@@ -1,36 +1,36 @@
-"use client"
-import PageTable from "@/components/shared/tables/app-table"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { CustomerSearch } from "@/components/features/customers/components/customer-search"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+"use client";
+import PageTable from "@/components/shared/tables/app-table";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { CustomerSearch } from "@/components/features/customers/components/customer-search";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import Heading from "@/components/ui/heading"
-import { Input } from "@/components/ui/input"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/dialog";
+import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import Spinner from "@/components/ui/spinner";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { Textarea } from "@/components/ui/textarea"
-import { UserSearch } from "@/components/shared/search/user-search"
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { AssignForm, RepairingProps } from "@/lib/types"
-import { YESTERDAY } from "@/lib/utils"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { ColumnDef } from "@tanstack/react-table"
+} from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { UserSearch } from "@/components/shared/search/user-search";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { AssignForm, RepairingProps } from "@/lib/types";
+import { YESTERDAY } from "@/lib/utils";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
   CalendarDays,
@@ -39,12 +39,17 @@ import {
   Trash2,
   UserRound,
   Wrench,
-} from "lucide-react"
-import moment from "moment"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useContext, useEffect, useMemo, useState } from "react"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
+} from "lucide-react";
+import moment from "moment";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useContext, useEffect, useMemo, useState } from "react";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import {
+  Field,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -52,58 +57,58 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function MainRepairingLab() {
-  const [data, setData] = useState<RepairingProps[]>([])
-  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<RepairingProps[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const { userID, designation } = useUserDetail()
-  const debouncedUserId = useDebounce(userID, 1000)
-  const [assignTask, setAssignTask] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<RepairingProps | null>(null)
-  const [filter, setFilter] = useState("all")
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const { userID, designation } = useUserDetail();
+  const debouncedUserId = useDebounce(userID, 1000);
+  const [assignTask, setAssignTask] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<RepairingProps | null>(null);
+  const [filter, setFilter] = useState("all");
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedTaskDelete, setSelectedTaskDelete] = useState<number | null>(
-    null
-  )
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const repairId = searchParams.get("r")
+    null,
+  );
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const repairId = searchParams.get("r");
 
   const selectedTaskDetail = useMemo(
     () => data.find((item) => String(item.id) === repairId) ?? null,
-    [data, repairId]
-  )
+    [data, repairId],
+  );
 
   function updateRepairParam(id?: number) {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams.toString());
 
-    if (id) params.set("r", String(id))
-    else params.delete("r")
+    if (id) params.set("r", String(id));
+    else params.delete("r");
 
-    const query = params.toString()
-    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false })
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
   useEffect(() => {
     if (debouncedUserId) {
-      fetchData()
+      fetchData();
     }
-  }, [debouncedUserId])
+  }, [debouncedUserId]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     axios
       .get(`/${debouncedUserId}/lab`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   const columns: ColumnDef<RepairingProps>[] = [
@@ -229,7 +234,7 @@ export default function MainRepairingLab() {
     {
       id: "actions",
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
         return (
           <div className="flex items-center justify-end gap-1.5">
@@ -239,8 +244,8 @@ export default function MainRepairingLab() {
               className="text-muted-foreground hover:bg-primary/10 hover:text-primary"
               aria-label="View repair task"
               onClick={(event) => {
-                event.stopPropagation()
-                updateRepairParam(currentItem.id)
+                event.stopPropagation();
+                updateRepairParam(currentItem.id);
               }}
             >
               <Eye />
@@ -252,37 +257,37 @@ export default function MainRepairingLab() {
                 className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                 aria-label="Delete repair task"
                 onClick={(event) => {
-                  event.stopPropagation()
-                  if (currentItem.id) setSelectedTaskDelete(currentItem.id)
+                  event.stopPropagation();
+                  if (currentItem.id) setSelectedTaskDelete(currentItem.id);
                 }}
               >
                 <Trash2 />
               </Button>
             )}
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleDelete(labID: number | null) {
-    if (!labID) return
-    setDeleteLoading(true)
+    if (!labID) return;
+    setDeleteLoading(true);
     axios
       .delete(`/${userID}/lab/${labID}`)
       .then(() => {
-        fetchData()
-        setSelectedTaskDelete(null)
+        fetchData();
+        setSelectedTaskDelete(null);
       })
       .finally(() => {
-        setDeleteLoading(false)
-      })
+        setDeleteLoading(false);
+      });
   }
 
   const filteredData =
     filter === "all"
       ? data
-      : data.filter((item) => item.status?.includes(filter))
+      : data.filter((item) => item.status?.includes(filter));
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -325,7 +330,7 @@ export default function MainRepairingLab() {
       <UpdateTaskModal
         open={!!selectedTask}
         onChange={(open) => {
-          if (!open) setSelectedTask(null)
+          if (!open) setSelectedTask(null);
         }}
         userID={debouncedUserId}
         task={selectedTask}
@@ -336,7 +341,7 @@ export default function MainRepairingLab() {
         open={Boolean(repairId && selectedTaskDetail)}
         task={selectedTaskDetail}
         onOpenChange={(open) => {
-          if (!open) updateRepairParam()
+          if (!open) updateRepairParam();
         }}
       />
 
@@ -349,7 +354,7 @@ export default function MainRepairingLab() {
         onPressCancel={() => setSelectedTaskDelete(null)}
       />
     </div>
-  )
+  );
 }
 
 const AssignTasksModal = ({
@@ -358,10 +363,10 @@ const AssignTasksModal = ({
   userID,
   onRefresh,
 }: {
-  open: boolean
-  onChange: (val: boolean) => void
-  userID: number
-  onRefresh: () => Promise<void>
+  open: boolean;
+  onChange: (val: boolean) => void;
+  userID: number;
+  onRefresh: () => Promise<void>;
 }) => {
   const [form, setForm] = useState<AssignForm>({
     assign_date: undefined,
@@ -370,20 +375,20 @@ const AssignTasksModal = ({
     customer_id: null,
     charges: 0,
     remarks: "",
-  })
-  const [loading, setLoading] = useState(false)
-  const { state: OfficeState } = useContext(OfficeContext)!
+  });
+  const [loading, setLoading] = useState(false);
+  const { state: OfficeState } = useContext(OfficeContext)!;
 
   const updateForm = (key: string, value: string | Date | number) => {
     setForm((prev) => ({
       ...prev,
       [key]: value,
-    }))
-  }
+    }));
+  };
 
   // Placeholder function for API call
   const handleSaveTask = async () => {
-    setLoading(true)
+    setLoading(true);
 
     axios
       .post(`/${userID}/lab`, {
@@ -391,7 +396,7 @@ const AssignTasksModal = ({
         managing_office: OfficeState.value.data || "lahore",
       })
       .then(() => {
-        onRefresh()
+        onRefresh();
         setForm({
           assign_date: undefined,
           deliver_date: undefined,
@@ -399,13 +404,13 @@ const AssignTasksModal = ({
           customer_id: null,
           charges: 0,
           remarks: "",
-        })
-        onChange(false)
+        });
+        onChange(false);
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }
+        setLoading(false);
+      });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onChange}>
@@ -542,8 +547,8 @@ const AssignTasksModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const UpdateTaskModal = ({
   open,
@@ -552,48 +557,48 @@ const UpdateTaskModal = ({
   onRefresh,
   task,
 }: {
-  open: boolean
-  onChange: (val: boolean) => void
-  userID: number
-  onRefresh: () => Promise<void>
-  task: RepairingProps | null
+  open: boolean;
+  onChange: (val: boolean) => void;
+  userID: number;
+  onRefresh: () => Promise<void>;
+  task: RepairingProps | null;
 }) => {
   useEffect(() => {
     if (open) {
-      setForm({ status: null, remarks_other: "" })
-      setLoading(false)
+      setForm({ status: null, remarks_other: "" });
+      setLoading(false);
     }
-  }, [open])
+  }, [open]);
   const [form, setForm] = useState({
     status: null,
     remarks_other: "",
-  })
-  const [loading, setLoading] = useState(false)
+  });
+  const [loading, setLoading] = useState(false);
 
   const updateForm = (key: string, value: Date | string | number) => {
     setForm((prev) => ({
       ...prev,
       [key]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSaveTask = async () => {
-    setLoading(true)
+    setLoading(true);
 
     axios
       .put(`/${userID}/lab/${task?.id}`, form)
       .then(() => {
-        onRefresh()
+        onRefresh();
         setForm({
           status: null,
           remarks_other: "",
-        })
-        onChange(false)
+        });
+        onChange(false);
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }
+        setLoading(false);
+      });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onChange}>
@@ -641,19 +646,19 @@ const UpdateTaskModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 function RepairTaskDetailSheet({
   open,
   task,
   onOpenChange,
 }: {
-  open: boolean
-  task: RepairingProps | null
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  task: RepairingProps | null;
+  onOpenChange: (open: boolean) => void;
 }) {
-  if (!task) return null
+  if (!task) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -736,13 +741,13 @@ function RepairTaskDetailSheet({
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
 
 function formatRepairDate(value: string) {
   return value && moment(value).isValid()
     ? moment(value).format("DD MMM YYYY")
-    : "—"
+    : "—";
 }
 
 function RepairDetail({
@@ -750,9 +755,9 @@ function RepairDetail({
   label,
   value,
 }: {
-  icon: typeof UserRound
-  label: string
-  value: string
+  icon: typeof UserRound;
+  label: string;
+  value: string;
 }) {
   return (
     <div className="rounded-lg border bg-card p-3">
@@ -762,5 +767,5 @@ function RepairDetail({
       <p className="text-[10px] text-muted-foreground">{label}</p>
       <p className="mt-0.5 truncate text-xs leading-5 font-medium">{value}</p>
     </div>
-  )
+  );
 }

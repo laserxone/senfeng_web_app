@@ -1,17 +1,17 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ChevronDown, Download } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Download } from "lucide-react";
 
 type Props = {
-  handlePdfDownload: () => Promise<void>
-  handleExcelDownload: () => Promise<void>
-  disabled: boolean
-}
+  handlePdfDownload: () => Promise<void>;
+  handleExcelDownload: () => Promise<void>;
+  disabled: boolean;
+};
 
 export default function ExportButton({
   handlePdfDownload,
@@ -36,5 +36,5 @@ export default function ExportButton({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

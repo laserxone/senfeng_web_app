@@ -1,21 +1,21 @@
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { BookOpenCheck } from "lucide-react"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MyCustomer, OrderItem } from "@/lib/types"
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
+} from "@/components/ui/dialog";
+import { BookOpenCheck } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MyCustomer, OrderItem } from "@/lib/types";
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
 
 const BookOrderDialog = ({
   visible,
@@ -24,19 +24,19 @@ const BookOrderDialog = ({
   id,
   item,
 }: {
-  visible: boolean
-  onClose: () => void
-  onRefresh: () => Promise<void>
-  id?: number
-  item: OrderItem | null
+  visible: boolean;
+  onClose: () => void;
+  onRefresh: () => Promise<void>;
+  id?: number;
+  item: OrderItem | null;
 }) => {
-  const [customer, setCustomer] = useState<MyCustomer | null>(null)
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [customer, setCustomer] = useState<MyCustomer | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const handleSubmit = async () => {
-    if (!customer?.id) return
-    setLoading(true)
+    if (!customer?.id) return;
+    setLoading(true);
     try {
       const response = await axios.post(`/${userID}/machine?inventory=${id}`, {
         customer_id: customer?.id,
@@ -47,17 +47,17 @@ const BookOrderDialog = ({
         sell_by: customer?.ownership,
         order_no_arr: [item?.machine_serial],
         commission: true,
-      })
-      await onRefresh()
-      handleClose()
+      });
+      await onRefresh();
+      handleClose();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose() {
-    onClose()
-    setCustomer(null)
+    onClose();
+    setCustomer(null);
   }
 
   return (
@@ -104,7 +104,7 @@ const BookOrderDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default BookOrderDialog
+export default BookOrderDialog;

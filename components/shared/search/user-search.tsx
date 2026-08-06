@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Check, ChevronsUpDown } from "lucide-react"
-import * as React from "react"
+import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -12,40 +12,40 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { cn } from "@/lib/utils"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Checkbox } from "@/components/ui/checkbox"
-import { UserDashboard } from "@/lib/types"
+} from "@/components/ui/popover";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { cn } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { UserDashboard } from "@/lib/types";
 
 type UserSearchProps = {
-  value?: number | null | string
+  value?: number | null | string;
 
   onReturn?: (
-    val: number
-  ) => void | React.Dispatch<React.SetStateAction<number>>
-  onReturnName?: (val: string) => void
-  onReturnData?: (val: UserDashboard) => void
-  placeholder?: string
-  lead?: boolean
-  remove?: boolean
-  className?: string
-  disabled?: boolean
-}
+    val: number,
+  ) => void | React.Dispatch<React.SetStateAction<number>>;
+  onReturnName?: (val: string) => void;
+  onReturnData?: (val: UserDashboard) => void;
+  placeholder?: string;
+  lead?: boolean;
+  remove?: boolean;
+  className?: string;
+  disabled?: boolean;
+};
 
 type LocalUserData = {
-  value: number
-  label: string
-  data: UserDashboard
-}
+  value: number;
+  label: string;
+  data: UserDashboard;
+};
 export function UserSearch({
   value,
   onReturn,
@@ -56,11 +56,11 @@ export function UserSearch({
   onReturnData,
   disabled = false,
 }: UserSearchProps) {
-  const [open, setOpen] = React.useState(false)
-  const [data, setData] = React.useState<LocalUserData[]>([])
-  const [city, setCity] = React.useState("lahore")
-  const [showInactive, setShowInactive] = React.useState(false)
-  const { userID, designation, office } = useUserDetail()
+  const [open, setOpen] = React.useState(false);
+  const [data, setData] = React.useState<LocalUserData[]>([]);
+  const [city, setCity] = React.useState("lahore");
+  const [showInactive, setShowInactive] = React.useState(false);
+  const { userID, designation, office } = useUserDetail();
 
   React.useEffect(() => {
     async function fetchData() {
@@ -74,21 +74,23 @@ export function UserSearch({
                   item.designation === "Owner" ||
                   item.designation === "Social Media Manager"
                 )
-                  return item
+                  return item;
               })
               .map((item: UserDashboard) => {
                 return {
                   value: item.id,
                   label: item?.name || item.email,
                   data: item,
-                }
-              })
+                };
+              });
             if (remove) {
               setData(
-                finalData.filter((item: LocalUserData) => item.value !== userID)
-              )
+                finalData.filter(
+                  (item: LocalUserData) => item.value !== userID,
+                ),
+              );
             } else {
-              setData(finalData)
+              setData(finalData);
             }
           } else {
             const finalData = response.data.map((item: UserDashboard) => {
@@ -96,38 +98,40 @@ export function UserSearch({
                 value: item.id,
                 label: item?.name || item.email,
                 data: item,
-              }
-            })
+              };
+            });
             if (remove) {
               setData(
-                finalData.filter((item: LocalUserData) => item.value !== userID)
-              )
+                finalData.filter(
+                  (item: LocalUserData) => item.value !== userID,
+                ),
+              );
             } else {
-              setData(finalData)
+              setData(finalData);
             }
           }
         }
-      })
+      });
     }
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   React.useEffect(() => {
     if (office) {
       if (designation === "Sales") {
-        setCity("")
+        setCity("");
       } else {
-        setCity(office)
+        setCity(office);
       }
     }
-  }, [office, designation])
+  }, [office, designation]);
 
   const filteredData = data
     .filter((item) => item?.data?.office?.includes(city))
     .filter((item) => {
-      if (showInactive) return true
-      return item?.data?.active
-    })
+      if (showInactive) return true;
+      return item?.data?.active;
+    });
 
   return (
     <>
@@ -138,8 +142,8 @@ export function UserSearch({
         aria-expanded={open}
         className="w-full justify-between"
         onClick={(e) => {
-          e.preventDefault()
-          setOpen(!open)
+          e.preventDefault();
+          setOpen(!open);
         }}
       >
         {value
@@ -177,19 +181,19 @@ export function UserSearch({
                   value={item.label}
                   className={!item.data.active ? "bg-red-300" : ""}
                   onSelect={() => {
-                    onReturn?.(Number(item.value))
-                    onReturnName?.(item.label)
+                    onReturn?.(Number(item.value));
+                    onReturnName?.(item.label);
                     if (lead) {
-                      onReturnData?.(item.data)
+                      onReturnData?.(item.data);
                     }
-                    setOpen(false)
+                    setOpen(false);
                   }}
                 >
                   {item.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === item.value ? "opacity-100" : "opacity-0"
+                      value === item.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>
@@ -199,5 +203,5 @@ export function UserSearch({
         </Command>
       </CommandDialog>
     </>
-  )
+  );
 }

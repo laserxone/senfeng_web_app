@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
-import Heading from "@/components/ui/heading"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import formatCurrency from "@/lib/formatCurrency"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import Heading from "@/components/ui/heading";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import formatCurrency from "@/lib/formatCurrency";
 import {
   RefreshCcw,
   Search,
@@ -18,52 +18,52 @@ import {
   ArrowDown,
   MoveVertical,
   X,
-} from "lucide-react"
-import { useEffect, useMemo, useState, useRef, useCallback } from "react"
+} from "lucide-react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SaleData = {
-  id: number
-  serial_no: string | null
-  power: string | null
-  order_no_arr: string[] | string | null
-  price: string | number | null
-}
+  id: number;
+  serial_no: string | null;
+  power: string | null;
+  order_no_arr: string[] | string | null;
+  price: string | number | null;
+};
 
 type OrderListRow = {
-  id: number
-  order_id: number | null
-  inventory_id: number | null
-  item_name: string | null
-  order_title: string | null
-  customer_id: number | null
-  customer_name: string | null
-  customer_location: string | null
-  customer_owner: string | null
-  ownership_name: string | null
-  booked_name: string | null
-  qty: number
-  price: string | number
-  buying_price: string | number
-  is_machine: boolean
-  booked: boolean
-  booking_date: string | null
-  status: string | null
-  location: string | null
-  show: boolean
-  machine_serial: string | null
-  machine_model: string | null
-  machine_power: string | null
-  machine_source: string | null
-  machine_id: number | null
-  has_sale: boolean
-  sale_data: SaleData | null
-  sold_order_no: string | null
-  row_date?: string | null
-}
+  id: number;
+  order_id: number | null;
+  inventory_id: number | null;
+  item_name: string | null;
+  order_title: string | null;
+  customer_id: number | null;
+  customer_name: string | null;
+  customer_location: string | null;
+  customer_owner: string | null;
+  ownership_name: string | null;
+  booked_name: string | null;
+  qty: number;
+  price: string | number;
+  buying_price: string | number;
+  is_machine: boolean;
+  booked: boolean;
+  booking_date: string | null;
+  status: string | null;
+  location: string | null;
+  show: boolean;
+  machine_serial: string | null;
+  machine_model: string | null;
+  machine_power: string | null;
+  machine_source: string | null;
+  machine_id: number | null;
+  has_sale: boolean;
+  sale_data: SaleData | null;
+  sold_order_no: string | null;
+  row_date?: string | null;
+};
 
-type SortDir = "asc" | "desc"
+type SortDir = "asc" | "desc";
 type SortKey =
   | "order_title"
   | "customer_name"
@@ -73,147 +73,147 @@ type SortKey =
   | "machine_model"
   | "machine_power"
   | "price"
-  | "row_date"
+  | "row_date";
 
-type SortState = { key: SortKey; dir: SortDir } | null
+type SortState = { key: SortKey; dir: SortDir } | null;
 
 type ContextMenuState = {
-  rowId: number
-  x: number
-  y: number
-} | null
+  rowId: number;
+  x: number;
+  y: number;
+} | null;
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Page() {
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
-  const [rows, setRows] = useState<OrderListRow[]>([])
-  const [loading, setLoading] = useState(false)
-  const [movedRow, setMovedRow] = useState<OrderListRow | null>(null)
-  const [search, setSearch] = useState("")
+  const [rows, setRows] = useState<OrderListRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [movedRow, setMovedRow] = useState<OrderListRow | null>(null);
+  const [search, setSearch] = useState("");
   const [expandedOrders, setExpandedOrders] = useState<Set<string | number>>(
-    new Set()
-  )
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null)
-  const [sortState, setSortState] = useState<SortState>(null)
-  const contextMenuRef = useRef<HTMLDivElement>(null)
+    new Set(),
+  );
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
+  const [sortState, setSortState] = useState<SortState>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   // Escape: clear moved state + close context menu
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setMovedRow(null)
-        setContextMenu(null)
+        setMovedRow(null);
+        setContextMenu(null);
       }
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [])
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Close context menu on outside click
   useEffect(() => {
-    if (!contextMenu) return
+    if (!contextMenu) return;
     const handle = (e: MouseEvent) => {
       if (
         contextMenuRef.current &&
         !contextMenuRef.current.contains(e.target as Node)
       ) {
-        setContextMenu(null)
+        setContextMenu(null);
       }
-    }
-    document.addEventListener("mousedown", handle)
-    return () => document.removeEventListener("mousedown", handle)
-  }, [contextMenu])
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [contextMenu]);
 
   async function fetchData() {
     try {
-      setLoading(true)
-      const res = await axios.get(`/${userID}/orderlist`)
+      setLoading(true);
+      const res = await axios.get(`/${userID}/orderlist`);
       const data: OrderListRow[] = (res.data ?? []).map((r: OrderListRow) => ({
         ...r,
         row_date: r.row_date ?? null,
-      }))
-      setRows(data)
+      }));
+      setRows(data);
       if (data.length > 0) {
-        const firstOrderId = data[0].order_id ?? "no-order"
-        setExpandedOrders(new Set([firstOrderId]))
+        const firstOrderId = data[0].order_id ?? "no-order";
+        setExpandedOrders(new Set([firstOrderId]));
       }
     } catch (error) {
-      console.error(error)
+      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const updateCell = useCallback(
     (rowId: number, key: keyof OrderListRow, value: string) => {
       setRows((prev) =>
-        prev.map((row) => (row.id === rowId ? { ...row, [key]: value } : row))
-      )
+        prev.map((row) => (row.id === rowId ? { ...row, [key]: value } : row)),
+      );
     },
-    []
-  )
+    [],
+  );
 
   // Mark a row as "being moved" and remove it from its current position
   const startMove = useCallback((row: OrderListRow) => {
-    setMovedRow(row)
-    setRows((prev) => prev.filter((r) => r.id !== row.id))
-    setContextMenu(null)
-  }, [])
+    setMovedRow(row);
+    setRows((prev) => prev.filter((r) => r.id !== row.id));
+    setContextMenu(null);
+  }, []);
 
   // Insert the moved row relative to a target
   const insertMovedRow = useCallback(
     (targetRowId: number, position: "above" | "below") => {
-      if (!movedRow) return
+      if (!movedRow) return;
       setRows((prev) => {
-        const targetIndex = prev.findIndex((r) => r.id === targetRowId)
-        if (targetIndex === -1) return prev
-        const insertAt = position === "above" ? targetIndex : targetIndex + 1
-        return [...prev.slice(0, insertAt), movedRow, ...prev.slice(insertAt)]
-      })
-      setMovedRow(null)
-      setContextMenu(null)
+        const targetIndex = prev.findIndex((r) => r.id === targetRowId);
+        if (targetIndex === -1) return prev;
+        const insertAt = position === "above" ? targetIndex : targetIndex + 1;
+        return [...prev.slice(0, insertAt), movedRow, ...prev.slice(insertAt)];
+      });
+      setMovedRow(null);
+      setContextMenu(null);
     },
-    [movedRow]
-  )
+    [movedRow],
+  );
 
   // Cancel move: put the row back at the end of its order group
   const cancelMove = useCallback(() => {
-    if (!movedRow) return
-    setRows((prev) => [...prev, movedRow])
-    setMovedRow(null)
-  }, [movedRow])
+    if (!movedRow) return;
+    setRows((prev) => [...prev, movedRow]);
+    setMovedRow(null);
+  }, [movedRow]);
 
   const deleteRow = useCallback((rowId: number) => {
-    setRows((prev) => prev.filter((row) => row.id !== rowId))
-  }, [])
+    setRows((prev) => prev.filter((row) => row.id !== rowId));
+  }, []);
 
   const toggleOrderExpanded = useCallback((orderId: string | number) => {
     setExpandedOrders((prev) => {
-      const next = new Set(prev)
-      if (next.has(orderId)) next.delete(orderId)
-      else next.add(orderId)
-      return next
-    })
-  }, [])
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  }, []);
 
   const handleSortColumn = useCallback((key: SortKey) => {
     setSortState((prev) => {
       if (prev?.key === key) {
-        return { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        return { key, dir: prev.dir === "asc" ? "desc" : "asc" };
       }
-      return { key, dir: "asc" }
-    })
-  }, [])
+      return { key, dir: "asc" };
+    });
+  }, []);
 
   const filteredRows = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return rows
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
     return rows.filter((row) =>
       [
         row.order_title,
@@ -232,26 +232,26 @@ export default function Page() {
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
-        .includes(q)
-    )
-  }, [rows, search])
+        .includes(q),
+    );
+  }, [rows, search]);
 
   const groupedRows = useMemo(() => {
     return filteredRows.reduce(
       (acc, row) => {
-        const key = row.order_id ?? "no-order"
-        if (!acc[key]) acc[key] = []
-        acc[key].push(row)
-        return acc
+        const key = row.order_id ?? "no-order";
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(row);
+        return acc;
       },
-      {} as Record<string | number, OrderListRow[]>
-    )
-  }, [filteredRows])
+      {} as Record<string | number, OrderListRow[]>,
+    );
+  }, [filteredRows]);
 
   const totalItems = useMemo(
     () => Object.values(groupedRows).reduce((s, arr) => s + arr.length, 0),
-    [groupedRows]
-  )
+    [groupedRows],
+  );
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4 pb-8">
@@ -387,7 +387,7 @@ export default function Page() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── OrderAccordion ────────────────────────────────────────────────────────────
@@ -408,79 +408,79 @@ function OrderAccordion({
   sortState,
   onSortColumn,
 }: {
-  orderId: string
-  orderRows: OrderListRow[]
-  isExpanded: boolean
-  onToggle: () => void
-  movedRow: OrderListRow | null
-  startMove: (row: OrderListRow) => void
-  insertMovedRow: (targetRowId: number, position: "above" | "below") => void
-  updateCell: (rowId: number, key: keyof OrderListRow, value: string) => void
-  deleteRow: (rowId: number) => void
-  contextMenu: ContextMenuState
-  setContextMenu: (s: ContextMenuState) => void
-  contextMenuRef: React.RefObject<HTMLDivElement | null>
-  sortState: SortState
-  onSortColumn: (key: SortKey) => void
+  orderId: string;
+  orderRows: OrderListRow[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  movedRow: OrderListRow | null;
+  startMove: (row: OrderListRow) => void;
+  insertMovedRow: (targetRowId: number, position: "above" | "below") => void;
+  updateCell: (rowId: number, key: keyof OrderListRow, value: string) => void;
+  deleteRow: (rowId: number) => void;
+  contextMenu: ContextMenuState;
+  setContextMenu: (s: ContextMenuState) => void;
+  contextMenuRef: React.RefObject<HTMLDivElement | null>;
+  sortState: SortState;
+  onSortColumn: (key: SortKey) => void;
 }) {
-  const firstRow = orderRows[0]
-  const count = orderRows.length
+  const firstRow = orderRows[0];
+  const count = orderRows.length;
 
   const sortedRows = useMemo(() => {
-    if (!sortState) return orderRows
+    if (!sortState) return orderRows;
     return [...orderRows].sort((a, b) => {
-      let aVal: string | number | null = null
-      let bVal: string | number | null = null
+      let aVal: string | number | null = null;
+      let bVal: string | number | null = null;
 
       switch (sortState.key) {
         case "order_title":
-          aVal = a.order_title
-          bVal = b.order_title
-          break
+          aVal = a.order_title;
+          bVal = b.order_title;
+          break;
         case "customer_name":
-          aVal = a.customer_name
-          bVal = b.customer_name
-          break
+          aVal = a.customer_name;
+          bVal = b.customer_name;
+          break;
         case "customer_location":
-          aVal = a.customer_location
-          bVal = b.customer_location
-          break
+          aVal = a.customer_location;
+          bVal = b.customer_location;
+          break;
         case "ownership_name":
-          aVal = a.ownership_name
-          bVal = b.ownership_name
-          break
+          aVal = a.ownership_name;
+          bVal = b.ownership_name;
+          break;
         case "machine_serial":
-          aVal = a.machine_serial
-          bVal = b.machine_serial
-          break
+          aVal = a.machine_serial;
+          bVal = b.machine_serial;
+          break;
         case "machine_model":
-          aVal = a.machine_model
-          bVal = b.machine_model
-          break
+          aVal = a.machine_model;
+          bVal = b.machine_model;
+          break;
         case "machine_power":
-          aVal = a.machine_power
-          bVal = b.machine_power
-          break
+          aVal = a.machine_power;
+          bVal = b.machine_power;
+          break;
         case "price":
-          aVal = Number(a.has_sale ? a.sale_data?.price : a.price) || 0
-          bVal = Number(b.has_sale ? b.sale_data?.price : b.price) || 0
-          break
+          aVal = Number(a.has_sale ? a.sale_data?.price : a.price) || 0;
+          bVal = Number(b.has_sale ? b.sale_data?.price : b.price) || 0;
+          break;
         case "row_date":
-          aVal = a.row_date ?? ""
-          bVal = b.row_date ?? ""
-          break
+          aVal = a.row_date ?? "";
+          bVal = b.row_date ?? "";
+          break;
       }
 
-      const aStr = aVal == null ? "" : String(aVal).toLowerCase()
-      const bStr = bVal == null ? "" : String(bVal).toLowerCase()
-      const aNum = Number(aVal)
-      const bNum = Number(bVal)
-      const isNumeric = !isNaN(aNum) && !isNaN(bNum)
+      const aStr = aVal == null ? "" : String(aVal).toLowerCase();
+      const bStr = bVal == null ? "" : String(bVal).toLowerCase();
+      const aNum = Number(aVal);
+      const bNum = Number(bVal);
+      const isNumeric = !isNaN(aNum) && !isNaN(bNum);
 
-      const cmp = isNumeric ? aNum - bNum : aStr.localeCompare(bStr)
-      return sortState.dir === "asc" ? cmp : -cmp
-    })
-  }, [orderRows, sortState])
+      const cmp = isNumeric ? aNum - bNum : aStr.localeCompare(bStr);
+      return sortState.dir === "asc" ? cmp : -cmp;
+    });
+  }, [orderRows, sortState]);
 
   return (
     <div className="max-w-full min-w-0 rounded-lg border border-border bg-card transition-shadow hover:shadow-sm">
@@ -539,7 +539,7 @@ function OrderAccordion({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // ─── RenderTable ───────────────────────────────────────────────────────────────
@@ -557,22 +557,22 @@ const RenderTable = ({
   sortState,
   onSortColumn,
 }: {
-  orderRows: OrderListRow[]
-  movedRow: OrderListRow | null
-  startMove: (row: OrderListRow) => void
-  insertMovedRow: (targetRowId: number, position: "above" | "below") => void
-  updateCell: (rowId: number, key: keyof OrderListRow, value: string) => void
-  deleteRow: (rowId: number) => void
-  contextMenu: ContextMenuState
-  setContextMenu: (s: ContextMenuState) => void
-  contextMenuRef: React.RefObject<HTMLDivElement | null>
-  sortState: SortState
-  onSortColumn: (key: SortKey) => void
+  orderRows: OrderListRow[];
+  movedRow: OrderListRow | null;
+  startMove: (row: OrderListRow) => void;
+  insertMovedRow: (targetRowId: number, position: "above" | "below") => void;
+  updateCell: (rowId: number, key: keyof OrderListRow, value: string) => void;
+  deleteRow: (rowId: number) => void;
+  contextMenu: ContextMenuState;
+  setContextMenu: (s: ContextMenuState) => void;
+  contextMenuRef: React.RefObject<HTMLDivElement | null>;
+  sortState: SortState;
+  onSortColumn: (key: SortKey) => void;
 }) => {
   const handleContextMenu = (e: React.MouseEvent, rowId: number) => {
-    e.preventDefault()
-    setContextMenu({ rowId, x: e.clientX, y: e.clientY })
-  }
+    e.preventDefault();
+    setContextMenu({ rowId, x: e.clientX, y: e.clientY });
+  };
 
   return (
     <div className="relative max-h-[500px] min-w-max">
@@ -656,16 +656,18 @@ const RenderTable = ({
                     ? row.sale_data!.order_no_arr.join(", ")
                     : row.machine_serial
                   : row.sale_data?.order_no_arr || row.machine_serial
-                : row.machine_serial
+                : row.machine_serial;
 
               const power = row.has_sale
                 ? row.sale_data?.power
-                : row.machine_power
+                : row.machine_power;
 
-              const finalPrice = row.has_sale ? row.sale_data?.price : row.price
+              const finalPrice = row.has_sale
+                ? row.sale_data?.price
+                : row.price;
 
-              const isBeingMoved = movedRow?.id === row.id
-              const isMenuOpen = contextMenu?.rowId === row.id
+              const isBeingMoved = movedRow?.id === row.id;
+              const isMenuOpen = contextMenu?.rowId === row.id;
 
               return (
                 <tr
@@ -763,7 +765,7 @@ const RenderTable = ({
                     )}
                   </Td>
                 </tr>
-              )
+              );
             })
           ) : (
             <tr>
@@ -795,8 +797,8 @@ const RenderTable = ({
             {/* Move */}
             <button
               onClick={() => {
-                const row = orderRows.find((r) => r.id === contextMenu.rowId)
-                if (row) startMove(row)
+                const row = orderRows.find((r) => r.id === contextMenu.rowId);
+                if (row) startMove(row);
               }}
               className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
             >
@@ -833,8 +835,8 @@ const RenderTable = ({
             {/* Delete */}
             <button
               onClick={() => {
-                deleteRow(contextMenu.rowId)
-                setContextMenu(null)
+                deleteRow(contextMenu.rowId);
+                setContextMenu(null);
               }}
               className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/8"
             >
@@ -855,8 +857,8 @@ const RenderTable = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 // ─── SortableTh ───────────────────────────────────────────────────────────────
 
@@ -867,14 +869,14 @@ function SortableTh({
   onSort,
   className = "",
 }: {
-  label: string
-  sortKey: SortKey | null
-  sortState: SortState
-  onSort: (key: SortKey) => void
-  className?: string
+  label: string;
+  sortKey: SortKey | null;
+  sortState: SortState;
+  onSort: (key: SortKey) => void;
+  className?: string;
 }) {
-  const isActive = sortKey !== null && sortState?.key === sortKey
-  const dir = isActive ? sortState!.dir : null
+  const isActive = sortKey !== null && sortState?.key === sortKey;
+  const dir = isActive ? sortState!.dir : null;
 
   if (sortKey === null) {
     return (
@@ -883,7 +885,7 @@ function SortableTh({
       >
         {label}
       </th>
-    )
+    );
   }
 
   return (
@@ -906,7 +908,7 @@ function SortableTh({
         )}
       </button>
     </th>
-  )
+  );
 }
 
 // ─── Td ───────────────────────────────────────────────────────────────────────
@@ -915,8 +917,8 @@ function Td({
   children,
   className = "",
 }: {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <td
@@ -924,7 +926,7 @@ function Td({
     >
       {children}
     </td>
-  )
+  );
 }
 
 // ─── EditableTd ───────────────────────────────────────────────────────────────
@@ -933,8 +935,8 @@ function EditableTd({
   value,
   onChange,
 }: {
-  value: string | number | null
-  onChange: (value: string) => void
+  value: string | number | null;
+  onChange: (value: string) => void;
 }) {
   return (
     <td className="p-0 align-middle">
@@ -945,5 +947,5 @@ function EditableTd({
         placeholder="—"
       />
     </td>
-  )
+  );
 }

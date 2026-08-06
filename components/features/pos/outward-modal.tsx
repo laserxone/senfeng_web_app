@@ -1,65 +1,65 @@
-import PageTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
+import PageTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { InvoiceItem, OutwardProps } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Edit } from "lucide-react"
-import { Dispatch, SetStateAction, useEffect, useState } from "react"
-import { FaRegFilePdf } from "react-icons/fa"
+} from "@/components/ui/dialog";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { InvoiceItem, OutwardProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Edit } from "lucide-react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { FaRegFilePdf } from "react-icons/fa";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
 
 const OutwardModal = ({
   visible,
   onClose,
 }: {
-  visible: boolean
-  onClose: Dispatch<SetStateAction<boolean>>
+  visible: boolean;
+  onClose: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<OutwardProps[]>([])
-  const [items, setItems] = useState<InvoiceItem[]>([])
-  const [createOutward, setCreateOutward] = useState<OutwardProps | null>(null)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<OutwardProps[]>([]);
+  const [items, setItems] = useState<InvoiceItem[]>([]);
+  const [createOutward, setCreateOutward] = useState<OutwardProps | null>(null);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     if (userID && visible) {
-      fetchData()
+      fetchData();
     }
     return () => {
-      resetData()
-    }
-  }, [userID, visible])
+      resetData();
+    };
+  }, [userID, visible]);
 
   function resetData() {
-    setLoading(false)
-    setData([])
-    setItems([])
-    setCreateOutward(null)
+    setLoading(false);
+    setData([]);
+    setItems([]);
+    setCreateOutward(null);
   }
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await axios.get(`/${userID}/pos/outward`)
-      setData(res.data)
+      const res = await axios.get(`/${userID}/pos/outward`);
+      setData(res.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -76,7 +76,7 @@ const OutwardModal = ({
             Gatepass No.
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">{row.getValue("invoicenumber")}</div>
@@ -94,7 +94,7 @@ const OutwardModal = ({
             Company
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("company")}</div>,
     },
@@ -111,7 +111,7 @@ const OutwardModal = ({
             Manager
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("manager")}</div>,
     },
@@ -119,7 +119,7 @@ const OutwardModal = ({
     {
       id: "actions",
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
         return (
           <div className="flex gap-1">
@@ -162,7 +162,7 @@ const OutwardModal = ({
                 variant={"ghost"}
                 size={"icon"}
                 onClick={async (e) => {
-                  e.stopPropagation()
+                  e.stopPropagation();
                   try {
                     const PDFData = {
                       from: currentItem?.outward_gatepass?.from_by ?? "",
@@ -177,7 +177,7 @@ const OutwardModal = ({
                       gatepassType: "Outward Gate Pass",
                       items: currentItem?.outward_gatepass?.fields ?? [],
                       created_at: currentItem?.outward_gatepass?.created_at,
-                    }
+                    };
 
                     const pdfRes = await axios.post(
                       `/${userID}/pos/outward/pdf`,
@@ -189,18 +189,18 @@ const OutwardModal = ({
                         headers: {
                           "Content-Type": "application/json",
                         },
-                      }
-                    )
+                      },
+                    );
 
                     const blob = new Blob([pdfRes.data], {
                       type: "application/pdf",
-                    })
+                    });
 
-                    const url = URL.createObjectURL(blob)
-                    window.open(url, "_blank")
-                    setTimeout(() => URL.revokeObjectURL(url), 600000)
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, "_blank");
+                    setTimeout(() => URL.revokeObjectURL(url), 600000);
                   } catch (e) {
-                    console.log(e)
+                    console.log(e);
                   }
                 }}
               >
@@ -211,28 +211,28 @@ const OutwardModal = ({
                 variant={"ghost"}
                 size={"icon"}
                 onClick={() => {
-                  setCreateOutward(currentItem)
+                  setCreateOutward(currentItem);
                   setItems(
                     currentItem?.fields?.map((item) => ({
                       ...item,
                       name: item?.name || item?.description,
-                    }))
-                  )
+                    })),
+                  );
                 }}
               >
                 <Edit />
               </Button>
             )}
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
-    const formData = new FormData(e.currentTarget)
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
     const data = {
       from_by: formData.get("from") as string,
       vehicle_no: formData.get("vehicle_no") as string,
@@ -242,10 +242,10 @@ const OutwardModal = ({
       savedinvoice_id: createOutward?.id,
       user_id: userID,
       fields: JSON.stringify(items),
-    }
+    };
 
     try {
-      const response = await axios.post(`/${userID}/pos/outward`, data)
+      const response = await axios.post(`/${userID}/pos/outward`, data);
       const PDFData = {
         from: data.from_by,
         vehicle_no: data.vehicle_no,
@@ -256,7 +256,7 @@ const OutwardModal = ({
         gatepassType: "Outward Gate Pass",
         created_at: response?.data?.created_at,
         items: items || [],
-      }
+      };
 
       const pdfRes = await axios.post(
         `/${userID}/pos/outward/pdf`,
@@ -268,32 +268,32 @@ const OutwardModal = ({
           headers: {
             "Content-Type": "application/json",
           },
-        }
-      )
+        },
+      );
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      })
+      });
 
-      const url = URL.createObjectURL(blob)
-      window.open(url, "_blank")
-      setTimeout(() => URL.revokeObjectURL(url), 600000)
-      await fetchData()
-      setCreateOutward(null)
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
+      await fetchData();
+      setCreateOutward(null);
     } catch (e) {
-      console.log(e)
+      console.log(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleItemChange = (
     index: number,
     field: string,
-    value: string | boolean | number
+    value: string | boolean | number,
   ) => {
     if (field === "isExisting") {
-      const copy = [...items]
+      const copy = [...items];
       copy[index] = {
         ...copy[index],
         [field as string]: value,
@@ -301,14 +301,14 @@ const OutwardModal = ({
         qty: 0,
         remarks: "",
         unit: "",
-      }
-      setItems(copy)
+      };
+      setItems(copy);
     } else {
-      const copy = [...items]
-      copy[index] = { ...copy[index], [field]: value }
-      setItems(copy)
+      const copy = [...items];
+      copy[index] = { ...copy[index], [field]: value };
+      setItems(copy);
     }
-  }
+  };
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
@@ -408,8 +408,8 @@ const OutwardModal = ({
                                   handleItemChange(
                                     index,
                                     "qty",
-                                    Number(e.target.value)
-                                  )
+                                    Number(e.target.value),
+                                  );
                               }}
                             />
                           </div>
@@ -430,7 +430,7 @@ const OutwardModal = ({
                                 handleItemChange(
                                   index,
                                   "remarks",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
@@ -450,7 +450,7 @@ const OutwardModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default OutwardModal
+export default OutwardModal;

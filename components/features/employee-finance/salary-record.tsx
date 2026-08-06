@@ -1,41 +1,41 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { ArrowUpDown } from "lucide-react"
-import { useEffect, useState } from "react"
-import PageTable from "@/components/shared/tables/app-table"
-import SalaryPdf from "@/components/features/salary/salaryPdf"
-import axios from "@/lib/axios"
-import moment from "moment"
-import { FaRegFilePdf } from "react-icons/fa"
-import { pdf } from "@react-pdf/renderer"
-import { UserSalaryProps } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
+"use client";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import PageTable from "@/components/shared/tables/app-table";
+import SalaryPdf from "@/components/features/salary/salaryPdf";
+import axios from "@/lib/axios";
+import moment from "moment";
+import { FaRegFilePdf } from "react-icons/fa";
+import { pdf } from "@react-pdf/renderer";
+import { UserSalaryProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
 const SalaryRecord = ({
   id,
   height,
 }: {
-  id: number | string
-  height?: string
+  id: number | string;
+  height?: string;
 }) => {
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<UserSalaryProps[]>([])
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<UserSalaryProps[]>([]);
 
   useEffect(() => {
     if (id) {
-      fetchData(id)
+      fetchData(id);
     }
-  }, [id])
+  }, [id]);
 
   async function fetchData(id: number | string) {
     axios
       .get(`/${id}/record`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   const columns: ColumnDef<UserSalaryProps>[] = [
@@ -51,7 +51,7 @@ const SalaryRecord = ({
             Salary Month
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">
@@ -74,7 +74,7 @@ const SalaryRecord = ({
             Employee
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
     },
@@ -83,7 +83,7 @@ const SalaryRecord = ({
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const payment = row.original
+        const payment = row.original;
 
         return (
           <div className="flex gap-4">
@@ -92,16 +92,16 @@ const SalaryRecord = ({
               className="h-7 w-7 text-red-500"
             />
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleDownload(item: UserSalaryProps) {
-    const blob = await pdf(<SalaryPdf data={item} />).toBlob()
-    const url = URL.createObjectURL(blob)
-    window.open(url, "_blank")
-    setTimeout(() => URL.revokeObjectURL(url), 600000)
+    const blob = await pdf(<SalaryPdf data={item} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 600000);
   }
 
   return (
@@ -116,7 +116,7 @@ const SalaryRecord = ({
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SalaryRecord
+export default SalaryRecord;

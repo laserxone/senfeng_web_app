@@ -1,6 +1,6 @@
-"use client"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+"use client";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Loading = () => {
   return (
@@ -37,7 +37,7 @@ const Loading = () => {
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default Loading
+export default Loading;

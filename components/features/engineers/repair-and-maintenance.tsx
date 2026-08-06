@@ -1,13 +1,13 @@
-"use client"
-import PageTable from "@/components/shared/tables/app-table"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { Button } from "@/components/ui/button"
+"use client";
+import PageTable from "@/components/shared/tables/app-table";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -15,30 +15,30 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { UserRepairing } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import moment from "moment"
-import { useEffect, useState } from "react"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UserRepairing } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import moment from "moment";
+import { useEffect, useState } from "react";
 
 export default function RepairAndMaintenance({
   data = [],
   onRefresh,
   height,
 }: {
-  data: UserRepairing[]
-  onRefresh: () => Promise<void>
-  height?: string
+  data: UserRepairing[];
+  onRefresh: () => Promise<void>;
+  height?: string;
 }) {
-  const [selectedTask, setSelectedTask] = useState<UserRepairing | null>(null)
-  const { userID } = useUserDetail()
-  const [filter, setFilter] = useState("all")
+  const [selectedTask, setSelectedTask] = useState<UserRepairing | null>(null);
+  const { userID } = useUserDetail();
+  const [filter, setFilter] = useState("all");
   const columns: ColumnDef<UserRepairing>[] = [
     {
       accessorKey: "assign_date",
@@ -159,12 +159,12 @@ export default function RepairAndMaintenance({
       ),
       cell: ({ row }) => <div>{row.getValue("remarks_other")}</div>,
     },
-  ]
+  ];
 
   const filteredData =
     filter === "all"
       ? data
-      : data.filter((item) => item.status?.includes(filter))
+      : data.filter((item) => item.status?.includes(filter));
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -200,16 +200,16 @@ export default function RepairAndMaintenance({
         />
       </div>
     </div>
-  )
+  );
 }
 
 type UpdateTaskModal = {
-  open: boolean
-  onChange: () => void
-  onRefresh: () => Promise<void>
-  task_id?: number
-  userID: number | string
-}
+  open: boolean;
+  onChange: () => void;
+  onRefresh: () => Promise<void>;
+  task_id?: number;
+  userID: number | string;
+};
 const UpdateTaskModal = ({
   open,
   onChange,
@@ -219,40 +219,40 @@ const UpdateTaskModal = ({
 }: UpdateTaskModal) => {
   useEffect(() => {
     if (open) {
-      setForm({ status: null, remarks_other: "" })
-      setLoading(false)
+      setForm({ status: null, remarks_other: "" });
+      setLoading(false);
     }
-  }, [open])
+  }, [open]);
   const [form, setForm] = useState({
     status: null,
     remarks_other: "",
-  })
-  const [loading, setLoading] = useState(false)
+  });
+  const [loading, setLoading] = useState(false);
 
   const updateForm = (key: string, value: string) => {
     setForm((prev) => ({
       ...prev,
       [key]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSaveTask = async () => {
-    setLoading(true)
+    setLoading(true);
 
     axios
       .put(`/${userID}/lab/${task_id}`, form)
       .then(() => {
-        onRefresh()
+        onRefresh();
         setForm({
           status: null,
           remarks_other: "",
-        })
-        onChange()
+        });
+        onChange();
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }
+        setLoading(false);
+      });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onChange}>
@@ -300,5 +300,5 @@ const UpdateTaskModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

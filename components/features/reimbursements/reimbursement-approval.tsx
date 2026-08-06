@@ -1,5 +1,5 @@
-"use client"
-import { Button } from "@/components/ui/button"
+"use client";
+import { Button } from "@/components/ui/button";
 import {
   ArrowUpDown,
   Banknote,
@@ -10,39 +10,39 @@ import {
   ReceiptText,
   Trash,
   UserRound,
-} from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
-import FilterSheet from "@/components/features/users/filter-sheet"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import PageTable from "@/components/shared/tables/app-table"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import FilterSheet from "@/components/features/users/filter-sheet";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import PageTable from "@/components/shared/tables/app-table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
-import { TIMEZONE } from "@/constants/data"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { UserReimbursementType } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import moment from "moment"
-import momentT from "moment-timezone"
-import Link from "next/link"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UserReimbursementType } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import moment from "moment";
+import momentT from "moment-timezone";
+import Link from "next/link";
 
 export default function ReimbursementApproval() {
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [data, setData] = useState<UserReimbursementType[]>([])
-  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null)
-  const [visible, setVisible] = useState(false)
-  const { base_route, userID, reimbursement_approval } = useUserDetail()
-  const [resetLoading, setResetLoading] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [selectedItem, setSelectedItem] = useState<number | null>(null)
-  const [deleteItem, setDeleteItem] = useState<number | null>(null)
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<UserReimbursementType[]>([]);
+  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null);
+  const [visible, setVisible] = useState(false);
+  const { base_route, userID, reimbursement_approval } = useUserDetail();
+  const [resetLoading, setResetLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<number | null>(null);
+  const [deleteItem, setDeleteItem] = useState<number | null>(null);
 
   useEffect(() => {
     if (userID && reimbursement_approval) {
@@ -51,41 +51,41 @@ export default function ReimbursementApproval() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      fetchData(startDate, endDate)
+        .toISOString();
+      fetchData(startDate, endDate);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(
     startDate: string,
     endDate: string,
-    user: null | number = null
+    user: null | number = null,
   ) {
     return new Promise((resolve, reject) => {
       axios
         .get(
           `/${userID}/reimbursementapproval?start_date=${startDate}&end_date=${endDate}&user=${
             user || ""
-          }`
+          }`,
         )
         .then((response) => {
-          setData(response.data)
-          resolve(true)
+          setData(response.data);
+          resolve(true);
         })
         .catch((e) => {
-          console.log(e)
-          reject(null)
+          console.log(e);
+          reject(null);
         })
         .finally(() => {
-          setLoading(false)
-        })
-    })
+          setLoading(false);
+        });
+    });
   }
 
   const columns: ColumnDef<UserReimbursementType>[] = [
@@ -101,7 +101,7 @@ export default function ReimbursementApproval() {
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -124,10 +124,10 @@ export default function ReimbursementApproval() {
             Purpose
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        return <div className="ml-2">{row.getValue("title")}</div>
+        return <div className="ml-2">{row.getValue("title")}</div>;
       },
     },
 
@@ -143,10 +143,10 @@ export default function ReimbursementApproval() {
             Customer
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
         if (currentItem.customer_id)
           return (
             <Link
@@ -160,7 +160,7 @@ export default function ReimbursementApproval() {
                 {row.getValue("customer")}
               </div>
             </Link>
-          )
+          );
       },
     },
 
@@ -176,12 +176,12 @@ export default function ReimbursementApproval() {
             Manager
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
         if (currentItem.ownership_id)
-          return <div className="ml-2">{row.getValue("ownership_name")}</div>
+          return <div className="ml-2">{row.getValue("ownership_name")}</div>;
       },
     },
 
@@ -197,7 +197,7 @@ export default function ReimbursementApproval() {
             Submitted By
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">{row.getValue("submitted_by_name")}</div>
@@ -216,7 +216,7 @@ export default function ReimbursementApproval() {
             City
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("city")}</div>,
     },
@@ -232,7 +232,7 @@ export default function ReimbursementApproval() {
             Amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -249,7 +249,7 @@ export default function ReimbursementApproval() {
             Description
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
@@ -258,9 +258,9 @@ export default function ReimbursementApproval() {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const currentItem = row.original
-        const isVerifying = selectedItem === currentItem?.id
-        const isDeleting = deleteItem === currentItem?.id
+        const currentItem = row.original;
+        const isVerifying = selectedItem === currentItem?.id;
+        const isDeleting = deleteItem === currentItem?.id;
 
         return (
           <div className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 shadow-sm">
@@ -271,8 +271,8 @@ export default function ReimbursementApproval() {
               disabled={isVerifying || isDeleting}
               aria-label="Verify reimbursement"
               onClick={(e) => {
-                e.stopPropagation()
-                handleVerify(currentItem?.id)
+                e.stopPropagation();
+                handleVerify(currentItem?.id);
               }}
             >
               {isVerifying ? (
@@ -290,8 +290,8 @@ export default function ReimbursementApproval() {
               disabled={isDeleting || isVerifying}
               aria-label="Delete reimbursement"
               onClick={(e) => {
-                e.stopPropagation()
-                handleDelete(currentItem?.id)
+                e.stopPropagation();
+                handleDelete(currentItem?.id);
               }}
             >
               {isDeleting ? (
@@ -302,58 +302,58 @@ export default function ReimbursementApproval() {
               Delete
             </Button>
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleVerify(id: number) {
-    if (!id) return
+    if (!id) return;
 
-    setSelectedItem(id)
+    setSelectedItem(id);
     try {
       await axios.put(`/${userID}/reimbursement/${id}`, {
         verified: true,
-      })
+      });
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      await fetchData(startDate, endDate)
+        .toISOString();
+      await fetchData(startDate, endDate);
     } finally {
-      setSelectedItem(null)
+      setSelectedItem(null);
     }
   }
 
   async function handleDelete(id: number) {
-    if (!id) return
+    if (!id) return;
 
-    setDeleteItem(id)
+    setDeleteItem(id);
     try {
-      await axios.delete(`/${userID}/reimbursement/${id}`)
+      await axios.delete(`/${userID}/reimbursement/${id}`);
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      await fetchData(startDate, endDate)
+        .toISOString();
+      await fetchData(startDate, endDate);
     } finally {
-      setDeleteItem(null)
+      setDeleteItem(null);
     }
   }
 
@@ -411,28 +411,28 @@ export default function ReimbursementApproval() {
           columns={columns}
           data={data}
           onRowClick={(val) => {
-            setImageURL(val)
-            setVisible(true)
+            setImageURL(val);
+            setVisible(true);
           }}
           filter
           reset
           resetLoading={resetLoading}
           onResetPress={async () => {
-            setResetLoading(true)
+            setResetLoading(true);
             const startDate = momentT
               .tz(TIMEZONE)
               .startOf("month")
               .startOf("day")
               .utc()
-              .toISOString()
+              .toISOString();
             const endDate = momentT
               .tz(TIMEZONE)
               .endOf("month")
               .endOf("day")
               .utc()
-              .toISOString()
-            await fetchData(startDate, endDate)
-            setResetLoading(false)
+              .toISOString();
+            await fetchData(startDate, endDate);
+            setResetLoading(false);
           }}
           onFilterPress={() => setFilterVisible(true)}
         />
@@ -442,7 +442,7 @@ export default function ReimbursementApproval() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user)
+          await fetchData(val.start, val.end, val.user);
         }}
       />
       <ImageSheet
@@ -453,13 +453,13 @@ export default function ReimbursementApproval() {
         submittedBy={imageURL?.submitted_by_name || null}
         id={imageURL?.id || null}
         onRefresh={async (id) => {
-          const tempData = [...data.filter((item) => item.id !== id)]
-          setData([...tempData])
-          return true
+          const tempData = [...data.filter((item) => item.id !== id)];
+          setData([...tempData]);
+          return true;
         }}
       />
     </div>
-  )
+  );
 }
 
 function ApprovalMetric({
@@ -467,9 +467,9 @@ function ApprovalMetric({
   label,
   value,
 }: {
-  icon: React.ReactNode
-  label: string
-  value: string | number
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
@@ -481,7 +481,7 @@ function ApprovalMetric({
         <span className="truncate text-sm font-bold">{value}</span>
       </div>
     </div>
-  )
+  );
 }
 const ImageSheet = ({
   visible,
@@ -492,30 +492,30 @@ const ImageSheet = ({
   id,
   onRefresh,
 }: {
-  visible: boolean
-  onClose: () => void
-  img: string | null
-  submittedBy: string | null
-  description: string | null
-  id: number | null
-  onRefresh: (id: number) => void
+  visible: boolean;
+  onClose: () => void;
+  img: string | null;
+  submittedBy: string | null;
+  description: string | null;
+  id: number | null;
+  onRefresh: (id: number) => void;
 }) => {
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const handleClose = useCallback(() => {
-    onClose()
-  }, [onClose])
+    onClose();
+  }, [onClose]);
 
   async function handleDelete() {
-    if (!id) return
+    if (!id) return;
 
     try {
-      await axios.delete(`/${userID}/reimbursement/${id}`)
-      onRefresh(id)
+      await axios.delete(`/${userID}/reimbursement/${id}`);
+      onRefresh(id);
     } finally {
-      setDeleteLoading(false)
-      handleClose()
+      setDeleteLoading(false);
+      handleClose();
     }
   }
 
@@ -578,9 +578,9 @@ const ImageSheet = ({
                 // e.stopPropagation()
                 // setSelectedCustomerId(currentItem?.id);
                 // setShowConfirmation(true);
-                if (!id) return
-                setDeleteLoading(true)
-                handleDelete()
+                if (!id) return;
+                setDeleteLoading(true);
+                handleDelete();
               }}
             >
               {deleteLoading ? (
@@ -594,5 +594,5 @@ const ImageSheet = ({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};

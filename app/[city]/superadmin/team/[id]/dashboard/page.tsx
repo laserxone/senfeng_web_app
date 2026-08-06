@@ -1,29 +1,29 @@
-import AfterSalesDashboardNew from "@/components/features/aftersales/AfterSalesDashboardNew"
-import CRMDashboard from "@/components/features/dashboards/crm-dashboard"
-import CRMDashboardPage from "@/components/page-compositions/dashboards/crm-dashboard"
-import DealerDashboard from "@/components/page-compositions/dashboards/dealer-dashboard"
-import EngineerDashboard from "@/components/page-compositions/dashboards/engineer-deashboard"
-import ManagerDashboard from "@/components/page-compositions/dashboards/manager-dashboard"
-import SalesDashboardPage from "@/components/page-compositions/dashboards/sales-dashboard"
-import SMMDashboard from "@/components/page-compositions/dashboards/smm-dashboard"
-import StoreManagerDashboard from "@/components/page-compositions/dashboards/store-dashboard"
+import AfterSalesDashboardNew from "@/components/features/aftersales/AfterSalesDashboardNew";
+import CRMDashboard from "@/components/features/dashboards/crm-dashboard";
+import CRMDashboardPage from "@/components/page-compositions/dashboards/crm-dashboard";
+import DealerDashboard from "@/components/page-compositions/dashboards/dealer-dashboard";
+import EngineerDashboard from "@/components/page-compositions/dashboards/engineer-deashboard";
+import ManagerDashboard from "@/components/page-compositions/dashboards/manager-dashboard";
+import SalesDashboardPage from "@/components/page-compositions/dashboards/sales-dashboard";
+import SMMDashboard from "@/components/page-compositions/dashboards/smm-dashboard";
+import StoreManagerDashboard from "@/components/page-compositions/dashboards/store-dashboard";
 
 type PageProps = {
   params: Promise<{
-    id: string
-  }>
+    id: string;
+  }>;
   searchParams: Promise<{
-    designation?: string
-    admin: string
-  }>
-}
+    designation?: string;
+    admin: string;
+  }>;
+};
 
 export default async function Page({ params, searchParams }: PageProps) {
-  const { id } = await params
-  const { designation, admin } = await searchParams
+  const { id } = await params;
+  const { designation, admin } = await searchParams;
 
   if (!id || !designation) {
-    return <div>Dashboard information is missing</div>
+    return <div>Dashboard information is missing</div>;
   }
 
   return (
@@ -48,5 +48,5 @@ export default async function Page({ params, searchParams }: PageProps) {
       )}
       {designation === "Dealer" && <DealerDashboard id={id as string} />}
     </>
-  )
+  );
 }

@@ -4,21 +4,21 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useContext, useState } from "react"
-import ChequeCredit from "./cheque-credit"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import moment from "moment"
-import { UploadImage } from "@/lib/uploadFunction"
-import axios from "@/lib/axios"
-import useUserDetail from "@/hooks/use-user-detail"
-import Spinner from "@/components/ui/spinner"
-import { ChequeProp } from "@/lib/types"
-import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase"
-import { AlertCircle, CreditCard, ShieldCheck } from "lucide-react"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useContext, useState } from "react";
+import ChequeCredit from "./cheque-credit";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import moment from "moment";
+import { UploadImage } from "@/lib/uploadFunction";
+import axios from "@/lib/axios";
+import useUserDetail from "@/hooks/use-user-detail";
+import Spinner from "@/components/ui/spinner";
+import { ChequeProp } from "@/lib/types";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { AlertCircle, CreditCard, ShieldCheck } from "lucide-react";
 
 export default function AddCheque({
   visible,
@@ -27,35 +27,35 @@ export default function AddCheque({
   customer_id,
   onRefresh,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  saleID: number | string
-  customer_id?: number
-  onRefresh: () => Promise<void>
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  saleID: number | string;
+  customer_id?: number;
+  onRefresh: () => Promise<void>;
 }) {
-  const [total, setTotal] = useState<ChequeProp[]>([])
-  const [value, setValue] = useState<string>()
-  const [errors, setErrors] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const { userID } = useUserDetail()
+  const [total, setTotal] = useState<ChequeProp[]>([]);
+  const [value, setValue] = useState<string>();
+  const [errors, setErrors] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const { userID } = useUserDetail();
 
   async function handleSubmit() {
-    setErrors(null)
-    const newErrors = []
+    setErrors(null);
+    const newErrors = [];
 
     total.forEach((item, index) => {
-      if (!item.date) newErrors.push(`Row ${index + 1}: Date is missing`)
-      if (!item.amount) newErrors.push(`Row ${index + 1}: Amount is missing`)
-      if (!item.img) newErrors.push(`Row ${index + 1}: Image is missing`)
-    })
+      if (!item.date) newErrors.push(`Row ${index + 1}: Date is missing`);
+      if (!item.amount) newErrors.push(`Row ${index + 1}: Amount is missing`);
+      if (!item.img) newErrors.push(`Row ${index + 1}: Image is missing`);
+    });
 
     if (newErrors.length > 0) {
-      setErrors("ALL FIELDS REQUIRED")
-      return
+      setErrors("ALL FIELDS REQUIRED");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await Promise.all(
@@ -64,23 +64,23 @@ export default function AddCheque({
             OfficeState.value.data
           }/customer/${customer_id}/machine/${saleID}/installments/${moment()
             .valueOf()
-            .toString()}_${idx}.png`
-          await UploadImage(item.img, name)
+            .toString()}_${idx}.png`;
+          await UploadImage(item.img, name);
           return axios.post(`/${userID}/installments`, {
             date: item.date,
             image: name,
             amount: item.amount,
             sale_id: saleID,
-          })
-        })
-      )
-      onRefresh()
-      TriggerFirebaseForChequeAlerts()
+          });
+        }),
+      );
+      onRefresh();
+      TriggerFirebaseForChequeAlerts();
     } catch (error) {
-      console.log(error)
-      setErrors("Something went wrong while saving installments.")
+      console.log(error);
+      setErrors("Something went wrong while saving installments.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -137,5 +137,5 @@ export default function AddCheque({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

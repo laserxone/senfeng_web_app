@@ -1,64 +1,65 @@
-"use client"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import { Resume, ResumesResponse } from "@/lib/types"
-import axios from "axios"
-import { BriefcaseBusiness, FileText, Search, UsersRound } from "lucide-react"
-import moment from "moment"
-import { useEffect, useState, type ElementType } from "react"
-import ResumesTable from "./resumes-table"
+"use client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import { Resume, ResumesResponse } from "@/lib/types";
+import axios from "axios";
+import { BriefcaseBusiness, FileText, Search, UsersRound } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState, type ElementType } from "react";
+import ResumesTable from "./resumes-table";
 
 export default function CareerPage() {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<ResumesResponse | null>(null)
-  const [search, setSearch] = useState("")
-  const [loading, setLoading] = useState(false)
-  const debouncedSearch = useDebounce(search, 300)
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<ResumesResponse | null>(null);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await axios.get("/api/careers/applications")
+      const res = await axios.get("/api/careers/applications");
       const updatedData = res.data?.resumes?.map((resume: Resume) => ({
         ...resume,
         status: moment(resume.created_at).isBefore(moment().subtract(1, "week"))
           ? "old"
           : resume.status,
-      }))
+      }));
 
-      setData({ ...res.data, resumes: updatedData })
+      setData({ ...res.data, resumes: updatedData });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const filteredData = data?.resumes?.filter((item) => {
-    const search = debouncedSearch.toLowerCase()
+    const search = debouncedSearch.toLowerCase();
 
     return Object.values(item).some((value) => {
       if (typeof value === "object" && value !== null) {
         return Object.values(value).some((nestedValue) =>
-          String(nestedValue).toLowerCase().includes(search)
-        )
+          String(nestedValue).toLowerCase().includes(search),
+        );
       }
 
-      return String(value).toLowerCase().includes(search)
-    })
-  })
+      return String(value).toLowerCase().includes(search);
+    });
+  });
 
-  const totalResumes = data?.resumes?.length ?? 0
-  const withCv = data?.resumes?.filter((item) => item.cvDownloadUrl).length ?? 0
+  const totalResumes = data?.resumes?.length ?? 0;
+  const withCv =
+    data?.resumes?.filter((item) => item.cvDownloadUrl).length ?? 0;
   const positions = new Set(
-    data?.resumes?.map((item) => item.position_applied_for).filter(Boolean)
-  ).size
+    data?.resumes?.map((item) => item.position_applied_for).filter(Boolean),
+  ).size;
 
   return (
     <div className="flex flex-1 flex-col gap-4 pb-4">
@@ -135,7 +136,7 @@ export default function CareerPage() {
         loading={loading}
       />
     </div>
-  )
+  );
 }
 
 function CareerStatCard({
@@ -144,10 +145,10 @@ function CareerStatCard({
   icon: Icon,
   iconClassName,
 }: {
-  title: string
-  value: number
-  icon: ElementType
-  iconClassName: string
+  title: string;
+  value: number;
+  icon: ElementType;
+  iconClassName: string;
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
@@ -159,5 +160,5 @@ function CareerStatCard({
         <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
-  )
+  );
 }

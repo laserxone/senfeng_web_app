@@ -1,66 +1,66 @@
-"use client"
-import { TIMEZONE } from "@/constants/data"
-import { ArrowUpDown, BadgeCheck, CircleDashed, ListTodo } from "lucide-react"
+"use client";
+import { TIMEZONE } from "@/constants/data";
+import { ArrowUpDown, BadgeCheck, CircleDashed, ListTodo } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { useCallback, useEffect, useState } from "react"
+import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useState } from "react";
 
-import PageTable from "@/components/shared/tables/app-table"
+import PageTable from "@/components/shared/tables/app-table";
 
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { TaskProps } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import moment from "moment"
-import momentT from "moment-timezone"
-import TaskDetail from "./task-detail"
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { TaskProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import moment from "moment";
+import momentT from "moment-timezone";
+import TaskDetail from "./task-detail";
 
 export default function TaskEmployee({ id }: { id: number | string }) {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<TaskProps[]>([])
-  const [visible, setVisible] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null)
-  const [filterVisible, setFilterVisible] = useState(false)
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<TaskProps[]>([]);
+  const [visible, setVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
+  const [filterVisible, setFilterVisible] = useState(false);
 
   const fetchData = useCallback(
     async (
       taskUserId: number | string,
       start_date?: string,
-      end_date?: string
+      end_date?: string,
     ) => {
       try {
         const query =
           start_date && end_date
             ? `?start_date=${encodeURIComponent(start_date)}&end_date=${encodeURIComponent(end_date)}`
-            : ""
-        console.log(query)
-        const response = await axios.get(`/${taskUserId}/task${query}`)
+            : "";
+        console.log(query);
+        const response = await axios.get(`/${taskUserId}/task${query}`);
 
         const apiData = response.data.map((item: TaskProps) => ({
           ...item,
           created_at_time: item.created_at,
-        }))
+        }));
 
-        setData(apiData)
+        setData(apiData);
       } catch {
         // The existing task list keeps its current data when refresh fails.
       }
     },
-    []
-  )
+    [],
+  );
 
   useEffect(() => {
     if (id) {
-      const taskId = new URLSearchParams(window.location.search).get("t")
+      const taskId = new URLSearchParams(window.location.search).get("t");
       if (taskId) {
-        const start = new URLSearchParams(window.location.search).get("start")
-        const end = new URLSearchParams(window.location.search).get("end")
+        const start = new URLSearchParams(window.location.search).get("start");
+        const end = new URLSearchParams(window.location.search).get("end");
         queueMicrotask(
-          () => void fetchData(id, start ?? undefined, end ?? undefined)
-        )
-        return
+          () => void fetchData(id, start ?? undefined, end ?? undefined),
+        );
+        return;
       }
 
       const startDate = momentT
@@ -68,58 +68,58 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      queueMicrotask(() => void fetchData(id, startDate, endDate))
+        .toISOString();
+      queueMicrotask(() => void fetchData(id, startDate, endDate));
     }
-  }, [fetchData, id])
+  }, [fetchData, id]);
 
   function clearUrl() {
-    const url = new URL(window.location.href)
-    url.searchParams.delete("t")
-    url.searchParams.delete("start")
-    url.searchParams.delete("end")
-    url.hash = ""
-    window.history.replaceState({}, "", url)
+    const url = new URL(window.location.href);
+    url.searchParams.delete("t");
+    url.searchParams.delete("start");
+    url.searchParams.delete("end");
+    url.hash = "";
+    window.history.replaceState({}, "", url);
   }
 
   const updateTaskQuery = useCallback((taskId?: string | number) => {
-    const url = new URL(window.location.href)
+    const url = new URL(window.location.href);
 
     if (taskId !== undefined) {
-      url.searchParams.set("t", String(taskId))
-      window.history.pushState({}, "", url)
+      url.searchParams.set("t", String(taskId));
+      window.history.pushState({}, "", url);
     } else {
-      url.searchParams.delete("t")
-      window.history.replaceState({}, "", url)
+      url.searchParams.delete("t");
+      window.history.replaceState({}, "", url);
     }
 
-    window.dispatchEvent(new PopStateEvent("popstate"))
-  }, [])
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   useEffect(() => {
     const syncTaskFromUrl = () => {
-      const taskId = new URLSearchParams(window.location.search).get("t")
+      const taskId = new URLSearchParams(window.location.search).get("t");
       const task = taskId
         ? data.find((item) => String(item.id) === taskId)
-        : undefined
+        : undefined;
 
-      setSelectedTask(task || null)
-      setVisible(Boolean(task))
-    }
+      setSelectedTask(task || null);
+      setVisible(Boolean(task));
+    };
 
-    syncTaskFromUrl()
-    window.addEventListener("popstate", syncTaskFromUrl)
+    syncTaskFromUrl();
+    window.addEventListener("popstate", syncTaskFromUrl);
 
     return () => {
-      window.removeEventListener("popstate", syncTaskFromUrl)
-    }
-  }, [data])
+      window.removeEventListener("popstate", syncTaskFromUrl);
+    };
+  }, [data]);
 
   const columns: ColumnDef<TaskProps>[] = [
     {
@@ -134,7 +134,7 @@ export default function TaskEmployee({ id }: { id: number | string }) {
             Status
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2 flex items-center gap-1">
@@ -161,7 +161,7 @@ export default function TaskEmployee({ id }: { id: number | string }) {
             Task Name
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("task_name")}</div>,
     },
@@ -178,7 +178,7 @@ export default function TaskEmployee({ id }: { id: number | string }) {
             Assigned To
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("assigned_to_name")}</div>,
     },
@@ -195,7 +195,7 @@ export default function TaskEmployee({ id }: { id: number | string }) {
             Assign Time
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -219,7 +219,7 @@ export default function TaskEmployee({ id }: { id: number | string }) {
             Assign Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -243,13 +243,13 @@ export default function TaskEmployee({ id }: { id: number | string }) {
     //     );
     //   },
     // },
-  ]
+  ];
 
   async function handleUpdateMark() {
-    const taskId = new URLSearchParams(window.location.search).get("t")
+    const taskId = new URLSearchParams(window.location.search).get("t");
     if (taskId) {
-      await fetchData(userID)
-      return
+      await fetchData(userID);
+      return;
     }
 
     const startDate = momentT
@@ -257,14 +257,14 @@ export default function TaskEmployee({ id }: { id: number | string }) {
       .startOf("month")
       .startOf("day")
       .utc()
-      .toISOString()
+      .toISOString();
     const endDate = momentT
       .tz(TIMEZONE)
       .endOf("month")
       .endOf("day")
       .utc()
-      .toISOString()
-    await fetchData(userID, startDate, endDate)
+      .toISOString();
+    await fetchData(userID, startDate, endDate);
   }
 
   return (
@@ -297,15 +297,15 @@ export default function TaskEmployee({ id }: { id: number | string }) {
                 .startOf("month")
                 .startOf("day")
                 .utc()
-                .toISOString()
+                .toISOString();
               const endDate = momentT
                 .tz(TIMEZONE)
                 .endOf("month")
                 .endOf("day")
                 .utc()
-                .toISOString()
+                .toISOString();
 
-              await fetchData(userID, startDate, endDate)
+              await fetchData(userID, startDate, endDate);
             }}
             user_id={userID}
           />
@@ -345,7 +345,7 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         columns={columns}
         data={data}
         onRowClick={(val) => {
-          updateTaskQuery(val.id)
+          updateTaskQuery(val.id);
         }}
         filter
         onFilterPress={() => setFilterVisible(true)}
@@ -358,12 +358,12 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         detail={selectedTask}
         visible={visible}
         onClose={(nextVisible) => {
-          setVisible(nextVisible)
-          if (!nextVisible) clearUrl()
+          setVisible(nextVisible);
+          if (!nextVisible) clearUrl();
         }}
         onMark={async () => {
-          clearUrl
-          await handleUpdateMark()
+          clearUrl;
+          await handleUpdateMark();
         }}
       />
 
@@ -371,12 +371,12 @@ export default function TaskEmployee({ id }: { id: number | string }) {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          clearUrl()
-          await fetchData(id, val.start, val.end)
+          clearUrl();
+          await fetchData(id, val.start, val.end);
         }}
       />
     </div>
-  )
+  );
 }
 
 function Metric({
@@ -384,9 +384,9 @@ function Metric({
   label,
   value,
 }: {
-  icon: React.ReactNode
-  label: string
-  value: number
+  icon: React.ReactNode;
+  label: string;
+  value: number;
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
@@ -398,5 +398,5 @@ function Metric({
         <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
-  )
+  );
 }

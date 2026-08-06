@@ -1,26 +1,26 @@
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { DateRange } from "react-day-picker"
+} from "@/components/ui/popover";
+import { DateRange } from "react-day-picker";
 
 const AppCalendarRange = ({
   date,
   onChange,
   min = new Date("1900-01-01"),
 }: {
-  date?: DateRange | null
-  onChange: (val: DateRange | undefined) => void
-  min?: Date
+  date?: DateRange | null;
+  onChange: (val: DateRange | undefined) => void;
+  min?: Date;
 }) => {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   return (
     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
       <PopoverTrigger asChild>
@@ -28,7 +28,7 @@ const AppCalendarRange = ({
           variant={"outline"}
           className={cn(
             "w-full pl-3 text-left font-normal",
-            !date && "text-muted-foreground"
+            !date && "text-muted-foreground",
           )}
         >
           {date?.from && date?.to ? (
@@ -60,7 +60,7 @@ const AppCalendarRange = ({
             //   now.getMilliseconds()
             // );
             // onChange(updatedDate);
-            onChange(e)
+            onChange(e);
             // console.log(e)
             // if (e?.to) {
             //   setIsCalendarOpen(false);
@@ -71,7 +71,7 @@ const AppCalendarRange = ({
         />
       </PopoverContent>
     </Popover>
-  )
-}
+  );
+};
 
-export default AppCalendarRange
+export default AppCalendarRange;

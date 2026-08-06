@@ -1,65 +1,65 @@
-"use client"
+"use client";
 
-import { storage } from "@/config/firebase"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { UserMap } from "@/lib/types"
-import { GoogleMap, InfoWindow, OverlayView } from "@react-google-maps/api"
-import { getDownloadURL, ref } from "firebase/storage"
-import moment from "moment"
-import { useTheme } from "next-themes"
-import { useParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UserMap } from "@/lib/types";
+import { GoogleMap, InfoWindow, OverlayView } from "@react-google-maps/api";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
+import { useTheme } from "next-themes";
+import { useParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MapComponent = () => {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<UserMap[]>([])
-  const { theme } = useTheme()
-  const { city } = useParams()
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<UserMap[]>([]);
+  const { theme } = useTheme();
+  const { city } = useParams();
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
-    const response = await axios.get(`/${userID}/locations`)
+    const response = await axios.get(`/${userID}/locations`);
 
     const resolvedData = await Promise.all(
       response.data.map(async (item: UserMap) => {
         if (item?.user_dp && !item.user_dp?.includes("http")) {
-          const storageRef = ref(storage, item?.user_dp)
-          const url = await getDownloadURL(storageRef)
-          return { ...item, user_dp: url }
+          const storageRef = ref(storage, item?.user_dp);
+          const url = await getDownloadURL(storageRef);
+          return { ...item, user_dp: url };
         }
-        return item
-      })
-    )
+        return item;
+      }),
+    );
 
-    setData(resolvedData)
+    setData(resolvedData);
   }
 
   const defaultMapContainerStyle = {
     width: "100%",
     height: "100%",
     borderRadius: "15px 0px 0px 15px",
-  }
+  };
 
   const defaultMapCenter = useMemo(() => {
     switch (city) {
       case "lahore":
-        return { lat: 31.4868877, lng: 74.3129694 }
+        return { lat: 31.4868877, lng: 74.3129694 };
       case "karachi":
-        return { lat: 24.8607, lng: 67.0011 }
+        return { lat: 24.8607, lng: 67.0011 };
       case "islamabad":
-        return { lat: 33.6844, lng: 73.0479 }
+        return { lat: 33.6844, lng: 73.0479 };
       default:
-        return { lat: 31.4868877, lng: 74.3129694 }
+        return { lat: 31.4868877, lng: 74.3129694 };
     }
-  }, [city])
-  const defaultMapZoom = 11.65
+  }, [city]);
+  const defaultMapZoom = 11.65;
 
   const [defaultMapOptions, setDefaultMapOptions] = useState({
     zoomControl: true,
@@ -67,25 +67,27 @@ const MapComponent = () => {
     gestureHandling: "auto",
     mapTypeId: "roadmap",
     colorScheme: "DARK",
-  })
+  });
 
   useEffect(() => {
     if (theme === "dark") {
       setDefaultMapOptions((prevState) => ({
         ...prevState,
         colorScheme: "DARK",
-      }))
+      }));
     } else {
       setDefaultMapOptions((prevState) => ({
         ...prevState,
         colorScheme: "LIGHT",
-      }))
+      }));
     }
-  }, [theme])
+  }, [theme]);
 
   const RenderMap = useCallback(
     ({ list }: { list: UserMap[] }) => {
-      const [selectedMarker, setSelectedMarker] = useState<UserMap | null>(null)
+      const [selectedMarker, setSelectedMarker] = useState<UserMap | null>(
+        null,
+      );
       return (
         <GoogleMap
           mapContainerStyle={defaultMapContainerStyle}
@@ -125,7 +127,7 @@ const MapComponent = () => {
                         <div>
                           Last update:{" "}
                           {moment(selectedMarker?.created_at).format(
-                            "YYYY-MM-DD hh:mm A"
+                            "YYYY-MM-DD hh:mm A",
                           )}
                         </div>
                       </div>
@@ -134,7 +136,7 @@ const MapComponent = () => {
                   <Avatar
                     onClick={() =>
                       setSelectedMarker(
-                        item?.id == selectedMarker?.id ? null : item
+                        item?.id == selectedMarker?.id ? null : item,
                       )
                     }
                     className="h-10 w-10 cursor-pointer"
@@ -148,19 +150,19 @@ const MapComponent = () => {
                   </Avatar>
                 </div>
               </OverlayView>
-            )
+            );
           })}
         </GoogleMap>
-      )
+      );
     },
-    [defaultMapOptions]
-  )
+    [defaultMapOptions],
+  );
 
   return (
     <div className="w-full">
       <RenderMap list={data} />
     </div>
-  )
-}
+  );
+};
 
-export { MapComponent }
+export { MapComponent };

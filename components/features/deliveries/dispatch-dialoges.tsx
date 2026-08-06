@@ -1,11 +1,11 @@
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Button } from "@/components/ui/button"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { useContext, useEffect, useState } from "react"
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { useContext, useEffect, useState } from "react";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 import {
   Dialog,
@@ -13,34 +13,34 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
-import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   TriggerFirebaseForMachine,
   TriggerFirebaseForPendingPayments,
-} from "@/lib/triggerFirebase"
-import { DeliveryInformation, DeliveryType, DispatchPdf } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { MapPinCheck, Plus, Trash2 } from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { Controller, useForm } from "react-hook-form"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { SelectOrderNo } from "@/components/shared/search/select-orderno"
+} from "@/lib/triggerFirebase";
+import { DeliveryInformation, DeliveryType, DispatchPdf } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { MapPinCheck, Plus, Trash2 } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { Controller, useForm } from "react-hook-form";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { SelectOrderNo } from "@/components/shared/search/select-orderno";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 const dispatchSchema = z.object({
   orderNo: z
@@ -55,9 +55,9 @@ const dispatchSchema = z.object({
   image: z.string().min(1, "Image is required"),
   transportation: z.coerce.number<number>().min(0, "Amount is required"),
   note: z.string().optional(),
-})
+});
 
-type FormValues = z.infer<typeof dispatchSchema>
+type FormValues = z.infer<typeof dispatchSchema>;
 
 export function DispatchOrderEditDialog({
   open,
@@ -65,21 +65,21 @@ export function DispatchOrderEditDialog({
   onRefresh,
   data,
 }: {
-  open: boolean
-  onClose: () => void
-  onRefresh: () => Promise<void>
-  data: DeliveryType | null
+  open: boolean;
+  onClose: () => void;
+  onRefresh: () => Promise<void>;
+  data: DeliveryType | null;
 }) {
-  const [loading, setLoading] = useState(false)
-  const [checklistLoading, setChecklistLoading] = useState(false)
-  const [checklist, setChecklist] = useState<Record<string, any>>({})
-  const [progress, setProgress] = useState(0)
-  const { userID } = useUserDetail()
-  const [originalImage, setOriginalImage] = useState(null)
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [checklistLoading, setChecklistLoading] = useState(false);
+  const [checklist, setChecklist] = useState<Record<string, any>>({});
+  const [progress, setProgress] = useState(0);
+  const { userID } = useUserDetail();
+  const [originalImage, setOriginalImage] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedOrderNo, setSelectedOrderNo] = useState<OrderNoTypes | null>(
-    null
-  )
+    null,
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(dispatchSchema),
@@ -95,17 +95,17 @@ export function DispatchOrderEditDialog({
       transportation: 0,
       transporter: "",
     },
-  })
+  });
 
   useEffect(() => {
     if (userID && open) {
-      setData()
+      setData();
     }
-  }, [userID, open])
+  }, [userID, open]);
 
   async function setData() {
-    if (!userID) return
-    const dispatchInformation = data?.dispatch_information
+    if (!userID) return;
+    const dispatchInformation = data?.dispatch_information;
     if (dispatchInformation) {
       form.reset({
         dispatchTime: dispatchInformation?.other_information?.dispatchTime,
@@ -117,22 +117,22 @@ export function DispatchOrderEditDialog({
         note: dispatchInformation?.other_information?.note,
         image: dispatchInformation?.other_information?.image,
         transporter: dispatchInformation?.other_information?.transporter ?? "",
-      })
-      setOriginalImage(dispatchInformation?.other_information?.image)
-      setChecklist(dispatchInformation?.checklist)
+      });
+      setOriginalImage(dispatchInformation?.other_information?.image);
+      setChecklist(dispatchInformation?.checklist);
     }
   }
 
   function handleChnage(key: string, val: string) {
-    setChecklist((prev) => ({ ...prev, [key]: val }))
+    setChecklist((prev) => ({ ...prev, [key]: val }));
   }
 
   async function handleSubmit(values: FormValues) {
-    if (!data) return
-    setLoading(true)
+    if (!data) return;
+    setLoading(true);
 
     try {
-      let name = data?.dispatch_information?.other_information?.image
+      let name = data?.dispatch_information?.other_information?.image;
       if (
         values.image !== data?.dispatch_information?.other_information?.image
       ) {
@@ -140,8 +140,8 @@ export function DispatchOrderEditDialog({
           values.image,
           name,
           "image/png",
-          (p) => setProgress(p)
-        )
+          (p) => setProgress(p),
+        );
       }
 
       const apiData = {
@@ -166,16 +166,16 @@ export function DispatchOrderEditDialog({
           },
         },
         order_no_data: selectedOrderNo,
-      }
+      };
 
-      await axios.put(`/${userID}/delivery`, apiData)
-      TriggerFirebaseForMachine()
-      await onRefresh?.()
-      handleClose()
-      form.reset()
+      await axios.put(`/${userID}/delivery`, apiData);
+      TriggerFirebaseForMachine();
+      await onRefresh?.();
+      handleClose();
+      form.reset();
     } finally {
-      setProgress(0)
-      setLoading(false)
+      setProgress(0);
+      setLoading(false);
     }
   }
 
@@ -187,13 +187,13 @@ export function DispatchOrderEditDialog({
     "tod",
     "pin",
     "note",
-  ]
+  ];
 
   function handleClose() {
-    setLoading(false)
-    setChecklistLoading(false)
-    setChecklist({})
-    onClose()
+    setLoading(false);
+    setChecklistLoading(false);
+    setChecklist({});
+    onClose();
     form.reset({
       orderNo: [""],
       driverName: "",
@@ -205,19 +205,19 @@ export function DispatchOrderEditDialog({
       note: "",
       transportation: 0,
       transporter: "",
-    })
+    });
   }
 
   async function handleDelete() {
-    if (!userID || !data?.id) return
-    setDeleteLoading(true)
+    if (!userID || !data?.id) return;
+    setDeleteLoading(true);
     try {
-      await axios.delete(`/${userID}/delivery?id=${data.id}`)
-      TriggerFirebaseForMachine()
-      await onRefresh?.()
-      handleClose()
+      await axios.delete(`/${userID}/delivery?id=${data.id}`);
+      TriggerFirebaseForMachine();
+      await onRefresh?.();
+      handleClose();
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
@@ -273,14 +273,14 @@ export function DispatchOrderEditDialog({
                                           onChange={(e) => {
                                             const updated = [
                                               ...(field.value || []),
-                                            ]
-                                            updated[index] = e.target.value
-                                            field.onChange(updated)
+                                            ];
+                                            updated[index] = e.target.value;
+                                            field.onChange(updated);
                                           }}
                                         />
                                       </div>
                                     </div>
-                                  )
+                                  ),
                                 )}
                               </div>
                             ) : (
@@ -297,10 +297,10 @@ export function DispatchOrderEditDialog({
                                           onReturnData={(e) => {
                                             const updated = [
                                               ...(field.value || []),
-                                            ]
-                                            updated[index] = e.machine_serial
-                                            field.onChange(updated)
-                                            setSelectedOrderNo(e)
+                                            ];
+                                            updated[index] = e.machine_serial;
+                                            field.onChange(updated);
+                                            setSelectedOrderNo(e);
                                           }}
                                         />
                                       </div>
@@ -321,7 +321,7 @@ export function DispatchOrderEditDialog({
                                     <Trash2 className="h-4 w-4" />
                                   </Button> */}
                                     </div>
-                                  )
+                                  ),
                                 )}
                               </div>
                             )}
@@ -485,8 +485,8 @@ export function DispatchOrderEditDialog({
                               dbImage={originalImage}
                               value={field.value}
                               onDrop={(file) => {
-                                field.onChange(file)
-                                setOriginalImage(null)
+                                field.onChange(file);
+                                setOriginalImage(null);
                               }}
                               title="Click to upload"
                               subheading="or drag and drop"
@@ -630,12 +630,12 @@ export function DispatchOrderEditDialog({
                       <p className="font-medium break-words">
                         {key === "tod"
                           ? moment(
-                              new Date(data?.delivery_information[key])
+                              new Date(data?.delivery_information[key]),
                             ).format("YYYY-MM-DD hh:mm A")
                           : String(
                               data?.delivery_information[
                                 key as keyof DeliveryInformation
-                              ]
+                              ],
                             )}
                       </p>
                     </div>
@@ -651,15 +651,15 @@ export function DispatchOrderEditDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 type OrderNoTypes = {
-  id: number
-  machine_serial: string
-  search: string
-  label: string
-}
+  id: number;
+  machine_serial: string;
+  search: string;
+  label: string;
+};
 
 export function DispatchOrderDialog({
   open,
@@ -668,27 +668,27 @@ export function DispatchOrderDialog({
   data,
   openPdf,
 }: {
-  open: boolean
-  onClose: () => void
-  onRefresh: () => Promise<void>
-  data: DeliveryType | null
-  openPdf: (item: DispatchPdf) => Promise<void>
+  open: boolean;
+  onClose: () => void;
+  onRefresh: () => Promise<void>;
+  data: DeliveryType | null;
+  openPdf: (item: DispatchPdf) => Promise<void>;
 }) {
-  const [loading, setLoading] = useState(false)
-  const [checklistLoading, setChecklistLoading] = useState(false)
-  const [checklist, setChecklist] = useState<Record<string, any>>({})
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [progress, setProgress] = useState(0)
-  const { userID, name: userName } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const [checklistLoading, setChecklistLoading] = useState(false);
+  const [checklist, setChecklist] = useState<Record<string, any>>({});
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [progress, setProgress] = useState(0);
+  const { userID, name: userName } = useUserDetail();
   const [selectedOrderNo, setSelectedOrderNo] = useState<OrderNoTypes | null>(
-    null
-  )
+    null,
+  );
 
   useEffect(() => {
     if (userID && open) {
-      fetchData()
+      fetchData();
     }
-  }, [userID, open])
+  }, [userID, open]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(dispatchSchema),
@@ -704,55 +704,55 @@ export function DispatchOrderDialog({
       transportation: 0,
       transporter: "",
     },
-  })
+  });
 
   function getSerialNumbers(items: any[] = []) {
-    return items.map((item) => item.serial_no)
+    return items.map((item) => item.serial_no);
   }
 
   useEffect(() => {
     if (data && data.type === "Parts") {
-      const partsInfo = data?.parts_information
+      const partsInfo = data?.parts_information;
       if (partsInfo && Array.isArray(partsInfo)) {
-        const serialNumbers = getSerialNumbers(partsInfo)
-        form.setValue("orderNo", serialNumbers)
+        const serialNumbers = getSerialNumbers(partsInfo);
+        form.setValue("orderNo", serialNumbers);
       }
     }
-  }, [data, open])
+  }, [data, open]);
 
   async function fetchData() {
-    if (!userID) return
-    setChecklistLoading(true)
+    if (!userID) return;
+    setChecklistLoading(true);
     try {
-      const response = await axios.get(`/${userID}/settings`)
-      const apiList = response.data?.machine_checklist || {}
+      const response = await axios.get(`/${userID}/settings`);
+      const apiList = response.data?.machine_checklist || {};
       const sorted = Object.fromEntries(
-        Object.entries(apiList).sort(([a], [b]) => a.localeCompare(b))
-      )
-      setChecklist(sorted)
+        Object.entries(apiList).sort(([a], [b]) => a.localeCompare(b)),
+      );
+      setChecklist(sorted);
     } finally {
-      setChecklistLoading(false)
+      setChecklistLoading(false);
     }
   }
 
   function handleChnage(key: string, val: string) {
-    setChecklist((prev) => ({ ...prev, [key]: val }))
+    setChecklist((prev) => ({ ...prev, [key]: val }));
   }
 
   async function handleSubmit(values: FormValues) {
-    if (!data) return
-    setLoading(true)
+    if (!data) return;
+    setLoading(true);
 
     try {
-      const name = `${OfficeState.value.data}/customer/${data?.customer_id}/machine/${data?.id}/dispatch/${moment().valueOf().toString()}.png`
+      const name = `${OfficeState.value.data}/customer/${data?.customer_id}/machine/${data?.id}/dispatch/${moment().valueOf().toString()}.png`;
 
       // const imgName =
       const imageRefResult = await UploadImage(
         values.image,
         name,
         "image/png",
-        (p) => setProgress(p)
-      )
+        (p) => setProgress(p),
+      );
 
       const apiData = {
         machine_id: data.id,
@@ -778,11 +778,11 @@ export function DispatchOrderDialog({
           },
         },
         order_no_data: selectedOrderNo,
-      }
+      };
 
-      await axios.post(`/${userID}/delivery`, apiData)
-      TriggerFirebaseForMachine()
-      TriggerFirebaseForPendingPayments()
+      await axios.post(`/${userID}/delivery`, apiData);
+      TriggerFirebaseForMachine();
+      TriggerFirebaseForPendingPayments();
       await openPdf({
         order_no: `${apiData?.order_no_arr?.join(" ")} - ${data?.serial_no} - ${data?.power} - ${data?.source}`,
         gate_pass: `DO-${data?.id}`,
@@ -797,12 +797,12 @@ export function DispatchOrderDialog({
         delivery_issued_by:
           apiData.dispatch_information.other_information.issuedBy,
         checklist: apiData.dispatch_information.checklist,
-      })
-      await onRefresh?.()
-      handleClose()
-      form.reset()
+      });
+      await onRefresh?.();
+      handleClose();
+      form.reset();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -814,13 +814,13 @@ export function DispatchOrderDialog({
     "tod",
     "pin",
     "note",
-  ]
+  ];
 
   function handleClose() {
-    setLoading(false)
-    setChecklistLoading(false)
-    setChecklist({})
-    onClose()
+    setLoading(false);
+    setChecklistLoading(false);
+    setChecklist({});
+    onClose();
     form.reset({
       orderNo: [""],
       driverName: "",
@@ -832,7 +832,7 @@ export function DispatchOrderDialog({
       note: "",
       transportation: 0,
       transporter: "",
-    })
+    });
   }
 
   return (
@@ -889,14 +889,14 @@ export function DispatchOrderDialog({
                                           onChange={(e) => {
                                             const updated = [
                                               ...(field.value || []),
-                                            ]
-                                            updated[index] = e.target.value
-                                            field.onChange(updated)
+                                            ];
+                                            updated[index] = e.target.value;
+                                            field.onChange(updated);
                                           }}
                                         />
                                       </div>
                                     </div>
-                                  )
+                                  ),
                                 )}
                               </div>
                             ) : (
@@ -911,13 +911,13 @@ export function DispatchOrderDialog({
                                         <SelectOrderNo
                                           value={order}
                                           onReturnData={(e) => {
-                                            console.log(e)
+                                            console.log(e);
                                             const updated = [
                                               ...(field.value || []),
-                                            ]
-                                            updated[index] = e.machine_serial
-                                            field.onChange(updated)
-                                            setSelectedOrderNo(e)
+                                            ];
+                                            updated[index] = e.machine_serial;
+                                            field.onChange(updated);
+                                            setSelectedOrderNo(e);
                                           }}
                                         />
                                       </div>
@@ -938,7 +938,7 @@ export function DispatchOrderDialog({
                                     <Trash2 className="h-4 w-4" />
                                   </Button> */}
                                     </div>
-                                  )
+                                  ),
                                 )}
                               </div>
                             )}
@@ -1243,13 +1243,13 @@ export function DispatchOrderDialog({
                           </Link>
                         ) : key === "tod" ? (
                           moment(
-                            new Date(data?.delivery_information[key])
+                            new Date(data?.delivery_information[key]),
                           ).format("YYYY-MM-DD hh:mm A")
                         ) : (
                           String(
                             data?.delivery_information[
                               key as keyof DeliveryInformation
-                            ]
+                            ],
                           )
                         )}
                       </p>
@@ -1266,5 +1266,5 @@ export function DispatchOrderDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

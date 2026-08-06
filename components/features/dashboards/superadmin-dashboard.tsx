@@ -1,27 +1,27 @@
-"use client"
-import { AreaStats } from "@/components/shared/charts/area_stats/page"
-import { BarStats } from "@/components/shared/charts/bar_stats/page"
-import { Stats } from "@/components/shared/charts/pie_stats/page"
-import { Sale } from "@/components/shared/charts/sales/page"
-import SalesTeamProgressChart from "@/components/shared/charts/sales_progress/page"
-import CustomerMap from "@/components/features/customers/components/customer-map"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
-import { PakCities } from "@/constants/data"
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import formatCurrency from "@/lib/formatCurrency"
+"use client";
+import { AreaStats } from "@/components/shared/charts/area_stats/page";
+import { BarStats } from "@/components/shared/charts/bar_stats/page";
+import { Stats } from "@/components/shared/charts/pie_stats/page";
+import { Sale } from "@/components/shared/charts/sales/page";
+import SalesTeamProgressChart from "@/components/shared/charts/sales_progress/page";
+import CustomerMap from "@/components/features/customers/components/customer-map";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PakCities } from "@/constants/data";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import formatCurrency from "@/lib/formatCurrency";
 import {
   AdminDashboard,
   AdminDashboardCustomers,
   AdminTeamTasks,
   TeamTaskForAdmin,
-} from "@/lib/types"
-import { MapProvider } from "@/providers/map-provider"
-import { OfficeContext } from "@/store/context/OfficeContext"
+} from "@/lib/types";
+import { MapProvider } from "@/providers/map-provider";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import {
   Banknote,
   CheckCircle2,
@@ -30,101 +30,101 @@ import {
   Clock3,
   MonitorCheck,
   UsersRound,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useContext, useEffect, useState } from "react"
-import { FaCashRegister } from "react-icons/fa"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useContext, useEffect, useState } from "react";
+import { FaCashRegister } from "react-icons/fa";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 export default function SuperadminDashboard() {
-  const [customers, setCustomers] = useState<AdminDashboardCustomers[]>([])
-  const [data, setData] = useState<AdminDashboard>()
-  const [loading, setLoading] = useState(false)
-  const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([])
-  const { userID } = useUserDetail()
-  const debouncedUserId = useDebounce(userID, 1000)
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [showMachinesSold, setShowMachinesSold] = useState(false)
-  const { base_route } = useUserDetail()
+  const [customers, setCustomers] = useState<AdminDashboardCustomers[]>([]);
+  const [data, setData] = useState<AdminDashboard>();
+  const [loading, setLoading] = useState(false);
+  const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([]);
+  const { userID } = useUserDetail();
+  const debouncedUserId = useDebounce(userID, 1000);
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [showMachinesSold, setShowMachinesSold] = useState(false);
+  const { base_route } = useUserDetail();
 
   useEffect(() => {
     if (debouncedUserId && OfficeState.value.data) {
-      fetchData()
+      fetchData();
     }
-  }, [debouncedUserId, OfficeState])
+  }, [debouncedUserId, OfficeState]);
 
   function fetchData() {
-    setLoading(true)
-    fetchCustomerList()
-    fetchDashboardData()
+    setLoading(true);
+    fetchCustomerList();
+    fetchDashboardData();
   }
 
   async function fetchDashboardData() {
     axios
       .get(`/${debouncedUserId}/dashboard?office=${OfficeState.value.data}`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
         if (response.data?.team_task) {
-          const today = new Date()
-          today.setHours(0, 0, 0, 0)
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
 
-          const yesterday = new Date(today)
-          yesterday.setDate(today.getDate() - 1)
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
 
-          const todayEnd = new Date(today)
-          todayEnd.setHours(23, 59, 59, 999)
+          const todayEnd = new Date(today);
+          todayEnd.setHours(23, 59, 59, 999);
 
           const splitTasksByDay = response.data.team_task.map(
             (user: { tasks: TeamTaskForAdmin[] }) => {
               const yesterdayTasks = user.tasks.filter(
                 (task: TeamTaskForAdmin) => {
-                  const createdAt = new Date(task.created_at)
-                  return createdAt >= yesterday && createdAt < today
-                }
-              )
+                  const createdAt = new Date(task.created_at);
+                  return createdAt >= yesterday && createdAt < today;
+                },
+              );
 
               const todayTasks = user.tasks.filter((task: TeamTaskForAdmin) => {
-                const createdAt = new Date(task.created_at)
-                return createdAt >= today && createdAt <= todayEnd
-              })
+                const createdAt = new Date(task.created_at);
+                return createdAt >= today && createdAt <= todayEnd;
+              });
 
               return {
                 ...user,
                 yesterdayTasks,
                 todayTasks,
-              }
-            }
-          )
+              };
+            },
+          );
 
-          setUserTaskData(splitTasksByDay)
+          setUserTaskData(splitTasksByDay);
         }
       })
       .catch((e) => console.log(e))
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   async function fetchCustomerList() {
     try {
       axios
         .get(
-          `/${debouncedUserId}/customer?map=true&office=${OfficeState.value.data}`
+          `/${debouncedUserId}/customer?map=true&office=${OfficeState.value.data}`,
         )
         .then((response) => {
-          const customerList = response.data
-          const newArray = mergeArrays(customerList, PakCities)
+          const customerList = response.data;
+          const newArray = mergeArrays(customerList, PakCities);
 
-          setCustomers(newArray)
-        })
+          setCustomers(newArray);
+        });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -132,20 +132,20 @@ export default function SuperadminDashboard() {
     return array1
       .map((obj1) => {
         const matchingCity = array2.find(
-          (obj2) => obj2?.name === obj1?.location
-        )
+          (obj2) => obj2?.name === obj1?.location,
+        );
 
         if (matchingCity) {
           return {
             ...obj1,
             latitude: matchingCity.lat,
             longitude: matchingCity.lng,
-          }
+          };
         } else {
-          return null
+          return null;
         }
       })
-      .filter(Boolean)
+      .filter(Boolean);
   }
 
   return (
@@ -435,14 +435,14 @@ export default function SuperadminDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
   const completedCount = tasks.filter(
-    (task) => task.status === "Completed"
-  ).length
-  const pendingCount = tasks.length - completedCount
+    (task) => task.status === "Completed",
+  ).length;
+  const pendingCount = tasks.length - completedCount;
 
   return (
     <Card className="w-full overflow-hidden border-border/70 bg-card shadow-sm">
@@ -477,7 +477,7 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
         ) : (
           <div className="space-y-2">
             {tasks.map((task) => {
-              const completed = task.status === "Completed"
+              const completed = task.status === "Completed";
 
               return (
                 <div
@@ -526,14 +526,14 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 function StatsCard({
   title,
@@ -543,12 +543,12 @@ function StatsCard({
   icon: Icon,
   iconClassName,
 }: {
-  title: string
-  value: React.ReactNode
-  change: string
-  loading: boolean
-  icon: React.ElementType
-  iconClassName: string
+  title: string;
+  value: React.ReactNode;
+  change: string;
+  loading: boolean;
+  icon: React.ElementType;
+  iconClassName: string;
 }) {
   return (
     <Card className="h-full shadow-sm">
@@ -578,7 +578,7 @@ function StatsCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function MiniStatsCard({
@@ -590,13 +590,13 @@ function MiniStatsCard({
   className,
   onClick,
 }: {
-  title: string
-  value: React.ReactNode
-  subtitle: string
-  loading: boolean
-  icon: React.ElementType
-  className: string
-  onClick?: () => void
+  title: string;
+  value: React.ReactNode;
+  subtitle: string;
+  loading: boolean;
+  icon: React.ElementType;
+  className: string;
+  onClick?: () => void;
 }) {
   return (
     <Card className="shadow-sm" onClick={() => onClick?.()}>
@@ -633,5 +633,5 @@ function MiniStatsCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import PageContainer from "@/components/core/layout/page-container"
-import { Separator } from "@/components/ui/separator"
+import PageContainer from "@/components/core/layout/page-container";
+import { Separator } from "@/components/ui/separator";
 
 export default function Page() {
   return (
@@ -82,5 +82,5 @@ export default function Page() {
         </section>
       </div>
     </PageContainer>
-  )
+  );
 }

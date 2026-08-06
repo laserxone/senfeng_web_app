@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ColumnDef,
@@ -13,23 +13,23 @@ import {
   SortingState,
   useReactTable,
   VisibilityState,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   Filter,
   RotateCcw,
   Search,
-} from "lucide-react"
+} from "lucide-react";
 
 import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
-} from "@radix-ui/react-icons"
+} from "@radix-ui/react-icons";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -37,8 +37,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { memo, useMemo, useState } from "react"
+} from "@/components/ui/table";
+import { memo, useMemo, useState } from "react";
 
 import {
   Select,
@@ -46,36 +46,36 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { useDebounce } from "@/hooks/use-debounce"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import exportToExcel from "@/lib/exportToExcel"
-import exportToPdf from "@/lib/exportToPdf"
-import moment from "moment"
-import ExportButton from "../exports/export-button"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import exportToExcel from "@/lib/exportToExcel";
+import exportToPdf from "@/lib/exportToPdf";
+import moment from "moment";
+import ExportButton from "../exports/export-button";
 
 type PageTableProps<T extends object> = {
-  children?: React.ReactNode
-  columns: ColumnDef<T>[]
-  data: T[]
-  pageSizeOptions?: number[]
-  totalCustomerText?: string
-  disableInput?: boolean
-  onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void
-  loading?: boolean
-  defaultPageSize?: number
-  download?: boolean
-  tableWidth?: string
-  height?: string
-  hideFooter?: boolean
-  filter?: boolean
-  reset?: boolean
-  onFilterPress?: () => void
-  onResetPress?: () => Promise<void>
-  resetLoading?: boolean
-}
+  children?: React.ReactNode;
+  columns: ColumnDef<T>[];
+  data: T[];
+  pageSizeOptions?: number[];
+  totalCustomerText?: string;
+  disableInput?: boolean;
+  onRowClick?: (row: T, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  loading?: boolean;
+  defaultPageSize?: number;
+  download?: boolean;
+  tableWidth?: string;
+  height?: string;
+  hideFooter?: boolean;
+  filter?: boolean;
+  reset?: boolean;
+  onFilterPress?: () => void;
+  onResetPress?: () => Promise<void>;
+  resetLoading?: boolean;
+};
 
 const PageTable = <T extends object>({
   children,
@@ -97,57 +97,57 @@ const PageTable = <T extends object>({
   hideFooter = false,
   resetLoading = false,
 }: PageTableProps<T>) => {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = useState({})
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(defaultPageSize)
-  const [search, setSearch] = useState("")
-  const debouncedSearch = useDebounce(search, 500)
-  const { userID } = useUserDetail()
-  const isMobile = useIsMobile()
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+  const { userID } = useUserDetail();
+  const isMobile = useIsMobile();
 
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
-  }
+  };
 
   const filteredData = useMemo(() => {
-    let filtered = data
+    let filtered = data;
     columnFilters.forEach((filter) => {
       filtered = filtered.filter((row) => {
-        const key = filter.id as keyof T
-        const cellValue = row[key]
+        const key = filter.id as keyof T;
+        const cellValue = row[key];
         return String(cellValue ?? "")
           .toLowerCase()
-          .includes(String(filter.value).toLowerCase())
-      })
-    })
+          .includes(String(filter.value).toLowerCase());
+      });
+    });
 
     if (debouncedSearch) {
       filtered = filtered.filter((row) => {
         return Object.values(row).some((value) =>
-          String(value).toLowerCase().includes(debouncedSearch.toLowerCase())
-        )
-      })
+          String(value).toLowerCase().includes(debouncedSearch.toLowerCase()),
+        );
+      });
     }
 
-    return filtered
-  }, [data, columnFilters, debouncedSearch])
-  const pageCount = Math.ceil(filteredData.length / pageSize)
+    return filtered;
+  }, [data, columnFilters, debouncedSearch]);
+  const pageCount = Math.ceil(filteredData.length / pageSize);
 
   const handlePaginationChange: OnChangeFn<PaginationState> = (
-    updaterOrValue
+    updaterOrValue,
   ) => {
     const pagination =
       typeof updaterOrValue === "function"
         ? updaterOrValue(paginationState)
-        : updaterOrValue
+        : updaterOrValue;
 
-    setCurrentPage(pagination.pageIndex + 1)
-    setPageSize(pagination.pageSize)
-  }
+    setCurrentPage(pagination.pageIndex + 1);
+    setPageSize(pagination.pageSize);
+  };
 
   const table = useReactTable<T>({
     data: filteredData,
@@ -172,56 +172,56 @@ const PageTable = <T extends object>({
     defaultColumn: {
       size: 200,
     },
-  })
+  });
 
-  const startIndex = paginationState.pageIndex * paginationState.pageSize + 1
+  const startIndex = paginationState.pageIndex * paginationState.pageSize + 1;
   const endIndex = Math.min(
     (paginationState.pageIndex + 1) * paginationState.pageSize,
-    filteredData.length
-  )
+    filteredData.length,
+  );
 
   function getVisibleExportData() {
     const exportableColumns = table
       .getVisibleLeafColumns()
-      .filter((column) => Boolean(column.accessorFn))
+      .filter((column) => Boolean(column.accessorFn));
 
     const headers = exportableColumns.map((column) => {
-      const header = column.columnDef.header
+      const header = column.columnDef.header;
       return typeof header === "string"
         ? header
         : column.id
             .replace(/_/g, " ")
-            .replace(/\b\w/g, (letter) => letter.toUpperCase())
-    })
+            .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    });
 
     const rows = table
       .getRowModel()
       .rows.map((row) =>
         exportableColumns.map((column) =>
-          formatExportValue(row.getValue(column.id))
-        )
-      )
+          formatExportValue(row.getValue(column.id)),
+        ),
+      );
 
-    return { headers, rows }
+    return { headers, rows };
   }
 
   function formatExportValue(value: unknown): string {
-    if (value == null) return ""
+    if (value == null) return "";
     if (
       typeof value === "string" &&
       moment(value, moment.ISO_8601, true).isValid()
     ) {
-      return moment(value).format("YYYY-MM-DD")
+      return moment(value).format("YYYY-MM-DD");
     }
-    if (Array.isArray(value)) return value.map(formatExportValue).join(", ")
-    if (typeof value === "object") return JSON.stringify(value)
-    return String(value)
+    if (Array.isArray(value)) return value.map(formatExportValue).join(", ");
+    if (typeof value === "object") return JSON.stringify(value);
+    return String(value);
   }
 
   async function handleExcelDownload() {
     try {
-      const { headers, rows } = getVisibleExportData()
-      if (!rows.length || !headers.length) return
+      const { headers, rows } = getVisibleExportData();
+      if (!rows.length || !headers.length) return;
       await exportToExcel(
         headers,
         rows,
@@ -229,20 +229,20 @@ const PageTable = <T extends object>({
         false,
         "",
         false,
-        userID
-      )
+        userID,
+      );
     } catch (error) {
-      console.error("Error exporting Excel:", error)
+      console.error("Error exporting Excel:", error);
     }
   }
 
   async function handlePdfDownload() {
     try {
-      const { headers, rows } = getVisibleExportData()
-      if (!rows.length || !headers.length) return
-      await exportToPdf(headers, rows, "Table-Export.pdf", userID)
+      const { headers, rows } = getVisibleExportData();
+      if (!rows.length || !headers.length) return;
+      await exportToPdf(headers, rows, "Table-Export.pdf", userID);
     } catch (error) {
-      console.error("Error exporting PDF:", error)
+      console.error("Error exporting PDF:", error);
     }
   }
 
@@ -257,7 +257,7 @@ const PageTable = <T extends object>({
                 value={search}
                 placeholder={`Search...`}
                 onChange={(event) => {
-                  setSearch(event.target.value)
+                  setSearch(event.target.value);
                 }}
                 className="h-8 rounded-md bg-muted/20 pl-9 text-xs"
               />
@@ -308,7 +308,7 @@ const PageTable = <T extends object>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   ))}
@@ -332,7 +332,7 @@ const PageTable = <T extends object>({
                         {flexRender(cell.column.columnDef.cell, {
                           ...cell.getContext(),
                           stopRowClick: (
-                            e: React.MouseEvent<HTMLTableRowElement>
+                            e: React.MouseEvent<HTMLTableRowElement>,
                           ) => e.stopPropagation(),
                         })}
                       </TableCell>
@@ -384,7 +384,7 @@ const PageTable = <T extends object>({
               <Select
                 value={`${paginationState.pageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value))
+                  table.setPageSize(Number(value));
                 }}
               >
                 <SelectTrigger className="h-8 w-[72px] shrink-0 rounded-md text-xs">
@@ -457,7 +457,7 @@ const PageTable = <T extends object>({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default memo(PageTable) as typeof PageTable
+export default memo(PageTable) as typeof PageTable;

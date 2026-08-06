@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import Heading from "@/components/ui/heading"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Heading from "@/components/ui/heading";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -11,39 +11,39 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MachineProps } from "@/lib/types"
-import { Filter } from "lucide-react"
-import Link from "next/link"
-import { useEffect, useState } from "react"
+} from "@/components/ui/table";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MachineProps } from "@/lib/types";
+import { Filter } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Page() {
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [data, setData] = useState<MachineProps[]>([])
-  const [loading, setLoading] = useState(false)
-  const { userID, base_route } = useUserDetail()
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<MachineProps[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { userID, base_route } = useUserDetail();
 
   async function fetchData(
     start: string,
     end: string,
-    user: number | null = null
+    user: number | null = null,
   ) {
-    if (!userID) return
+    if (!userID) return;
 
-    setLoading(true)
+    setLoading(true);
 
     axios
       .get(`/${userID}/analytics?user=${user || ""}&start=${start}&end=${end}`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   return (
@@ -67,11 +67,11 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user)
+          await fetchData(val.start, val.end, val.user);
         }}
       />
     </div>
-  )
+  );
 }
 
 const SalesTable = ({
@@ -79,24 +79,24 @@ const SalesTable = ({
   base_route = "",
   loading,
 }: {
-  data: MachineProps[]
-  base_route: string
-  loading: boolean
+  data: MachineProps[];
+  base_route: string;
+  loading: boolean;
 }) => {
-  const [total, setTotal] = useState(0)
-  const isMobile = useIsMobile()
+  const [total, setTotal] = useState(0);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function fetchSales() {
       const totalPrice = data.reduce(
         (sum, item) => sum + Number(item.price || 0),
-        0
-      )
-      setTotal(totalPrice)
+        0,
+      );
+      setTotal(totalPrice);
     }
 
-    fetchSales()
-  }, [data])
+    fetchSales();
+  }, [data]);
 
   return loading ? (
     <Skeleton className="h-[300px] w-full" />
@@ -174,5 +174,5 @@ const SalesTable = ({
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};

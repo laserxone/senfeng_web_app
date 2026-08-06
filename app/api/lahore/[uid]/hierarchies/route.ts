@@ -1,5 +1,5 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   try {
     const query = `
@@ -21,38 +21,38 @@ export async function GET() {
       WHERE ah.is_active = true
       GROUP BY ah.id
       ORDER BY ah.created_at DESC
-    `
+    `;
 
-    const result = await pool.query(query)
+    const result = await pool.query(query);
 
-    return NextResponse.json(result.rows)
+    return NextResponse.json(result.rows);
   } catch (error) {
-    console.error("Error fetching hierarchies:", error)
+    console.error("Error fetching hierarchies:", error);
 
     return NextResponse.json(
       { error: "Failed to fetch hierarchies" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
-  const client = await pool.connect()
+  const client = await pool.connect();
 
   try {
-    await client.query("BEGIN")
+    await client.query("BEGIN");
 
-    const body = await request.json()
+    const body = await request.json();
 
-    const { name, description, hierarchy_type, approvers, created_by } = body
+    const { name, description, hierarchy_type, approvers, created_by } = body;
 
     if (!name || !approvers || approvers.length === 0) {
       return NextResponse.json(
         {
           error: "Name and at least one approver are required",
         },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     // Create hierarchy
@@ -63,10 +63,10 @@ export async function POST(request: NextRequest) {
       VALUES ($1, $2, $3, $4)
       RETURNING *
       `,
-      [name, description || null, hierarchy_type || "loan", created_by || null]
-    )
+      [name, description || null, hierarchy_type || "loan", created_by || null],
+    );
 
-    const hierarchy = hierarchyResult.rows[0]
+    const hierarchy = hierarchyResult.rows[0];
 
     // Insert approvers
     for (let i = 0; i < approvers.length; i++) {
@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
         (hierarchy_id, user_id, approval_order)
         VALUES ($1, $2, $3)
         `,
-        [hierarchy.id, approvers[i], i + 1]
-      )
+        [hierarchy.id, approvers[i], i + 1],
+      );
     }
 
     // Fetch full hierarchy
@@ -101,22 +101,22 @@ export async function POST(request: NextRequest) {
       WHERE ah.id = $1
       GROUP BY ah.id
       `,
-      [hierarchy.id]
-    )
+      [hierarchy.id],
+    );
 
-    await client.query("COMMIT")
+    await client.query("COMMIT");
 
-    return NextResponse.json(completeHierarchyResult.rows[0], { status: 201 })
+    return NextResponse.json(completeHierarchyResult.rows[0], { status: 201 });
   } catch (error) {
-    await client.query("ROLLBACK")
+    await client.query("ROLLBACK");
 
-    console.error("Error creating hierarchy:", error)
+    console.error("Error creating hierarchy:", error);
 
     return NextResponse.json(
       { error: "Failed to create hierarchy" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   } finally {
-    client.release()
+    client.release();
   }
 }

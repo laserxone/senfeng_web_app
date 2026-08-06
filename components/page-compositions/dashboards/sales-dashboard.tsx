@@ -1,50 +1,50 @@
-"use client"
-import Attendance from "@/components/features/attendance/attendance"
-import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback"
-import CustomerEmployee from "@/components/features/customer-relations/customer"
-import VisitTab from "@/components/features/customer-relations/visit-tab"
-import RenderFines from "@/components/features/employee-finance/render-fines"
-import RenderReturnable from "@/components/features/employee-finance/render-returnable"
-import SalaryRecord from "@/components/features/employee-finance/salary-record"
-import Reimbursement from "@/components/features/reimbursements/Reimbursement"
-import ChequeClearanceAlert from "@/components/features/sales/cheque-alert"
-import { CustomerInsights } from "@/components/features/sales/customer-insights"
-import SalesQuickActions from "@/components/features/sales/quick-actions"
-import RecentQuotations from "@/components/features/sales/recent-quotations"
+"use client";
+import Attendance from "@/components/features/attendance/attendance";
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
+import CustomerEmployee from "@/components/features/customer-relations/customer";
+import VisitTab from "@/components/features/customer-relations/visit-tab";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import RenderReturnable from "@/components/features/employee-finance/render-returnable";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
+import ChequeClearanceAlert from "@/components/features/sales/cheque-alert";
+import { CustomerInsights } from "@/components/features/sales/customer-insights";
+import SalesQuickActions from "@/components/features/sales/quick-actions";
+import RecentQuotations from "@/components/features/sales/recent-quotations";
 import {
   MetricDialogState,
   SalesMetricCard,
   SalesMetricDetailsDialog,
-} from "@/components/features/sales/sales-metric"
-import TargetOverview from "@/components/features/sales/target-overview"
-import RenderTodayTasks from "@/components/features/sales/today-task"
-import MyTasks from "@/components/features/tasks/my-tasks"
-import { CustomerExtraData } from "@/components/features/users/extra-data"
-import UserTabs from "@/components/features/users/user-tabs"
+} from "@/components/features/sales/sales-metric";
+import TargetOverview from "@/components/features/sales/target-overview";
+import RenderTodayTasks from "@/components/features/sales/today-task";
+import MyTasks from "@/components/features/tasks/my-tasks";
+import { CustomerExtraData } from "@/components/features/users/extra-data";
+import UserTabs from "@/components/features/users/user-tabs";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Progress } from "@/components/ui/progress"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { useSidebar } from "@/components/ui/sidebar"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSidebar } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
   SalesCustomer,
   SalesCustomerMachines,
@@ -56,7 +56,7 @@ import {
   UserCallData,
   UserExtraTypes,
   UserReimbursementType,
-} from "@/lib/types"
+} from "@/lib/types";
 import {
   AlertCircle,
   ArrowUpRight,
@@ -78,54 +78,55 @@ import {
   Users,
   Wallet,
   WalletCards,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function SalesDashboardPage({
   id: userID,
 }: {
-  id: string | number
+  id: string | number;
 }) {
-  const [data, setData] = useState<SalesDashboard>()
-  const { base_route } = useUserDetail()
-  const [visitData, setVisitData] = useState<SalesVisitTypes[]>([])
-  const [extraData, setExtraData] = useState<UserExtraTypes>()
-  const [selectedOption, setSelectedOption] = useState("thisMonth")
+  const [data, setData] = useState<SalesDashboard>();
+  const { base_route } = useUserDetail();
+  const [visitData, setVisitData] = useState<SalesVisitTypes[]>([]);
+  const [extraData, setExtraData] = useState<UserExtraTypes>();
+  const [selectedOption, setSelectedOption] = useState("thisMonth");
   const [reimbursementData, setReimbursementData] = useState<
     UserReimbursementType[]
-  >([])
+  >([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>(
-    []
-  )
-  const [callData, setCallData] = useState<UserCallData[]>([])
-  const [activeTab, setActiveTab] = useState("newCustomers")
-  const isMobile = useIsMobile()
-  const [allFines, setAllFines] = useState(0)
-  const [allReturnables, setAllReturnables] = useState(0)
+    [],
+  );
+  const [callData, setCallData] = useState<UserCallData[]>([]);
+  const [activeTab, setActiveTab] = useState("newCustomers");
+  const isMobile = useIsMobile();
+  const [allFines, setAllFines] = useState(0);
+  const [allReturnables, setAllReturnables] = useState(0);
   const [selectedMetric, setSelectedMetric] =
-    useState<MetricDialogState | null>(null)
-  const [machinesSoldDialogOpen, setMachinesSoldDialogOpen] = useState(false)
-  const [todayTasks, setTodayTasks] = useState<SalesTodayTasks | null>(null)
-  const [showingAutoScroll, setShowingAutoScroll] = useState(false)
-  const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(false)
-  const [dashboardSkeletonLoading, setDashboardSkeletonLoading] = useState(true)
-  const pendingRequests = useRef(0)
+    useState<MetricDialogState | null>(null);
+  const [machinesSoldDialogOpen, setMachinesSoldDialogOpen] = useState(false);
+  const [todayTasks, setTodayTasks] = useState<SalesTodayTasks | null>(null);
+  const [showingAutoScroll, setShowingAutoScroll] = useState(false);
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [dashboardSkeletonLoading, setDashboardSkeletonLoading] =
+    useState(true);
+  const pendingRequests = useRef(0);
 
-  const { open } = useSidebar()
+  const { open } = useSidebar();
 
   useEffect(() => {
     if (userID) {
-      let cancelled = false
-      const startDate = moment().startOf("month").toISOString()
-      const endDate = moment().endOf("month").toISOString()
-      const start = moment().startOf("day").toISOString()
-      const end = moment().endOf("day").toISOString()
+      let cancelled = false;
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      const start = moment().startOf("day").toISOString();
+      const end = moment().endOf("day").toISOString();
 
-      setDashboardSkeletonLoading(true)
+      setDashboardSkeletonLoading(true);
 
       Promise.allSettled([
         fetchData(),
@@ -137,97 +138,97 @@ export default function SalesDashboardPage({
         fetchTasks(start, end),
       ]).finally(() => {
         if (!cancelled) {
-          setDashboardSkeletonLoading(false)
+          setDashboardSkeletonLoading(false);
         }
-      })
+      });
 
       return () => {
-        cancelled = true
-      }
+        cancelled = true;
+      };
     }
-  }, [userID])
+  }, [userID]);
 
   useEffect(() => {
-    const paramTab = searchParams.get("p")
+    const paramTab = searchParams.get("p");
     if (paramTab) {
-      setActiveTab(paramTab)
+      setActiveTab(paramTab);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   function routeTo(targetTab: string) {
     window.history.pushState(
       {},
       "",
-      `${window.location.pathname}?p=${targetTab}`
-    )
+      `${window.location.pathname}?p=${targetTab}`,
+    );
   }
 
   function startDashboardLoading() {
-    pendingRequests.current += 1
-    setLoading(true)
+    pendingRequests.current += 1;
+    setLoading(true);
   }
 
   function stopDashboardLoading() {
-    pendingRequests.current = Math.max(0, pendingRequests.current - 1)
+    pendingRequests.current = Math.max(0, pendingRequests.current - 1);
 
     if (pendingRequests.current === 0) {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function withDashboardLoading<T>(request: () => Promise<T>) {
-    startDashboardLoading()
+    startDashboardLoading();
 
     try {
-      return await request()
+      return await request();
     } catch (error) {
-      console.error("Dashboard request failed:", error)
-      return undefined as T
+      console.error("Dashboard request failed:", error);
+      return undefined as T;
     } finally {
-      stopDashboardLoading()
+      stopDashboardLoading();
     }
   }
 
   async function fetchCallData(startDate: string, endDate: string) {
     return withDashboardLoading(async () => {
       const response = await axios.get(
-        `/${userID}/call?start_date=${startDate}&end_date=${endDate}`
-      )
+        `/${userID}/call?start_date=${startDate}&end_date=${endDate}`,
+      );
 
-      setCallData(response.data)
-    })
+      setCallData(response.data);
+    });
   }
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
     return withDashboardLoading(async () => {
       const response = await axios.get(
-        `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
-      )
+        `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`,
+      );
 
-      setReimbursementData(response.data)
-    })
+      setReimbursementData(response.data);
+    });
   }
 
   async function fetchAttendanceData(startDate: string, endDate: string) {
     return withDashboardLoading(async () => {
       const response = await axios.get(
-        `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
-      )
+        `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`,
+      );
 
       const apiData = response.data.map((item: UserAttendanceRecord) => {
         let status = item?.leave_status
           ? `Leave ${item?.leave_status}`
-          : "Absent"
+          : "Absent";
 
         if (item?.time_in) {
-          const checkInTime = new Date(item.time_in)
-          const threshold = new Date(item.time_in)
-          threshold.setHours(10, 10, 0, 0)
+          const checkInTime = new Date(item.time_in);
+          const threshold = new Date(item.time_in);
+          threshold.setHours(10, 10, 0, 0);
 
           if (checkInTime > threshold) {
-            status = "Late"
+            status = "Late";
           } else {
-            status = "Present"
+            status = "Present";
           }
         }
 
@@ -235,43 +236,43 @@ export default function SalesDashboardPage({
           ...item,
           date: item?.time_in || item?.leave_date,
           status,
-        }
-      })
+        };
+      });
 
-      setAttendanceData(apiData)
-    })
+      setAttendanceData(apiData);
+    });
   }
 
   async function fetchTasks(start: string, end: string) {
     return withDashboardLoading(async () => {
       const response = await axios.get(
-        `/${userID}/task?start_date=${start}&end_date=${end}`
-      )
-      setTodayTasks({ total: response.data.length, data: response.data })
-    })
+        `/${userID}/task?start_date=${start}&end_date=${end}`,
+      );
+      setTodayTasks({ total: response.data.length, data: response.data });
+    });
   }
 
   async function fetchData() {
     return withDashboardLoading(async () => {
-      const response = await axios.get(`/${userID}/dashboard`)
-      setData(response.data)
-    })
+      const response = await axios.get(`/${userID}/dashboard`);
+      setData(response.data);
+    });
   }
 
   async function fetchVisitData(start: string, end: string) {
     return withDashboardLoading(async () => {
       const response = await axios.get(
-        `/${userID}/visit?start_date=${start}&end_date=${end}`
-      )
-      setVisitData(response.data)
-    })
+        `/${userID}/visit?start_date=${start}&end_date=${end}`,
+      );
+      setVisitData(response.data);
+    });
   }
 
   async function fetchExtraCustomerOptions() {
     return withDashboardLoading(async () => {
-      const response = await axios.get(`/${userID}/dashboard/group`)
-      setExtraData(response.data)
-    })
+      const response = await axios.get(`/${userID}/dashboard/group`);
+      setExtraData(response.data);
+    });
   }
 
   const RenderVisitTab = useCallback(() => {
@@ -281,18 +282,18 @@ export default function SalesDashboardPage({
           id={userID}
           data={visitData}
           onRefresh={async () => {
-            const startDate = moment().startOf("month").toISOString()
-            const endDate = moment().endOf("month").toISOString()
-            await fetchVisitData(startDate, endDate)
-            await fetchData()
+            const startDate = moment().startOf("month").toISOString();
+            const endDate = moment().endOf("month").toISOString();
+            await fetchVisitData(startDate, endDate);
+            await fetchData();
           }}
           onFetchData={async (start, end) => {
-            await fetchVisitData(start, end)
+            await fetchVisitData(start, end);
           }}
         />
       </div>
-    )
-  }, [visitData])
+    );
+  }, [visitData]);
 
   const RenderNewCustomer = useCallback(() => {
     return (
@@ -303,7 +304,7 @@ export default function SalesDashboardPage({
             data={extraData || {}}
             option={selectedOption}
             onSelect={(val) => {
-              setSelectedOption(val)
+              setSelectedOption(val);
             }}
           />
         </div>
@@ -321,14 +322,14 @@ export default function SalesDashboardPage({
             }
             newly_assigned={data?.new_entries?.newly_assigned_customers || null}
             onRefresh={async () => {
-              await fetchData()
-              await fetchExtraCustomerOptions()
+              await fetchData();
+              await fetchExtraCustomerOptions();
             }}
           />
         </div>
       </div>
-    )
-  }, [userID, data, extraData, selectedOption])
+    );
+  }, [userID, data, extraData, selectedOption]);
 
   const RenderMembers = useCallback(() => {
     return (
@@ -337,8 +338,8 @@ export default function SalesDashboardPage({
           data?.customers.filter((customer) => customer.sales.length > 0) || []
         }
       />
-    )
-  }, [userID, data])
+    );
+  }, [userID, data]);
 
   const RenderReimbursement = useCallback(() => {
     return (
@@ -346,19 +347,19 @@ export default function SalesDashboardPage({
         id={userID}
         passingData={reimbursementData || []}
         onAddRefresh={async () => {
-          const startDate = moment().startOf("month").toISOString()
-          const endDate = moment().endOf("month").toISOString()
-          await fetchReimbursementData(startDate, endDate)
+          const startDate = moment().startOf("month").toISOString();
+          const endDate = moment().endOf("month").toISOString();
+          await fetchReimbursementData(startDate, endDate);
         }}
         onFilterReturn={async (start, end) => {
-          await fetchReimbursementData(start, end)
+          await fetchReimbursementData(start, end);
         }}
         onReset={async (start: string, end: string) => {
-          await fetchReimbursementData(start, end)
+          await fetchReimbursementData(start, end);
         }}
       />
-    )
-  }, [reimbursementData])
+    );
+  }, [reimbursementData]);
 
   const RenderAttendance = useCallback(() => {
     return (
@@ -366,11 +367,11 @@ export default function SalesDashboardPage({
         // height="min-h-[calc(100dvh-350px)]"
         passingData={attendanceData}
         onFilterReturn={async (start, end) => {
-          await fetchAttendanceData(start, end)
+          await fetchAttendanceData(start, end);
         }}
       />
-    )
-  }, [attendanceData])
+    );
+  }, [attendanceData]);
 
   const RenderCallTab = useCallback(() => {
     return (
@@ -379,16 +380,16 @@ export default function SalesDashboardPage({
           <Calls
             data={callData}
             onRefresh={async () => {
-              const startDate = moment().startOf("month").toISOString()
-              const endDate = moment().endOf("month").toISOString()
-              await fetchData()
-              await fetchCallData(startDate, endDate)
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchData();
+              await fetchCallData(startDate, endDate);
             }}
           />
         </CardContent>
       </Card>
-    )
-  }, [callData])
+    );
+  }, [callData]);
 
   const tabs = [
     {
@@ -448,23 +449,23 @@ export default function SalesDashboardPage({
       icon: BadgeAlert,
       count: allFines,
     },
-  ]
+  ];
 
   const cityInsightItems = useMemo(
     () =>
       buildCustomerInsightItems(data?.customers, "location", "Unknown City"),
-    [data?.customers]
-  )
+    [data?.customers],
+  );
 
   const industryInsightItems = useMemo(
     () =>
       buildCustomerInsightItems(
         data?.customers,
         "industry",
-        "Unspecified Industry"
+        "Unspecified Industry",
       ),
-    [data?.customers]
-  )
+    [data?.customers],
+  );
 
   const tabsMaxWidth = isMobile
     ? "max-w-[calc(100dvw-35px)]"
@@ -474,7 +475,7 @@ export default function SalesDashboardPage({
         : "max-w-[calc(100dvw-340px)]"
       : open
         ? "max-w-[calc(100dvw-290px)]"
-        : "max-w-[calc(100dvw-80px)]"
+        : "max-w-[calc(100dvw-80px)]";
 
   if (dashboardSkeletonLoading) {
     return (
@@ -483,7 +484,7 @@ export default function SalesDashboardPage({
           <SalesDashboardSkeleton />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -599,32 +600,32 @@ export default function SalesDashboardPage({
 
             <SalesQuickActions
               onRefreshVisit={async () => {
-                const startDate = moment().startOf("month").toISOString()
-                const endDate = moment().endOf("month").toISOString()
-                await fetchVisitData(startDate, endDate)
-                await fetchData()
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await fetchVisitData(startDate, endDate);
+                await fetchData();
               }}
               onRefreshReimbursement={async () => {
-                const startDate = moment().startOf("month").toISOString()
-                const endDate = moment().endOf("month").toISOString()
-                await fetchReimbursementData(startDate, endDate)
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await fetchReimbursementData(startDate, endDate);
               }}
               onRefreshCustomer={async () => {
-                await fetchData()
-                await fetchExtraCustomerOptions()
+                await fetchData();
+                await fetchExtraCustomerOptions();
               }}
               onRefreshFeedback={async () => {
-                await fetchData()
-                await fetchExtraCustomerOptions()
+                await fetchData();
+                await fetchExtraCustomerOptions();
               }}
               onRefreshQuotation={async () => {
-                await fetchData()
+                await fetchData();
               }}
               onRefreshTask={async () => {
-                await fetchData()
-                const start = moment().startOf("day").toISOString()
-                const end = moment().endOf("day").toISOString()
-                await fetchTasks(start, end)
+                await fetchData();
+                const start = moment().startOf("day").toISOString();
+                const end = moment().endOf("day").toISOString();
+                await fetchTasks(start, end);
               }}
             />
             <MyTasks data={data?.allTasks} />
@@ -638,10 +639,10 @@ export default function SalesDashboardPage({
             <RenderTodayTasks
               data={todayTasks}
               onRefresh={async () => {
-                await fetchData()
-                const start = moment().startOf("day").toISOString()
-                const end = moment().endOf("day").toISOString()
-                await fetchTasks(start, end)
+                await fetchData();
+                const start = moment().startOf("day").toISOString();
+                const end = moment().endOf("day").toISOString();
+                await fetchTasks(start, end);
               }}
             />
           </div>
@@ -706,7 +707,7 @@ export default function SalesDashboardPage({
         baseRoute={base_route}
       />
     </div>
-  )
+  );
 }
 
 function SalesDashboardSkeleton() {
@@ -808,7 +809,7 @@ function SalesDashboardSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function DashboardPanelSkeleton() {
@@ -836,92 +837,92 @@ function DashboardPanelSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function buildCustomerInsightItems(
   customers: SalesCustomer[] | undefined,
   key: "location" | "industry",
-  fallback: string
+  fallback: string,
 ) {
-  const counts = new Map<string, number>()
+  const counts = new Map<string, number>();
 
-  ;(customers || []).forEach((customer) => {
-    const label = normalizeInsightLabel(customer[key], fallback)
-    counts.set(label, (counts.get(label) || 0) + 1)
-  })
+  (customers || []).forEach((customer) => {
+    const label = normalizeInsightLabel(customer[key], fallback);
+    counts.set(label, (counts.get(label) || 0) + 1);
+  });
 
   return Array.from(counts.entries())
     .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 }
 
 function normalizeInsightLabel(
   value: string | null | undefined,
-  fallback: string
+  fallback: string,
 ) {
-  const trimmed = value?.trim()
-  if (!trimmed) return fallback
+  const trimmed = value?.trim();
+  if (!trimmed) return fallback;
 
-  const normalized = trimmed.toLowerCase()
+  const normalized = trimmed.toLowerCase();
   if (
     ["n/a", "na", "nil", "nill", "null", "none", "undefined"].includes(
-      normalized
+      normalized,
     )
   ) {
-    return fallback
+    return fallback;
   }
 
-  return trimmed
+  return trimmed;
 }
 
 function CustomersTab({ data }: { data: SalesCustomer[] }) {
   const [localData, setLocalData] = useState<
     (SalesCustomer & { overall: string })[]
-  >([])
-  const { base_route } = useUserDetail()
+  >([]);
+  const { base_route } = useUserDetail();
 
   useEffect(() => {
     if (data.length > 0) {
       const temp = data.map((customer) => {
-        const customerCompletion = Number(customer.profile_completion) || 0
-        const machines = customer.sales || []
+        const customerCompletion = Number(customer.profile_completion) || 0;
+        const machines = customer.sales || [];
 
         const totalMachineCompletion = machines.reduce(
           (sum, item) => sum + Number(item.percentage_completion || 0),
-          0
-        )
+          0,
+        );
 
         const overallCompletion =
-          (customerCompletion + totalMachineCompletion) / (machines.length + 1)
+          (customerCompletion + totalMachineCompletion) / (machines.length + 1);
 
-        return { ...customer, overall: overallCompletion.toFixed(0) }
-      })
+        return { ...customer, overall: overallCompletion.toFixed(0) };
+      });
 
-      setLocalData(temp)
+      setLocalData(temp);
     } else {
-      setLocalData([])
+      setLocalData([]);
     }
-  }, [data])
+  }, [data]);
 
   const RenderEachMachine = ({
     machine,
     customer_id,
   }: {
-    machine: SalesCustomerMachines
-    customer_id: number
+    machine: SalesCustomerMachines;
+    customer_id: number;
   }) => {
     const totalPayments = machine.payments.reduce(
       (sum, payment) => sum + Number(payment.amount),
-      0
-    )
+      0,
+    );
 
-    console.log(totalPayments)
-    console.log(machine.price)
+    console.log(totalPayments);
+    console.log(machine.price);
 
     const isCompleted =
       Number(machine.price) - Number(machine.speed_money_amount) ===
-        totalPayments && Number(machine?.percentage_completion) === 100
+        totalPayments && Number(machine?.percentage_completion) === 100;
 
     return (
       <div className="flex w-full flex-col gap-2 rounded-lg border bg-background px-3 py-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -968,8 +969,8 @@ function CustomersTab({ data }: { data: SalesCustomer[] }) {
           </Badge>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="w-full overflow-hidden">
@@ -1110,21 +1111,21 @@ function CustomersTab({ data }: { data: SalesCustomer[] }) {
         )}
       </Accordion>
     </div>
-  )
+  );
 }
 
 function Calls({
   data,
   onRefresh,
 }: {
-  data: UserCallData[]
-  onRefresh: () => Promise<void>
+  data: UserCallData[];
+  onRefresh: () => Promise<void>;
 }) {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<UserCallData | null>(
-    null
-  )
-  const { userID } = useUserDetail()
+    null,
+  );
+  const { userID } = useUserDetail();
 
   const RenderEachCall = ({ call }: { call: UserCallData }) => {
     return (
@@ -1164,8 +1165,8 @@ function Calls({
             <div className="flex w-full shrink-0 items-center gap-2 md:w-auto md:justify-end">
               <Button
                 onClick={() => {
-                  setSelectedCustomer(call)
-                  setVisible(true)
+                  setSelectedCustomer(call);
+                  setVisible(true);
                 }}
                 className="h-9 w-full rounded-lg px-3 md:w-auto"
               >
@@ -1176,8 +1177,8 @@ function Calls({
           </div>
         </CardContent>
       </Card>
-    )
-  }
+    );
+  };
 
   return (
     <div className="w-full min-w-0 overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-zinc-950">
@@ -1226,15 +1227,15 @@ function Calls({
       <AddFeedbackDialog
         customer_id={selectedCustomer?.id}
         onClose={() => {
-          setSelectedCustomer(null)
-          setVisible(false)
+          setSelectedCustomer(null);
+          setVisible(false);
         }}
         onRefresh={onRefresh}
         open={visible}
         user_id={userID}
       />
     </div>
-  )
+  );
 }
 
 function MachinesSold({
@@ -1243,10 +1244,10 @@ function MachinesSold({
   machineData,
   base_route,
 }: {
-  visible: boolean
-  setVisible: (val: boolean) => void
-  machineData: SalesMachine[]
-  base_route: string
+  visible: boolean;
+  setVisible: (val: boolean) => void;
+  machineData: SalesMachine[];
+  base_route: string;
 }) {
   return (
     <Dialog open={visible} onOpenChange={setVisible}>
@@ -1326,5 +1327,5 @@ function MachinesSold({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

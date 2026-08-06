@@ -1,2 +1,2 @@
-import { listRoutes } from "@/lib/custom-lists-routes"
-export const { GET, POST } = listRoutes("karachi")
+import { listRoutes } from "@/lib/custom-lists-routes";
+export const { GET, POST } = listRoutes("karachi");

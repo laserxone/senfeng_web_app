@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import type { MyCustomer } from "@/lib/types"
+} from "@/components/ui/select";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import type { MyCustomer } from "@/lib/types";
 import {
   Document,
   Image as PdfImage,
@@ -19,8 +19,8 @@ import {
   StyleSheet,
   Text,
   View,
-} from "@react-pdf/renderer"
-import { saveAs } from "file-saver"
+} from "@react-pdf/renderer";
+import { saveAs } from "file-saver";
 import {
   Box,
   Camera,
@@ -30,44 +30,44 @@ import {
   ShieldCheck,
   Truck,
   User,
-} from "lucide-react"
-import NextImage from "next/image"
-import type { ChangeEvent, ReactNode } from "react"
-import { useEffect, useMemo, useState } from "react"
+} from "lucide-react";
+import NextImage from "next/image";
+import type { ChangeEvent, ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type CustomerMachineOrder = {
-  id: number
-  orderNumbers: string[]
-  power: string
-  model?: string
-  serial: string
-}
+  id: number;
+  orderNumbers: string[];
+  power: string;
+  model?: string;
+  serial: string;
+};
 
 type GatePassFormValues = {
-  partName: string
-  partType: string
-  partNumber: string
-  partPrice: string
-  quantity: string
-  remarks: string
-  carrierDetails: string
-  trackingNo: string
-}
+  partName: string;
+  partType: string;
+  partNumber: string;
+  partPrice: string;
+  quantity: string;
+  remarks: string;
+  carrierDetails: string;
+  trackingNo: string;
+};
 
 type CheckState = {
-  returnable: boolean
-  gift: boolean
-  selfCollection: boolean
-  courier: boolean
-  companyDelivery: boolean
-}
+  returnable: boolean;
+  gift: boolean;
+  selfCollection: boolean;
+  courier: boolean;
+  companyDelivery: boolean;
+};
 
 export default function GatePassSlip() {
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
-    null
-  )
+    null,
+  );
   const [selectedMachine, setSelectedMachine] =
-    useState<CustomerMachineOrder | null>(null)
+    useState<CustomerMachineOrder | null>(null);
   const [formValues, setFormValues] = useState<GatePassFormValues>({
     partName: "",
     partType: "",
@@ -77,52 +77,52 @@ export default function GatePassSlip() {
     remarks: "",
     carrierDetails: "",
     trackingNo: "",
-  })
+  });
   const [checked, setChecked] = useState<CheckState>({
     returnable: false,
     gift: false,
     selfCollection: false,
     courier: false,
     companyDelivery: false,
-  })
-  const [photoDataUrl, setPhotoDataUrl] = useState("")
-  const [photoName, setPhotoName] = useState("")
-  const [pdfLoading, setPdfLoading] = useState(false)
+  });
+  const [photoDataUrl, setPhotoDataUrl] = useState("");
+  const [photoName, setPhotoName] = useState("");
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const customerNumber = useMemo(() => {
-    if (!selectedCustomer?.number) return ""
+    if (!selectedCustomer?.number) return "";
     return Array.isArray(selectedCustomer.number)
       ? selectedCustomer.number.join(", ")
-      : selectedCustomer.number
-  }, [selectedCustomer])
+      : selectedCustomer.number;
+  }, [selectedCustomer]);
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const updateFormValue = (key: keyof GatePassFormValues, value: string) => {
-    setFormValues((current) => ({ ...current, [key]: value }))
-  }
+    setFormValues((current) => ({ ...current, [key]: value }));
+  };
 
   const updateChecked = (key: keyof CheckState, value: boolean) => {
-    setChecked((current) => ({ ...current, [key]: value }))
-  }
+    setChecked((current) => ({ ...current, [key]: value }));
+  };
 
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setPhotoName(file.name)
-    const reader = new FileReader()
+    setPhotoName(file.name);
+    const reader = new FileReader();
     reader.onload = () => {
-      setPhotoDataUrl(typeof reader.result === "string" ? reader.result : "")
-    }
-    reader.readAsDataURL(file)
-  }
+      setPhotoDataUrl(typeof reader.result === "string" ? reader.result : "");
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleCreatePdf = async () => {
-    setPdfLoading(true)
+    setPdfLoading(true);
     const docNo = `GP-${Date.now().toString().slice(-6)}-${Math.floor(
-      100 + Math.random() * 900
-    )}`
+      100 + Math.random() * 900,
+    )}`;
 
     try {
       const blob = await pdf(
@@ -135,17 +135,17 @@ export default function GatePassSlip() {
           photoDataUrl={photoDataUrl}
           selectedCustomer={selectedCustomer}
           selectedMachine={selectedMachine}
-        />
-      ).toBlob()
-      saveAs(blob, `Gate-Pass-${docNo}.pdf`)
+        />,
+      ).toBlob();
+      saveAs(blob, `Gate-Pass-${docNo}.pdf`);
     } finally {
-      setPdfLoading(false)
+      setPdfLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    setSelectedMachine(null)
-  }, [selectedCustomer?.id])
+    setSelectedMachine(null);
+  }, [selectedCustomer?.id]);
 
   return (
     <div className="min-h-screen bg-slate-100 p-2 sm:p-3 print:bg-white">
@@ -421,7 +421,7 @@ export default function GatePassSlip() {
         </footer>
       </div>
     </div>
-  )
+  );
 }
 
 function GatePassPdfDocument({
@@ -434,19 +434,19 @@ function GatePassPdfDocument({
   selectedCustomer,
   selectedMachine,
 }: {
-  checked: CheckState
-  customerNumber: string
-  date: string
-  docNo: string
-  formValues: GatePassFormValues
-  photoDataUrl: string
-  selectedCustomer: MyCustomer | null
-  selectedMachine: CustomerMachineOrder | null
+  checked: CheckState;
+  customerNumber: string;
+  date: string;
+  docNo: string;
+  formValues: GatePassFormValues;
+  photoDataUrl: string;
+  selectedCustomer: MyCustomer | null;
+  selectedMachine: CustomerMachineOrder | null;
 }) {
-  const customerName = selectedCustomer?.owner || selectedCustomer?.name || ""
-  const companyName = selectedCustomer?.company || selectedCustomer?.name || ""
-  const orderNumbers = selectedMachine?.orderNumbers?.join(", ") || ""
-  const machineModel = selectedMachine?.serial || selectedMachine?.power || ""
+  const customerName = selectedCustomer?.owner || selectedCustomer?.name || "";
+  const companyName = selectedCustomer?.company || selectedCustomer?.name || "";
+  const orderNumbers = selectedMachine?.orderNumbers?.join(", ") || "";
+  const machineModel = selectedMachine?.serial || selectedMachine?.power || "";
 
   return (
     <Document>
@@ -609,7 +609,7 @@ function GatePassPdfDocument({
         <Text style={pdfStyles.footer}>Thank you for your business!</Text>
       </Page>
     </Document>
-  )
+  );
 }
 
 function PdfSection({
@@ -618,12 +618,12 @@ function PdfSection({
   color,
   children,
 }: {
-  number: string
-  title: string
-  color: "blue" | "teal" | "purple" | "orange"
-  children: ReactNode
+  number: string;
+  title: string;
+  color: "blue" | "teal" | "purple" | "orange";
+  children: ReactNode;
 }) {
-  const colorStyle = pdfSectionColors[color]
+  const colorStyle = pdfSectionColors[color];
 
   return (
     <View style={[pdfStyles.section, { borderColor: colorStyle.border }]}>
@@ -635,7 +635,7 @@ function PdfSection({
       </View>
       <View style={pdfStyles.sectionBody}>{children}</View>
     </View>
-  )
+  );
 }
 
 function PdfLineField({
@@ -643,9 +643,9 @@ function PdfLineField({
   value,
   color,
 }: {
-  label: string
-  value: string
-  color: "blue" | "teal"
+  label: string;
+  value: string;
+  color: "blue" | "teal";
 }) {
   return (
     <View style={pdfStyles.lineField}>
@@ -659,7 +659,7 @@ function PdfLineField({
         {value || " "}
       </Text>
     </View>
-  )
+  );
 }
 
 function PdfBoxField({
@@ -667,16 +667,16 @@ function PdfBoxField({
   value,
   full = false,
 }: {
-  label: string
-  value: string
-  full?: boolean
+  label: string;
+  value: string;
+  full?: boolean;
 }) {
   return (
     <View style={full ? pdfStyles.boxFieldFull : pdfStyles.boxField}>
       <Text style={pdfStyles.boxLabel}>{label}</Text>
       <Text style={pdfStyles.boxValue}>{value || " "}</Text>
     </View>
-  )
+  );
 }
 
 function PdfCheck({ label, checked }: { label: string; checked: boolean }) {
@@ -685,7 +685,7 @@ function PdfCheck({ label, checked }: { label: string; checked: boolean }) {
       <Text style={pdfStyles.checkBox}>{checked ? "X" : ""}</Text>
       <Text style={pdfStyles.checkLabel}>{label}</Text>
     </View>
-  )
+  );
 }
 
 function PdfStatusCheck({
@@ -693,11 +693,11 @@ function PdfStatusCheck({
   checked,
   color,
 }: {
-  label: string
-  checked: boolean
-  color: "teal" | "orange"
+  label: string;
+  checked: boolean;
+  color: "teal" | "orange";
 }) {
-  const isTeal = color === "teal"
+  const isTeal = color === "teal";
 
   return (
     <View
@@ -726,7 +726,7 @@ function PdfStatusCheck({
         {checked ? "X" : ""}
       </Text>
     </View>
-  )
+  );
 }
 
 function PdfSignature({ title }: { title: string }) {
@@ -737,7 +737,7 @@ function PdfSignature({ title }: { title: string }) {
       <PdfSignatureLine label="Signature:" />
       <PdfSignatureLine label="Date:" />
     </View>
-  )
+  );
 }
 
 function PdfSignatureLine({ label }: { label: string }) {
@@ -746,7 +746,7 @@ function PdfSignatureLine({ label }: { label: string }) {
       <Text style={pdfStyles.signatureLabel}>{label}</Text>
       <Text style={pdfStyles.signatureValue}> </Text>
     </View>
-  )
+  );
 }
 
 const pdfSectionColors = {
@@ -754,7 +754,7 @@ const pdfSectionColors = {
   teal: { fill: "#0f766e", border: "#0d9488" },
   purple: { fill: "#7e22ce", border: "#9333ea" },
   orange: { fill: "#ea580c", border: "#f97316" },
-}
+};
 
 const pdfStyles = StyleSheet.create({
   page: {
@@ -1084,7 +1084,7 @@ const pdfStyles = StyleSheet.create({
     fontSize: 8,
     fontWeight: 800,
   },
-})
+});
 
 function Section({
   number,
@@ -1093,18 +1093,18 @@ function Section({
   color,
   children,
 }: {
-  number: string
-  title: string
-  icon: ReactNode
-  color: "blue" | "teal" | "purple" | "orange"
-  children: ReactNode
+  number: string;
+  title: string;
+  icon: ReactNode;
+  color: "blue" | "teal" | "purple" | "orange";
+  children: ReactNode;
 }) {
   const colors = {
     blue: "from-blue-700 to-blue-500 border-blue-600",
     teal: "from-teal-700 to-teal-500 border-teal-600",
     purple: "from-purple-700 to-purple-500 border-purple-600",
     orange: "from-orange-600 to-orange-400 border-orange-500",
-  }
+  };
 
   return (
     <section
@@ -1124,7 +1124,7 @@ function Section({
 
       <div className="p-2.5 sm:p-3">{children}</div>
     </section>
-  )
+  );
 }
 
 function InputLine({ label, value }: { label: string; value?: string }) {
@@ -1137,7 +1137,7 @@ function InputLine({ label, value }: { label: string; value?: string }) {
         className="h-8 min-w-0 rounded-md border border-blue-300 px-2 text-sm outline-none read-only:bg-blue-50/50"
       />
     </div>
-  )
+  );
 }
 
 function MachineOrderSelect({
@@ -1145,42 +1145,42 @@ function MachineOrderSelect({
   value,
   onReturn,
 }: {
-  customerId?: number
-  value: CustomerMachineOrder | null
-  onReturn: (value: CustomerMachineOrder | null) => void
+  customerId?: number;
+  value: CustomerMachineOrder | null;
+  onReturn: (value: CustomerMachineOrder | null) => void;
 }) {
-  const { userID } = useUserDetail()
-  const [items, setItems] = useState<CustomerMachineOrder[]>([])
-  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [items, setItems] = useState<CustomerMachineOrder[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchMachines() {
       if (!userID || !customerId) {
-        setItems([])
-        return
+        setItems([]);
+        return;
       }
 
-      setLoading(true)
+      setLoading(true);
       try {
         const response: { data: CustomerMachineOrder[] } = await axios.get(
-          `/${userID}/customer/${customerId}/limited`
-        )
-        setItems(response.data || [])
+          `/${userID}/customer/${customerId}/limited`,
+        );
+        setItems(response.data || []);
       } catch (error) {
-        setItems([])
+        setItems([]);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchMachines()
-  }, [customerId, userID])
+    fetchMachines();
+  }, [customerId, userID]);
 
   const placeholder = !customerId
     ? "Select customer first"
     : loading
       ? "Loading machines..."
-      : "Select order / serial"
+      : "Select order / serial";
 
   return (
     <div className="grid gap-1 sm:grid-cols-[118px_1fr] sm:items-center sm:gap-2">
@@ -1192,8 +1192,8 @@ function MachineOrderSelect({
         disabled={!customerId || loading}
         onValueChange={(selectedId) => {
           const selected =
-            items.find((item) => String(item.id) === selectedId) || null
-          onReturn(selected)
+            items.find((item) => String(item.id) === selectedId) || null;
+          onReturn(selected);
         }}
       >
         <SelectTrigger
@@ -1223,7 +1223,7 @@ function MachineOrderSelect({
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }
 
 function InputBox({
@@ -1232,10 +1232,10 @@ function InputBox({
   onChange,
   tall = false,
 }: {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  tall?: boolean
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  tall?: boolean;
 }) {
   return (
     <div className={tall ? "sm:row-span-2" : ""}>
@@ -1250,7 +1250,7 @@ function InputBox({
         }`}
       />
     </div>
-  )
+  );
 }
 
 function StatusToggle({
@@ -1259,15 +1259,15 @@ function StatusToggle({
   checked,
   onChange,
 }: {
-  label: string
-  color: "teal" | "orange"
-  checked: boolean
-  onChange: (value: boolean) => void
+  label: string;
+  color: "teal" | "orange";
+  checked: boolean;
+  onChange: (value: boolean) => void;
 }) {
   const style =
     color === "teal"
       ? "border-teal-500 bg-teal-50 text-teal-700"
-      : "border-orange-400 bg-orange-50 text-orange-600"
+      : "border-orange-400 bg-orange-50 text-orange-600";
 
   return (
     <label
@@ -1281,7 +1281,7 @@ function StatusToggle({
         className="h-5 w-5 shrink-0 cursor-pointer rounded-md border-2 border-current bg-white accent-current"
       />
     </label>
-  )
+  );
 }
 
 function CheckOption({
@@ -1289,9 +1289,9 @@ function CheckOption({
   checked,
   onChange,
 }: {
-  label: string
-  checked: boolean
-  onChange: (value: boolean) => void
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-2 font-medium text-slate-700 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
@@ -1303,7 +1303,7 @@ function CheckOption({
       />
       <span className="min-w-0">{label}</span>
     </label>
-  )
+  );
 }
 
 function SignatureCard({ title }: { title: string }) {
@@ -1320,7 +1320,7 @@ function SignatureCard({ title }: { title: string }) {
         <SignatureLine label="Date:" />
       </div>
     </div>
-  )
+  );
 }
 
 function SignatureLine({ label }: { label: string }) {
@@ -1329,5 +1329,5 @@ function SignatureLine({ label }: { label: string }) {
       <span className="font-medium text-slate-700">{label}</span>
       <span className="border-b border-slate-500" />
     </div>
-  )
+  );
 }

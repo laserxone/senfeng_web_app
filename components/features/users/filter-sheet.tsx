@@ -1,12 +1,12 @@
-import { TIMEZONE } from "@/constants/data"
-import { zodResolver } from "@hookform/resolvers/zod"
-import moment from "moment"
-import momentT from "moment-timezone"
-import { Dispatch, SetStateAction, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { Button } from "@/components/ui/button"
+import { TIMEZONE } from "@/constants/data";
+import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import momentT from "moment-timezone";
+import { Dispatch, SetStateAction, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
@@ -14,47 +14,47 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
-import { format, setMonth } from "date-fns"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
+import { format, setMonth } from "date-fns";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 type FilterSheetProps = {
-  visible: boolean
-  onClose: Dispatch<SetStateAction<boolean>>
-  user_disable?: boolean
+  visible: boolean;
+  onClose: Dispatch<SetStateAction<boolean>>;
+  user_disable?: boolean;
   onReturn: ({
     start,
     end,
     user,
   }: {
-    start: string
-    end: string
-    user?: number
-  }) => Promise<void>
-}
+    start: string;
+    end: string;
+    user?: number;
+  }) => Promise<void>;
+};
 
 const formSchema = z.object({
   start: z.date({ error: "Start date is required." }),
   end: z.date({ error: "End date is required." }),
   user: z.number().optional(),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 const FilterSheet = ({
   visible,
@@ -62,7 +62,7 @@ const FilterSheet = ({
   onReturn,
   user_disable = true,
 }: FilterSheetProps) => {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -71,26 +71,26 @@ const FilterSheet = ({
       end: moment().endOf("month").toDate(),
       user: undefined,
     },
-  })
+  });
 
   async function onSubmit(values: FormValues) {
-    setLoading(true)
-    let start = values.start
-    let end = values.end
+    setLoading(true);
+    let start = values.start;
+    let end = values.end;
 
     await onReturn({
       start: momentT.tz(start, TIMEZONE).startOf("day").utc().toISOString(),
       end: momentT.tz(end, TIMEZONE).endOf("day").utc().toISOString(),
       user: values.user,
-    })
-    setLoading(false)
-    onClose(false)
-    handleClear()
+    });
+    setLoading(false);
+    onClose(false);
+    handleClear();
   }
 
   function handleClose() {
-    onClose(false)
-    handleClear()
+    onClose(false);
+    handleClear();
   }
 
   function handleClear() {
@@ -98,7 +98,7 @@ const FilterSheet = ({
       start: moment().startOf("month").toDate(),
       end: moment().endOf("month").toDate(),
       user: undefined,
-    })
+    });
   }
 
   return (
@@ -176,35 +176,35 @@ const FilterSheet = ({
         </form>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 export const FilterSheetMonth = ({
   visible,
   onClose,
   onReturn,
 }: FilterSheetProps) => {
-  const currentDate = new Date()
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth())
+  const currentDate = new Date();
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
 
   const years = Array.from(
     { length: 20 },
-    (_, i) => new Date().getFullYear() - 10 + i
-  )
+    (_, i) => new Date().getFullYear() - 10 + i,
+  );
 
   const months = Array.from({ length: 12 }, (_, i) =>
-    format(setMonth(new Date(), i), "MMMM")
-  )
+    format(setMonth(new Date(), i), "MMMM"),
+  );
 
   function handleClear() {
-    setSelectedYear(currentDate.getFullYear())
-    setSelectedMonth(currentDate.getMonth())
+    setSelectedYear(currentDate.getFullYear());
+    setSelectedMonth(currentDate.getMonth());
   }
 
   function handleClose() {
-    onClose(false)
-    handleClear()
+    onClose(false);
+    handleClear();
   }
 
   async function handleFilter() {
@@ -215,11 +215,11 @@ export const FilterSheetMonth = ({
           .month(selectedMonth)
           .startOf("month")
           .toDate(),
-        TIMEZONE
+        TIMEZONE,
       )
       .startOf("day")
       .utc()
-      .toISOString()
+      .toISOString();
 
     const endDate = momentT
       .tz(
@@ -228,18 +228,18 @@ export const FilterSheetMonth = ({
           .month(selectedMonth)
           .endOf("month")
           .toDate(),
-        TIMEZONE
+        TIMEZONE,
       )
       .endOf("day")
       .utc()
-      .toISOString()
+      .toISOString();
 
     onReturn({
       start: startDate,
       end: endDate,
-    })
+    });
 
-    onClose(false)
+    onClose(false);
   }
 
   return (
@@ -263,7 +263,7 @@ export const FilterSheetMonth = ({
                 <Select
                   value={selectedMonth.toString()}
                   onValueChange={(month) => {
-                    setSelectedMonth(Number(month))
+                    setSelectedMonth(Number(month));
                   }}
                 >
                   <SelectTrigger>
@@ -286,7 +286,7 @@ export const FilterSheetMonth = ({
                 <Select
                   value={selectedYear.toString()}
                   onValueChange={(year) => {
-                    setSelectedYear(Number(year))
+                    setSelectedYear(Number(year));
                   }}
                 >
                   <SelectTrigger>
@@ -311,7 +311,7 @@ export const FilterSheetMonth = ({
         </div>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
-export default FilterSheet
+export default FilterSheet;

@@ -1,5 +1,5 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -65,14 +65,14 @@ LEFT JOIN sale s ON s.id = oi.machine_id
 WHERE oi.show IS TRUE
 
 ORDER BY oi.id DESC
-`)
+`);
 
-    return NextResponse.json(orderItemsQuery.rows, { status: 200 })
+    return NextResponse.json(orderItemsQuery.rows, { status: 200 });
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

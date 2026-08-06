@@ -1,58 +1,58 @@
-"use client"
+"use client";
 
 import {
   AlertTriangle,
   ArrowUpDown,
   ArrowUpRight,
   CalendarClock,
-} from "lucide-react"
-import moment from "moment"
-import { useMemo, useState } from "react"
+} from "lucide-react";
+import moment from "moment";
+import { useMemo, useState } from "react";
 
-import PageTable from "@/components/shared/tables/app-table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import PageTable from "@/components/shared/tables/app-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { useChequeAlerts } from "@/hooks/use-cheque-alerts"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase"
-import { ColumnDef } from "@tanstack/react-table"
-import Link from "next/link"
-import { toast } from "sonner"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
+} from "@/components/ui/dialog";
+import { useChequeAlerts } from "@/hooks/use-cheque-alerts";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
+import { toast } from "sonner";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 
 type ChequeAlertItem = {
-  id: number
-  link: string
-  date: string
-  amount: string | number
-  serial_no: string
-  customer_name: string
-  customer_owner: string
-}
+  id: number;
+  link: string;
+  date: string;
+  amount: string | number;
+  serial_no: string;
+  customer_name: string;
+  customer_owner: string;
+};
 
 export default function ChequeClearanceAlert() {
-  const { info } = useChequeAlerts()
-  const { base_route } = useUserDetail()
+  const { info } = useChequeAlerts();
+  const { base_route } = useUserDetail();
 
   const alerts = useMemo(
     () =>
       [...info].sort((a, b) => {
-        const first = moment(a.date).valueOf()
-        const second = moment(b.date).valueOf()
-        return first - second
+        const first = moment(a.date).valueOf();
+        const second = moment(b.date).valueOf();
+        return first - second;
       }),
-    [info]
-  )
-  const previewAlerts = alerts.slice(0, 10)
+    [info],
+  );
+  const previewAlerts = alerts.slice(0, 10);
 
   return (
     <Card className="h-full w-full overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-[600px]">
@@ -124,19 +124,19 @@ export default function ChequeClearanceAlert() {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function ChequeAlertsTable({
   alerts,
   baseRoute,
 }: {
-  alerts: ChequeAlertItem[]
-  baseRoute: string
+  alerts: ChequeAlertItem[];
+  baseRoute: string;
 }) {
-  const [selected, setSelected] = useState<null | ChequeAlertItem>(null)
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [selected, setSelected] = useState<null | ChequeAlertItem>(null);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const columns: ColumnDef<ChequeAlertItem>[] = [
     {
@@ -151,7 +151,7 @@ function ChequeAlertsTable({
             Customer
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <Link
@@ -182,7 +182,7 @@ function ChequeAlertsTable({
             Serial No
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <Link
@@ -206,7 +206,7 @@ function ChequeAlertsTable({
             amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{formatAmount(row.original.amount)}</div>,
     },
@@ -223,7 +223,7 @@ function ChequeAlertsTable({
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{formatDate(row.original.date)}</div>,
     },
@@ -240,10 +240,10 @@ function ChequeAlertsTable({
             Status
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const status = getChequeStatus(row.original.date)
+        const status = getChequeStatus(row.original.date);
         return (
           <Badge
             variant={status.variant}
@@ -251,37 +251,37 @@ function ChequeAlertsTable({
           >
             {status.label}
           </Badge>
-        )
+        );
       },
     },
 
     {
       id: "actions",
       header: ({ column }) => {
-        return <Button variant="ghost">Action</Button>
+        return <Button variant="ghost">Action</Button>;
       },
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
         return (
           <Button size={"sm"} onClick={() => setSelected(currentItem)}>
             Paid
           </Button>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleSubmit(item: ChequeAlertItem | null) {
-    if (!item?.id) return
-    setLoading(true)
+    if (!item?.id) return;
+    setLoading(true);
     try {
-      await axios.put(`/${userID}/reminders/${item.id}`, { pending: false })
-      toast.success("Cheque status updated")
-      TriggerFirebaseForChequeAlerts()
-      setSelected(null)
+      await axios.put(`/${userID}/reminders/${item.id}`, { pending: false });
+      toast.success("Cheque status updated");
+      TriggerFirebaseForChequeAlerts();
+      setSelected(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
   return (
@@ -302,51 +302,51 @@ function ChequeAlertsTable({
         loading={loading}
       />
     </>
-  )
+  );
 }
 
 function getChequeStatus(date: string) {
-  const today = moment().startOf("day")
-  const dueDate = moment(date).startOf("day")
+  const today = moment().startOf("day");
+  const dueDate = moment(date).startOf("day");
 
   if (!dueDate.isValid()) {
-    return { label: "-", variant: "outline" as const }
+    return { label: "-", variant: "outline" as const };
   }
 
   if (dueDate.isBefore(today, "day")) {
-    return { label: "Overdue", variant: "destructive" as const }
+    return { label: "Overdue", variant: "destructive" as const };
   }
 
   if (dueDate.isSame(today, "day")) {
-    return { label: "Today", variant: "secondary" as const }
+    return { label: "Today", variant: "secondary" as const };
   }
 
-  const daysLeft = dueDate.diff(today, "days")
+  const daysLeft = dueDate.diff(today, "days");
   return {
     label: `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`,
     variant: "outline" as const,
-  }
+  };
 }
 
 function formatDate(date?: string | null) {
-  if (!date) return "-"
+  if (!date) return "-";
 
-  const value = moment(date)
-  return value.isValid() ? value.format("YYYY-MM-DD") : "-"
+  const value = moment(date);
+  return value.isValid() ? value.format("YYYY-MM-DD") : "-";
 }
 
 function formatAmount(amount?: string | number | null) {
-  if (amount === undefined || amount === null || amount === "") return "-"
+  if (amount === undefined || amount === null || amount === "") return "-";
 
-  const number = Number(String(amount).replace(/[^\d.-]/g, ""))
+  const number = Number(String(amount).replace(/[^\d.-]/g, ""));
 
   if (Number.isNaN(number)) {
-    return String(amount)
+    return String(amount);
   }
 
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "PKR",
     maximumFractionDigits: 0,
-  }).format(number)
+  }).format(number);
 }

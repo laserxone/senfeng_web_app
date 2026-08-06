@@ -1,20 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript : {
-    ignoreBuildErrors : true
+  typescript: {
+    ignoreBuildErrors: true,
   },
-    images: {
+  images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'firebasestorage.googleapis.com',
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
       },
       {
-        protocol : "https",
-        hostname : "utojullngqvuxoiapqel.supabase.co"
-      }
+        protocol: "https",
+        hostname: "utojullngqvuxoiapqel.supabase.co",
+      },
     ],
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

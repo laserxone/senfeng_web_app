@@ -1,58 +1,58 @@
-import pool from "@/config/db"
-import { addLog } from "@/lib/addLog"
-import { checkSuperadmin } from "@/lib/checkSuperadmin"
-import { generateLog } from "@/lib/generateLog"
-import { sendNotification } from "@/lib/sendNotification"
+import pool from "@/config/db";
+import { addLog } from "@/lib/addLog";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { generateLog } from "@/lib/generateLog";
+import { sendNotification } from "@/lib/sendNotification";
 import {
   sendNotificationToCRM,
   sendNotificationToCRMWithoutLead,
-} from "@/lib/sendNotificationToCRM"
-import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile"
-import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner"
-import { NextRequest, NextResponse } from "next/server"
-import { NOTIFICATION_TYPES } from "@/constants/notifications"
+} from "@/lib/sendNotificationToCRM";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
+import { NextRequest, NextResponse } from "next/server";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
+  const { uid } = await params;
 
   try {
-    const data = await req.json()
+    const data = await req.json();
 
     if (!data || Object.keys(data).length === 0) {
       return NextResponse.json(
         { message: "No data provided for insertion" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    const fields = Object.keys(data)
-    const values = Object.values(data)
-    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
+    const fields = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
     const query = `
         INSERT INTO customer (${fields.join(", ")})
         VALUES (${placeholders})
         RETURNING *
-    `
+    `;
 
-    const result = await pool.query(query, values)
+    const result = await pool.query(query, values);
 
     if (result.rows[0].lead) {
       sendNotificationToCRM(
         result.rows[0].lead,
         `${result.rows[0]?.name}-${result.rows[0]?.owner}`,
-        `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`
-      )
+        `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`,
+      );
     }
 
     if (result.rows[0]?.lead !== result.rows[0].created_by) {
       sendNotificationToCRMWithoutLead(
         `${result.rows[0]?.name}-${result.rows[0]?.owner}`,
-        `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`
-      )
+        `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`,
+      );
     }
 
     if (result.rows[0].ownership) {
@@ -61,63 +61,63 @@ export async function POST(
         `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`,
         result.rows[0].ownership,
         NOTIFICATION_TYPES.customer_assigned.title,
-        NOTIFICATION_TYPES.customer_assigned.category
-      )
+        NOTIFICATION_TYPES.customer_assigned.category,
+      );
       sendNotificationToMobile(
         `${result.rows[0]?.name}-${result.rows[0]?.owner} assigned to you`,
         "Customer",
         result.rows[0].ownership,
         result.rows[0],
         "client",
-        `/dashboard/customer/${result.rows[0].id}`
-      )
+        `/dashboard/customer/${result.rows[0].id}`,
+      );
     }
     sendNotificationToOwner(
       `${result.rows[0]?.name} - new customer added`,
       `${result.rows[0].member ? "member" : "customer"}/${result.rows[0].id}`,
       "lahore",
       "all",
-      NOTIFICATION_TYPES.customer_added.title
-    )
+      NOTIFICATION_TYPES.customer_added.title,
+    );
     try {
-      const logMSG = generateLog(data, "New customer added")
+      const logMSG = generateLog(data, "New customer added");
 
-      addLog({ text: logMSG, user_id: uid, customer_id: result.rows[0].id })
+      addLog({ text: logMSG, user_id: uid, customer_id: result.rows[0].id });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
 
     return NextResponse.json(
       { message: "Inserted successfully", data: result.rows[0] },
-      { status: 201 }
-    )
+      { status: 201 },
+    );
   } catch (error) {
-    console.error("Error inserting data: ", error)
+    console.error("Error inserting data: ", error);
     return NextResponse.json(
       { message: "Error adding customer" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
+  const { uid } = await params;
 
-  const searchParams = req.nextUrl.searchParams
-  const urlQuery = searchParams.get("withoutsale")
-  const mapQuery = searchParams.get("map")
-  const machinesQuery = searchParams.get("machines")
-  const start_date = searchParams.get("start_date")
-  const end_date = searchParams.get("end_date")
-  const user = searchParams.get("user")
-  const member = searchParams.get("member")
-  const office = searchParams.get("office")
+  const searchParams = req.nextUrl.searchParams;
+  const urlQuery = searchParams.get("withoutsale");
+  const mapQuery = searchParams.get("map");
+  const machinesQuery = searchParams.get("machines");
+  const start_date = searchParams.get("start_date");
+  const end_date = searchParams.get("end_date");
+  const user = searchParams.get("user");
+  const member = searchParams.get("member");
+  const office = searchParams.get("office");
 
   try {
-    const isAdmin = await checkSuperadmin(uid)
+    const isAdmin = await checkSuperadmin(uid);
 
     if (isAdmin) {
       if (mapQuery) {
@@ -132,16 +132,16 @@ export async function GET(
         users.name AS ownership_name
     FROM customer
     LEFT JOIN users ON customer.ownership = users.id
-`
+`;
 
         if (office) {
-          query += ` WHERE customer.office = '${office}'`
+          query += ` WHERE customer.office = '${office}'`;
         }
 
-        query += " ORDER BY customer.name ASC"
+        query += " ORDER BY customer.name ASC";
 
-        const result = await pool.query(query)
-        return NextResponse.json(result.rows, { status: 200 })
+        const result = await pool.query(query);
+        return NextResponse.json(result.rows, { status: 200 });
       } else if (urlQuery) {
         const result = await pool.query(`
                 SELECT 
@@ -150,10 +150,10 @@ export async function GET(
                 FROM customer
                 LEFT JOIN users ON customer.ownership = users.id
                 ORDER BY customer.name ASC;
-                `)
-        return NextResponse.json(result.rows, { status: 200 })
+                `);
+        return NextResponse.json(result.rows, { status: 200 });
       } else if (machinesQuery) {
-        const queryParams = []
+        const queryParams = [];
 
         let query = `
     SELECT 
@@ -202,35 +202,35 @@ export async function GET(
 
     LEFT JOIN users u 
       ON c.ownership = u.id
-  `
+  `;
 
         if (member) {
-          query += ` WHERE c.member IS TRUE`
+          query += ` WHERE c.member IS TRUE`;
         } else {
-          query += ` WHERE c.member IS FALSE`
+          query += ` WHERE c.member IS FALSE`;
         }
 
         if (start_date && end_date) {
-          queryParams.push(start_date, end_date)
+          queryParams.push(start_date, end_date);
 
           query += `
       AND s.contract_date BETWEEN $${queryParams.length - 1} AND $${queryParams.length}
-    `
+    `;
         }
 
         if (user) {
-          queryParams.push(user)
+          queryParams.push(user);
 
-          query += ` AND c.ownership = $${queryParams.length}`
+          query += ` AND c.ownership = $${queryParams.length}`;
         }
 
         query += `
     GROUP BY c.id, u.name, u.dp
-  `
+  `;
 
-        const result = await pool.query(query, queryParams)
+        const result = await pool.query(query, queryParams);
 
-        return NextResponse.json(result.rows, { status: 200 })
+        return NextResponse.json(result.rows, { status: 200 });
       } else {
         let query = `
                 SELECT 
@@ -239,55 +239,55 @@ export async function GET(
                 FROM customer
                 LEFT JOIN users ON customer.ownership = users.id
                 
-                `
+                `;
         if (member && member === "true") {
-          query += ` WHERE customer.member IS TRUE`
+          query += ` WHERE customer.member IS TRUE`;
         } else if (member && member === "false") {
-          query += ` WHERE customer.member IS FALSE`
+          query += ` WHERE customer.member IS FALSE`;
         }
-        query += ` ORDER BY customer.name ASC;`
-        const customerQuery = await pool.query(query)
-        const customers = customerQuery.rows
+        query += ` ORDER BY customer.name ASC;`;
+        const customerQuery = await pool.query(query);
+        const customers = customerQuery.rows;
 
         if (customers.length === 0) {
-          return NextResponse.json([], { status: 200 })
+          return NextResponse.json([], { status: 200 });
         }
 
-        const customerIds = customers.map((customer) => customer.id)
+        const customerIds = customers.map((customer) => customer.id);
 
         const salesQuery = await pool.query(
           `SELECT * FROM sale WHERE customer_id = ANY($1)`,
-          [customerIds]
-        )
-        const sales = salesQuery.rows
+          [customerIds],
+        );
+        const sales = salesQuery.rows;
 
         const customersWithSales = customers.map((customer) => {
           const customerSales = sales.filter(
-            (sale) => sale.customer_id === customer.id
-          )
+            (sale) => sale.customer_id === customer.id,
+          );
 
           const my_customer =
             Number(customer.ownership) === Number(uid) ||
-            customerSales.some((sale) => Number(sale.sell_by) === Number(uid))
+            customerSales.some((sale) => Number(sale.sell_by) === Number(uid));
 
           return {
             ...customer,
             sales: customerSales,
             my_customer,
-          }
-        })
+          };
+        });
 
-        return NextResponse.json(customersWithSales, { status: 200 })
+        return NextResponse.json(customersWithSales, { status: 200 });
       }
     } else {
       const userQuery = await pool.query(
         `SELECT id, designation, limited_access FROM users WHERE id = $1`,
-        [uid]
-      )
-      const user = userQuery.rows[0]
+        [uid],
+      );
+      const user = userQuery.rows[0];
 
-      let query = ""
-      const queryParams = []
+      let query = "";
+      const queryParams = [];
 
       query = `
     SELECT 
@@ -324,59 +324,59 @@ export async function GET(
       ON TRUE`
         : ""
     }
-  `
+  `;
 
-      let whereClauses = []
+      let whereClauses = [];
 
       if (user.limited_access) {
         if (
           user.designation === "Social Media Manager" ||
           user.designation === "Customer Relationship Manager"
         ) {
-          whereClauses.push(`c.lead = $${queryParams.length + 1}`)
-          queryParams.push(uid)
+          whereClauses.push(`c.lead = $${queryParams.length + 1}`);
+          queryParams.push(uid);
         } else if (user.designation === "Sales") {
-          whereClauses.push(`c.ownership = $${queryParams.length + 1}`)
-          queryParams.push(uid)
+          whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
+          queryParams.push(uid);
         }
       }
       if (user.designation === "Dealer") {
-        whereClauses.push(`c.ownership = $${queryParams.length + 1}`)
-        queryParams.push(uid)
+        whereClauses.push(`c.ownership = $${queryParams.length + 1}`);
+        queryParams.push(uid);
       }
 
       if (member && member === "true") {
-        whereClauses.push("c.member IS TRUE")
+        whereClauses.push("c.member IS TRUE");
       } else if (member && member === "false") {
-        whereClauses.push("c.member IS FALSE")
+        whereClauses.push("c.member IS FALSE");
       }
 
       if (machinesQuery && start_date && end_date) {
         whereClauses.push(
-          `s.contract_date BETWEEN $${queryParams.length + 1} AND $${queryParams.length + 2}`
-        )
-        queryParams.push(start_date, end_date)
+          `s.contract_date BETWEEN $${queryParams.length + 1} AND $${queryParams.length + 2}`,
+        );
+        queryParams.push(start_date, end_date);
       }
 
       if (whereClauses.length > 0) {
-        query += " WHERE " + whereClauses.join(" AND ")
+        query += " WHERE " + whereClauses.join(" AND ");
       }
 
       query += `
     GROUP BY c.id, u.name
     ORDER BY c.name ASC
-  `
+  `;
 
-      const result = await pool.query(query, queryParams)
-      return NextResponse.json(result.rows, { status: 200 })
+      const result = await pool.query(query, queryParams);
+      return NextResponse.json(result.rows, { status: 200 });
     }
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

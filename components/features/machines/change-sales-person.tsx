@@ -1,19 +1,19 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { FieldLegend, FieldSet } from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
-import { UserSearch } from "@/components/shared/search/user-search"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { User } from "lucide-react"
-import { useState } from "react"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { FieldLegend, FieldSet } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { UserSearch } from "@/components/shared/search/user-search";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { User } from "lucide-react";
+import { useState } from "react";
 
 const ChangeSalesPersonDialog = ({
   open,
@@ -22,36 +22,36 @@ const ChangeSalesPersonDialog = ({
   onRefresh,
   existing,
 }: {
-  open: boolean
-  onClose: () => void
-  machine_id: number | undefined
-  onRefresh: () => Promise<void>
-  existing: string | undefined
+  open: boolean;
+  onClose: () => void;
+  machine_id: number | undefined;
+  onRefresh: () => Promise<void>;
+  existing: string | undefined;
 }) => {
-  const [selectedUser, setSelectedUser] = useState<null | number>(null)
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [selectedUser, setSelectedUser] = useState<null | number>(null);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   async function handleSubmit() {
-    if (!selectedUser || !machine_id) return
+    if (!selectedUser || !machine_id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.put(`/${userID}/machine/${machine_id}`, {
         sell_by: selectedUser,
-      })
+      });
 
-      await onRefresh()
-      handleClose()
+      await onRefresh();
+      handleClose();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleClose() {
-    setSelectedUser(null)
-    onClose()
+    setSelectedUser(null);
+    onClose();
   }
 
   return (
@@ -126,7 +126,7 @@ const ChangeSalesPersonDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default ChangeSalesPersonDialog
+export default ChangeSalesPersonDialog;

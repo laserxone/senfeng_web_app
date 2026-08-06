@@ -1,35 +1,35 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const searchParams = req.nextUrl.searchParams
-    const uid = searchParams.get("uid")
+    const searchParams = req.nextUrl.searchParams;
+    const uid = searchParams.get("uid");
 
     if (!uid) {
-      return NextResponse.json({ message: "Invalid user" }, { status: 400 })
+      return NextResponse.json({ message: "Invalid user" }, { status: 400 });
     }
 
     const result = await pool.query(
       `SELECT id, active, office FROM users WHERE id = $1`,
-      [uid]
-    )
+      [uid],
+    );
 
-    let user = result.rows[0]
+    let user = result.rows[0];
 
     if (!user || !user.active) {
       return NextResponse.json(
         { message: "User is inactive or does not exist" },
-        { status: 403 }
-      )
+        { status: 403 },
+      );
     }
 
     return NextResponse.json(
       { active: true, office: user.office },
-      { status: 200 }
-    )
+      { status: 200 },
+    );
   } catch (err) {
-    console.error("DB Error:", err)
-    return NextResponse.json({ message: "Server error" }, { status: 500 })
+    console.error("DB Error:", err);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

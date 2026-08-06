@@ -1,47 +1,47 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import Heading from "@/components/ui/heading"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { UserMap } from "@/lib/types"
-import { MapProvider } from "@/providers/map-provider"
+"use client";
+import { Button } from "@/components/ui/button";
+import Heading from "@/components/ui/heading";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UserMap } from "@/lib/types";
+import { MapProvider } from "@/providers/map-provider";
 import {
   GoogleMap,
   InfoWindow,
   Marker,
   Polyline,
   MarkerClusterer,
-} from "@react-google-maps/api"
-import { Filter } from "lucide-react"
-import moment from "moment"
-import { useTheme } from "next-themes"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+} from "@react-google-maps/api";
+import { Filter } from "lucide-react";
+import moment from "moment";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const containerStyle = {
   width: "100%",
   height: "100%",
-}
+};
 
 export default function Page() {
-  const [maps, setMaps] = useState<UserMap[]>([])
-  const { theme } = useTheme()
-  const [filterVisible, setFilterVisible] = useState(false)
-  const { userID } = useUserDetail()
-  const PAGE_SIZE = 20
+  const [maps, setMaps] = useState<UserMap[]>([]);
+  const { theme } = useTheme();
+  const [filterVisible, setFilterVisible] = useState(false);
+  const { userID } = useUserDetail();
+  const PAGE_SIZE = 20;
 
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(0);
 
   const paginatedData = useMemo(() => {
-    return filterClosePoints(maps, 100)
-  }, [maps])
+    return filterClosePoints(maps, 100);
+  }, [maps]);
 
   const filteredData = paginatedData.slice(
     page * PAGE_SIZE,
-    (page + 1) * PAGE_SIZE
-  )
+    (page + 1) * PAGE_SIZE,
+  );
 
   const [defaultMapOptions, setDefaultMapOptions] = useState({
     zoomControl: true,
@@ -49,53 +49,53 @@ export default function Page() {
     gestureHandling: "auto",
     mapTypeId: "roadmap",
     colorScheme: "DARK",
-  })
+  });
 
   useEffect(() => {
     if (theme === "dark") {
       setDefaultMapOptions((prevState) => ({
         ...prevState,
         colorScheme: "DARK",
-      }))
+      }));
     } else {
       setDefaultMapOptions((prevState) => ({
         ...prevState,
         colorScheme: "LIGHT",
-      }))
+      }));
     }
-  }, [theme])
+  }, [theme]);
 
   async function fetchData(start: string, end: string, user?: number) {
     if (!start || !end || !user) {
-      toast.info("User is required")
-      return
+      toast.info("User is required");
+      return;
     }
     return new Promise<void>((resolve) => {
       axios
         .get(
-          `/${userID}/locations?start_date=${start}&end_date=${end}&user=${user}`
+          `/${userID}/locations?start_date=${start}&end_date=${end}&user=${user}`,
         )
         .then((response) => {
-          setMaps(response.data)
+          setMaps(response.data);
         })
         .finally(() => {
-          resolve()
-        })
-    })
+          resolve();
+        });
+    });
   }
 
   const MapWithPath = useCallback(
     ({ data }: { data: UserMap[] }) => {
-      const [selected, setSelected] = useState<number | null>(null)
+      const [selected, setSelected] = useState<number | null>(null);
 
-      if (!data.length) return <p>No data to show</p>
+      if (!data.length) return <p>No data to show</p>;
 
       const path = data.map((item) => ({
         lat: item.location[0],
         lng: item.location[1],
-      }))
+      }));
 
-      const center = path[0]
+      const center = path[0];
 
       return (
         <div className="flex flex-1 flex-col gap-4 sm:flex-row">
@@ -165,7 +165,7 @@ export default function Page() {
                   ? "Start"
                   : index === data.length - 1
                     ? "End"
-                    : `#${index + 1}`
+                    : `#${index + 1}`;
 
               return (
                 <div
@@ -190,14 +190,14 @@ export default function Page() {
                     {item.user_name}
                   </div>
                 </div>
-              )
+              );
             })}
           </ScrollArea>
         </div>
-      )
+      );
     },
-    [filteredData, defaultMapOptions]
-  )
+    [filteredData, defaultMapOptions],
+  );
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -212,7 +212,7 @@ export default function Page() {
             <div className="flex gap-2">
               <Button
                 onClick={() => {
-                  setFilterVisible(true)
+                  setFilterVisible(true);
                 }}
               >
                 <Filter /> Filter user and date
@@ -251,49 +251,49 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user)
+          await fetchData(val.start, val.end, val.user);
         }}
       />
     </div>
-  )
+  );
 }
 
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371e3 // meters
-  const φ1 = (lat1 * Math.PI) / 180
-  const φ2 = (lat2 * Math.PI) / 180
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180
+  const R = 6371e3; // meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
   const a =
     Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c // meters
+  return R * c; // meters
 }
 
 function filterClosePoints(data: UserMap[], threshold = 20) {
-  if (!data.length) return []
+  if (!data.length) return [];
 
-  const filtered = [data[0]]
+  const filtered = [data[0]];
 
   for (let i = 1; i < data.length; i++) {
-    const prev = filtered[filtered.length - 1]
-    const curr = data[i]
+    const prev = filtered[filtered.length - 1];
+    const curr = data[i];
 
     const dist = getDistance(
       prev.location[0],
       prev.location[1],
       curr.location[0],
-      curr.location[1]
-    )
+      curr.location[1],
+    );
 
     if (dist > threshold) {
-      filtered.push(curr)
+      filtered.push(curr);
     }
   }
 
-  return filtered
+  return filtered;
 }

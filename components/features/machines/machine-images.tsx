@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,17 +6,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { zodResolver } from "@hookform/resolvers/zod"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Hash,
   MessageSquareText,
   ReceiptText,
   ShieldCheck,
   Trash,
-} from "lucide-react"
+} from "lucide-react";
 import {
   memo,
   useCallback,
@@ -24,72 +24,72 @@ import {
   useEffect,
   useMemo,
   useState,
-} from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
+} from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
-import DropzoneMulti from "@/components/shared/uploads/dropzone-multi"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Separator } from "@/components/ui/separator"
+import DropzoneMulti from "@/components/shared/uploads/dropzone-multi";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
 
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { DeleteFromStorage } from "@/lib/deleteFunction"
-import { MachineProps } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { FileText, Images, UploadCloud } from "lucide-react"
-import moment from "moment"
-import * as pdfjsLib from "pdfjs-dist"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import { toast } from "sonner"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { MachineProps } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { FileText, Images, UploadCloud } from "lucide-react";
+import moment from "moment";
+import * as pdfjsLib from "pdfjs-dist";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import { toast } from "sonner";
 
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 
 type RenderImageProps = {
-  img: string
-  type?: string
+  img: string;
+  type?: string;
   onDelete?: (
     img: string,
     imageType: string,
-    imageIndex: number
-  ) => Promise<void> | void
-  imageType?: string
-  imageIndex?: number
-}
+    imageIndex: number,
+  ) => Promise<void> | void;
+  imageType?: string;
+  imageIndex?: number;
+};
 
 type ImageSheetProps = {
-  payment_lock: boolean | undefined
-  visible: boolean
-  onClose: () => void
-  img: string | null
-  note: string | null
-  remarks: string | null
-  id: number | undefined
-  onRefresh: () => Promise<void>
-  editAllowed: boolean
-  cheque_id: string | null
-  override: boolean
-}
+  payment_lock: boolean | undefined;
+  visible: boolean;
+  onClose: () => void;
+  img: string | null;
+  note: string | null;
+  remarks: string | null;
+  id: number | undefined;
+  onRefresh: () => Promise<void>;
+  editAllowed: boolean;
+  cheque_id: string | null;
+  override: boolean;
+};
 
 type FormValues = {
-  note: string
-  images: string[]
-  handover_user_id?: number | null
-}
+  note: string;
+  images: string[];
+  handover_user_id?: number | null;
+};
 
 const formSchema = z
   .object({
@@ -104,8 +104,8 @@ const formSchema = z
     {
       message: "Handover User ID is required",
       path: ["handover_user_id"],
-    }
-  )
+    },
+  );
 
 export const ImageSheet = ({
   payment_lock,
@@ -120,20 +120,20 @@ export const ImageSheet = ({
   cheque_id,
   override,
 }: ImageSheetProps) => {
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   async function handleDelete(id: string | number) {
     try {
       if (img && !img.includes("https")) {
-        await DeleteFromStorage(img)
+        await DeleteFromStorage(img);
       }
-      await axios.delete(`/${userID}/payment/${id}`)
-      await onRefresh()
-      toast.success("Payment Deleted")
-      onClose()
+      await axios.delete(`/${userID}/payment/${id}`);
+      await onRefresh();
+      toast.success("Payment Deleted");
+      onClose();
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
@@ -164,9 +164,9 @@ export const ImageSheet = ({
                   size="sm"
                   disabled={deleteLoading}
                   onClick={() => {
-                    if (!id) return
-                    setDeleteLoading(true)
-                    handleDelete(id)
+                    if (!id) return;
+                    setDeleteLoading(true);
+                    handleDelete(id);
                   }}
                 >
                   {deleteLoading ? <Spinner /> : <Trash className="h-4 w-4" />}
@@ -249,8 +249,8 @@ export const ImageSheet = ({
         </div>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 export const ViewImagesSheet = ({
   editAllowed,
@@ -260,135 +260,135 @@ export const ViewImagesSheet = ({
   onRefresh,
   customer_id,
 }: {
-  editAllowed: boolean
-  visible: boolean
-  onClose: () => void
-  onRefresh: () => Promise<void>
-  data: MachineProps | undefined
-  customer_id: number | undefined
+  editAllowed: boolean;
+  visible: boolean;
+  onClose: () => void;
+  onRefresh: () => Promise<void>;
+  data: MachineProps | undefined;
+  customer_id: number | undefined;
 }) => {
-  if (!data) return null
+  if (!data) return null;
 
-  const [contractPdfImages, setContractPdfImages] = useState<string[]>([])
-  const [otherPdfImages, setOtherPdfImages] = useState<string[]>([])
-  const [addImageVisible, setAddImageVisible] = useState(false)
+  const [contractPdfImages, setContractPdfImages] = useState<string[]>([]);
+  const [otherPdfImages, setOtherPdfImages] = useState<string[]>([]);
+  const [addImageVisible, setAddImageVisible] = useState(false);
 
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
-  const contractImages = useMemo(() => data?.contract_images_png || [], [data])
-  const otherImages = useMemo(() => data?.other_images_png || [], [data])
-  const handshakeImages = useMemo(() => data?.handshake_images || [], [data])
+  const contractImages = useMemo(() => data?.contract_images_png || [], [data]);
+  const otherImages = useMemo(() => data?.other_images_png || [], [data]);
+  const handshakeImages = useMemo(() => data?.handshake_images || [], [data]);
   const handoverImages = useMemo(
     () => data?.final_handover_images || [],
-    [data]
-  )
+    [data],
+  );
   const nameplateImages = useMemo(
     () => data?.machine_nameplate_images || [],
-    [data]
-  )
+    [data],
+  );
   const installationReport = useMemo(
     () => data?.installation_report || [],
-    [data]
-  )
+    [data],
+  );
 
   const prepareData = useCallback(
     async (pdfUrls: File[], condition: string) => {
-      let localImages: string[] = []
+      let localImages: string[] = [];
       await Promise.all(
         pdfUrls.map(async (pdfUrl) => {
-          const pdfData = await fetchPdfData(pdfUrl)
-          const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise
+          const pdfData = await fetchPdfData(pdfUrl);
+          const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
           for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const page = await pdfDoc.getPage(i)
-            const scale = 2
-            const viewport = page.getViewport({ scale })
+            const page = await pdfDoc.getPage(i);
+            const scale = 2;
+            const viewport = page.getViewport({ scale });
 
-            const canvas = document.createElement("canvas")
-            const ctx = canvas.getContext("2d")
-            canvas.width = viewport.width
-            canvas.height = viewport.height
-            if (!ctx) return
-            await page.render({ canvasContext: ctx, viewport, canvas }).promise
-            const imgData = canvas.toDataURL("image/jpeg")
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            if (!ctx) return;
+            await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+            const imgData = canvas.toDataURL("image/jpeg");
 
-            localImages.push(imgData)
+            localImages.push(imgData);
           }
-        })
-      )
+        }),
+      );
       if (condition === "pdf") {
-        setContractPdfImages((prevState) => [...prevState, ...localImages])
+        setContractPdfImages((prevState) => [...prevState, ...localImages]);
       } else {
-        setOtherPdfImages((prevState) => [...prevState, ...localImages])
+        setOtherPdfImages((prevState) => [...prevState, ...localImages]);
       }
     },
-    []
-  )
+    [],
+  );
 
   useEffect(() => {
-    if (!visible) return
+    if (!visible) return;
 
     if (data?.contract_images_pdf?.length) {
-      prepareData(data.contract_images_pdf, "pdf")
+      prepareData(data.contract_images_pdf, "pdf");
     }
     if (data?.other_images_pdf?.length) {
-      prepareData(data.other_images_pdf, "other")
+      prepareData(data.other_images_pdf, "other");
     }
 
     return () => {
-      setContractPdfImages([])
-      setOtherPdfImages([])
-    }
-  }, [visible, data?.contract_images_pdf, data?.other_images_pdf, prepareData])
+      setContractPdfImages([]);
+      setOtherPdfImages([]);
+    };
+  }, [visible, data?.contract_images_pdf, data?.other_images_pdf, prepareData]);
 
   const handleClose = useCallback(() => {
-    onClose()
-  }, [onClose])
+    onClose();
+  }, [onClose]);
 
   const handleDeleteImage = async (
     imgUrl: string,
     typeKey: string,
-    imageIndex: number
+    imageIndex: number,
   ) => {
     try {
-      if (!imgUrl || !typeKey) return
-      const currentImages = data[typeKey as keyof MachineProps]
-      if (!Array.isArray(currentImages)) return
+      if (!imgUrl || !typeKey) return;
+      const currentImages = data[typeKey as keyof MachineProps];
+      if (!Array.isArray(currentImages)) return;
 
       const updatedImages = currentImages.filter(
-        (_: string, index: number) => index !== imageIndex
-      )
+        (_: string, index: number) => index !== imageIndex,
+      );
 
-      let storagePath = ""
+      let storagePath = "";
       if (imgUrl.includes("https")) {
-        storagePath = ""
+        storagePath = "";
       } else {
-        storagePath = imgUrl
+        storagePath = imgUrl;
       }
 
       if (storagePath && !updatedImages.includes(imgUrl)) {
-        await DeleteFromStorage(storagePath)
+        await DeleteFromStorage(storagePath);
       }
 
       let formData: Record<string, any> = {
         [typeKey]: updatedImages,
-      }
+      };
 
       if (typeKey === "final_handover_images") {
-        formData.handover_user_id = null
+        formData.handover_user_id = null;
       }
 
-      await axios.put(`/${userID}/machine/${data.id}`, formData)
+      await axios.put(`/${userID}/machine/${data.id}`, formData);
 
-      toast.success("Image deleted successfully.")
-      await onRefresh()
+      toast.success("Image deleted successfully.");
+      await onRefresh();
     } catch (error) {
-      toast.error("Failed to delete image")
+      toast.error("Failed to delete image");
     }
-  }
+  };
 
-  const isMobile = useIsMobile()
-  const maxwidth = isMobile ? "94vw" : "72vw"
+  const isMobile = useIsMobile();
+  const maxwidth = isMobile ? "94vw" : "72vw";
   const totalImages =
     handshakeImages.length +
     nameplateImages.length +
@@ -397,16 +397,16 @@ export const ViewImagesSheet = ({
     contractImages.length +
     contractPdfImages.length +
     otherImages.length +
-    otherPdfImages.length
+    otherPdfImages.length;
 
   type SheetImageGroup = {
-    title: string
-    description: string
-    images: string[]
-    imageType: string
-    pdfImages?: string[]
-    emptyText: string
-  }
+    title: string;
+    description: string;
+    images: string[];
+    imageType: string;
+    pdfImages?: string[];
+    emptyText: string;
+  };
 
   const imageGroups: SheetImageGroup[] = [
     {
@@ -453,10 +453,10 @@ export const ViewImagesSheet = ({
       pdfImages: otherPdfImages,
       emptyText: "No additional images found",
     },
-  ]
+  ];
 
   const renderImageGroup = (group: SheetImageGroup) => {
-    const count = group.images.length + (group.pdfImages?.length || 0)
+    const count = group.images.length + (group.pdfImages?.length || 0);
 
     return (
       <Card
@@ -493,7 +493,7 @@ export const ViewImagesSheet = ({
                   img={item}
                   imageIndex={ind}
                   onDelete={(a, b, index) => {
-                    if (editAllowed) return handleDeleteImage(a, b, index)
+                    if (editAllowed) return handleDeleteImage(a, b, index);
                   }}
                   imageType={group.imageType}
                 />
@@ -513,8 +513,8 @@ export const ViewImagesSheet = ({
           )}
         </CardContent>
       </Card>
-    )
-  }
+    );
+  };
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
@@ -552,9 +552,9 @@ export const ViewImagesSheet = ({
               className="h-8 rounded-lg px-3"
               onClick={() => {
                 if (editAllowed) {
-                  setAddImageVisible(true)
+                  setAddImageVisible(true);
                 } else {
-                  toast.error("You are not allowed to perform this action")
+                  toast.error("You are not allowed to perform this action");
                 }
               }}
             >
@@ -579,12 +579,12 @@ export const ViewImagesSheet = ({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 const RenderImage = memo(
   ({ img, type, onDelete, imageType, imageIndex = -1 }: RenderImageProps) => {
-    const [deleteLoading, setDeleteLoading] = useState(false)
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     return (
       <div className="group relative overflow-hidden rounded-lg border bg-slate-50 shadow-sm transition-shadow hover:shadow-md dark:bg-zinc-900/70">
@@ -603,12 +603,12 @@ const RenderImage = memo(
             className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-90 shadow-sm transition-opacity group-hover:opacity-100"
             disabled={deleteLoading}
             onClick={async () => {
-              if (deleteLoading || !imageType || imageIndex < 0) return
-              setDeleteLoading(true)
+              if (deleteLoading || !imageType || imageIndex < 0) return;
+              setDeleteLoading(true);
               try {
-                await onDelete(img, imageType, imageIndex)
+                await onDelete(img, imageType, imageIndex);
               } finally {
-                setDeleteLoading(false)
+                setDeleteLoading(false);
               }
             }}
           >
@@ -616,9 +616,9 @@ const RenderImage = memo(
           </Button>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
 const AddImages = ({
   customer_id,
@@ -627,15 +627,15 @@ const AddImages = ({
   onClose,
   onRefresh,
 }: {
-  customer_id: number | undefined
-  machine: MachineProps
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
+  customer_id: number | undefined;
+  machine: MachineProps;
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
-  const { state: OfficeState } = useContext(OfficeContext)!
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
+  const { state: OfficeState } = useContext(OfficeContext)!;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -644,106 +644,106 @@ const AddImages = ({
       images: [],
       handover_user_id: null,
     },
-  })
+  });
 
   async function onSubmit(values: FormValues) {
-    setLoading(true)
-    let allProcessedImages: string[] = []
+    setLoading(true);
+    let allProcessedImages: string[] = [];
     await Promise.all(
       values.images.map(async (item) => {
         const name = `${
           OfficeState.value.data
         }/customer/${customer_id}/machine/${machine.id}/${
           values.note
-        }/${moment().valueOf().toString()}.png`
-        const imageRefResult = await UploadImage(item, name)
-        allProcessedImages.push(name)
-      })
-    )
-    let formData: Partial<MachineProps> = {}
+        }/${moment().valueOf().toString()}.png`;
+        const imageRefResult = await UploadImage(item, name);
+        allProcessedImages.push(name);
+      }),
+    );
+    let formData: Partial<MachineProps> = {};
     if (values.note === "contract") {
       formData.contract_images_png = [
         ...machine.contract_images_png,
         ...allProcessedImages,
-      ]
+      ];
     } else if (values.note === "additional") {
       formData.other_images_png = [
         ...machine.other_images_png,
         ...allProcessedImages,
-      ]
+      ];
     } else if (values.note === "handshake") {
       formData.handshake_images = [
         ...machine.handshake_images,
         ...allProcessedImages,
-      ]
+      ];
     } else if (values.note === "installation") {
       formData.installation_report = [
         ...machine.installation_report,
         ...allProcessedImages,
-      ]
+      ];
     } else if (values.note === "handover") {
       formData.final_handover_images = [
         ...machine.final_handover_images,
         ...allProcessedImages,
-      ]
-      formData.handover_user_id = values.handover_user_id
+      ];
+      formData.handover_user_id = values.handover_user_id;
     } else if (values.note === "nameplate") {
       formData.machine_nameplate_images = [
         ...machine.machine_nameplate_images,
         ...allProcessedImages,
-      ]
+      ];
     }
 
     await axios
       .put(`/${userID}/machine/${machine.id}`, formData)
       .then(async (response) => {
-        await onRefresh()
-        handleClose(false)
+        await onRefresh();
+        handleClose(false);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    onClose(val)
+    form.reset();
+    onClose(val);
   }
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (event.target.files && event.target.files.length > 0) {
-      const files: File[] = Array.from(event.target.files)
+      const files: File[] = Array.from(event.target.files);
 
-      let localImages: any[] = []
+      let localImages: any[] = [];
 
       await Promise.all(
         files.map(async (file) => {
-          const pdfData = await fetchPdfData(file)
-          const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise
+          const pdfData = await fetchPdfData(file);
+          const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
 
           for (let i = 1; i <= pdfDoc.numPages; i++) {
-            const page = await pdfDoc.getPage(i)
-            const scale = 2 // Increase for better quality
-            const viewport = page.getViewport({ scale })
+            const page = await pdfDoc.getPage(i);
+            const scale = 2; // Increase for better quality
+            const viewport = page.getViewport({ scale });
 
-            const canvas = document.createElement("canvas")
-            const ctx = canvas.getContext("2d")
-            canvas.width = viewport.width
-            canvas.height = viewport.height
-            if (!ctx) return
-            await page.render({ canvasContext: ctx, viewport, canvas }).promise
-            const imgData = canvas.toDataURL("image/jpeg")
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            if (!ctx) return;
+            await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+            const imgData = canvas.toDataURL("image/jpeg");
 
-            localImages.push(imgData)
+            localImages.push(imgData);
           }
-        })
-      )
+        }),
+      );
 
-      form.setValue("images", localImages)
+      form.setValue("images", localImages);
     }
-  }
+  };
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -938,10 +938,10 @@ const AddImages = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const fetchPdfData = async (file: File) => {
-  const arrayBuffer = await file.arrayBuffer()
-  return new Uint8Array(arrayBuffer)
-}
+  const arrayBuffer = await file.arrayBuffer();
+  return new Uint8Array(arrayBuffer);
+};

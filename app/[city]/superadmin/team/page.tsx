@@ -1,15 +1,15 @@
-"use client"
-import PageTable from "@/components/shared/tables/app-table"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+"use client";
+import PageTable from "@/components/shared/tables/app-table";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
@@ -17,10 +17,10 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import Heading from "@/components/ui/heading"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/field";
+import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -28,21 +28,21 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { Team } from "@/lib/types"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
-import moment from "moment"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { Team } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const columns: ColumnDef<Team>[] = [
   {
@@ -57,7 +57,7 @@ const columns: ColumnDef<Team>[] = [
           Name
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div className="ml-2">{row.getValue("name")}</div>,
   },
@@ -73,7 +73,7 @@ const columns: ColumnDef<Team>[] = [
           Designation
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("designation")}</div>,
   },
@@ -90,7 +90,7 @@ const columns: ColumnDef<Team>[] = [
           Joining Date
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div>
@@ -113,7 +113,7 @@ const columns: ColumnDef<Team>[] = [
           Leaving Date
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div>
@@ -136,7 +136,7 @@ const columns: ColumnDef<Team>[] = [
           Email
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
   },
@@ -153,7 +153,7 @@ const columns: ColumnDef<Team>[] = [
           Office
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div className="uppercase">{row.getValue("office")}</div>
@@ -172,43 +172,43 @@ const columns: ColumnDef<Team>[] = [
           Status
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => {
-      const val = row.getValue("active")
+      const val = row.getValue("active");
       return (
         <Badge variant={val ? "default" : "destructive"}>
           {val ? "Active" : "Inactive"}
         </Badge>
-      )
+      );
     },
   },
-]
+];
 
 export default function Page() {
-  const [open, setOpen] = useState(false)
-  const [data, setData] = useState<Team[]>([])
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-  const { userID, office, base_route } = useUserDetail()
-  const [status, setStatus] = useState("Active")
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { userID, office, base_route } = useUserDetail();
+  const [status, setStatus] = useState("Active");
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
         .get(`/${userID}/user?withbranch=true`)
         .then((response) => {
-          setData(response.data)
+          setData(response.data);
         })
         .finally(() => {
-          resolve(true)
-          setLoading(false)
-        })
-    })
+          resolve(true);
+          setLoading(false);
+        });
+    });
   }
 
   return (
@@ -217,7 +217,7 @@ export default function Page() {
         <Heading panel title="Team" description="Manage team members" />
         <Button
           onClick={() => {
-            setOpen(true)
+            setOpen(true);
           }}
         >
           Add User
@@ -228,17 +228,17 @@ export default function Page() {
         loading={loading}
         columns={columns}
         data={data.filter((item) => {
-          if (status === "All") return true
-          if (status === "Active") return item.active === true
-          return item.active === false
+          if (status === "All") return true;
+          if (status === "Active") return item.active === true;
+          return item.active === false;
         })}
         onRowClick={(val, event) => {
           if (val.id) {
-            const url = `/${base_route}/team/${val.id}`
+            const url = `/${base_route}/team/${val.id}`;
             if (event.ctrlKey || event.metaKey) {
-              window.open(url, "_blank")
+              window.open(url, "_blank");
             } else {
-              router.push(url)
+              router.push(url);
             }
           }
         }}
@@ -264,23 +264,23 @@ export default function Page() {
         onClose={setOpen}
         office={office}
         onReturn={(newUser) => {
-          let temp = [...data]
-          temp.push(newUser)
+          let temp = [...data];
+          temp.push(newUser);
           temp.sort((a, b) => {
-            const nameA = a.name ? a.name.toLowerCase() : ""
-            const nameB = b.name ? b.name.toLowerCase() : ""
+            const nameA = a.name ? a.name.toLowerCase() : "";
+            const nameB = b.name ? b.name.toLowerCase() : "";
 
-            if (!nameA && nameB) return 1
-            if (nameA && !nameB) return -1
+            if (!nameA && nameB) return 1;
+            if (nameA && !nameB) return -1;
 
-            return nameA.localeCompare(nameB)
-          })
-          setData([...temp])
-          toast.success("New user added")
+            return nameA.localeCompare(nameB);
+          });
+          setData([...temp]);
+          toast.success("New user added");
         }}
       />
     </div>
-  )
+  );
 }
 
 const formSchema = z.object({
@@ -290,9 +290,9 @@ const formSchema = z.object({
   joining_date: z.date({ error: "Joining date is required." }),
   office: z.string().min(1, { message: "" }),
   note: z.string().optional(),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 const AddUserDialog = ({
   visible,
@@ -300,13 +300,13 @@ const AddUserDialog = ({
   onReturn,
   office = "islamabad",
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onReturn: (item: any) => void
-  office: string
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onReturn: (item: any) => void;
+  office: string;
 }) => {
-  const [dataLoading, setDataLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [dataLoading, setDataLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -318,10 +318,10 @@ const AddUserDialog = ({
       note: "",
       office: office,
     },
-  })
+  });
 
   function onSubmit(values: FormValues) {
-    setDataLoading(true)
+    setDataLoading(true);
 
     axios
       .post(`/${userID}/user`, {
@@ -329,12 +329,12 @@ const AddUserDialog = ({
         name: values.name.toUpperCase(),
       })
       .then(async (response) => {
-        onReturn(response.data)
-        handleClose(false)
+        onReturn(response.data);
+        handleClose(false);
       })
       .finally(() => {
-        setDataLoading(false)
-      })
+        setDataLoading(false);
+      });
   }
 
   const designations = [
@@ -356,11 +356,11 @@ const AddUserDialog = ({
     },
     { label: "Office Boy", value: "Office Boy" },
     { label: "Store Manager", value: "Store Manager" },
-  ]
+  ];
 
   async function handleClose(val: boolean) {
-    onClose(val)
-    form.reset()
+    onClose(val);
+    form.reset();
   }
 
   return (
@@ -531,5 +531,5 @@ const AddUserDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

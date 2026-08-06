@@ -1,64 +1,64 @@
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { TaskProps } from "@/lib/types"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { TaskProps } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
   Clock,
   UserRound,
-} from "lucide-react"
-import moment from "moment"
-import { Badge } from "@/components/ui/badge"
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog"
-import { Button } from "@/components/ui/button"
-import Spinner from "@/components/ui/spinner"
-import { Progress } from "@/components/ui/progress"
+} from "lucide-react";
+import moment from "moment";
+import { Badge } from "@/components/ui/badge";
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import { Button } from "@/components/ui/button";
+import Spinner from "@/components/ui/spinner";
+import { Progress } from "@/components/ui/progress";
 
 const RenderTodayTasks = ({
   data,
   onRefresh,
 }: {
-  data: { total: number; data: TaskProps[] } | null
-  onRefresh?: (start: string, end: string) => Promise<void>
+  data: { total: number; data: TaskProps[] } | null;
+  onRefresh?: (start: string, end: string) => Promise<void>;
 }) => {
-  const { userID } = useUserDetail()
-  const [tasks, setTasks] = useState<TaskProps[]>([])
-  const [loadingId, setLoadingId] = useState<TaskProps["id"] | null>(null)
+  const { userID } = useUserDetail();
+  const [tasks, setTasks] = useState<TaskProps[]>([]);
+  const [loadingId, setLoadingId] = useState<TaskProps["id"] | null>(null);
 
   useEffect(() => {
-    setTasks(data?.data || [])
-  }, [data])
+    setTasks(data?.data || []);
+  }, [data]);
 
-  const totalTasks = data?.total ?? tasks.length
+  const totalTasks = data?.total ?? tasks.length;
   const completedTasks = tasks.filter(
-    (task) => task.status?.toLowerCase() === "completed"
-  ).length
+    (task) => task.status?.toLowerCase() === "completed",
+  ).length;
   const progress = totalTasks
     ? Math.round((completedTasks / totalTasks) * 100)
-    : 0
+    : 0;
 
   async function handleMarkCompleted(task: TaskProps) {
-    setLoadingId(task.id)
+    setLoadingId(task.id);
     try {
       await axios.put(`/${userID}/task/${task.id}`, {
         id: task.id,
         status: "Completed",
-      })
+      });
       setTasks((prev) =>
         prev.map((item) =>
-          item.id === task.id ? { ...item, status: "Completed" } : item
-        )
-      )
-      toast.success("Task marked completed")
+          item.id === task.id ? { ...item, status: "Completed" } : item,
+        ),
+      );
+      toast.success("Task marked completed");
     } catch (error) {
-      console.log(error)
-      toast.error("Failed to update task")
+      console.log(error);
+      toast.error("Failed to update task");
     } finally {
-      setLoadingId(null)
+      setLoadingId(null);
     }
   }
 
@@ -96,9 +96,9 @@ const RenderTodayTasks = ({
               variant="outline"
               placeholder="Plan your day"
               onRefresh={async () => {
-                const startDate = moment().startOf("day").toISOString()
-                const endDate = moment().endOf("day").toISOString()
-                await onRefresh?.(startDate, endDate)
+                const startDate = moment().startOf("day").toISOString();
+                const endDate = moment().endOf("day").toISOString();
+                await onRefresh?.(startDate, endDate);
               }}
               user_id={userID}
             />
@@ -121,9 +121,9 @@ const RenderTodayTasks = ({
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
             <div className="grid gap-2">
               {tasks.map((task) => {
-                const normalizedStatus = task.status?.toLowerCase()
-                const isCompleted = normalizedStatus === "completed"
-                const isPending = normalizedStatus === "pending"
+                const normalizedStatus = task.status?.toLowerCase();
+                const isCompleted = normalizedStatus === "completed";
+                const isPending = normalizedStatus === "pending";
 
                 return (
                   <div
@@ -199,7 +199,7 @@ const RenderTodayTasks = ({
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </div>
@@ -218,7 +218,7 @@ const RenderTodayTasks = ({
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default RenderTodayTasks
+export default RenderTodayTasks;

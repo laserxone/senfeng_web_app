@@ -1,6 +1,6 @@
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { EngineerIssuedItems } from "@/lib/types"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { EngineerIssuedItems } from "@/lib/types";
 import {
   Building2,
   CalendarDays,
@@ -9,26 +9,26 @@ import {
   PackageCheck,
   Phone,
   UserRound,
-} from "lucide-react"
-import moment from "moment"
-import { Dispatch, ReactNode, SetStateAction, useState } from "react"
-import { Button } from "@/components/ui/button"
+} from "lucide-react";
+import moment from "moment";
+import { Dispatch, ReactNode, SetStateAction, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import "./Button.css"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import "./Button.css";
 
 type EngineerModalType = {
-  engineersModal: boolean
-  setEngineersModal: Dispatch<SetStateAction<boolean>>
-  allEngineersData: EngineerIssuedItems[]
-  onRefresh: () => Promise<void>
-}
+  engineersModal: boolean;
+  setEngineersModal: Dispatch<SetStateAction<boolean>>;
+  allEngineersData: EngineerIssuedItems[];
+  onRefresh: () => Promise<void>;
+};
 
 const EngineerModal = ({
   engineersModal,
@@ -83,33 +83,33 @@ const EngineerModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const RenderEachEngineerRow = ({
   item,
   onRefresh,
 }: {
-  item: EngineerIssuedItems
-  onRefresh: () => Promise<void>
+  item: EngineerIssuedItems;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [updateLoading, setUpdateLoading] = useState(false)
-  const { userID } = useUserDetail()
-  const itemCount = item.fields?.length || 0
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const { userID } = useUserDetail();
+  const itemCount = item.fields?.length || 0;
   const totalAmount =
-    item.fields?.reduce((sum, field) => sum + Number(field.total || 0), 0) || 0
+    item.fields?.reduce((sum, field) => sum + Number(field.total || 0), 0) || 0;
 
   async function handleReceivedBack() {
-    setUpdateLoading(true)
+    setUpdateLoading(true);
     axios
       .post(`/${userID}/pos/engineer/${item.id}`, { field: item.fields })
       .then(async () => {
-        await onRefresh()
-        setUpdateLoading(false)
+        await onRefresh();
+        setUpdateLoading(false);
       })
       .catch(() => {
-        setUpdateLoading(false)
-      })
+        setUpdateLoading(false);
+      });
   }
 
   return (
@@ -215,17 +215,17 @@ const RenderEachEngineerRow = ({
         </table>
       </div>
     </div>
-  )
-}
+  );
+};
 
 function InfoChip({
   icon,
   label,
   value,
 }: {
-  icon: ReactNode
-  label: string
-  value: string
+  icon: ReactNode;
+  label: string;
+  value: string;
 }) {
   return (
     <div className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5">
@@ -239,7 +239,7 @@ function InfoChip({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 function MetaLine({
@@ -247,9 +247,9 @@ function MetaLine({
   label,
   value,
 }: {
-  icon: ReactNode
-  label: string
-  value?: string
+  icon: ReactNode;
+  label: string;
+  value?: string;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2 rounded-md bg-background/70 px-2 py-1.5">
@@ -259,7 +259,7 @@ function MetaLine({
         {value || "-"}
       </p>
     </div>
-  )
+  );
 }
 
-export default EngineerModal
+export default EngineerModal;

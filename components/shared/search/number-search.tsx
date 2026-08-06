@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { ChevronsUpDown } from "lucide-react"
-import * as React from "react"
+import { ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -12,30 +12,30 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import { CountriesList } from "@/constants/data"
+} from "@/components/ui/command";
+import { CountriesList } from "@/constants/data";
 
 type CountriesType = {
-  flag: string
-  name: string
-  code: string
-  num: string
-}
+  flag: string;
+  name: string;
+  code: string;
+  num: string;
+};
 
 export function NumberSearch({
   value,
   onReturn,
 }: {
-  value: string
-  onReturn: (val: string) => void
+  value: string;
+  onReturn: (val: string) => void;
 }) {
-  const [open, setOpen] = React.useState(false)
-  const [numbers, setNumbers] = React.useState<CountriesType[]>([])
+  const [open, setOpen] = React.useState(false);
+  const [numbers, setNumbers] = React.useState<CountriesType[]>([]);
   React.useEffect(() => {
     if (CountriesList) {
-      setNumbers(CountriesList)
+      setNumbers(CountriesList);
     }
-  }, [CountriesList])
+  }, [CountriesList]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -46,8 +46,8 @@ export function NumberSearch({
         aria-expanded={open}
         className="w-full justify-between"
         onClick={(e) => {
-          e.preventDefault()
-          setOpen(true)
+          e.preventDefault();
+          setOpen(true);
         }}
       >
         {numbers.length > 0 && value
@@ -67,8 +67,8 @@ export function NumberSearch({
                   key={item.name}
                   value={item.num + item.name}
                   onSelect={() => {
-                    onReturn(item.num) // return full object
-                    setOpen(false)
+                    onReturn(item.num); // return full object
+                    setOpen(false);
                   }}
                 >
                   {item.name} {item.num}
@@ -79,5 +79,5 @@ export function NumberSearch({
         </Command>
       </CommandDialog>
     </div>
-  )
+  );
 }

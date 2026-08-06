@@ -1,160 +1,160 @@
-"use client"
+"use client";
 
-import { Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
-import moment from "moment"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { Eye, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { Badge } from "@/components/ui/badge"
-import { FieldLegend, FieldSet } from "@/components/ui/field"
-import Heading from "@/components/ui/heading"
-import { Label } from "@/components/ui/label"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { Badge } from "@/components/ui/badge";
+import { FieldLegend, FieldSet } from "@/components/ui/field";
+import Heading from "@/components/ui/heading";
+import { Label } from "@/components/ui/label";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 
 type Khata = {
-  id: number
-  name: string
-  start_date: Date | undefined
-  end_date: Date | undefined
-  note: string | null
-  created_at: string
-  total_amount: number | string
-}
+  id: number;
+  name: string;
+  start_date: Date | undefined;
+  end_date: Date | undefined;
+  note: string | null;
+  created_at: string;
+  total_amount: number | string;
+};
 
 const emptyKhataForm: {
-  name: string
-  start_date: Date | undefined
-  end_date: Date | undefined
-  note: string
+  name: string;
+  start_date: Date | undefined;
+  end_date: Date | undefined;
+  note: string;
 } = {
   name: "",
   start_date: undefined,
   end_date: undefined,
   note: "",
-}
+};
 
 export default function KhataPage() {
-  const router = useRouter()
-  const { userID, base_route } = useUserDetail()
+  const router = useRouter();
+  const { userID, base_route } = useUserDetail();
 
-  const [khatas, setKhatas] = useState<Khata[]>([])
-  const [khataOpen, setKhataOpen] = useState(false)
-  const [editingKhata, setEditingKhata] = useState<Khata | null>(null)
-  const [khataForm, setKhataForm] = useState(emptyKhataForm)
+  const [khatas, setKhatas] = useState<Khata[]>([]);
+  const [khataOpen, setKhataOpen] = useState(false);
+  const [editingKhata, setEditingKhata] = useState<Khata | null>(null);
+  const [khataForm, setKhataForm] = useState(emptyKhataForm);
 
-  const [khataLoading, setKhataLoading] = useState(false)
-  const [savingKhata, setSavingKhata] = useState(false)
-  const [deletingKhataId, setDeletingKhataId] = useState<number | null>(null)
+  const [khataLoading, setKhataLoading] = useState(false);
+  const [savingKhata, setSavingKhata] = useState(false);
+  const [deletingKhataId, setDeletingKhataId] = useState<number | null>(null);
   const [khataErrors, setKhataErrors] = useState({
     name: "",
     start_date: "",
     end_date: "",
     note: "",
-  })
+  });
 
   const fetchKhatas = async () => {
-    if (!userID) return
+    if (!userID) return;
 
     try {
-      setKhataLoading(true)
-      const res = await axios.get(`/${userID}/khata`)
-      setKhatas(res.data || [])
+      setKhataLoading(true);
+      const res = await axios.get(`/${userID}/khata`);
+      setKhatas(res.data || []);
     } finally {
-      setKhataLoading(false)
+      setKhataLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    if (userID) fetchKhatas()
-  }, [userID])
+    if (userID) fetchKhatas();
+  }, [userID]);
 
   const openKhataCreate = () => {
-    setEditingKhata(null)
-    setKhataForm(emptyKhataForm)
+    setEditingKhata(null);
+    setKhataForm(emptyKhataForm);
     setKhataErrors({
       name: "",
       start_date: "",
       end_date: "",
       note: "",
-    })
-    setKhataOpen(true)
-  }
+    });
+    setKhataOpen(true);
+  };
 
   const openKhataEdit = (khata: Khata) => {
-    setEditingKhata(khata)
+    setEditingKhata(khata);
     setKhataForm({
       name: khata.name,
       start_date: khata.start_date,
       end_date: khata.end_date,
       note: khata.note || "",
-    })
+    });
     setKhataErrors({
       name: "",
       start_date: "",
       end_date: "",
       note: "",
-    })
-    setKhataOpen(true)
-  }
+    });
+    setKhataOpen(true);
+  };
 
   const saveKhata = async () => {
-    if (!userID) return
+    if (!userID) return;
 
-    const isValid = validateKhataForm()
-    if (!isValid) return
+    const isValid = validateKhataForm();
+    if (!isValid) return;
 
     const payload = {
       name: khataForm.name.trim(),
       start_date: khataForm.start_date,
       end_date: khataForm.end_date,
       note: khataForm.note.trim(),
-    }
+    };
 
     try {
-      setSavingKhata(true)
+      setSavingKhata(true);
 
       if (editingKhata) {
-        await axios.put(`/${userID}/khata/${editingKhata.id}`, payload)
+        await axios.put(`/${userID}/khata/${editingKhata.id}`, payload);
       } else {
-        await axios.post(`/${userID}/khata`, payload)
+        await axios.post(`/${userID}/khata`, payload);
       }
 
-      setKhataOpen(false)
-      setEditingKhata(null)
-      setKhataForm(emptyKhataForm)
-      await fetchKhatas()
+      setKhataOpen(false);
+      setEditingKhata(null);
+      setKhataForm(emptyKhataForm);
+      await fetchKhatas();
     } finally {
-      setSavingKhata(false)
+      setSavingKhata(false);
     }
-  }
+  };
 
   const deleteKhata = async (id: number) => {
-    if (!userID) return
-    if (!confirm("Delete this khata?")) return
+    if (!userID) return;
+    if (!confirm("Delete this khata?")) return;
 
     try {
-      setDeletingKhataId(id)
-      await axios.delete(`/${userID}/khata/${id}`)
-      await fetchKhatas()
+      setDeletingKhataId(id);
+      await axios.delete(`/${userID}/khata/${id}`);
+      await fetchKhatas();
     } finally {
-      setDeletingKhataId(null)
+      setDeletingKhataId(null);
     }
-  }
+  };
 
   const validateKhataForm = () => {
     const errors = {
@@ -162,22 +162,22 @@ export default function KhataPage() {
       start_date: "",
       end_date: "",
       note: "",
-    }
+    };
 
     if (!khataForm.name.trim()) {
-      errors.name = "Name is required"
+      errors.name = "Name is required";
     }
 
     if (!khataForm.start_date) {
-      errors.start_date = "Start date is required"
+      errors.start_date = "Start date is required";
     }
 
     if (!khataForm.end_date) {
-      errors.end_date = "End date is required"
+      errors.end_date = "End date is required";
     }
 
     if (!khataForm.note.trim()) {
-      errors.note = "Note is required"
+      errors.note = "Note is required";
     }
 
     if (
@@ -185,13 +185,13 @@ export default function KhataPage() {
       khataForm.end_date &&
       new Date(khataForm.end_date) < new Date(khataForm.start_date)
     ) {
-      errors.end_date = "End date cannot be less than start date"
+      errors.end_date = "End date cannot be less than start date";
     }
 
-    setKhataErrors(errors)
+    setKhataErrors(errors);
 
-    return !Object.values(errors).some(Boolean)
-  }
+    return !Object.values(errors).some(Boolean);
+  };
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -211,7 +211,7 @@ export default function KhataPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {khatas.map((khata) => {
-            const isDeleting = deletingKhataId === khata.id
+            const isDeleting = deletingKhataId === khata.id;
 
             return (
               <Card key={khata.id} className="transition hover:border-primary">
@@ -267,8 +267,8 @@ export default function KhataPage() {
                         variant="outline"
                         className="h-8 w-8"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          openKhataEdit(khata)
+                          e.stopPropagation();
+                          openKhataEdit(khata);
                         }}
                       >
                         <Pencil className="h-4 w-4" />
@@ -280,8 +280,8 @@ export default function KhataPage() {
                         className="h-8 w-8"
                         disabled={isDeleting}
                         onClick={(e) => {
-                          e.stopPropagation()
-                          deleteKhata(khata.id)
+                          e.stopPropagation();
+                          deleteKhata(khata.id);
                         }}
                       >
                         {isDeleting ? (
@@ -294,7 +294,7 @@ export default function KhataPage() {
                   </div>
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       )}
@@ -323,8 +323,8 @@ export default function KhataPage() {
                       placeholder="Enter khata name"
                       value={khataForm.name}
                       onChange={(e) => {
-                        setKhataForm({ ...khataForm, name: e.target.value })
-                        setKhataErrors({ ...khataErrors, name: "" })
+                        setKhataForm({ ...khataForm, name: e.target.value });
+                        setKhataErrors({ ...khataErrors, name: "" });
                       }}
                     />
 
@@ -353,13 +353,13 @@ export default function KhataPage() {
                               khataForm.end_date < date
                                 ? undefined
                                 : khataForm.end_date,
-                          })
+                          });
 
                           setKhataErrors({
                             ...khataErrors,
                             start_date: "",
                             end_date: "",
-                          })
+                          });
                         }}
                       />
 
@@ -379,8 +379,8 @@ export default function KhataPage() {
                         min={khataForm.start_date || new Date("1900-01-01")}
                         date={khataForm.end_date}
                         onChange={(date) => {
-                          setKhataForm({ ...khataForm, end_date: date })
-                          setKhataErrors({ ...khataErrors, end_date: "" })
+                          setKhataForm({ ...khataForm, end_date: date });
+                          setKhataErrors({ ...khataErrors, end_date: "" });
                         }}
                       />
 
@@ -402,8 +402,8 @@ export default function KhataPage() {
                       className="min-h-24 resize-none"
                       value={khataForm.note}
                       onChange={(e) => {
-                        setKhataForm({ ...khataForm, note: e.target.value })
-                        setKhataErrors({ ...khataErrors, note: "" })
+                        setKhataForm({ ...khataForm, note: e.target.value });
+                        setKhataErrors({ ...khataErrors, note: "" });
                       }}
                     />
 
@@ -437,5 +437,5 @@ export default function KhataPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

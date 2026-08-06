@@ -1,6 +1,6 @@
-"use client"
-import AppTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
+"use client";
+import AppTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,93 +8,93 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import Spinner from "@/components/ui/spinner"
-import { QuotationForm } from "@/components/features/quotations/quotation-form"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { QuotationData } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
+} from "@/components/ui/dialog";
+import Spinner from "@/components/ui/spinner";
+import { QuotationForm } from "@/components/features/quotations/quotation-form";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { QuotationData } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
   Download,
   ExternalLink,
   FileText,
   Trash2,
-} from "lucide-react"
-import moment from "moment"
-import { useCallback, useEffect, useState } from "react"
-import { toast } from "sonner"
-import Heading from "@/components/ui/heading"
-import { QuotationFormEdit } from "./quotation-form-edit"
+} from "lucide-react";
+import moment from "moment";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import Heading from "@/components/ui/heading";
+import { QuotationFormEdit } from "./quotation-form-edit";
 
 export default function QuotationPage() {
-  const [data, setData] = useState<QuotationData[]>([])
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [data, setData] = useState<QuotationData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
   const [deleteItem, setDeleteItem] = useState<
     number | string | null | undefined
-  >(null)
+  >(null);
   const [downloadItem, setDownloadItem] = useState<
     number | string | null | undefined
-  >(null)
-  const [open, setOpen] = useState(false)
-  const [detailsOpen, setDetailsOpen] = useState(false)
+  >(null);
+  const [open, setOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] =
-    useState<QuotationData | null>(null)
+    useState<QuotationData | null>(null);
   const [openingItem, setOpeningItem] = useState<
     number | string | null | undefined
-  >(null)
+  >(null);
 
   const fetchData = useCallback(async () => {
-    if (!userID) return
-    setLoading(true)
+    if (!userID) return;
+    setLoading(true);
     try {
-      const res = await axios.get(`/${userID}/quotation`)
-      setData(res.data)
+      const res = await axios.get(`/${userID}/quotation`);
+      setData(res.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [userID])
+  }, [userID]);
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [fetchData, userID])
+  }, [fetchData, userID]);
 
   const updateQuotationQuery = useCallback((quotationId?: string | number) => {
-    const url = new URL(window.location.href)
+    const url = new URL(window.location.href);
 
     if (quotationId !== undefined) {
-      url.searchParams.set("q", String(quotationId))
-      window.history.pushState({}, "", url)
+      url.searchParams.set("q", String(quotationId));
+      window.history.pushState({}, "", url);
     } else {
-      url.searchParams.delete("q")
-      window.history.replaceState({}, "", url)
+      url.searchParams.delete("q");
+      window.history.replaceState({}, "", url);
     }
 
-    window.dispatchEvent(new PopStateEvent("popstate"))
-  }, [])
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   useEffect(() => {
     const syncQuotationFromUrl = () => {
-      const quotationId = new URLSearchParams(window.location.search).get("q")
+      const quotationId = new URLSearchParams(window.location.search).get("q");
       const quotation = quotationId
         ? data.find((item) => String(item.id) === quotationId)
-        : undefined
+        : undefined;
 
-      setSelectedQuotation(quotation || null)
-      setDetailsOpen(Boolean(quotation))
-    }
+      setSelectedQuotation(quotation || null);
+      setDetailsOpen(Boolean(quotation));
+    };
 
-    syncQuotationFromUrl()
-    window.addEventListener("popstate", syncQuotationFromUrl)
+    syncQuotationFromUrl();
+    window.addEventListener("popstate", syncQuotationFromUrl);
 
     return () => {
-      window.removeEventListener("popstate", syncQuotationFromUrl)
-    }
-  }, [data])
+      window.removeEventListener("popstate", syncQuotationFromUrl);
+    };
+  }, [data]);
 
   const columns: ColumnDef<QuotationData>[] = [
     {
@@ -267,7 +267,7 @@ export default function QuotationPage() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
         return (
           <div className="flex gap-2">
@@ -281,8 +281,8 @@ export default function QuotationPage() {
               variant="outline"
               disabled={downloadItem === currentItem?.id}
               onClick={(e) => {
-                e.stopPropagation()
-                handleDownloadQuotation(currentItem)
+                e.stopPropagation();
+                handleDownloadQuotation(currentItem);
               }}
             >
               {downloadItem === currentItem?.id ? (
@@ -296,8 +296,8 @@ export default function QuotationPage() {
               variant="destructive"
               disabled={deleteItem === currentItem?.id}
               onClick={(e) => {
-                e.stopPropagation()
-                handleDelete(currentItem)
+                e.stopPropagation();
+                handleDelete(currentItem);
               }}
             >
               {deleteItem === currentItem?.id ? (
@@ -307,14 +307,14 @@ export default function QuotationPage() {
               )}
             </Button>
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleDownloadQuotation(quotation: QuotationData) {
-    if (!quotation?.id) return
-    setDownloadItem(quotation.id)
+    if (!quotation?.id) return;
+    setDownloadItem(quotation.id);
 
     try {
       const pdfRes = await axios.post(
@@ -327,41 +327,43 @@ export default function QuotationPage() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
-      )
+        },
+      );
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      })
+      });
 
-      const url = URL.createObjectURL(blob)
+      const url = URL.createObjectURL(blob);
 
-      const link = document.createElement("a")
-      link.href = url
+      const link = document.createElement("a");
+      link.href = url;
 
       const fileName =
         pdfRes.headers["content-disposition"]
           ?.split("filename=")?.[1]
-          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`
+          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`;
 
-      link.download = fileName
+      link.download = fileName;
 
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      URL.revokeObjectURL(url)
+      URL.revokeObjectURL(url);
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Error creating pdf")
+      toast.error(
+        error instanceof Error ? error.message : "Error creating pdf",
+      );
     } finally {
-      setDownloadItem(null)
+      setDownloadItem(null);
     }
   }
 
   async function handleOpenQuotation(quotation: QuotationData) {
-    if (!quotation?.id || !userID) return
+    if (!quotation?.id || !userID) return;
 
-    setOpeningItem(quotation.id)
+    setOpeningItem(quotation.id);
 
     try {
       const pdfRes = await axios.post(
@@ -370,55 +372,55 @@ export default function QuotationPage() {
         {
           responseType: "blob",
           headers: { "Content-Type": "application/json" },
-        }
-      )
+        },
+      );
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      })
+      });
 
-      const url = URL.createObjectURL(blob)
+      const url = URL.createObjectURL(blob);
 
-      const link = document.createElement("a")
-      link.href = url
+      const link = document.createElement("a");
+      link.href = url;
 
       const fileName =
         pdfRes.headers["content-disposition"]
           ?.split("filename=")?.[1]
-          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`
+          ?.replaceAll('"', "") || `Quotation-${quotation.id}.pdf`;
 
-      link.download = fileName
+      link.download = fileName;
 
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      URL.revokeObjectURL(url)
+      URL.revokeObjectURL(url);
     } catch (error: unknown) {
       toast.error(
-        error instanceof Error ? error.message : "Error opening quotation"
-      )
+        error instanceof Error ? error.message : "Error opening quotation",
+      );
     } finally {
-      setOpeningItem(null)
+      setOpeningItem(null);
     }
   }
 
   function handleDetailsOpenChange(nextOpen: boolean) {
-    setDetailsOpen(nextOpen)
+    setDetailsOpen(nextOpen);
 
     if (!nextOpen) {
-      updateQuotationQuery()
+      updateQuotationQuery();
     }
   }
 
   async function handleDelete(item: QuotationData) {
-    if (!item?.id) return
-    setDeleteItem(item.id)
+    if (!item?.id) return;
+    setDeleteItem(item.id);
     try {
-      await axios.delete(`/${userID}/quotation/${item.id}`)
-      await fetchData()
+      await axios.delete(`/${userID}/quotation/${item.id}`);
+      await fetchData();
     } finally {
-      setDeleteItem(null)
+      setDeleteItem(null);
     }
   }
   return (
@@ -526,7 +528,7 @@ export default function QuotationPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 function QuotationDetail({
@@ -534,9 +536,9 @@ function QuotationDetail({
   value,
   className = "",
 }: {
-  label: string
-  value?: string | number | null
-  className?: string
+  label: string;
+  value?: string | number | null;
+  className?: string;
 }) {
   return (
     <div className={`rounded-lg border bg-background px-3 py-2.5 ${className}`}>
@@ -547,5 +549,5 @@ function QuotationDetail({
         {value || "-"}
       </p>
     </div>
-  )
+  );
 }

@@ -1,29 +1,29 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { Input } from "@/components/ui/input"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { Input } from "@/components/ui/input";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase"
-import { MachineResponse } from "@/lib/types"
-import { Truck } from "lucide-react"
-import "pdfjs-dist/build/pdf.worker.mjs"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
+import { MachineResponse } from "@/lib/types";
+import { Truck } from "lucide-react";
+import "pdfjs-dist/build/pdf.worker.mjs";
 
 const SendForDeliveryDialog = ({
   open,
@@ -31,12 +31,12 @@ const SendForDeliveryDialog = ({
   onRefresh,
   data,
 }: {
-  open: boolean
-  onClose: () => void
-  onRefresh: () => Promise<void>
-  data: MachineResponse | null
+  open: boolean;
+  onClose: () => void;
+  onRefresh: () => Promise<void>;
+  data: MachineResponse | null;
 }) => {
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
   const formSchema = z.object({
     name: z.string().min(1, "Receiver name is required"),
@@ -46,11 +46,11 @@ const SendForDeliveryDialog = ({
     pin: z.string().min(1, "Google pin is required"),
     note: z.string().optional(),
     tod: z.string().min(1, "Delivery time is required"),
-  })
+  });
 
-  type FormValues = z.infer<typeof formSchema>
+  type FormValues = z.infer<typeof formSchema>;
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,7 +63,7 @@ const SendForDeliveryDialog = ({
       note: "",
       tod: "",
     },
-  })
+  });
 
   useEffect(() => {
     if (data?.customer?.id) {
@@ -75,25 +75,25 @@ const SendForDeliveryDialog = ({
         pin: data?.customer?.pin || "",
         note: "",
         tod: "",
-      })
+      });
     }
-  }, [data])
+  }, [data]);
 
   async function onSubmit(values: FormValues) {
-    if (!data?.machine?.id) return
+    if (!data?.machine?.id) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
       await axios.put(`/${userID}/machine/${data.machine.id}/delivery`, {
         ready_for_delivery: true,
         delivery_information: { ...values, tod: new Date(values.tod) },
         delivery_request_date: new Date(),
-      })
-      await TriggerFirebaseForMachine()
-      await onRefresh()
-      onClose()
+      });
+      await TriggerFirebaseForMachine();
+      await onRefresh();
+      onClose();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -118,7 +118,7 @@ const SendForDeliveryDialog = ({
         <ScrollArea className="max-h-[calc(100dvh-132px)] px-2 pb-4">
           <form
             onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log("Validation Errors", err)
+              console.log("Validation Errors", err);
             })}
           >
             <div className="grid gap-3 p-3.5 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
@@ -285,7 +285,7 @@ const SendForDeliveryDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default SendForDeliveryDialog
+export default SendForDeliveryDialog;

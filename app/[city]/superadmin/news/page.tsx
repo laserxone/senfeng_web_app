@@ -1,71 +1,71 @@
-"use client"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import Heading from "@/components/ui/heading"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { News } from "@/lib/types"
-import { Trash } from "lucide-react"
-import moment from "moment"
-import { useEffect, useState } from "react"
+"use client";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Heading from "@/components/ui/heading";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { News } from "@/lib/types";
+import { Trash } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState } from "react";
 
 export default function NewsPage() {
-  const [newsList, setNewsList] = useState<News[]>([])
-  const [newsText, setNewsText] = useState("")
-  const [startDate, setStartDate] = useState<Date | null>(null)
-  const [endDate, setEndDate] = useState<Date | null>(null)
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [newsList, setNewsList] = useState<News[]>([]);
+  const [newsText, setNewsText] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   const fetchData = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await axios.get(`/${userID}/news`)
-      setNewsList(response.data)
+      const response = await axios.get(`/${userID}/news`);
+      setNewsList(response.data);
     } catch (error) {
-      console.error("Fetch Error:", error)
+      console.error("Fetch Error:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const addNews = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       await axios.post(`/${userID}/news`, {
         news: newsText,
         start_date: startDate,
         end_date: endDate,
-      })
+      });
 
-      await fetchData()
-      setNewsText("")
-      setStartDate(null)
-      setEndDate(null)
+      await fetchData();
+      setNewsText("");
+      setStartDate(null);
+      setEndDate(null);
     } catch (error) {
-      console.error("Submit Error:", error)
+      console.error("Submit Error:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   async function handleDelete(id: number) {
     try {
-      await axios.delete(`/${userID}/news/${id}`)
-      await fetchData()
+      await axios.delete(`/${userID}/news/${id}`);
+      await fetchData();
     } catch (error) {
-      console.error("Submit Error:", error)
+      console.error("Submit Error:", error);
     }
   }
 
@@ -95,7 +95,7 @@ export default function NewsPage() {
             <AppCalendar
               date={startDate}
               onChange={(d) => {
-                setStartDate(moment(d).startOf("day").toDate())
+                setStartDate(moment(d).startOf("day").toDate());
               }}
               max={""}
             />
@@ -106,7 +106,7 @@ export default function NewsPage() {
             <AppCalendar
               date={endDate}
               onChange={(d) => {
-                setEndDate(moment(d).endOf("day").toDate())
+                setEndDate(moment(d).endOf("day").toDate());
               }}
               max={""}
             />
@@ -137,17 +137,17 @@ export default function NewsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 const RenderEachRow = ({
   item,
   handleDelete,
 }: {
-  item: News
-  handleDelete: (id: number) => Promise<void>
+  item: News;
+  handleDelete: (id: number) => Promise<void>;
 }) => {
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   return (
     <Card>
@@ -164,13 +164,13 @@ const RenderEachRow = ({
           variant="destructive"
           size="icon"
           onClick={(e) => {
-            setDeleteLoading(true)
-            handleDelete(item.id)
+            setDeleteLoading(true);
+            handleDelete(item.id);
           }}
         >
           {deleteLoading ? <Spinner /> : <Trash size={16} />}
         </Button>
       </CardContent>
     </Card>
-  )
-}
+  );
+};

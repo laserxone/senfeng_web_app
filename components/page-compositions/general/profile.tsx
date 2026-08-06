@@ -1,29 +1,29 @@
-"use client"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
-import { auth, storage } from "@/config/firebase"
+"use client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { auth, storage } from "@/config/firebase";
 
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { UserContext } from "@/store/context/UserContext"
+} from "@/components/ui/popover";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { UserContext } from "@/store/context/UserContext";
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
-} from "firebase/auth"
-import { deleteObject, getDownloadURL, ref } from "firebase/storage"
-import { CheckCircle } from "lucide-react"
+} from "firebase/auth";
+import { deleteObject, getDownloadURL, ref } from "firebase/storage";
+import { CheckCircle } from "lucide-react";
 import {
   ChangeEvent,
   useCallback,
@@ -31,33 +31,33 @@ import {
   useEffect,
   useRef,
   useState,
-} from "react"
-import { toast } from "sonner"
+} from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 type DocsDataType = {
-  cnic: string
-  education: string
-  police: string
-  resume: string
-  appointment_letter: string
-  father_cnic: string
-}
+  cnic: string;
+  education: string;
+  police: string;
+  resume: string;
+  appointment_letter: string;
+  father_cnic: string;
+};
 
 export default function ProfilePage() {
-  const { state: UserState, setUser } = useContext(UserContext)
-  const { userID } = useUserDetail()
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false)
-  const [passwordLoading, setPasswordLoading] = useState(false)
+  const { state: UserState, setUser } = useContext(UserContext);
+  const { userID } = useUserDetail();
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [isPasswordResetVisible, setIsPasswordResetVisible] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     father: "",
@@ -75,7 +75,7 @@ export default function ProfilePage() {
     total_salary: "",
     designation: "",
     email: "",
-  })
+  });
   const [docsData, setDocsData] = useState<DocsDataType>({
     cnic: "",
     education: "",
@@ -83,16 +83,16 @@ export default function ProfilePage() {
     resume: "",
     appointment_letter: "",
     father_cnic: "",
-  })
-  const [otherDocs, setOtherDocs] = useState<string[]>([])
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  });
+  const [otherDocs, setOtherDocs] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [dp, setDp] = useState("")
-  const [formLoading, setFormLoading] = useState(false)
+  const [dp, setDp] = useState("");
+  const [formLoading, setFormLoading] = useState(false);
 
   useEffect(() => {
     if (UserState.value.data?.id) {
-      const u = UserState.value.data
+      const u = UserState.value.data;
       setFormData({
         name: u.name || "",
         father: u.father || "",
@@ -111,8 +111,8 @@ export default function ProfilePage() {
         designation: u.designation || "",
         email: u.email || "",
         dp: u.dp || "",
-      })
-      setDp(u.dp || "")
+      });
+      setDp(u.dp || "");
       setDocsData({
         cnic: u.cnic || "",
         education: u.education || "",
@@ -120,66 +120,66 @@ export default function ProfilePage() {
         resume: u.resume || "",
         appointment_letter: u.appointment_letter || "",
         father_cnic: u.father_cnic || "",
-      })
-      setOtherDocs(u.other_docs || [])
+      });
+      setOtherDocs(u.other_docs || []);
     }
-  }, [UserState.value.data])
+  }, [UserState.value.data]);
 
   const RenderProfilePicture = useCallback(() => {
-    const [localImage, setLocalImage] = useState<string | null>(null)
-    const [loading, setLoading] = useState(false)
+    const [localImage, setLocalImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
       if (dp?.trim()) {
-        setLoading(true)
-        getDp()
+        setLoading(true);
+        getDp();
       }
-    }, [])
+    }, []);
 
     async function getDp() {
       try {
         if (dp?.includes("http")) {
-          setLocalImage(dp)
+          setLocalImage(dp);
         } else {
-          const storageRef = ref(storage, dp)
-          const url = await getDownloadURL(storageRef)
-          setLocalImage(url)
+          const storageRef = ref(storage, dp);
+          const url = await getDownloadURL(storageRef);
+          setLocalImage(url);
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     const handleImage = async (
-      event: ChangeEvent<HTMLInputElement, HTMLInputElement>
+      event: ChangeEvent<HTMLInputElement, HTMLInputElement>,
     ) => {
-      if (!event.target.files) return
-      setLoading(true)
+      if (!event.target.files) return;
+      setLoading(true);
       try {
-        const fileList = Array.from(event.target.files)
-        const name = `${OfficeState.value.data}/${userID}/profile/${UserState.value.data?.email}-dp.png`
-        const img = await UploadImage(URL.createObjectURL(fileList[0]), name)
+        const fileList = Array.from(event.target.files);
+        const name = `${OfficeState.value.data}/${userID}/profile/${UserState.value.data?.email}-dp.png`;
+        const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
         const response = await axios.put(`/${userID}`, {
           dp: name,
-        })
+        });
         if (UserState.value.data?.id) {
           setUser({
             ...UserState.value.data,
             ...formData,
             dp: name,
-          })
+          });
         }
 
-        toast.success("Profile Updated")
+        toast.success("Profile Updated");
       } catch (error: any) {
-        toast.error(error?.message || "Error updating image")
-        console.log(error)
+        toast.error(error?.message || "Error updating image");
+        console.log(error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
     return (
       <>
@@ -190,7 +190,7 @@ export default function ProfilePage() {
             <Avatar
               className="hover : h-[350px] w-[350px] cursor-pointer"
               onClick={() => {
-                if (inputRef.current) inputRef.current.click()
+                if (inputRef.current) inputRef.current.click();
               }}
             >
               {localImage && <AvatarImage src={localImage} />}
@@ -209,82 +209,82 @@ export default function ProfilePage() {
           onChange={(e) => handleImage(e)}
         ></input>
       </>
-    )
-  }, [dp])
+    );
+  }, [dp]);
 
   const handleChange = (
     e:
       | ChangeEvent<HTMLInputElement, HTMLInputElement>
-      | ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>
+      | ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>,
   ) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-  }
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   async function handleSave() {
-    setFormLoading(true)
-    const { password, confirmPassword, currentPassword, ...rest } = formData
+    setFormLoading(true);
+    const { password, confirmPassword, currentPassword, ...rest } = formData;
 
     try {
       const response = await axios.put(`/${userID}`, {
         ...rest,
-      })
+      });
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,
           ...rest,
-        })
+        });
       }
 
-      toast.success("Profile Updated")
+      toast.success("Profile Updated");
     } catch (error) {
     } finally {
-      setFormLoading(false)
+      setFormLoading(false);
     }
   }
 
   const handlePasswordResetToggle = () =>
-    setIsPasswordResetVisible(!isPasswordResetVisible)
+    setIsPasswordResetVisible(!isPasswordResetVisible);
 
   const handlePasswordUpdate = async () => {
     if (!formData.password || !formData.confirmPassword) {
-      return
+      return;
     }
     if (formData.password !== formData.confirmPassword) {
-      toast.info("Password do not match")
-      return
+      toast.info("Password do not match");
+      return;
     }
 
-    const user = auth.currentUser
+    const user = auth.currentUser;
     if (user?.email) {
-      setPasswordLoading(true)
+      setPasswordLoading(true);
       const credential = EmailAuthProvider.credential(
         user.email,
-        formData.currentPassword
-      )
+        formData.currentPassword,
+      );
 
       reauthenticateWithCredential(user, credential)
         .then(() => {
           updatePassword(user, formData.password).then(() => {
-            handlePasswordResetToggle()
-            toast.success("Password changed")
+            handlePasswordResetToggle();
+            toast.success("Password changed");
             setFormData({
               ...formData,
               currentPassword: "",
               password: "",
               confirmPassword: "",
-            })
-          })
+            });
+          });
         })
         .catch((error) => {
-          toast.error(error?.message || "Error")
-          console.log(error)
+          toast.error(error?.message || "Error");
+          console.log(error);
         })
         .finally(() => {
-          setPasswordLoading(false)
-        })
+          setPasswordLoading(false);
+        });
     }
-  }
+  };
 
   return (
     <div className="flex flex-1 flex-col flex-wrap pb-4">
@@ -511,7 +511,7 @@ export default function ProfilePage() {
         </Card>
       )}
     </div>
-  )
+  );
 }
 
 const DocumentCard = ({
@@ -519,84 +519,84 @@ const DocumentCard = ({
   userID,
   docsData,
 }: {
-  type: keyof DocsDataType
-  userID: number | string
-  docsData: DocsDataType
+  type: keyof DocsDataType;
+  userID: number | string;
+  docsData: DocsDataType;
 }) => {
-  const [fileUrl, setFileUrl] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [fileName, setFileName] = useState<string | undefined>("")
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const { state: UserState, setUser } = useContext(UserContext)
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const userId = userID
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fileName, setFileName] = useState<string | undefined>("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { state: UserState, setUser } = useContext(UserContext);
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const userId = userID;
 
   useEffect(() => {
     if (docsData?.[type]) {
-      setLoading(true)
-      const filePath = docsData[type]
+      setLoading(true);
+      const filePath = docsData[type];
       if (filePath.includes("http")) {
-        setFileUrl(filePath)
-        setFileName(filePath.split("/").pop())
-        setLoading(false)
+        setFileUrl(filePath);
+        setFileName(filePath.split("/").pop());
+        setLoading(false);
       } else {
-        const storageRef = ref(storage, filePath)
+        const storageRef = ref(storage, filePath);
         getDownloadURL(storageRef)
           .then((url) => {
-            setFileUrl(url)
-            setFileName(filePath.split("/").pop())
+            setFileUrl(url);
+            setFileName(filePath.split("/").pop());
           })
           .catch((error) => console.error("Error loading file:", error))
-          .finally(() => setLoading(false))
+          .finally(() => setLoading(false));
       }
     }
-  }, [docsData])
+  }, [docsData]);
 
   const handleFileUpload = async (
-    event: ChangeEvent<HTMLInputElement, HTMLInputElement>
+    event: ChangeEvent<HTMLInputElement, HTMLInputElement>,
   ) => {
-    const file = event?.target?.files?.[0]
-    if (!file) return
+    const file = event?.target?.files?.[0];
+    if (!file) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const extension = file.name.split(".").pop()
-      const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`
+      const extension = file.name.split(".").pop();
+      const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
 
       if (docsData?.[type] && !docsData[type].includes("http")) {
-        const oldFileRef = ref(storage, docsData[type])
+        const oldFileRef = ref(storage, docsData[type]);
         await deleteObject(oldFileRef).catch((err) =>
-          console.log("Old file could not be deleted:", err)
-        )
+          console.log("Old file could not be deleted:", err),
+        );
       }
 
       const uploadedPath = await UploadImage(
         URL.createObjectURL(file),
         newFilePath,
-        file.type || "application/octet-stream"
-      )
+        file.type || "application/octet-stream",
+      );
 
       const updatedData = {
         ...docsData,
         [type]: newFilePath,
-      }
-      await axios.put(`/${userId}`, updatedData)
+      };
+      await axios.put(`/${userId}`, updatedData);
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,
           ...updatedData,
-        })
+        });
       }
 
-      toast.success("File uploaded successfully")
-      setFileUrl(URL.createObjectURL(file))
-      setFileName(file.name)
+      toast.success("File uploaded successfully");
+      setFileUrl(URL.createObjectURL(file));
+      setFileName(file.name);
     } catch (error) {
-      toast.error("Upload failed")
+      toast.error("Upload failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-2">
@@ -650,37 +650,37 @@ const DocumentCard = ({
         </>
       )}
     </div>
-  )
-}
+  );
+};
 
 const DocumentCardOther = ({
   userID,
   otherDocs,
 }: {
-  userID: number | string
-  otherDocs: string[]
+  userID: number | string;
+  otherDocs: string[];
 }) => {
   const [files, setFiles] = useState<
     {
-      url: string
-      name: string
-      path: string
+      url: string;
+      name: string;
+      path: string;
     }[]
-  >([])
+  >([]);
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const { state: UserState, setUser } = useContext(UserContext)
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [open, setOpen] = useState(false)
-  const userId = userID
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { state: UserState, setUser } = useContext(UserContext);
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [open, setOpen] = useState(false);
+  const userId = userID;
 
   useEffect(() => {
     async function loadFiles() {
-      if (!otherDocs?.length) return
+      if (!otherDocs?.length) return;
 
-      setLoading(true)
+      setLoading(true);
 
       try {
         const loadedFiles = await Promise.all(
@@ -690,63 +690,63 @@ const DocumentCardOther = ({
                 url: filePath,
                 name: filePath.split("/").pop() || "file",
                 path: filePath,
-              }
+              };
             }
 
-            const storageRef = ref(storage, filePath)
-            const url = await getDownloadURL(storageRef)
+            const storageRef = ref(storage, filePath);
+            const url = await getDownloadURL(storageRef);
 
             return {
               url,
               name: filePath.split("/").pop() || "file",
               path: filePath,
-            }
-          })
-        )
+            };
+          }),
+        );
 
-        setFiles(loadedFiles)
+        setFiles(loadedFiles);
       } catch (error) {
-        console.error("Error loading files:", error)
+        console.error("Error loading files:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    loadFiles()
-  }, [otherDocs])
+    loadFiles();
+  }, [otherDocs]);
 
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event?.target?.files?.[0]
+    const file = event?.target?.files?.[0];
 
-    if (!file) return
+    if (!file) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const extension = file.name.split(".").pop()
+      const extension = file.name.split(".").pop();
 
-      const fileName = `${Date.now()}-${file.name}`
+      const fileName = `${Date.now()}-${file.name}`;
 
-      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`
+      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`;
 
       await UploadImage(
         URL.createObjectURL(file),
         newFilePath,
-        file.type || "application/octet-stream"
-      )
+        file.type || "application/octet-stream",
+      );
 
-      const updatedOtherDocs = [...(otherDocs || []), newFilePath]
+      const updatedOtherDocs = [...(otherDocs || []), newFilePath];
 
       const updatedData = {
         other_docs: [...updatedOtherDocs],
-      }
+      };
 
-      await axios.put(`/${userId}`, updatedData)
+      await axios.put(`/${userId}`, updatedData);
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,
           ...updatedData,
-        })
+        });
       }
 
       setFiles((prev) => [
@@ -756,20 +756,20 @@ const DocumentCardOther = ({
           name: file.name,
           path: newFilePath,
         },
-      ])
+      ]);
 
-      toast.success("File uploaded successfully")
+      toast.success("File uploaded successfully");
     } catch (error) {
-      console.error(error)
-      toast.error("Upload failed")
+      console.error(error);
+      toast.error("Upload failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = "";
       }
     }
-  }
+  };
 
   return (
     <div className="space-y-2">
@@ -825,7 +825,7 @@ const DocumentCardOther = ({
             <ScrollArea className="h-[60vh] pr-4">
               <div className="flex flex-col gap-3">
                 {files.map((file, index) => {
-                  const cleanName = file.name.replace(/^\d+-/, "")
+                  const cleanName = file.name.replace(/^\d+-/, "");
 
                   return (
                     <a
@@ -855,7 +855,7 @@ const DocumentCardOther = ({
                         Download
                       </Button>
                     </a>
-                  )
+                  );
                 })}
               </div>
             </ScrollArea>
@@ -867,5 +867,5 @@ const DocumentCardOther = ({
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};

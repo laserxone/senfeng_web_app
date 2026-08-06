@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import Heading from "@/components/ui/heading"
-import axios from "@/lib/axios"
-import useUserDetail from "@/hooks/use-user-detail"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import Heading from "@/components/ui/heading";
+import axios from "@/lib/axios";
+import useUserDetail from "@/hooks/use-user-detail";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -26,72 +26,76 @@ import {
   Plus,
   Search,
   Trash2,
-} from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
-type ListColumn = { id: string; name: string }
-type ListRow = { id: string; values: Record<string, string> }
+type ListColumn = { id: string; name: string };
+type ListRow = { id: string; values: Record<string, string> };
 type CustomList = {
-  id: string
-  name: string
-  description: string
-  columns: ListColumn[]
-  rows: ListRow[]
-  recordCount?: number
-  isPinned?: boolean
-  updatedAt: string
-}
-type ListForm = { name: string; description: string; columnCount: number }
+  id: string;
+  name: string;
+  description: string;
+  columns: ListColumn[];
+  rows: ListRow[];
+  recordCount?: number;
+  isPinned?: boolean;
+  updatedAt: string;
+};
+type ListForm = { name: string; description: string; columnCount: number };
 type DeleteTarget = {
-  type: "list" | "row" | "column"
-  id: string
-  name: string
-} | null
+  type: "list" | "row" | "column";
+  id: string;
+  name: string;
+} | null;
 
-const emptyListForm = { name: "", description: "", columnCount: 3 }
+const emptyListForm = { name: "", description: "", columnCount: 3 };
 
 export default function ListsPage() {
-  const [lists, setLists] = useState<CustomList[]>([])
-  const [activeListId, setActiveListId] = useState<string | null>(null)
-  const [listDialogOpen, setListDialogOpen] = useState(false)
-  const [listForm, setListForm] = useState(emptyListForm)
+  const [lists, setLists] = useState<CustomList[]>([]);
+  const [activeListId, setActiveListId] = useState<string | null>(null);
+  const [listDialogOpen, setListDialogOpen] = useState(false);
+  const [listForm, setListForm] = useState(emptyListForm);
   const [columnNames, setColumnNames] = useState<string[]>([
     "Column 1",
     "Column 2",
     "Column 3",
-  ])
-  const [editingListId, setEditingListId] = useState<string | null>(null)
-  const [rowDialogOpen, setRowDialogOpen] = useState(false)
-  const [editingRowId, setEditingRowId] = useState<string | null>(null)
-  const [rowValues, setRowValues] = useState<Record<string, string>>({})
-  const [columnDialogOpen, setColumnDialogOpen] = useState(false)
-  const [editingColumnId, setEditingColumnId] = useState<string | null>(null)
-  const [columnName, setColumnName] = useState("")
-  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null)
-  const [search, setSearch] = useState("")
-  const [pinnedIds, setPinnedIds] = useState<string[]>([])
-  const [gridView, setGridView] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const { userID } = useUserDetail()
+  ]);
+  const [editingListId, setEditingListId] = useState<string | null>(null);
+  const [rowDialogOpen, setRowDialogOpen] = useState(false);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [rowValues, setRowValues] = useState<Record<string, string>>({});
+  const [columnDialogOpen, setColumnDialogOpen] = useState(false);
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
+  const [columnName, setColumnName] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
+  const [search, setSearch] = useState("");
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
+  const [gridView, setGridView] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { userID } = useUserDetail();
 
   const activeList = useMemo(
     () => lists.find((list) => list.id === activeListId) ?? null,
-    [activeListId, lists]
-  )
+    [activeListId, lists],
+  );
   const visibleLists = useMemo(
     () =>
       lists.filter((list) =>
         `${list.name} ${list.description}`
           .toLowerCase()
-          .includes(search.toLowerCase())
+          .includes(search.toLowerCase()),
       ),
-    [lists, search]
-  )
-  const pinnedLists = visibleLists.filter((list) => pinnedIds.includes(list.id))
-  const otherLists = visibleLists.filter((list) => !pinnedIds.includes(list.id))
+    [lists, search],
+  );
+  const pinnedLists = visibleLists.filter((list) =>
+    pinnedIds.includes(list.id),
+  );
+  const otherLists = visibleLists.filter(
+    (list) => !pinnedIds.includes(list.id),
+  );
 
-  const listUrl = `/${userID}/lists`
+  const listUrl = `/${userID}/lists`;
   const toList = useCallback(
     (list: Record<string, unknown>): CustomList => ({
       id: String(list.id),
@@ -110,137 +114,137 @@ export default function ListsPage() {
           }))
         : [],
       recordCount: Number(
-        list.record_count || (Array.isArray(list.rows) ? list.rows.length : 0)
+        list.record_count || (Array.isArray(list.rows) ? list.rows.length : 0),
       ),
       isPinned: Boolean(list.is_pinned),
       updatedAt: list.updated_at
         ? new Date(String(list.updated_at)).toLocaleString()
         : "Just now",
     }),
-    []
-  )
+    [],
+  );
 
   const fetchLists = useCallback(async () => {
-    if (!userID) return
-    setLoading(true)
+    if (!userID) return;
+    setLoading(true);
     try {
-      const response = await axios.get(listUrl)
-      const mapped = response.data.map(toList)
-      setLists(mapped)
+      const response = await axios.get(listUrl);
+      const mapped = response.data.map(toList);
+      setLists(mapped);
       setPinnedIds(
-        mapped.filter((list) => list.isPinned).map((list) => list.id)
-      )
+        mapped.filter((list) => list.isPinned).map((list) => list.id),
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [userID, listUrl, toList])
+  }, [userID, listUrl, toList]);
 
   const openList = async (listId: string) => {
     try {
-      const response = await axios.get(`${listUrl}/${listId}`)
-      const detail = toList(response.data)
-      const cellValues = new Map<string, string>()
+      const response = await axios.get(`${listUrl}/${listId}`);
+      const detail = toList(response.data);
+      const cellValues = new Map<string, string>();
       response.data.cells?.forEach(
         (cell: { row_id: number; column_id: number; value: string | null }) =>
-          cellValues.set(`${cell.row_id}-${cell.column_id}`, cell.value || "")
-      )
+          cellValues.set(`${cell.row_id}-${cell.column_id}`, cell.value || ""),
+      );
       detail.rows = response.data.rows.map((row: { id: number }) => ({
         id: String(row.id),
         values: Object.fromEntries(
           detail.columns.map((column) => [
             column.id,
             cellValues.get(`${row.id}-${column.id}`) || "",
-          ])
+          ]),
         ),
-      }))
-      detail.recordCount = detail.rows.length
+      }));
+      detail.recordCount = detail.rows.length;
       setLists((current) =>
-        current.map((item) => (item.id === listId ? detail : item))
-      )
-      setActiveListId(listId)
+        current.map((item) => (item.id === listId ? detail : item)),
+      );
+      setActiveListId(listId);
     } catch {
       /* axios interceptor displays the error */
     }
-  }
+  };
 
   useEffect(() => {
-    fetchLists()
-  }, [fetchLists])
+    fetchLists();
+  }, [fetchLists]);
 
   const resetListDialog = () => {
-    setListForm(emptyListForm)
-    setColumnNames(["Column 1", "Column 2", "Column 3"])
-    setEditingListId(null)
-  }
+    setListForm(emptyListForm);
+    setColumnNames(["Column 1", "Column 2", "Column 3"]);
+    setEditingListId(null);
+  };
 
   const openCreateList = () => {
-    resetListDialog()
-    setListDialogOpen(true)
-  }
+    resetListDialog();
+    setListDialogOpen(true);
+  };
 
   const openEditList = (list: CustomList) => {
-    setEditingListId(list.id)
+    setEditingListId(list.id);
     setListForm({
       name: list.name,
       description: list.description,
       columnCount: list.columns.length,
-    })
-    setColumnNames(list.columns.map((column) => column.name))
-    setListDialogOpen(true)
-  }
+    });
+    setColumnNames(list.columns.map((column) => column.name));
+    setListDialogOpen(true);
+  };
 
   const changeColumnCount = (value: number) => {
-    const count = Math.max(1, Math.min(20, Number.isFinite(value) ? value : 1))
-    setListForm((form) => ({ ...form, columnCount: count }))
+    const count = Math.max(1, Math.min(20, Number.isFinite(value) ? value : 1));
+    setListForm((form) => ({ ...form, columnCount: count }));
     setColumnNames((current) =>
       Array.from(
         { length: count },
-        (_, index) => current[index] || `Column ${index + 1}`
-      )
-    )
-  }
+        (_, index) => current[index] || `Column ${index + 1}`,
+      ),
+    );
+  };
 
   const saveList = async () => {
-    const name = listForm.name.trim()
+    const name = listForm.name.trim();
     const names = columnNames.map(
-      (column, index) => column.trim() || `Column ${index + 1}`
-    )
-    if (!name) return toast.error("Please enter a list name.")
+      (column, index) => column.trim() || `Column ${index + 1}`,
+    );
+    if (!name) return toast.error("Please enter a list name.");
     if (
       new Set(names.map((column) => column.toLowerCase())).size !== names.length
     ) {
-      return toast.error("Column names must be unique.")
+      return toast.error("Column names must be unique.");
     }
 
     if (editingListId) {
       try {
-        const current = lists.find((list) => list.id === editingListId)
+        const current = lists.find((list) => list.id === editingListId);
         await axios.put(`${listUrl}/${editingListId}`, {
           title: name,
           description: listForm.description.trim(),
-        })
+        });
         await Promise.all(
           names.map((columnName, index) =>
             current?.columns[index]
               ? axios.put(
                   `${listUrl}/${editingListId}/columns/${current.columns[index].id}`,
-                  { name: columnName }
+                  { name: columnName },
                 )
               : axios.post(`${listUrl}/${editingListId}/columns`, {
                   name: columnName,
-                })
-          )
-        )
+                }),
+          ),
+        );
         await Promise.all(
           (current?.columns.slice(names.length) || []).map((column) =>
-            axios.delete(`${listUrl}/${editingListId}/columns/${column.id}`)
-          )
-        )
-        await fetchLists()
-        if (activeListId === editingListId) await openList(editingListId)
-        toast.success("List updated.")
+            axios.delete(`${listUrl}/${editingListId}/columns/${column.id}`),
+          ),
+        );
+        await fetchLists();
+        if (activeListId === editingListId) await openList(editingListId);
+        toast.success("List updated.");
       } catch {
-        return
+        return;
       }
     } else {
       try {
@@ -248,126 +252,126 @@ export default function ListsPage() {
           title: name,
           description: listForm.description.trim(),
           columns: names,
-        })
-        await fetchLists()
-        toast.success("List created.")
+        });
+        await fetchLists();
+        toast.success("List created.");
       } catch {
-        return
+        return;
       }
     }
-    setListDialogOpen(false)
-    resetListDialog()
-  }
+    setListDialogOpen(false);
+    resetListDialog();
+  };
 
   const openAddRow = () => {
-    if (!activeList) return
-    setEditingRowId(null)
+    if (!activeList) return;
+    setEditingRowId(null);
     setRowValues(
-      Object.fromEntries(activeList.columns.map((column) => [column.id, ""]))
-    )
-    setRowDialogOpen(true)
-  }
+      Object.fromEntries(activeList.columns.map((column) => [column.id, ""])),
+    );
+    setRowDialogOpen(true);
+  };
 
   const openEditRow = (row: ListRow) => {
-    setEditingRowId(row.id)
-    setRowValues(row.values)
-    setRowDialogOpen(true)
-  }
+    setEditingRowId(row.id);
+    setRowValues(row.values);
+    setRowDialogOpen(true);
+  };
 
   const saveRow = async () => {
-    if (!activeList) return
+    if (!activeList) return;
     try {
-      const values = Object.fromEntries(Object.entries(rowValues))
+      const values = Object.fromEntries(Object.entries(rowValues));
       if (editingRowId)
         await axios.put(`${listUrl}/${activeList.id}/rows/${editingRowId}`, {
           values,
-        })
-      else await axios.post(`${listUrl}/${activeList.id}/rows`, { values })
-      await openList(activeList.id)
-      toast.success(editingRowId ? "Entry updated." : "Entry added.")
-      setRowDialogOpen(false)
+        });
+      else await axios.post(`${listUrl}/${activeList.id}/rows`, { values });
+      await openList(activeList.id);
+      toast.success(editingRowId ? "Entry updated." : "Entry added.");
+      setRowDialogOpen(false);
     } catch {
-      return
+      return;
     }
-  }
+  };
 
   const openAddColumn = () => {
-    setEditingColumnId(null)
-    setColumnName("")
-    setColumnDialogOpen(true)
-  }
+    setEditingColumnId(null);
+    setColumnName("");
+    setColumnDialogOpen(true);
+  };
 
   const openEditColumn = (column: ListColumn) => {
-    setEditingColumnId(column.id)
-    setColumnName(column.name)
-    setColumnDialogOpen(true)
-  }
+    setEditingColumnId(column.id);
+    setColumnName(column.name);
+    setColumnDialogOpen(true);
+  };
 
   const saveColumn = async () => {
     if (!activeList || !columnName.trim())
-      return toast.error("Please enter a column name.")
-    const name = columnName.trim()
+      return toast.error("Please enter a column name.");
+    const name = columnName.trim();
     if (
       activeList.columns.some(
         (column) =>
           column.id !== editingColumnId &&
-          column.name.toLowerCase() === name.toLowerCase()
+          column.name.toLowerCase() === name.toLowerCase(),
       )
     )
-      return toast.error("Column names must be unique.")
+      return toast.error("Column names must be unique.");
     try {
       if (editingColumnId)
         await axios.put(
           `${listUrl}/${activeList.id}/columns/${editingColumnId}`,
-          { name }
-        )
-      else await axios.post(`${listUrl}/${activeList.id}/columns`, { name })
-      await openList(activeList.id)
-      toast.success(editingColumnId ? "Column updated." : "Column added.")
-      setColumnDialogOpen(false)
+          { name },
+        );
+      else await axios.post(`${listUrl}/${activeList.id}/columns`, { name });
+      await openList(activeList.id);
+      toast.success(editingColumnId ? "Column updated." : "Column added.");
+      setColumnDialogOpen(false);
     } catch {
-      return
+      return;
     }
-  }
+  };
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return
+    if (!deleteTarget) return;
     if (deleteTarget.type === "list") {
       try {
-        await axios.delete(`${listUrl}/${deleteTarget.id}`)
+        await axios.delete(`${listUrl}/${deleteTarget.id}`);
       } catch {
-        return
+        return;
       }
       setLists((current) =>
-        current.filter((list) => list.id !== deleteTarget.id)
-      )
-      if (activeListId === deleteTarget.id) setActiveListId(null)
-      toast.success("List deleted.")
+        current.filter((list) => list.id !== deleteTarget.id),
+      );
+      if (activeListId === deleteTarget.id) setActiveListId(null);
+      toast.success("List deleted.");
     }
     if (deleteTarget.type === "row" && activeList) {
       try {
         await axios.delete(
-          `${listUrl}/${activeList.id}/rows/${deleteTarget.id}`
-        )
-        await openList(activeList.id)
+          `${listUrl}/${activeList.id}/rows/${deleteTarget.id}`,
+        );
+        await openList(activeList.id);
       } catch {
-        return
+        return;
       }
-      toast.success("Entry deleted.")
+      toast.success("Entry deleted.");
     }
     if (deleteTarget.type === "column" && activeList) {
       try {
         await axios.delete(
-          `${listUrl}/${activeList.id}/columns/${deleteTarget.id}`
-        )
-        await openList(activeList.id)
+          `${listUrl}/${activeList.id}/columns/${deleteTarget.id}`,
+        );
+        await openList(activeList.id);
       } catch {
-        return
+        return;
       }
-      toast.success("Column and its entries deleted.")
+      toast.success("Column and its entries deleted.");
     }
-    setDeleteTarget(null)
-  }
+    setDeleteTarget(null);
+  };
 
   if (activeList)
     return (
@@ -425,7 +429,7 @@ export default function ListsPage() {
           onConfirm={confirmDelete}
         />
       </>
-    )
+    );
 
   return (
     <>
@@ -502,8 +506,10 @@ export default function ListsPage() {
                   })
                 }
                 onPin={async () => {
-                  await axios.put(`${listUrl}/${list.id}`, { is_pinned: false })
-                  setPinnedIds((ids) => ids.filter((id) => id !== list.id))
+                  await axios.put(`${listUrl}/${list.id}`, {
+                    is_pinned: false,
+                  });
+                  setPinnedIds((ids) => ids.filter((id) => id !== list.id));
                 }}
               />
             ))}
@@ -553,8 +559,8 @@ export default function ListsPage() {
                   onPin={async () => {
                     await axios.put(`${listUrl}/${list.id}`, {
                       is_pinned: true,
-                    })
-                    setPinnedIds((ids) => [...ids, list.id])
+                    });
+                    setPinnedIds((ids) => [...ids, list.id]);
                   }}
                 />
               ))}
@@ -568,8 +574,8 @@ export default function ListsPage() {
                 setDeleteTarget({ type: "list", id: list.id, name: list.name })
               }
               onPin={async (list) => {
-                await axios.put(`${listUrl}/${list.id}`, { is_pinned: true })
-                setPinnedIds((ids) => [...ids, list.id])
+                await axios.put(`${listUrl}/${list.id}`, { is_pinned: true });
+                setPinnedIds((ids) => [...ids, list.id]);
               }}
             />
           )}
@@ -592,7 +598,7 @@ export default function ListsPage() {
         onConfirm={confirmDelete}
       />
     </>
-  )
+  );
 }
 
 function ListWorkspace({
@@ -606,15 +612,15 @@ function ListWorkspace({
   onEditColumn,
   onDeleteColumn,
 }: {
-  list: CustomList
-  onBack: () => void
-  onEditList: () => void
-  onAddRow: () => void
-  onEditRow: (row: ListRow) => void
-  onDeleteRow: (row: ListRow) => void
-  onAddColumn: () => void
-  onEditColumn: (column: ListColumn) => void
-  onDeleteColumn: (column: ListColumn) => void
+  list: CustomList;
+  onBack: () => void;
+  onEditList: () => void;
+  onAddRow: () => void;
+  onEditRow: (row: ListRow) => void;
+  onDeleteRow: (row: ListRow) => void;
+  onAddColumn: () => void;
+  onEditColumn: (column: ListColumn) => void;
+  onDeleteColumn: (column: ListColumn) => void;
 }) {
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -742,7 +748,7 @@ function ListWorkspace({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function ListSummary({
@@ -753,12 +759,12 @@ function ListSummary({
   onDelete,
   onPin,
 }: {
-  list: CustomList
-  pinned?: boolean
-  onOpen: () => void
-  onEdit: () => void
-  onDelete: () => void
-  onPin: () => void
+  list: CustomList;
+  pinned?: boolean;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onPin: () => void;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-4 shadow-sm">
@@ -816,7 +822,7 @@ function ListSummary({
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 function ListsTable({
@@ -826,18 +832,18 @@ function ListsTable({
   onDelete,
   onPin,
 }: {
-  lists: CustomList[]
-  onOpen: (id: string) => void
-  onEdit: (list: CustomList) => void
-  onDelete: (list: CustomList) => void
-  onPin: (list: CustomList) => void
+  lists: CustomList[];
+  onOpen: (id: string) => void;
+  onEdit: (list: CustomList) => void;
+  onDelete: (list: CustomList) => void;
+  onPin: (list: CustomList) => void;
 }) {
   if (!lists.length)
     return (
       <div className="rounded-xl border border-dashed p-12 text-center text-sm text-muted-foreground">
         No lists match your search.
       </div>
-    )
+    );
   return (
     <div className="overflow-hidden rounded-xl border bg-card">
       <div className="overflow-x-auto">
@@ -930,7 +936,7 @@ function ListsTable({
         </table>
       </div>
     </div>
-  )
+  );
 }
 
 function ListDialog({
@@ -944,15 +950,15 @@ function ListDialog({
   onSave,
   isEditing,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  form: ListForm
-  setForm: (form: ListForm) => void
-  columnNames: string[]
-  setColumnNames: (names: string[]) => void
-  onCountChange: (count: number) => void
-  onSave: () => void
-  isEditing: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  form: ListForm;
+  setForm: (form: ListForm) => void;
+  columnNames: string[];
+  setColumnNames: (names: string[]) => void;
+  onCountChange: (count: number) => void;
+  onSave: () => void;
+  isEditing: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1010,8 +1016,8 @@ function ListDialog({
                   onChange={(event) =>
                     setColumnNames(
                       columnNames.map((item: string, itemIndex: number) =>
-                        itemIndex === index ? event.target.value : item
-                      )
+                        itemIndex === index ? event.target.value : item,
+                      ),
                     )
                   }
                   placeholder={`Column ${index + 1}`}
@@ -1030,7 +1036,7 @@ function ListDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function RowDialog({
@@ -1042,13 +1048,13 @@ function RowDialog({
   onSave,
   isEditing,
 }: {
-  list: CustomList
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  values: Record<string, string>
-  setValues: (values: Record<string, string>) => void
-  onSave: () => void
-  isEditing: boolean
+  list: CustomList;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  values: Record<string, string>;
+  setValues: (values: Record<string, string>) => void;
+  onSave: () => void;
+  isEditing: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1083,7 +1089,7 @@ function RowDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function ColumnDialog({
@@ -1094,12 +1100,12 @@ function ColumnDialog({
   onSave,
   isEditing,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  name: string
-  setName: (name: string) => void
-  onSave: () => void
-  isEditing: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  name: string;
+  setName: (name: string) => void;
+  onSave: () => void;
+  isEditing: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1132,7 +1138,7 @@ function ColumnDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function DeleteDialog({
@@ -1140,16 +1146,16 @@ function DeleteDialog({
   onCancel,
   onConfirm,
 }: {
-  target: DeleteTarget
-  onCancel: () => void
-  onConfirm: () => void
+  target: DeleteTarget;
+  onCancel: () => void;
+  onConfirm: () => void;
 }) {
   const noun =
     target?.type === "column"
       ? "column"
       : target?.type === "row"
         ? "entry"
-        : "list"
+        : "list";
   return (
     <Dialog open={!!target} onOpenChange={(open) => !open && onCancel()}>
       <DialogContent className="max-w-md">
@@ -1171,5 +1177,5 @@ function DeleteDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

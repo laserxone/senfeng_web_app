@@ -1,26 +1,26 @@
-import React, { ReactNode } from "react"
-import { useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { Order } from "@/lib/types"
+import React, { ReactNode } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { Order } from "@/lib/types";
 
 function SortableCard({
   order,
   children,
   dragHandle,
 }: {
-  order: Order | null
-  children: ReactNode
-  dragHandle: React.ReactElement
+  order: Order | null;
+  children: ReactNode;
+  dragHandle: React.ReactElement;
 }) {
-  if (!order?.id) return
+  if (!order?.id) return;
 
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: order.id })
+    useSortable({ id: order.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-  }
+  };
 
   return (
     <div ref={setNodeRef} style={style} className="flex w-full gap-2">
@@ -29,7 +29,7 @@ function SortableCard({
 
       {children}
     </div>
-  )
+  );
 }
 
-export default SortableCard
+export default SortableCard;

@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -8,27 +8,27 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import useUserDetail from "@/hooks/use-user-detail"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import useUserDetail from "@/hooks/use-user-detail";
 import {
   CRMTeamProgress,
   CRMTeamProgressDataCustomer,
   CRMTeamProgressDataSale,
-} from "@/lib/types"
-import { useEffect, useState } from "react"
-import Link from "next/link"
+} from "@/lib/types";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
 const chartConfig = {
   customers_assigned: {
@@ -43,12 +43,10 @@ const chartConfig = {
     label: "Repeated Customers",
     color: "var(--chart-3)",
   },
-}
+};
 
 type ProgressMetric =
-  | "customers_assigned"
-  | "sale_produced_customers"
-  | "repeated_customers"
+  "customers_assigned" | "sale_produced_customers" | "repeated_customers";
 
 type ChartRow = Omit<
   CRMTeamProgress,
@@ -58,36 +56,36 @@ type ChartRow = Omit<
   | "repeated_customers"
   | "customer_to_member_conversion"
 > & {
-  full_name: string
-  name: string
-  customers_assigned: number
-  sale_produced_customers: number
-  repeated_customers: number
-  customer_to_member_conversion: number
-}
+  full_name: string;
+  name: string;
+  customers_assigned: number;
+  sale_produced_customers: number;
+  repeated_customers: number;
+  customer_to_member_conversion: number;
+};
 
 type SelectedProgressDetail = {
-  metric: ProgressMetric
-  member: ChartRow
-}
+  metric: ProgressMetric;
+  member: ChartRow;
+};
 
 const metricLabels: Record<ProgressMetric, string> = {
   customers_assigned: "Assigned Customers",
   sale_produced_customers: "Conversions",
   repeated_customers: "Repeated Customers",
-}
+};
 
 export default function SalesTeamProgressChartCRM({
   passingData,
 }: {
-  passingData: CRMTeamProgress[]
+  passingData: CRMTeamProgress[];
 }) {
-  const [data, setData] = useState<ChartRow[]>([])
+  const [data, setData] = useState<ChartRow[]>([]);
   const [selectedDetail, setSelectedDetail] =
-    useState<SelectedProgressDetail | null>(null)
+    useState<SelectedProgressDetail | null>(null);
 
   useEffect(() => {
-    if (!Array.isArray(passingData)) return
+    if (!Array.isArray(passingData)) return;
 
     const updatedData = passingData.map((item) => ({
       ...item,
@@ -98,10 +96,10 @@ export default function SalesTeamProgressChartCRM({
       repeated_customers: Number(item.repeated_customers) || 0,
       customer_to_member_conversion:
         Number(item.customer_to_member_conversion) || 0,
-    }))
+    }));
 
-    setData(updatedData)
-  }, [passingData])
+    setData(updatedData);
+  }, [passingData]);
 
   return (
     <Card>
@@ -128,20 +126,20 @@ export default function SalesTeamProgressChartCRM({
         onClose={() => setSelectedDetail(null)}
       />
     </Card>
-  )
+  );
 }
 
 const RenderBarChart = ({
   data,
   onSelect,
 }: {
-  data: ChartRow[]
-  onSelect: (member: ChartRow, metric: ProgressMetric) => void
+  data: ChartRow[];
+  onSelect: (member: ChartRow, metric: ProgressMetric) => void;
 }) => {
   const handleBarClick = (metric: ProgressMetric) => (entry: unknown) => {
-    const payload = (entry as { payload?: ChartRow })?.payload
-    if (payload) onSelect(payload, metric)
-  }
+    const payload = (entry as { payload?: ChartRow })?.payload;
+    if (payload) onSelect(payload, metric);
+  };
 
   return (
     <ChartContainer
@@ -167,14 +165,14 @@ const RenderBarChart = ({
               className="w-[240px]"
               formatter={(value, name, item) => {
                 const label =
-                  chartConfig[name as keyof typeof chartConfig]?.label || name
+                  chartConfig[name as keyof typeof chartConfig]?.label || name;
 
                 return (
                   <div className="flex w-full items-center justify-between gap-4">
                     <span className="text-muted-foreground">{label}</span>
                     <span className="font-medium">{value}</span>
                   </div>
-                )
+                );
               }}
             />
           }
@@ -208,23 +206,23 @@ const RenderBarChart = ({
         />
       </BarChart>
     </ChartContainer>
-  )
-}
+  );
+};
 
 const ProgressDetailDialog = ({
   selectedDetail,
   onClose,
 }: {
-  selectedDetail: SelectedProgressDetail | null
-  onClose: () => void
+  selectedDetail: SelectedProgressDetail | null;
+  onClose: () => void;
 }) => {
-  const member = selectedDetail?.member
-  const metric = selectedDetail?.metric
-  const assignedCustomers = member?.customers_assigned_data || []
+  const member = selectedDetail?.member;
+  const metric = selectedDetail?.metric;
+  const assignedCustomers = member?.customers_assigned_data || [];
   const saleGroups =
     metric === "sale_produced_customers"
       ? member?.sale_produced_data || []
-      : member?.repeated_customers_data || []
+      : member?.repeated_customers_data || [];
 
   return (
     <Dialog open={!!selectedDetail} onOpenChange={(open) => !open && onClose()}>
@@ -268,22 +266,22 @@ const ProgressDetailDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const SummaryTile = ({ label, value }: { label: string; value: number }) => (
   <div className="rounded-md border bg-background px-3 py-2">
     <p className="text-[11px] text-muted-foreground uppercase">{label}</p>
     <p className="mt-1 text-lg leading-none font-bold">{value}</p>
   </div>
-)
+);
 
 const CustomerDetailList = ({
   customers,
 }: {
-  customers: CRMTeamProgressDataCustomer[]
+  customers: CRMTeamProgressDataCustomer[];
 }) => {
-  if (customers.length === 0) return <EmptyDetailState />
+  if (customers.length === 0) return <EmptyDetailState />;
 
   return (
     <div className="grid gap-2 md:grid-cols-2">
@@ -291,19 +289,19 @@ const CustomerDetailList = ({
         <CustomerCard key={customer.id} customer={customer} />
       ))}
     </div>
-  )
-}
+  );
+};
 
 const SaleGroupDetailList = ({
   groups,
 }: {
   groups: {
-    customer: CRMTeamProgressDataCustomer
-    sales: CRMTeamProgressDataSale[]
-  }[]
+    customer: CRMTeamProgressDataCustomer;
+    sales: CRMTeamProgressDataSale[];
+  }[];
 }) => {
-  const { base_route } = useUserDetail()
-  if (groups.length === 0) return <EmptyDetailState />
+  const { base_route } = useUserDetail();
+  if (groups.length === 0) return <EmptyDetailState />;
 
   return (
     <div className="space-y-3">
@@ -348,20 +346,20 @@ const SaleGroupDetailList = ({
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
 const CustomerCard = ({
   customer,
   compact = false,
 }: {
-  customer: CRMTeamProgressDataCustomer
-  compact?: boolean
+  customer: CRMTeamProgressDataCustomer;
+  compact?: boolean;
 }) => {
   const phone = Array.isArray(customer.phone)
     ? customer.phone.join(", ")
-    : customer.phone || "-"
-  const { base_route } = useUserDetail()
+    : customer.phone || "-";
+  const { base_route } = useUserDetail();
 
   return (
     <div
@@ -391,8 +389,8 @@ const CustomerCard = ({
         <p className="truncate">Location: {customer.location || "-"}</p>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const EmptyDetailState = () => (
   <div className="flex min-h-[220px] flex-col items-center justify-center rounded-md border border-dashed bg-muted/20 px-4 text-center">
@@ -401,4 +399,4 @@ const EmptyDetailState = () => (
       Detail records will appear here when this metric has saved data.
     </p>
   </div>
-)
+);

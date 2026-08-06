@@ -1,6 +1,6 @@
-"use client"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+"use client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,17 +9,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { auth } from "@/config/firebase"
-import { useProfileImage } from "@/hooks/use-profile-image"
-import useUserDetail from "@/hooks/use-user-detail"
-import { signOut } from "firebase/auth"
-import { ChevronDown, LogOut, UserRound } from "lucide-react"
-import Link from "next/link"
+} from "@/components/ui/dropdown-menu";
+import { auth } from "@/config/firebase";
+import { useProfileImage } from "@/hooks/use-profile-image";
+import useUserDetail from "@/hooks/use-user-detail";
+import { signOut } from "firebase/auth";
+import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import Link from "next/link";
 export function UserNav() {
-  const { base_route, name, email, designation } = useUserDetail()
+  const { base_route, name, email, designation } = useUserDetail();
 
-  const profileImage = useProfileImage()
+  const profileImage = useProfileImage();
 
   return (
     <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export function UserNav() {
           <DropdownMenuItem
             className="gap-2 rounded-lg text-red-600 focus:text-red-600"
             onClick={() => {
-              signOut(auth)
+              signOut(auth);
               // localStorage.removeItem('user_email');
               // router.replace("/login")
             }}
@@ -97,5 +97,5 @@ export function UserNav() {
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  )
+  );
 }

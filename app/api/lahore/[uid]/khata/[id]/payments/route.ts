@@ -1,11 +1,11 @@
-import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextResponse } from "next/server";
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id: khataId } = await params
+  const { id: khataId } = await params;
 
   const result = await pool.query(
     `
@@ -14,20 +14,20 @@ export async function GET(
     WHERE khata_id = $1
     ORDER BY date DESC
     `,
-    [khataId]
-  )
+    [khataId],
+  );
 
-  return NextResponse.json(result.rows)
+  return NextResponse.json(result.rows);
 }
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id: khataId } = await params
-  const body = await req.json()
+  const { id: khataId } = await params;
+  const body = await req.json();
 
-  const { amount, date, remarks, tid } = body
+  const { amount, date, remarks, tid } = body;
 
   const result = await pool.query(
     `
@@ -35,8 +35,8 @@ export async function POST(
     VALUES ($1, $2, $3, $4, $5)
     RETURNING *
     `,
-    [khataId, amount, date, remarks, tid]
-  )
+    [khataId, amount, date, remarks, tid],
+  );
 
-  return NextResponse.json(result.rows[0])
+  return NextResponse.json(result.rows[0]);
 }

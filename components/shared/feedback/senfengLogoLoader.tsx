@@ -18,7 +18,7 @@ const SenfengLogoLoader = () => {
         </svg>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SenfengLogoLoader
+export default SenfengLogoLoader;

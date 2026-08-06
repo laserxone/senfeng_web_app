@@ -1,41 +1,41 @@
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import { Input } from "@/components/ui/input"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import { Input } from "@/components/ui/input";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MachineProps } from "@/lib/types"
-import "pdfjs-dist/build/pdf.worker.mjs"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MachineProps } from "@/lib/types";
+import "pdfjs-dist/build/pdf.worker.mjs";
 
 const CancelDeal = ({
   machine,
   onRefresh,
 }: {
-  machine: MachineProps
-  onRefresh: () => Promise<void>
+  machine: MachineProps;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [confirmation, setConfirmation] = useState(false)
-  const [reason, setReason] = useState("")
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const [confirmation, setConfirmation] = useState(false);
+  const [reason, setReason] = useState("");
+  const { userID } = useUserDetail();
 
   async function handleDealCancel() {
-    if (!machine?.id) return
+    if (!machine?.id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     axios
       .post(`/${userID}/machine/${machine?.id}/dealcancel`, { reason })
       .then(async () => {
-        await onRefresh()
-        setConfirmation(false)
+        await onRefresh();
+        setConfirmation(false);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   return (
@@ -72,7 +72,7 @@ const CancelDeal = ({
         </div>
       </ConfirmationDialog>
     </>
-  )
-}
+  );
+};
 
-export default CancelDeal
+export default CancelDeal;

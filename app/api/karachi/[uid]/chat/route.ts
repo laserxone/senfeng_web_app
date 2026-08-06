@@ -1,23 +1,23 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
+  const { uid } = await params;
 
   if (!uid) {
-    return NextResponse.json({ message: "User not found" }, { status: 400 })
+    return NextResponse.json({ message: "User not found" }, { status: 400 });
   }
 
-  const userId = Number(uid)
+  const userId = Number(uid);
 
   try {
     const usersResult = await pool.query(
       `SELECT id, name, designation, dp FROM users WHERE id != $1 ORDER BY name ASC`,
-      [userId]
-    )
+      [userId],
+    );
 
     const conversationsResult = await pool.query(
       `SELECT 
@@ -29,18 +29,18 @@ export async function GET(
       LEFT JOIN users u2 ON c.participant_2 = u2.id
       WHERE c.participant_1 = $1 OR c.participant_2 = $1
       ORDER BY c.last_updated DESC`,
-      [userId]
-    )
+      [userId],
+    );
 
-    const conversations = conversationsResult.rows
+    const conversations = conversationsResult.rows;
 
-    const conversationMap = new Map()
+    const conversationMap = new Map();
 
     for (const conv of conversations) {
       const otherId =
         conv.participant_1_id === userId
           ? conv.participant_2_id
-          : conv.participant_1_id
+          : conv.participant_1_id;
 
       const unreadRes = await pool.query(
         `SELECT COUNT(*) AS unread_count
@@ -48,10 +48,10 @@ export async function GET(
          WHERE conversation_id = $1
            AND sender_id != $2
            AND is_read = false`,
-        [conv.id, Number(userId)]
-      )
+        [conv.id, Number(userId)],
+      );
 
-      const unreadCount = parseInt(unreadRes.rows[0].unread_count, 10)
+      const unreadCount = parseInt(unreadRes.rows[0].unread_count, 10);
 
       conversationMap.set(otherId, {
         id: conv.id,
@@ -68,44 +68,44 @@ export async function GET(
           name: conv.participant_2_name,
         },
         unreadCount,
-      })
+      });
     }
 
-    const usersWithConversation = []
-    const usersWithoutConversation = []
+    const usersWithConversation = [];
+    const usersWithoutConversation = [];
 
     for (const user of usersResult.rows) {
-      const conversation = conversationMap.get(user.id)
+      const conversation = conversationMap.get(user.id);
       const userData = {
         ...user,
         conversation: conversation || null,
         unreadCount: conversation ? conversation.unreadCount : 0,
-      }
+      };
 
       if (conversation) {
-        usersWithConversation.push(userData)
+        usersWithConversation.push(userData);
       } else {
-        usersWithoutConversation.push(userData)
+        usersWithoutConversation.push(userData);
       }
     }
 
     usersWithConversation.sort(
       (a, b) =>
         new Date(b.conversation.last_updated).getTime() -
-        new Date(a.conversation.last_updated).getTime()
-    )
+        new Date(a.conversation.last_updated).getTime(),
+    );
 
     const finalUserList = [
       ...usersWithConversation,
       ...usersWithoutConversation,
-    ]
+    ];
 
-    return NextResponse.json(finalUserList, { status: 200 })
+    return NextResponse.json(finalUserList, { status: 200 });
   } catch (error: any) {
-    console.error(error)
+    console.error(error);
     return NextResponse.json(
       { message: error?.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

@@ -1,22 +1,22 @@
-import { cn } from "@/lib/utils"
-import { Star } from "lucide-react"
-import { useState } from "react"
+import { cn } from "@/lib/utils";
+import { Star } from "lucide-react";
+import { useState } from "react";
 
 const StarRating = ({
   value = 0,
   onChange,
   size = 24,
 }: {
-  value?: number
-  onChange?: (val: number) => void
-  size?: number
+  value?: number;
+  onChange?: (val: number) => void;
+  size?: number;
 }) => {
-  const [rating, setRating] = useState(value)
+  const [rating, setRating] = useState(value);
 
   const handleRating = (newRating: number) => {
-    setRating(newRating)
-    onChange?.(newRating)
-  }
+    setRating(newRating);
+    onChange?.(newRating);
+  };
 
   return (
     <div className="flex gap-1">
@@ -26,13 +26,13 @@ const StarRating = ({
           size={size}
           className={cn(
             "cursor-pointer transition-all",
-            num <= rating ? "fill-yellow-500 text-yellow-500" : "text-gray-400"
+            num <= rating ? "fill-yellow-500 text-yellow-500" : "text-gray-400",
           )}
           onClick={() => handleRating(num)}
         />
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default StarRating
+export default StarRating;

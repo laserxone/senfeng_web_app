@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
   CircleDollarSign,
   Clock3,
@@ -9,103 +9,103 @@ import {
   Loader2,
   Trash2,
   Wallet,
-} from "lucide-react"
-import moment from "moment"
-import { useEffect, useMemo, useState } from "react"
+} from "lucide-react";
+import moment from "moment";
+import { useEffect, useMemo, useState } from "react";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import Heading from "@/components/ui/heading"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Heading from "@/components/ui/heading";
 
-import PageTable from "@/components/shared/tables/app-table"
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { DeleteFromStorage } from "@/lib/deleteFunction"
-import { TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase"
-import { UploadImage } from "@/lib/uploadFunction"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
-import { toast } from "sonner"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import PageTable from "@/components/shared/tables/app-table";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { TriggerFirebaseForPendingPayments } from "@/lib/triggerFirebase";
+import { UploadImage } from "@/lib/uploadFunction";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import { toast } from "sonner";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type PaymentRequest = {
-  id: number
-  request_type: boolean
-  created_at: string
-  amount: string
-  slip: string
-  date: Date
-  tid: string
-  sale_id: number
-  order_no_arr: string[]
-  customer_id: number
-  customer_name: string
-  customer_owner: string
-  ownership_name: string
-  customer_location: string
-  dispatch_information: { other_information?: { transporter?: string } }
-  note: string
-}
+  id: number;
+  request_type: boolean;
+  created_at: string;
+  amount: string;
+  slip: string;
+  date: Date;
+  tid: string;
+  sale_id: number;
+  order_no_arr: string[];
+  customer_id: number;
+  customer_name: string;
+  customer_owner: string;
+  ownership_name: string;
+  customer_location: string;
+  dispatch_information: { other_information?: { transporter?: string } };
+  note: string;
+};
 
 export default function PaymentRequestsPage() {
-  const { userID } = useUserDetail()
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [requests, setRequests] = useState<PaymentRequest[]>([])
-  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [requests, setRequests] = useState<PaymentRequest[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const [selected, setSelected] = useState<PaymentRequest | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  const [selected, setSelected] = useState<PaymentRequest | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [selectedForDelete, setSelectedForDelete] =
-    useState<PaymentRequest | null>(null)
+    useState<PaymentRequest | null>(null);
 
   const [form, setForm] = useState<{
-    date: Date
-    tid: string
-    amount: string
-    slip: string | null
-    note: string
+    date: Date;
+    tid: string;
+    amount: string;
+    slip: string | null;
+    note: string;
   }>({
     date: new Date(),
     tid: "",
     amount: "",
     slip: "",
     note: "",
-  })
-  const [edit, setEdit] = useState(false)
+  });
+  const [edit, setEdit] = useState(false);
 
   const fetchPaymentRequests = async () => {
-    if (!userID) return
+    if (!userID) return;
 
     try {
-      setLoading(true)
+      setLoading(true);
 
-      const res = await axios.get(`/${userID}/payment-requests`)
+      const res = await axios.get(`/${userID}/payment-requests`);
 
-      setRequests(res.data || [])
+      setRequests(res.data || []);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (userID) {
-      fetchPaymentRequests()
+      fetchPaymentRequests();
     }
-  }, [userID])
+  }, [userID]);
 
   const handleOpenDialog = (item: PaymentRequest) => {
-    setSelected(item)
+    setSelected(item);
 
     setForm({
       date: new Date(),
@@ -113,14 +113,14 @@ export default function PaymentRequestsPage() {
       amount: item.amount,
       slip: "",
       note: "",
-    })
+    });
 
-    setDialogOpen(true)
-  }
+    setDialogOpen(true);
+  };
 
   const handleEditDialog = (item: PaymentRequest) => {
-    setSelected(item)
-    setEdit(true)
+    setSelected(item);
+    setEdit(true);
 
     setForm({
       date: item.date,
@@ -128,15 +128,15 @@ export default function PaymentRequestsPage() {
       amount: item.amount,
       slip: item.slip,
       note: item?.note ?? "",
-    })
+    });
 
-    setDialogOpen(true)
-  }
+    setDialogOpen(true);
+  };
 
   const handleRecordPayment = async () => {
-    if (!selected) return
+    if (!selected) return;
 
-    setSubmitting(true)
+    setSubmitting(true);
 
     try {
       const formData: any = {
@@ -146,51 +146,51 @@ export default function PaymentRequestsPage() {
         amount: form.amount,
         note: form.note,
         request_type: false,
-      }
+      };
 
-      const shouldUploadSlip = !edit || selected.slip !== form.slip
+      const shouldUploadSlip = !edit || selected.slip !== form.slip;
 
       if (shouldUploadSlip && form?.slip) {
         const slipPath = edit
           ? selected.slip
-          : `/payment-requests/${selected.id}.png`
+          : `/payment-requests/${selected.id}.png`;
 
-        await UploadImage(form.slip, slipPath, "image/png")
+        await UploadImage(form.slip, slipPath, "image/png");
 
-        formData.slip = slipPath
+        formData.slip = slipPath;
       }
 
-      await axios.put(`/${userID}/payment-requests`, formData)
-      TriggerFirebaseForPendingPayments()
-      await fetchPaymentRequests()
+      await axios.put(`/${userID}/payment-requests`, formData);
+      TriggerFirebaseForPendingPayments();
+      await fetchPaymentRequests();
 
-      setDialogOpen(false)
-      setEdit(false)
+      setDialogOpen(false);
+      setEdit(false);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   const totals = useMemo(() => {
     const totalRequested = requests.reduce(
       (sum, item) => sum + Number(item.amount || 0),
-      0
-    )
+      0,
+    );
 
     const totalPaid = requests
       .filter((item) => !item.request_type)
-      .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
     const totalDue = requests
       .filter((item) => item.request_type)
-      .reduce((sum, item) => sum + Number(item.amount || 0), 0)
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
     return {
       totalRequested,
       totalPaid,
       totalDue,
-    }
-  }, [requests])
+    };
+  }, [requests]);
 
   const columns: ColumnDef<PaymentRequest>[] = useMemo(
     () => [
@@ -385,7 +385,7 @@ export default function PaymentRequestsPage() {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
-          const item = row.original
+          const item = row.original;
 
           return (
             <div className="flex gap-2">
@@ -414,26 +414,28 @@ export default function PaymentRequestsPage() {
                 <Trash2 className="size-3.5" />
               </Button>
             </div>
-          )
+          );
         },
       },
     ],
-    [requests]
-  )
+    [requests],
+  );
 
   async function handleDelete() {
-    if (!selectedForDelete) return
-    setDeleteLoading(true)
+    if (!selectedForDelete) return;
+    setDeleteLoading(true);
     try {
       if (selectedForDelete?.slip) {
-        await DeleteFromStorage(selectedForDelete?.slip)
+        await DeleteFromStorage(selectedForDelete?.slip);
       }
-      await axios.delete(`/${userID}/payment-requests/${selectedForDelete?.id}`)
-      toast.success("Entry deleted successfully")
-      setSelectedForDelete(null)
-      await fetchPaymentRequests()
+      await axios.delete(
+        `/${userID}/payment-requests/${selectedForDelete?.id}`,
+      );
+      toast.success("Entry deleted successfully");
+      setSelectedForDelete(null);
+      await fetchPaymentRequests();
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
@@ -469,7 +471,7 @@ export default function PaymentRequestsPage() {
               color: "text-amber-600 dark:text-amber-400",
             },
           ].map((item) => {
-            const Icon = item.icon
+            const Icon = item.icon;
             return (
               <div
                 key={item.label}
@@ -485,7 +487,7 @@ export default function PaymentRequestsPage() {
                   </span>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       </section>
@@ -618,5 +620,5 @@ export default function PaymentRequestsPage() {
         onPressCancel={() => setSelectedForDelete(null)}
       />
     </div>
-  )
+  );
 }

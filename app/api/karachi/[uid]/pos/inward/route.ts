@@ -1,13 +1,13 @@
-import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextResponse } from "next/server";
 
 export async function POST(
   req: NextResponse,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
   const { from, vehicle_no, driver_name, manager, received_by, items } =
-    await req.json()
-  const { uid } = await params
+    await req.json();
+  const { uid } = await params;
 
   try {
     // Insert gatepass
@@ -22,8 +22,8 @@ export async function POST(
         received_by,
         uid,
         JSON.stringify(items),
-      ]
-    )
+      ],
+    );
 
     // Update inventory
     if (items && items.length > 0) {
@@ -31,22 +31,22 @@ export async function POST(
         if (item.inventory_id) {
           await pool.query(
             `UPDATE inventory_karachi SET qty = qty + $1 WHERE id = $2`,
-            [item.qty, item.inventory_id]
-          )
+            [item.qty, item.inventory_id],
+          );
         } else {
           await pool.query(
             `INSERT INTO inventory_karachi (name, qty, unit, remarks) VALUES ($1, $2, $3, $4)`,
-            [item.name, item.qty, item.unit, item.remarks]
-          )
+            [item.name, item.qty, item.unit, item.remarks],
+          );
         }
       }
     }
 
-    return NextResponse.json({ id: gatepassid.rows[0].id }, { status: 200 })
+    return NextResponse.json({ id: gatepassid.rows[0].id }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Error saving data" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

@@ -1,30 +1,30 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus } from "lucide-react"
-import { useContext, useEffect, useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { Checkbox } from "@/components/ui/checkbox"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -32,18 +32,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import axios from "@/lib/axios"
-import { MyCustomer } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import moment from "moment"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import { UserSearch } from "@/components/shared/search/user-search"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import axios from "@/lib/axios";
+import { MyCustomer } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import { UserSearch } from "@/components/shared/search/user-search";
 
 const AddReimbursementDialog = ({
   onRefresh,
@@ -51,17 +51,17 @@ const AddReimbursementDialog = ({
   open,
   onClose,
 }: {
-  onRefresh?: () => Promise<void>
-  id?: number | string | null
-  open: boolean
-  onClose: () => void
+  onRefresh?: () => Promise<void>;
+  id?: number | string | null;
+  open: boolean;
+  onClose: () => void;
 }) => {
-  const [selectedRadio, setSelectedRadio] = useState("customer")
+  const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
-    null
-  )
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [loading, setLoading] = useState(false)
+    null,
+  );
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [loading, setLoading] = useState(false);
 
   const formSchema = z
     .object({
@@ -82,10 +82,10 @@ const AddReimbursementDialog = ({
       {
         path: ["customer"],
         message: "Customer is required.",
-      }
-    )
+      },
+    );
 
-  type FormValues = z.infer<typeof formSchema>
+  type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -100,19 +100,19 @@ const AddReimbursementDialog = ({
       customer: null,
       resolved: false,
     },
-  })
+  });
 
   useEffect(() => {
     if (id) {
-      form.setValue("submitted_by", Number(id))
+      form.setValue("submitted_by", Number(id));
     }
-  }, [id])
+  }, [id]);
 
   async function onSubmit(values: FormValues) {
-    setLoading(true)
+    setLoading(true);
     try {
-      const name = `${OfficeState.value.data}/${id}/reimbursement/${moment().valueOf().toString()}.png`
-      const imgRef = await UploadImage(values.image, name)
+      const name = `${OfficeState.value.data}/${id}/reimbursement/${moment().valueOf().toString()}.png`;
+      const imgRef = await UploadImage(values.image, name);
       const response = await axios.post(`/${id}/reimbursement`, {
         amount: values.amount,
         title: values.title,
@@ -124,15 +124,15 @@ const AddReimbursementDialog = ({
         customer_id: selectedRadio === "customer" ? values.customer : null,
         purpose: true,
         resolved: values.resolved,
-      })
-      onRefresh?.()
-      form.reset()
-      setSelectedCustomer(null)
-      setSelectedRadio("customer")
+      });
+      onRefresh?.();
+      form.reset();
+      setSelectedCustomer(null);
+      setSelectedRadio("customer");
     } catch (error) {
-      console.log(error)
+      console.log(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -140,11 +140,11 @@ const AddReimbursementDialog = ({
     <Dialog
       open={open}
       onOpenChange={(val) => {
-        form.reset()
-        setSelectedCustomer(null)
-        setSelectedRadio("customer")
-        setLoading(false)
-        onClose()
+        form.reset();
+        setSelectedCustomer(null);
+        setSelectedRadio("customer");
+        setLoading(false);
+        onClose();
       }}
     >
       <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-2xl">
@@ -187,7 +187,7 @@ const AddReimbursementDialog = ({
             </RadioGroup>
             <form
               onSubmit={form.handleSubmit(onSubmit, (er) => {
-                console.log(er)
+                console.log(er);
               })}
               className="space-y-3 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
             >
@@ -211,15 +211,15 @@ const AddReimbursementDialog = ({
                           <CustomerSearchWithData
                             value={selectedCustomer}
                             onReturn={(val) => {
-                              field.onChange(val.id)
-                              setSelectedCustomer(val)
+                              field.onChange(val.id);
+                              setSelectedCustomer(val);
                               if (val.location) {
-                                form.setValue("city", val.location)
+                                form.setValue("city", val.location);
                               }
                               form.setValue(
                                 "title",
-                                val?.company || val?.owner || ""
-                              )
+                                val?.company || val?.owner || "",
+                              );
                             }}
                           />
                           {fieldState.invalid && (
@@ -341,7 +341,7 @@ const AddReimbursementDialog = ({
                           value={field.value ?? ""}
                           onChange={(e) => {
                             if (!isNaN(Number(e.target.value))) {
-                              field.onChange(Number(e.target.value))
+                              field.onChange(Number(e.target.value));
                             }
                           }}
                         />
@@ -368,7 +368,7 @@ const AddReimbursementDialog = ({
                             new Date(
                               new Date().getFullYear(),
                               new Date().getMonth(),
-                              1
+                              1,
                             )
                           }
                         />
@@ -463,7 +463,7 @@ const AddReimbursementDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default AddReimbursementDialog
+export default AddReimbursementDialog;

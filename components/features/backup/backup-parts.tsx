@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import PageTable from "@/components/shared/tables/app-table"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import AddBackupPartDialog from "@/components/features/machines/add-backup-part-dialog"
-import { Button } from "@/components/ui/button"
-import Heading from "@/components/ui/heading"
+import PageTable from "@/components/shared/tables/app-table";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import AddBackupPartDialog from "@/components/features/machines/add-backup-part-dialog";
+import { Button } from "@/components/ui/button";
+import Heading from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -12,11 +12,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { ColumnDef } from "@tanstack/react-table"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
   Box,
@@ -25,76 +25,72 @@ import {
   Package,
   Plus,
   UserRound,
-} from "lucide-react"
-import moment from "moment"
-import { useEffect, useMemo, useState, type ReactNode } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import moment from "moment";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
-type BackupPartStatus = "in_stock" | "given_to_customer"
+type BackupPartStatus = "in_stock" | "given_to_customer";
 
 export type BackupApplicationStatus =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "issued"
-  | "returned"
+  "pending" | "approved" | "rejected" | "issued" | "returned";
 
 type BackupDetail = {
-  id: number
-  name: string
-  date_of_delivery: string | null
-  amount: number | null
-  shipment_name: string | null
-  image: string | null
-  expected_return_date: string | null
-  user_id: number
-  status: BackupApplicationStatus | string
-  issued: boolean
-  issue_date: string | null
-  actual_return_date: string | null
-  hierarchy_id: number | null
-  current_approver_order: number
-  created_at: string
-  updated_at: string
-  sale_id: number | null
-  backup_inventory_id: number | null
-  customer_name: string
-  user_name: string
-}
+  id: number;
+  name: string;
+  date_of_delivery: string | null;
+  amount: number | null;
+  shipment_name: string | null;
+  image: string | null;
+  expected_return_date: string | null;
+  user_id: number;
+  status: BackupApplicationStatus | string;
+  issued: boolean;
+  issue_date: string | null;
+  actual_return_date: string | null;
+  hierarchy_id: number | null;
+  current_approver_order: number;
+  created_at: string;
+  updated_at: string;
+  sale_id: number | null;
+  backup_inventory_id: number | null;
+  customer_name: string;
+  user_name: string;
+};
 
 interface BackupPart {
-  id: number
-  name: string
-  power: string
-  serial_no: string
-  size: string
-  created_at: string | Date
-  backup_application_detail: null | BackupDetail
-  status: BackupPartStatus
-  image: string | null
+  id: number;
+  name: string;
+  power: string;
+  serial_no: string;
+  size: string;
+  created_at: string | Date;
+  backup_application_detail: null | BackupDetail;
+  status: BackupPartStatus;
+  image: string | null;
 }
 
 type BackupPartTableRow = BackupPart & {
-  part_name_display: string
-  serial_display: string
-  image_display: string
-  power_display: string
-  size_display: string
-  status_label: string
-  customer_machine: string
-  issue_date_display: string
-  expected_return_display: string
-  actual_return_display: string
-}
+  part_name_display: string;
+  serial_display: string;
+  image_display: string;
+  power_display: string;
+  size_display: string;
+  status_label: string;
+  customer_machine: string;
+  issue_date_display: string;
+  expected_return_display: string;
+  actual_return_display: string;
+};
 
 function getColumns({
   actionLoadingId,
   onIssueItem,
   onReceiveBack,
 }: {
-  actionLoadingId: number | null
-  onIssueItem: (part: BackupPartTableRow) => void
-  onReceiveBack: (part: BackupPartTableRow) => void
+  actionLoadingId: number | null;
+  onIssueItem: (part: BackupPartTableRow) => void;
+  onReceiveBack: (part: BackupPartTableRow) => void;
 }): ColumnDef<BackupPartTableRow>[] {
   return [
     {
@@ -120,10 +116,10 @@ function getColumns({
       filterFn: "includesString",
       header: () => <div className="px-2">Image</div>,
       cell: ({ row }) => {
-        const image = row.original.image
+        const image = row.original.image;
 
         if (!image) {
-          return <span className="text-muted-foreground">-</span>
+          return <span className="text-muted-foreground">-</span>;
         }
 
         return (
@@ -137,7 +133,7 @@ function getColumns({
               className="max-h-12 rounded-md object-contain"
             />
           </div>
-        )
+        );
       },
     },
     {
@@ -211,10 +207,10 @@ function getColumns({
         </Button>
       ),
       cell: ({ row }) => {
-        const detail = row.original.backup_application_detail
+        const detail = row.original.backup_application_detail;
 
         if (!detail?.customer_name && !detail?.name) {
-          return <span className="text-muted-foreground">-</span>
+          return <span className="text-muted-foreground">-</span>;
         }
 
         return (
@@ -226,7 +222,7 @@ function getColumns({
               Machine: {detail?.name || "-"}
             </p>
           </div>
-        )
+        );
       },
     },
     {
@@ -282,7 +278,7 @@ function getColumns({
         <DateTimeCell
           value={row.original.backup_application_detail?.actual_return_date}
           success={Boolean(
-            row.original.backup_application_detail?.actual_return_date
+            row.original.backup_application_detail?.actual_return_date,
           )}
         />
       ),
@@ -291,15 +287,15 @@ function getColumns({
       id: "actions",
       header: () => <div className="text-center">Actions</div>,
       cell: ({ row }) => {
-        const part = row.original
-        const detail = part.backup_application_detail
+        const part = row.original;
+        const detail = part.backup_application_detail;
 
         if (!detail || detail.actual_return_date) {
-          return <div className="text-center text-muted-foreground">-</div>
+          return <div className="text-center text-muted-foreground">-</div>;
         }
 
-        const isLoading = actionLoadingId === detail.id
-        const isIssued = Boolean(detail.issued || detail.issue_date)
+        const isLoading = actionLoadingId === detail.id;
+        const isIssued = Boolean(detail.issued || detail.issue_date);
 
         return (
           <div className="flex justify-center">
@@ -310,15 +306,15 @@ function getColumns({
               className="h-8 gap-2 whitespace-nowrap"
               disabled={isLoading}
               onClick={(event) => {
-                event.stopPropagation()
+                event.stopPropagation();
                 // if (detail.status !== 'approved') {
                 //     toast.error("Request is not approved yet")
                 //     return
                 // }
                 if (isIssued) {
-                  onReceiveBack(part)
+                  onReceiveBack(part);
                 } else {
-                  onIssueItem(part)
+                  onIssueItem(part);
                 }
               }}
             >
@@ -326,20 +322,20 @@ function getColumns({
               {isIssued ? "Receive Back" : "Issue Item"}
             </Button>
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 }
 
 function formatDateTime(value?: string | null) {
-  if (!value) return "-"
+  if (!value) return "-";
 
-  const date = new Date(value)
+  const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) return "-"
+  if (Number.isNaN(date.getTime())) return "-";
 
-  return moment(value).format("YYYY-MM-DD")
+  return moment(value).format("YYYY-MM-DD");
 }
 
 function isPartOverdue(part: BackupPart) {
@@ -347,94 +343,95 @@ function isPartOverdue(part: BackupPart) {
     getPartStatus(part) !== "given_to_customer" ||
     !part.backup_application_detail?.expected_return_date
   ) {
-    return false
+    return false;
   }
 
   return (
     new Date(part.backup_application_detail.expected_return_date).getTime() <
     Date.now()
-  )
+  );
 }
 
 function getPartName(part: BackupPart) {
-  return part.name || "-"
+  return part.name || "-";
 }
 
 function getPartSerial(part: BackupPart) {
-  return part.serial_no || "-"
+  return part.serial_no || "-";
 }
 
 function getPartStatus(part: BackupPart): BackupPartStatus {
-  return part.status || "in_stock"
+  return part.status || "in_stock";
 }
 
 function getPartPower(part: BackupPart) {
-  return part.power || "-"
+  return part.power || "-";
 }
 
 function getPartSize(part: BackupPart) {
-  return part.size || "-"
+  return part.size || "-";
 }
 
 function getStatusLabel(part: BackupPart) {
-  if (isPartOverdue(part)) return "Overdue"
-  if (getPartStatus(part) === "in_stock") return "In Stock"
-  return "Given to Customer"
+  if (isPartOverdue(part)) return "Overdue";
+  if (getPartStatus(part) === "in_stock") return "In Stock";
+  return "Given to Customer";
 }
 
 export default function BackupPartsPage() {
-  const [parts, setParts] = useState<BackupPart[]>([])
-  const [loading, setLoading] = useState(true)
-  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
-  const { userID } = useUserDetail()
+  const [parts, setParts] = useState<BackupPart[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const { userID } = useUserDetail();
   const [statusFilter, setStatusFilter] = useState<
     "all" | BackupPartStatus | "overdue"
-  >("all")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  >("all");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
-    if (!userID) return
+    if (!userID) return;
 
-    setLoading(true)
-    setParts([])
+    setLoading(true);
+    setParts([]);
 
     try {
-      const response = await axios.get(`/${userID}/backup-parts`)
-      setParts(Array.isArray(response.data) ? response.data : [])
+      const response = await axios.get(`/${userID}/backup-parts`);
+      setParts(Array.isArray(response.data) ? response.data : []);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function updateBackupApplication(
     detailId: number,
     payload: Record<string, unknown>,
-    successMessage: string
+    successMessage: string,
   ) {
-    if (!userID) return
+    if (!userID) return;
 
-    setActionLoadingId(detailId)
+    setActionLoadingId(detailId);
 
     try {
-      await axios.put(`/${userID}/backup-applications/${detailId}`, payload)
-      await fetchData()
-      toast.success(successMessage)
+      await axios.put(`/${userID}/backup-applications/${detailId}`, payload);
+      await fetchData();
+      toast.success(successMessage);
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message || "Failed to update backup application."
-      )
+        error?.response?.data?.message ||
+          "Failed to update backup application.",
+      );
     } finally {
-      setActionLoadingId(null)
+      setActionLoadingId(null);
     }
   }
 
   function handleIssueItem(part: BackupPartTableRow) {
-    const detailId = part.backup_application_detail?.id
-    if (!detailId) return
+    const detailId = part.backup_application_detail?.id;
+    if (!detailId) return;
 
     updateBackupApplication(
       detailId,
@@ -443,13 +440,13 @@ export default function BackupPartsPage() {
         issued: true,
         status: "issued",
       },
-      "Backup item issued."
-    )
+      "Backup item issued.",
+    );
   }
 
   function handleReceiveBack(part: BackupPartTableRow) {
-    const detailId = part.backup_application_detail?.id
-    if (!detailId) return
+    const detailId = part.backup_application_detail?.id;
+    if (!detailId) return;
 
     updateBackupApplication(
       detailId,
@@ -459,29 +456,29 @@ export default function BackupPartsPage() {
         issued: false,
         backup_inventory_id: null,
       },
-      "Backup item received back."
-    )
+      "Backup item received back.",
+    );
   }
 
   const stats = useMemo(() => {
-    const total = parts.length
+    const total = parts.length;
     const inStock = parts.filter(
-      (part) => getPartStatus(part) === "in_stock"
-    ).length
+      (part) => getPartStatus(part) === "in_stock",
+    ).length;
     const givenToCustomers = parts.filter(
       (part) =>
         getPartStatus(part) === "given_to_customer" &&
-        !part.backup_application_detail?.actual_return_date
-    ).length
-    const overdue = parts.filter(isPartOverdue).length
+        !part.backup_application_detail?.actual_return_date,
+    ).length;
+    const overdue = parts.filter(isPartOverdue).length;
 
     return {
       total,
       inStock,
       givenToCustomers,
       overdue,
-    }
-  }, [parts])
+    };
+  }, [parts]);
 
   const filteredParts = useMemo(() => {
     return parts.filter((part) => {
@@ -490,18 +487,18 @@ export default function BackupPartsPage() {
           ? true
           : statusFilter === "overdue"
             ? isPartOverdue(part)
-            : getPartStatus(part) === statusFilter
+            : getPartStatus(part) === statusFilter;
 
-      return matchesStatus
-    })
-  }, [parts, statusFilter])
+      return matchesStatus;
+    });
+  }, [parts, statusFilter]);
 
   const tableData = useMemo<BackupPartTableRow[]>(() => {
     return filteredParts.map((part) => {
-      const detail = part.backup_application_detail
-      const issueDate = detail?.issue_date
-      const expectedReturn = detail?.expected_return_date
-      const actualReturn = detail?.actual_return_date
+      const detail = part.backup_application_detail;
+      const issueDate = detail?.issue_date;
+      const expectedReturn = detail?.expected_return_date;
+      const actualReturn = detail?.actual_return_date;
 
       return {
         ...part,
@@ -517,9 +514,9 @@ export default function BackupPartsPage() {
         issue_date_display: formatDateTime(issueDate),
         expected_return_display: formatDateTime(expectedReturn),
         actual_return_display: formatDateTime(actualReturn),
-      }
-    })
-  }, [filteredParts])
+      };
+    });
+  }, [filteredParts]);
 
   const columns = useMemo(
     () =>
@@ -528,8 +525,8 @@ export default function BackupPartsPage() {
         onIssueItem: handleIssueItem,
         onReceiveBack: handleReceiveBack,
       }),
-    [actionLoadingId, userID]
-  )
+    [actionLoadingId, userID],
+  );
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -619,7 +616,7 @@ export default function BackupPartsPage() {
         onRefresh={fetchData}
       />
     </div>
-  )
+  );
 }
 
 function StatCard({
@@ -629,18 +626,18 @@ function StatCard({
   icon,
   variant,
 }: {
-  label: string
-  value: number
-  description: string
-  icon: ReactNode
-  variant: "blue" | "green" | "orange" | "red"
+  label: string;
+  value: number;
+  description: string;
+  icon: ReactNode;
+  variant: "blue" | "green" | "orange" | "red";
 }) {
   const variants = {
     blue: "text-blue-600 dark:text-blue-400",
     green: "text-emerald-600 dark:text-emerald-400",
     orange: "text-orange-600 dark:text-orange-400",
     red: "text-red-600 dark:text-red-400",
-  }
+  };
 
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:px-5 xl:border-t-0 sm:[&:nth-child(2)]:border-t-0">
@@ -659,7 +656,7 @@ function StatCard({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 function StatusBadge({ part }: { part: BackupPart }) {
@@ -668,7 +665,7 @@ function StatusBadge({ part }: { part: BackupPart }) {
       <span className="inline-flex rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-red-700 ring-1 ring-red-200 ring-inset">
         Overdue
       </span>
-    )
+    );
   }
 
   if (getPartStatus(part) === "in_stock") {
@@ -676,14 +673,14 @@ function StatusBadge({ part }: { part: BackupPart }) {
       <span className="inline-flex rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-emerald-700 ring-1 ring-emerald-200 ring-inset">
         In Stock
       </span>
-    )
+    );
   }
 
   return (
     <span className="inline-flex rounded-md bg-orange-50 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-orange-700 ring-1 ring-orange-200 ring-inset">
       Given to Customer
     </span>
-  )
+  );
 }
 
 function DateTimeCell({
@@ -691,12 +688,12 @@ function DateTimeCell({
   danger,
   success,
 }: {
-  value?: string | null
-  danger?: boolean
-  success?: boolean
+  value?: string | null;
+  danger?: boolean;
+  success?: boolean;
 }) {
   if (!value) {
-    return <span className="text-muted-foreground">-</span>
+    return <span className="text-muted-foreground">-</span>;
   }
 
   return (
@@ -711,5 +708,5 @@ function DateTimeCell({
     >
       {formatDateTime(value)}
     </span>
-  )
+  );
 }

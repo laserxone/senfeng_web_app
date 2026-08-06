@@ -1,17 +1,17 @@
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   PendingDelivery,
   PendingPartsPayment,
   PendingPayment,
   TopFollow,
-} from "@/lib/types"
+} from "@/lib/types";
 import {
   AlertCircle,
   Banknote,
@@ -25,38 +25,38 @@ import {
   Truck,
   UserRound,
   Wallet,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useId, type ElementType } from "react"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useId, type ElementType } from "react";
 
 export type MetricDialogState =
   | {
-      kind: "pending_payments"
-      title: string
-      total: number
-      totalAmount?: number
-      data: PendingPayment[]
+      kind: "pending_payments";
+      title: string;
+      total: number;
+      totalAmount?: number;
+      data: PendingPayment[];
     }
   | {
-      kind: "pending_parts_payments"
-      title: string
-      total: number
-      totalAmount?: number
-      data: PendingPartsPayment[]
+      kind: "pending_parts_payments";
+      title: string;
+      total: number;
+      totalAmount?: number;
+      data: PendingPartsPayment[];
     }
   | {
-      kind: "pending_deliveries"
-      title: string
-      total: number
-      data: PendingDelivery[]
+      kind: "pending_deliveries";
+      title: string;
+      total: number;
+      data: PendingDelivery[];
     }
   | {
-      kind: "top_follow"
-      title: string
-      total: number
-      data: TopFollow[]
-    }
+      kind: "top_follow";
+      title: string;
+      total: number;
+      data: TopFollow[];
+    };
 
 export function SalesMetricCard({
   title,
@@ -67,31 +67,31 @@ export function SalesMetricCard({
   onClick,
   description = "Current Total",
 }: {
-  title: string
-  value: number
-  icon: ElementType
-  accent: string
-  iconClassName: string
-  onClick?: () => void
-  description?: string
+  title: string;
+  value: number;
+  icon: ElementType;
+  accent: string;
+  iconClassName: string;
+  onClick?: () => void;
+  description?: string;
 }) {
   const getChartColor = (className: string) => {
-    if (className.includes("rose")) return "#e11d48"
-    if (className.includes("blue")) return "#2563eb"
-    if (className.includes("emerald")) return "#059669"
-    if (className.includes("amber")) return "#d97706"
-    if (className.includes("violet")) return "#7c3aed"
-    if (className.includes("indigo")) return "#4f46e5"
-    if (className.includes("cyan")) return "#0891b2"
-    if (className.includes("orange")) return "#ea580c"
-    if (className.includes("red")) return "#dc2626"
+    if (className.includes("rose")) return "#e11d48";
+    if (className.includes("blue")) return "#2563eb";
+    if (className.includes("emerald")) return "#059669";
+    if (className.includes("amber")) return "#d97706";
+    if (className.includes("violet")) return "#7c3aed";
+    if (className.includes("indigo")) return "#4f46e5";
+    if (className.includes("cyan")) return "#0891b2";
+    if (className.includes("orange")) return "#ea580c";
+    if (className.includes("red")) return "#dc2626";
 
-    return "#334155"
-  }
+    return "#334155";
+  };
 
-  const chartColor = getChartColor(iconClassName)
+  const chartColor = getChartColor(iconClassName);
 
-  const chartId = useId()
+  const chartId = useId();
 
   return (
     <div
@@ -128,8 +128,8 @@ export function SalesMetricCard({
             <button
               type="button"
               onClick={(e) => {
-                e.stopPropagation()
-                onClick?.()
+                e.stopPropagation();
+                onClick?.();
               }}
               disabled={!onClick}
               className={`text-left text-3xl leading-none font-black tracking-tight text-slate-950 ${onClick ? "cursor-pointer transition hover:text-blue-700 hover:underline" : "cursor-default"} `}
@@ -229,7 +229,7 @@ export function SalesMetricCard({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function SalesMetricDetailsDialog({
@@ -237,14 +237,14 @@ export function SalesMetricDetailsDialog({
   onClose,
   baseRoute,
 }: {
-  metric: MetricDialogState | null
-  onClose: () => void
-  baseRoute: string
+  metric: MetricDialogState | null;
+  onClose: () => void;
+  baseRoute: string;
 }) {
   const amountText =
     metric && "totalAmount" in metric && typeof metric.totalAmount === "number"
       ? formatMetricAmount(metric.totalAmount)
-      : null
+      : null;
 
   return (
     <Dialog open={!!metric} onOpenChange={(open) => !open && onClose()}>
@@ -300,7 +300,7 @@ export function SalesMetricDetailsDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function MetricDetailCard({
@@ -308,15 +308,15 @@ function MetricDetailCard({
   kind,
   baseRoute,
 }: {
-  item: PendingPayment | PendingPartsPayment | PendingDelivery | TopFollow
-  kind: MetricDialogState["kind"]
-  baseRoute: string
+  item: PendingPayment | PendingPartsPayment | PendingDelivery | TopFollow;
+  kind: MetricDialogState["kind"];
+  baseRoute: string;
 }) {
-  const customer = item.customer
-  const customerUrl = `/${baseRoute}/${customer?.member ? "member" : "customer"}/${customer?.id || item.customer_id}`
+  const customer = item.customer;
+  const customerUrl = `/${baseRoute}/${customer?.member ? "member" : "customer"}/${customer?.id || item.customer_id}`;
 
   if (kind === "pending_parts_payments") {
-    const parts = item as PendingPartsPayment
+    const parts = item as PendingPartsPayment;
     return (
       <MetricCardShell
         href={customerUrl}
@@ -331,17 +331,17 @@ function MetricDetailCard({
             icon: Banknote,
             label: "Balance",
             value: formatMetricAmount(
-              Number(parts.final_amount || 0) - Number(parts.total_paid || 0)
+              Number(parts.final_amount || 0) - Number(parts.total_paid || 0),
             ),
           },
           { icon: UserRound, label: "Manager", value: parts.manager || "N/A" },
         ]}
       />
-    )
+    );
   }
 
   if (kind === "top_follow") {
-    const follow = item as TopFollow
+    const follow = item as TopFollow;
     return (
       <MetricCardShell
         href={customerUrl}
@@ -367,11 +367,11 @@ function MetricDetailCard({
           },
         ]}
       />
-    )
+    );
   }
 
-  const payment = item as PendingPayment
-  const isDelivery = kind === "pending_deliveries"
+  const payment = item as PendingPayment;
+  const isDelivery = kind === "pending_deliveries";
 
   return (
     <MetricCardShell
@@ -393,7 +393,7 @@ function MetricDetailCard({
           value: formatMetricAmount(
             isDelivery
               ? Number(payment.price || 0)
-              : Number(payment.pending_amount || 0)
+              : Number(payment.pending_amount || 0),
           ),
         },
         {
@@ -401,13 +401,13 @@ function MetricDetailCard({
           label: isDelivery ? "Delivery Date" : "Power",
           value: isDelivery
             ? formatMetricDate(
-                payment.delivery_date || payment.delivery_request_date
+                payment.delivery_date || payment.delivery_request_date,
               )
             : payment.power || "N/A",
         },
       ]}
     />
-  )
+  );
 }
 
 function MetricCardShell({
@@ -418,12 +418,12 @@ function MetricCardShell({
   badge,
   details,
 }: {
-  href: string
-  icon: ElementType
-  title: string
-  subtitle: string
-  badge: string
-  details: { icon: ElementType; label: string; value: string }[]
+  href: string;
+  icon: ElementType;
+  title: string;
+  subtitle: string;
+  badge: string;
+  details: { icon: ElementType; label: string; value: string }[];
 }) {
   return (
     <div className="rounded-2xl border bg-background p-4 shadow-sm transition hover:bg-muted/15">
@@ -456,7 +456,7 @@ function MetricCardShell({
 
       <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-3">
         {details.map((detail) => {
-          const DetailIcon = detail.icon
+          const DetailIcon = detail.icon;
 
           return (
             <span
@@ -473,19 +473,19 @@ function MetricCardShell({
                 </span>
               </span>
             </span>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 function formatMetricAmount(value: number) {
   return new Intl.NumberFormat("en-PK", {
     maximumFractionDigits: 0,
-  }).format(Number(value || 0))
+  }).format(Number(value || 0));
 }
 
 function formatMetricDate(value: string | Date | null) {
-  return value ? moment(new Date(value)).format("YYYY-MM-DD") : "N/A"
+  return value ? moment(new Date(value)).format("YYYY-MM-DD") : "N/A";
 }

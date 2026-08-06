@@ -1,6 +1,6 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+"use client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   closestCenter,
   DndContext,
@@ -9,13 +9,13 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-} from "@dnd-kit/core"
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
+} from "@dnd-kit/sortable";
 import {
   Calendar,
   ChevronDown,
@@ -25,30 +25,30 @@ import {
   Plus,
   Trash2,
   Warehouse,
-} from "lucide-react"
-import { useEffect, useState } from "react"
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
-import AddOrderDialog from "@/components/features/orders/add-order"
-import BookOrderDialog from "@/components/features/orders/book-order"
-import EditOrderDialog from "@/components/features/orders/edit-order"
-import CreateOrderDialog from "@/components/features/orders/new-order"
-import SortableCard from "@/components/features/orders/sortable-card"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
+import AddOrderDialog from "@/components/features/orders/add-order";
+import BookOrderDialog from "@/components/features/orders/book-order";
+import EditOrderDialog from "@/components/features/orders/edit-order";
+import CreateOrderDialog from "@/components/features/orders/new-order";
+import SortableCard from "@/components/features/orders/sortable-card";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import Heading from "@/components/ui/heading"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { Order, OrderItem } from "@/lib/types"
-import moment from "moment"
-import Image from "next/image"
+} from "@/components/ui/collapsible";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import Heading from "@/components/ui/heading";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { Order, OrderItem } from "@/lib/types";
+import moment from "moment";
+import Image from "next/image";
 
 const colorClasses = [
   { bg: "bg-red-100", text: "text-red-800" },
@@ -61,117 +61,117 @@ const colorClasses = [
   { bg: "bg-teal-100", text: "text-teal-800" },
   { bg: "bg-orange-100", text: "text-orange-800" },
   { bg: "bg-gray-100", text: "text-gray-800" },
-]
+];
 
 export default function Page() {
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [data, setData] = useState<Order[]>([])
-  const [visible, setVisible] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<Order[]>([]);
+  const [visible, setVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<number | undefined | null>(
-    null
-  )
-  const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null)
+    null,
+  );
+  const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const [selectedItemForBook, setSelectedItemForBook] =
-    useState<OrderItem | null>(null)
-  const { userID } = useUserDetail()
-  const [orderedData, setOrderedData] = useState<Order[]>([])
-  const [search, setSearch] = useState("")
-  const [deleteLoading, setDeleteLoading] = useState(false)
+    useState<OrderItem | null>(null);
+  const { userID } = useUserDetail();
+  const [orderedData, setOrderedData] = useState<Order[]>([]);
+  const [search, setSearch] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedShipment, setSelectedShipment] = useState<
     number | null | undefined
-  >(null)
-  const [selectedStock, setSelectedStock] = useState("")
-  const [loading, setLoading] = useState(false)
+  >(null);
+  const [selectedStock, setSelectedStock] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const savedOrder = localStorage.getItem("cardOrder")
+    const savedOrder = localStorage.getItem("cardOrder");
     if (savedOrder) {
-      const orderArr: number[] = JSON.parse(savedOrder)
+      const orderArr: number[] = JSON.parse(savedOrder);
       const reordered = orderArr
         .map((id) => data.find((o) => o.id === id))
-        .filter((o): o is Order => o !== undefined)
-      const extras = data.filter((o) => !orderArr.includes(o.id))
-      setOrderedData([...reordered, ...extras])
+        .filter((o): o is Order => o !== undefined);
+      const extras = data.filter((o) => !orderArr.includes(o.id));
+      setOrderedData([...reordered, ...extras]);
     } else {
-      setOrderedData(data)
+      setOrderedData(data);
     }
-  }, [data])
+  }, [data]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
+    }),
+  );
 
   function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
+    const { active, over } = event;
     if (active.id !== over?.id) {
-      const oldIndex = orderedData.findIndex((item) => item.id === active.id)
-      const newIndex = orderedData.findIndex((item) => item.id === over?.id)
-      const newData = arrayMove(orderedData, oldIndex, newIndex)
-      setOrderedData(newData)
+      const oldIndex = orderedData.findIndex((item) => item.id === active.id);
+      const newIndex = orderedData.findIndex((item) => item.id === over?.id);
+      const newData = arrayMove(orderedData, oldIndex, newIndex);
+      setOrderedData(newData);
       localStorage.setItem(
         "cardOrder",
-        JSON.stringify(newData.map((item) => item.id))
-      )
+        JSON.stringify(newData.map((item) => item.id)),
+      );
     }
   }
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(startDate?: string, endDate?: string) {
-    if (!userID) return
-    setLoading(true)
+    if (!userID) return;
+    setLoading(true);
 
     try {
       const response = await axios.get(
-        `/${userID}/neworder?start_date=${startDate}&end_date=${endDate}`
-      )
+        `/${userID}/neworder?start_date=${startDate}&end_date=${endDate}`,
+      );
 
-      const rawData = response.data
+      const rawData = response.data;
 
-      const typeColorMap = new Map()
-      let colorIndex = 0
+      const typeColorMap = new Map();
+      let colorIndex = 0;
 
       const updatedData = rawData.map((order: any) => {
         const sortedOrderItems = [...order.order_items].sort((a, b) => {
-          const serialA = parseInt(a.machine_serial, 10)
-          const serialB = parseInt(b.machine_serial, 10)
+          const serialA = parseInt(a.machine_serial, 10);
+          const serialB = parseInt(b.machine_serial, 10);
           if (isNaN(serialA) || isNaN(serialB)) {
-            return a.machine_serial.localeCompare(b.machine_serial)
+            return a.machine_serial.localeCompare(b.machine_serial);
           }
-          return serialA - serialB
-        })
+          return serialA - serialB;
+        });
 
-        const groupedMachines: any = {}
+        const groupedMachines: any = {};
 
         for (const item of sortedOrderItems) {
           if (item.is_machine) {
-            const typeKey = `${item.machine_model}-${item.machine_power}-${item.machine_source}`
-            if (!groupedMachines[typeKey]) groupedMachines[typeKey] = []
-            groupedMachines[typeKey].push(item)
+            const typeKey = `${item.machine_model}-${item.machine_power}-${item.machine_source}`;
+            if (!groupedMachines[typeKey]) groupedMachines[typeKey] = [];
+            groupedMachines[typeKey].push(item);
           }
         }
 
-        const finalMachineItems: any[] = []
+        const finalMachineItems: any[] = [];
 
         for (const typeKey in groupedMachines) {
-          const items = groupedMachines[typeKey]
+          const items = groupedMachines[typeKey];
 
           if (!typeColorMap.has(typeKey)) {
-            const color = colorClasses[colorIndex % colorClasses.length]
-            typeColorMap.set(typeKey, color)
-            colorIndex++
+            const color = colorClasses[colorIndex % colorClasses.length];
+            typeColorMap.set(typeKey, color);
+            colorIndex++;
           }
 
-          const assignedColor = typeColorMap.get(typeKey)
+          const assignedColor = typeColorMap.get(typeKey);
 
-          let counter = 1
+          let counter = 1;
 
           items.forEach((item: any) => {
             finalMachineItems.push({
@@ -179,87 +179,87 @@ export default function Page() {
               machine_color_bg: assignedColor.bg,
               machine_color_text: assignedColor.text,
               machine_type_count: counter++,
-            })
-          })
+            });
+          });
         }
 
         finalMachineItems.sort((a, b) => {
-          const serialA = parseInt(a.machine_serial, 10)
-          const serialB = parseInt(b.machine_serial, 10)
+          const serialA = parseInt(a.machine_serial, 10);
+          const serialB = parseInt(b.machine_serial, 10);
           if (isNaN(serialA) || isNaN(serialB)) {
             // fallback: string comparison if not numeric
-            return a.machine_serial.localeCompare(b.machine_serial)
+            return a.machine_serial.localeCompare(b.machine_serial);
           }
-          return serialA - serialB
-        })
+          return serialA - serialB;
+        });
 
-        const nonMachineItems = sortedOrderItems.filter((i) => !i.is_machine)
+        const nonMachineItems = sortedOrderItems.filter((i) => !i.is_machine);
 
-        const finalItems = [...finalMachineItems, ...nonMachineItems]
+        const finalItems = [...finalMachineItems, ...nonMachineItems];
 
         return {
           ...order,
           order_items: finalItems,
-        }
-      })
+        };
+      });
 
-      setData(updatedData)
+      setData(updatedData);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function handleDelete(orderId?: number | null) {
-    if (!orderId) return
-    setDeleteLoading(true)
+    if (!orderId) return;
+    setDeleteLoading(true);
     axios
       .delete(`/${userID}/neworder/${orderId}`)
       .then(() => {
-        fetchData()
-        setSelectedShipment(null)
+        fetchData();
+        setSelectedShipment(null);
       })
       .finally(() => {
-        setDeleteLoading(false)
-      })
+        setDeleteLoading(false);
+      });
   }
 
   function handleEditItem(itemId: OrderItem) {
-    setSelectedItem(itemId)
+    setSelectedItem(itemId);
   }
 
   function handleBookItem(itemId: OrderItem) {
-    setSelectedItemForBook(itemId)
+    setSelectedItemForBook(itemId);
   }
 
   const filteredData = orderedData
     ?.map((order) => {
-      if (!search.trim() && !selectedStock) return order
+      if (!search.trim() && !selectedStock) return order;
 
       const filteredItems = order.order_items
         .filter((item) => {
-          if (!selectedStock) return true
+          if (!selectedStock) return true;
 
-          return item.location?.toLowerCase() === selectedStock.toLowerCase()
+          return item.location?.toLowerCase() === selectedStock.toLowerCase();
         })
         .filter((item) =>
           !search.trim()
             ? true
             : Object.entries(item).some(([_, value]) => {
-                if (value === null || value === undefined) return false
+                if (value === null || value === undefined) return false;
                 return String(value)
                   .toLowerCase()
-                  .includes(search.toLowerCase())
-              })
-        )
+                  .includes(search.toLowerCase());
+              }),
+        );
 
-      if (filteredItems.length === 0) return null
+      if (filteredItems.length === 0) return null;
 
       return {
         ...order,
         order_items: filteredItems,
-      }
+      };
     })
-    .filter((order): order is typeof order => order !== null)
+    .filter((order): order is typeof order => order !== null);
 
   return (
     <div className="flex flex-1 flex-col space-y-4 py-2">
@@ -278,15 +278,15 @@ export default function Page() {
               label: "Karachi Stock",
             },
           ].map((item) => {
-            const active = selectedStock === item.key
+            const active = selectedStock === item.key;
 
             const total = orderedData
               .flatMap((order) => order.order_items)
               .filter((it) => !it.customer_id)
               .filter(
                 (it) =>
-                  it.location?.toLowerCase() === item.key?.toLocaleLowerCase()
-              ).length
+                  it.location?.toLowerCase() === item.key?.toLocaleLowerCase(),
+              ).length;
 
             return (
               <button
@@ -304,7 +304,7 @@ export default function Page() {
                   <span className="text-sm font-bold">{total || "0"}</span>
                 </div>
               </button>
-            )
+            );
           })}
         </div>
       </section>
@@ -395,7 +395,7 @@ export default function Page() {
                                   <span className="inline-flex items-center gap-1">
                                     <Calendar className="size-3.5" />
                                     {moment(order?.created_at).format(
-                                      "YYYY-MM-DD"
+                                      "YYYY-MM-DD",
                                     )}
                                   </span>
                                   <span>
@@ -413,7 +413,7 @@ export default function Page() {
                                 variant="ghost"
                                 className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 onClick={() => {
-                                  setSelectedShipment(order?.id)
+                                  setSelectedShipment(order?.id);
                                   // handleDelete(order.id)
                                 }}
                               >
@@ -424,7 +424,7 @@ export default function Page() {
                                 variant={"outline"}
                                 size="icon-sm"
                                 onClick={() => {
-                                  setSelectedOrder(order?.id)
+                                  setSelectedOrder(order?.id);
                                 }}
                               >
                                 <Plus />
@@ -516,7 +516,7 @@ export default function Page() {
                                               size="sm"
                                               className="h-7 px-2.5 text-xs"
                                               onClick={() => {
-                                                handleBookItem(item)
+                                                handleBookItem(item);
                                               }}
                                             >
                                               Book
@@ -565,7 +565,7 @@ export default function Page() {
                                               Booking Date:{" "}
                                               {item?.booking_date
                                                 ? moment(
-                                                    item?.booking_date
+                                                    item?.booking_date,
                                                   ).format("YYYY-MM-DD")
                                                 : ""}
                                             </span>
@@ -582,7 +582,7 @@ export default function Page() {
                       </CardContent>
                     </Card>
                   </SortableCard>
-                )
+                );
               })}
             </div>
             {/* </ScrollArea> */}
@@ -594,7 +594,7 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end)
+          await fetchData(val.start, val.end);
         }}
       />
 
@@ -638,5 +638,5 @@ export default function Page() {
         onPressCancel={() => setSelectedShipment(null)}
       />
     </div>
-  )
+  );
 }

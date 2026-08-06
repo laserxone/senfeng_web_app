@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
-import { PricesSearch } from "@/components/shared/search/prices-search"
-import { Button } from "@/components/ui/button"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
+import { PricesSearch } from "@/components/shared/search/prices-search";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 import {
   Field,
@@ -18,20 +18,20 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MyCustomer, PricesSearchProps, QuotationData } from "@/lib/types"
-import { zodResolver } from "@hookform/resolvers/zod"
+} from "@/components/ui/select";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MyCustomer, PricesSearchProps, QuotationData } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Building2,
   Clock,
@@ -45,10 +45,10 @@ import {
   User,
   Users,
   Zap,
-} from "lucide-react"
-import { useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 export const quotationSchema = z
   .object({
@@ -83,9 +83,9 @@ export const quotationSchema = z
   .refine((val) => val.customer_id, {
     message: "Customer selection is required",
     path: ["customer_id"],
-  })
+  });
 
-export type QuotationFormValues = z.infer<typeof quotationSchema>
+export type QuotationFormValues = z.infer<typeof quotationSchema>;
 
 const defaultValues: QuotationData = {
   date: new Date(),
@@ -101,42 +101,42 @@ const defaultValues: QuotationData = {
   delivery_time: "",
   customer_id: "",
   original_pdf: "",
-}
+};
 
 export function QuotationForm({
   onRefresh,
   open,
   onClose,
 }: {
-  onRefresh?: () => Promise<void>
-  open: boolean
-  onClose: () => void
+  onRefresh?: () => Promise<void>;
+  open: boolean;
+  onClose: () => void;
 }) {
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
-    null
-  )
+    null,
+  );
   const [selectedMachine, setSelectedMachine] =
-    useState<PricesSearchProps | null>(null)
-  const [disable, setDisable] = useState(true)
+    useState<PricesSearchProps | null>(null);
+  const [disable, setDisable] = useState(true);
 
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
   const form = useForm<QuotationFormValues>({
     resolver: zodResolver(quotationSchema),
     defaultValues,
-  })
+  });
 
   const handleGeneratePDF = async (data: QuotationData) => {
-    setIsGenerating(true)
+    setIsGenerating(true);
 
     try {
       const res = await axios.post(`/${userID}/quotation`, {
         ...data,
         user_id: userID,
-      })
-      const resID = res.data?.id || ""
-      const finalData = { ...data, id: resID }
+      });
+      const resID = res.data?.id || "";
+      const finalData = { ...data, id: resID };
 
       const pdfRes = await axios.post(
         `/${userID}/quotation/pdf`,
@@ -148,83 +148,83 @@ export function QuotationForm({
           headers: {
             "Content-Type": "application/json",
           },
-        }
-      )
+        },
+      );
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      })
+      });
 
-      const url = URL.createObjectURL(blob)
+      const url = URL.createObjectURL(blob);
 
-      const link = document.createElement("a")
-      link.href = url
+      const link = document.createElement("a");
+      link.href = url;
 
       const fileName =
         pdfRes.headers["content-disposition"]
           ?.split("filename=")?.[1]
-          ?.replaceAll('"', "") || `Quotation-${finalData.id}.pdf`
+          ?.replaceAll('"', "") || `Quotation-${finalData.id}.pdf`;
 
-      link.download = fileName
+      link.download = fileName;
 
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-      URL.revokeObjectURL(url)
+      URL.revokeObjectURL(url);
 
-      await onRefresh?.()
-      handleOpenChange(false)
+      await onRefresh?.();
+      handleOpenChange(false);
     } catch (error) {
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   const handleOpenChange = (value: boolean) => {
     if (!value) {
-      form.reset(defaultValues)
-      setSelectedCustomer(null)
-      setSelectedMachine(null)
-      onClose()
+      form.reset(defaultValues);
+      setSelectedCustomer(null);
+      setSelectedMachine(null);
+      onClose();
     }
-  }
+  };
 
-  const paymentTerms = form.watch("payment_terms")
+  const paymentTerms = form.watch("payment_terms");
 
   useEffect(() => {
-    if (!selectedMachine) return
+    if (!selectedMachine) return;
     if (paymentTerms === "FOB" || paymentTerms === "EXW") {
       form.setValue("price", selectedMachine?.data?.fob || "", {
         shouldValidate: true,
-      })
+      });
     }
     if (paymentTerms === "DDP") {
       form.setValue("price", selectedMachine?.data?.ddp || "", {
         shouldValidate: true,
-      })
+      });
     }
-  }, [selectedMachine, paymentTerms])
+  }, [selectedMachine, paymentTerms]);
 
   useEffect(() => {
-    if (!selectedMachine || !paymentTerms) return
+    if (!selectedMachine || !paymentTerms) return;
     if (paymentTerms === "CFR") {
-      form.setValue("price", "")
-      setDisable(false)
+      form.setValue("price", "");
+      setDisable(false);
     } else if (paymentTerms === "FOB" || paymentTerms === "EXW") {
       if (!selectedMachine?.data?.fob?.trim()) {
-        setDisable(false)
+        setDisable(false);
       } else {
-        setDisable(true)
+        setDisable(true);
       }
     } else if (paymentTerms === "DDP") {
       if (!selectedMachine?.data?.ddp?.trim()) {
-        setDisable(false)
+        setDisable(false);
       } else {
-        setDisable(true)
+        setDisable(true);
       }
     }
-  }, [selectedMachine, paymentTerms])
+  }, [selectedMachine, paymentTerms]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -301,31 +301,31 @@ export function QuotationForm({
                   <CustomerSearchWithData
                     value={selectedCustomer}
                     onReturn={(val) => {
-                      setSelectedCustomer(val)
+                      setSelectedCustomer(val);
 
                       form.setValue("customer_id", val.id, {
                         shouldValidate: true,
-                      })
+                      });
 
                       form.setValue(
                         "customer_name",
                         val.name || val.owner || "",
-                        { shouldValidate: true }
-                      )
+                        { shouldValidate: true },
+                      );
 
                       form.setValue("contact_person", val.owner || "", {
                         shouldValidate: true,
-                      })
+                      });
 
                       form.setValue(
                         "contact_number",
                         val?.number ? val.number.join(", ") : "",
-                        { shouldValidate: true }
-                      )
+                        { shouldValidate: true },
+                      );
 
                       form.setValue("email", val?.email || "", {
                         shouldValidate: true,
-                      })
+                      });
                     }}
                   />
 
@@ -438,23 +438,23 @@ export function QuotationForm({
                   <PricesSearch
                     value={selectedMachine}
                     onReturn={(val) => {
-                      setSelectedMachine(val)
+                      setSelectedMachine(val);
 
                       form.setValue("machine_model", val.data?.model || "", {
                         shouldValidate: true,
-                      })
+                      });
 
                       form.setValue("machine_power", val.data?.power || "", {
                         shouldValidate: true,
-                      })
+                      });
 
                       form.setValue(
                         "original_pdf",
                         val.data?.attachment_url || "",
                         {
                           shouldValidate: true,
-                        }
-                      )
+                        },
+                      );
                     }}
                   />
                 </Field>
@@ -513,7 +513,7 @@ export function QuotationForm({
                       <Select
                         disabled={!selectedMachine}
                         onValueChange={(val) => {
-                          field.onChange(val)
+                          field.onChange(val);
                         }}
                         value={field.value}
                       >
@@ -618,5 +618,5 @@ export function QuotationForm({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

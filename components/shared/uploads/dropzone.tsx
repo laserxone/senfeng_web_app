@@ -1,25 +1,25 @@
-"use client"
-import { GetProfileImage } from "@/lib/getProfileImage"
-import Image from "next/image"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { useDropzone } from "react-dropzone"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Spinner from "@/components/ui/spinner"
+"use client";
+import { GetProfileImage } from "@/lib/getProfileImage";
+import Image from "next/image";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
 
 type DropzoneProps = {
-  onDrop?: (file: string | null) => void
-  onDropFile?: (file: File | Blob | null) => void
-  title?: string
-  subheading?: string
-  description?: string
-  drag?: string
-  borderColor?: string
-  noImage?: boolean
-  value: File | string | null
-  className?: string
-  dbImage?: any
-}
+  onDrop?: (file: string | null) => void;
+  onDropFile?: (file: File | Blob | null) => void;
+  title?: string;
+  subheading?: string;
+  description?: string;
+  drag?: string;
+  borderColor?: string;
+  noImage?: boolean;
+  value: File | string | null;
+  className?: string;
+  dbImage?: any;
+};
 const Dropzone = ({
   onDrop,
   onDropFile,
@@ -35,59 +35,59 @@ const Dropzone = ({
 }: DropzoneProps) => {
   const onDropAccepted = useCallback(
     (acceptedFiles: File[]) => {
-      const file = acceptedFiles[0]
-      onDrop?.(URL.createObjectURL(file))
-      onDropFile?.(file)
+      const file = acceptedFiles[0];
+      onDrop?.(URL.createObjectURL(file));
+      onDropFile?.(file);
     },
-    [onDrop, onDropFile]
-  )
+    [onDrop, onDropFile],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
     accept: {
       "image/*": [],
     },
-  })
+  });
 
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
-      const items = event?.clipboardData?.items
-      if (!items) return
+      const items = event?.clipboardData?.items;
+      if (!items) return;
       for (let item of items) {
         if (item.type.startsWith("image/")) {
-          const file = item.getAsFile()
-          const imageUrl = URL.createObjectURL(file as Blob)
+          const file = item.getAsFile();
+          const imageUrl = URL.createObjectURL(file as Blob);
 
-          onDrop?.(imageUrl)
-          onDropFile?.(file as Blob)
+          onDrop?.(imageUrl);
+          onDropFile?.(file as Blob);
         }
       }
-    }
+    };
 
-    document.addEventListener("paste", handlePaste)
-    return () => document.removeEventListener("paste", handlePaste)
-  }, [])
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, []);
 
   async function handleDelete() {
-    onDrop?.(null)
-    onDropFile?.(null)
+    onDrop?.(null);
+    onDropFile?.(null);
   }
 
   const previewUrl = useMemo(() => {
     if (value instanceof File) {
-      return URL.createObjectURL(value)
+      return URL.createObjectURL(value);
     }
 
-    return null
-  }, [value])
+    return null;
+  }, [value]);
 
   useEffect(() => {
     return () => {
       if (previewUrl) {
-        URL.revokeObjectURL(previewUrl)
+        URL.revokeObjectURL(previewUrl);
       }
-    }
-  }, [previewUrl])
+    };
+  }, [previewUrl]);
 
   return (
     <div
@@ -128,7 +128,7 @@ const Dropzone = ({
             <div className="mt-2 ml-2 flex space-x-2">
               <button
                 onClick={() => {
-                  handleDelete()
+                  handleDelete();
                 }}
                 className="text-sm text-red-500"
               >
@@ -166,45 +166,45 @@ const Dropzone = ({
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const RenderImage = ({ img }: { img: string }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [localImage, setLocalImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img)
+        setLocalImage(img);
       } else {
-        const imgResult = await GetProfileImage(img)
-        setLocalImage(imgResult)
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
       }
-      setLoading(false)
+      setLoading(false);
     }
 
     if (img) {
-      setLoading(true)
-      fetchImage()
+      setLoading(true);
+      fetchImage();
     }
-  }, [img])
+  }, [img]);
 
   if (loading) {
     return (
       <div className="flex h-20 w-20 items-center justify-center">
         <Spinner />
       </div>
-    )
+    );
   }
-  if (!localImage) return null
+  if (!localImage) return null;
   return (
     <img
       src={localImage}
       alt="nameplate"
       className="h-20 w-20 cursor-pointer object-cover"
     />
-  )
-}
+  );
+};
 
-export default Dropzone
+export default Dropzone;

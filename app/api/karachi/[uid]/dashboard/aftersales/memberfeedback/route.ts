@@ -1,13 +1,13 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const searchParams = req.nextUrl.searchParams
-  const start = searchParams.get("start")
-  const end = searchParams.get("end")
+  const searchParams = req.nextUrl.searchParams;
+  const start = searchParams.get("start");
+  const end = searchParams.get("end");
   try {
     const customersResult = await pool.query(`
   SELECT
@@ -30,9 +30,9 @@ export async function GET(
       )
     )
   ORDER BY c.created_at DESC
-`)
+`);
 
-    const customers = customersResult.rows
+    const customers = customersResult.rows;
 
     const feedbackResult = await pool.query(
       `
@@ -49,8 +49,8 @@ export async function GET(
       AND f.created_at BETWEEN $2 AND $3
     ORDER BY f.customer_id, f.created_at DESC
     `,
-      ["karachi", start, end]
-    )
+      ["karachi", start, end],
+    );
 
     const feedbackMap = new Map(
       feedbackResult.rows.map((row) => [
@@ -61,8 +61,8 @@ export async function GET(
           feedback_status: row.status,
           feedback: row.feedback,
         },
-      ])
-    )
+      ]),
+    );
 
     const previousFeedbackResult = await pool.query(
       `
@@ -75,8 +75,8 @@ export async function GET(
   WHERE f.created_at < $1
   ORDER BY f.customer_id, f.created_at DESC
   `,
-      [start]
-    )
+      [start],
+    );
 
     const previousFeedbackMap = new Map(
       previousFeedbackResult.rows.map((row) => [
@@ -86,20 +86,20 @@ export async function GET(
           previous_feedback_date: row.created_at || null,
           previous_feedback_status: row.status || "",
         },
-      ])
-    )
+      ]),
+    );
 
-    const customersWithFeedback = []
-    const customersWithoutFeedback = []
+    const customersWithFeedback = [];
+    const customersWithoutFeedback = [];
 
     for (const customer of customers) {
-      const feedbackInfo = feedbackMap.get(customer.id)
+      const feedbackInfo = feedbackMap.get(customer.id);
 
       const previousInfo = previousFeedbackMap.get(customer.id) || {
         previous_feedback: "",
         previous_feedback_date: null,
         previous_feedback_status: "",
-      }
+      };
 
       if (feedbackInfo) {
         customersWithFeedback.push({
@@ -109,12 +109,12 @@ export async function GET(
           user_name: feedbackInfo.user_name,
           feedback_status: feedbackInfo.feedback_status,
           feedback: feedbackInfo.feedback,
-        })
+        });
       } else {
         customersWithoutFeedback.push({
           ...customer,
           ...previousInfo,
-        })
+        });
       }
     }
 
@@ -128,19 +128,19 @@ export async function GET(
         total: customersWithoutFeedback.length,
       },
       satisfied: customersWithFeedback.filter(
-        (item) => item.feedback_status === "Satisfactory"
+        (item) => item.feedback_status === "Satisfactory",
       ).length,
       unsatisfied: customersWithFeedback.filter(
-        (item) => item.feedback_status !== "Satisfactory"
+        (item) => item.feedback_status !== "Satisfactory",
       ).length,
-    }
+    };
 
-    return NextResponse.json(responseData)
+    return NextResponse.json(responseData);
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

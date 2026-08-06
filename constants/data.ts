@@ -326,7 +326,7 @@ export const OwnerSidebarItems = [
     items: [],
     group: "engineer",
   },
-]
+];
 
 // export const ownerNavItems = [
 //   {
@@ -540,7 +540,7 @@ export const Careers = {
   shortcut: ["a", "p", "p"],
   items: [],
   group: "hr",
-}
+};
 
 export const FinanceItem = {
   title: "Finance",
@@ -550,7 +550,7 @@ export const FinanceItem = {
 
   items: [],
   group: "sales",
-}
+};
 
 export const EngineersPerformance = {
   title: "Engineer's Performance",
@@ -560,7 +560,7 @@ export const EngineersPerformance = {
 
   items: [],
   group: "engineer",
-}
+};
 
 export const complaintItem = {
   title: "Complaint & Installation",
@@ -570,7 +570,7 @@ export const complaintItem = {
   shortcut: ["c", "o", "m", "p"],
   items: [],
   group: "engineer",
-}
+};
 
 export const myCloud = {
   title: "My Cloud",
@@ -580,7 +580,7 @@ export const myCloud = {
 
   items: [],
   group: "dms",
-}
+};
 
 export const teamAttendance = {
   title: "Team Attendance",
@@ -590,7 +590,7 @@ export const teamAttendance = {
 
   items: [],
   group: "hr",
-}
+};
 
 export const ReimbursementApproval = {
   title: "Reimbursement Approval",
@@ -600,7 +600,7 @@ export const ReimbursementApproval = {
 
   items: [],
   group: "finance",
-}
+};
 
 export const employeeNavItems = [
   {
@@ -666,7 +666,7 @@ export const employeeNavItems = [
 
     items: [],
   },
-]
+];
 
 export const Commission = {
   title: "Commission",
@@ -675,7 +675,7 @@ export const Commission = {
   shortcut: ["c", "o", "m"],
   items: [],
   group: "sales",
-}
+};
 
 export const dealerNavItems = [
   {
@@ -709,7 +709,7 @@ export const dealerNavItems = [
 
     items: [],
   },
-]
+];
 
 export const branchNavItem = {
   title: "Office Expense",
@@ -719,7 +719,7 @@ export const branchNavItem = {
 
   items: [],
   group: "finance",
-}
+};
 
 export const StoreNavItem = [
   {
@@ -779,7 +779,7 @@ export const StoreNavItem = [
 
     items: [],
   },
-]
+];
 
 export const POSNavItemAdmin = {
   title: "Point Of Sale",
@@ -803,7 +803,7 @@ export const POSNavItemAdmin = {
       url: "/gatepass",
     },
   ],
-}
+};
 
 export const POSNavItem = {
   title: "Point Of Sale",
@@ -812,7 +812,7 @@ export const POSNavItem = {
   shortcut: ["p", "o", "s"],
   items: [],
   group: "pos",
-}
+};
 
 export const BackupNavItem = {
   title: "Backup Parts",
@@ -821,7 +821,7 @@ export const BackupNavItem = {
   shortcut: ["b", "a", "c"],
   items: [],
   group: "pos",
-}
+};
 
 export const Tools = {
   title: "Tools",
@@ -877,7 +877,7 @@ export const Tools = {
     //   shortcut: ['l', 'o', 'g'],
     // },
   ],
-}
+};
 
 export const Prices = {
   title: "Prices",
@@ -887,7 +887,7 @@ export const Prices = {
 
   items: [],
   group: "sales",
-}
+};
 
 export const RepairAndMaintenance = {
   title: "Repair and Maintenance",
@@ -897,7 +897,7 @@ export const RepairAndMaintenance = {
 
   items: [],
   group: "engineer",
-}
+};
 
 export const PakCities = [
   {
@@ -3546,7 +3546,7 @@ export const PakCities = [
     lat: "30.38244",
     lng: "67.72562",
   },
-]
+];
 
 export const CountriesList = [
   {
@@ -5037,17 +5037,17 @@ export const CountriesList = [
     code: "AX",
     num: "+35818",
   },
-]
+];
 
 // export const BASE_URL = "https://senfeng-web.vercel.app/api"
 // export const BASE_URL = "http://localhost:3001/api"
-export const BASE_URL = "/api"
+export const BASE_URL = "/api";
 
 export const Colors = {
   button: "#1d76a4",
-}
+};
 
-export const TIMEZONE = "Asia/Karachi"
+export const TIMEZONE = "Asia/Karachi";
 
 export const saleFields = [
   "price",
@@ -5062,7 +5062,7 @@ export const saleFields = [
   "handover_user_id",
   "installation_report",
   "handshake_images",
-]
+];
 
 export const partFields = [
   "price",
@@ -5074,7 +5074,7 @@ export const partFields = [
   "handover_user_id",
   "installation_report",
   "handshake_images",
-]
+];
 
 export const profileFields = [
   "name",
@@ -5091,4 +5091,4 @@ export const profileFields = [
   "platform",
   "other",
   "pin",
-]
+];

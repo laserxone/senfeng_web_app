@@ -1,41 +1,41 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { ArrowUpDown, RotateCcw, Trash2 } from "lucide-react"
-import { memo, useEffect, useState } from "react"
+"use client";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown, RotateCcw, Trash2 } from "lucide-react";
+import { memo, useEffect, useState } from "react";
 
-import PageTable from "@/components/shared/tables/app-table"
-import SalaryPdf from "@/components/features/salary/salaryPdf"
-import Heading from "@/components/ui/heading"
-import axios from "@/lib/axios"
-import moment from "moment"
-import { FaRegFilePdf } from "react-icons/fa"
+import PageTable from "@/components/shared/tables/app-table";
+import SalaryPdf from "@/components/features/salary/salaryPdf";
+import Heading from "@/components/ui/heading";
+import axios from "@/lib/axios";
+import moment from "moment";
+import { FaRegFilePdf } from "react-icons/fa";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import { pdf } from "@react-pdf/renderer"
-import { SalaryRecord, UserSalaryProps } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
+import useUserDetail from "@/hooks/use-user-detail";
+import { pdf } from "@react-pdf/renderer";
+import { SalaryRecord, UserSalaryProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
 const RecordComponent = () => {
-  const { userID } = useUserDetail()
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<SalaryRecord[]>([])
+  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<SalaryRecord[]>([]);
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     axios
       .get(`/${userID}/record`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   const columns: ColumnDef<SalaryRecord>[] = [
@@ -51,7 +51,7 @@ const RecordComponent = () => {
             Salary Month
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">
@@ -74,7 +74,7 @@ const RecordComponent = () => {
             Employee
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
     },
@@ -94,22 +94,22 @@ const RecordComponent = () => {
               className="h-7 w-7 text-red-500"
             />
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleDelete(id: number) {
-    if (!id) return
-    setLoading(true)
+    if (!id) return;
+    setLoading(true);
     axios
       .delete(`/${userID}/record/${id}`)
       .then(async () => {
-        await fetchData()
+        await fetchData();
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   async function handleDownload(item: SalaryRecord) {
@@ -128,11 +128,11 @@ const RecordComponent = () => {
       late: String(item.late),
       fuel: item.fuel,
       issued_commissions_detail: item.issued_commissions_detail,
-    }
-    const blob = await pdf(<SalaryPdf data={passingData} />).toBlob()
-    const url = URL.createObjectURL(blob)
-    window.open(url, "_blank")
-    setTimeout(() => URL.revokeObjectURL(url), 600000)
+    };
+    const blob = await pdf(<SalaryPdf data={passingData} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 600000);
   }
 
   return (
@@ -151,7 +151,7 @@ const RecordComponent = () => {
         </Button>
       </PageTable>
     </div>
-  )
-}
+  );
+};
 
-export default memo(RecordComponent)
+export default memo(RecordComponent);

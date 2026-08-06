@@ -1,28 +1,28 @@
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Button } from "@/components/ui/button"
-import Spinner from "@/components/ui/spinner"
-import { storage } from "@/config/firebase"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { InvoiceItem, StockProps } from "@/lib/types"
-import { ref, uploadBytesResumable } from "firebase/storage"
-import { Minus, PencilIcon, Plus } from "lucide-react"
-import { useState } from "react"
-import { toast } from "sonner"
-import "./Button.css"
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
+import Spinner from "@/components/ui/spinner";
+import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { InvoiceItem, StockProps } from "@/lib/types";
+import { ref, uploadBytesResumable } from "firebase/storage";
+import { Minus, PencilIcon, Plus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import "pdfjs-dist/build/pdf.worker.mjs"
-import "pdfjs-dist/legacy/web/pdf_viewer.css"
+import "pdfjs-dist/build/pdf.worker.mjs";
+import "pdfjs-dist/legacy/web/pdf_viewer.css";
 
 type RenderStockItemsProps = {
-  designation?: string
-  item: StockProps
-  invoiceItems?: InvoiceItem[]
-  handleDecrease?: (item: StockProps) => void
-  handleIncrease?: (item: StockProps) => void
-  onRefresh?: () => void
-  edit?: boolean
-}
+  designation?: string;
+  item: StockProps;
+  invoiceItems?: InvoiceItem[];
+  handleDecrease?: (item: StockProps) => void;
+  handleIncrease?: (item: StockProps) => void;
+  onRefresh?: () => void;
+  edit?: boolean;
+};
 
 const RenderStockItemsOtherView = ({
   designation,
@@ -33,134 +33,134 @@ const RenderStockItemsOtherView = ({
   onRefresh,
   edit = true,
 }: RenderStockItemsProps) => {
-  const [localName, setLocalName] = useState("")
-  const [localChineseName, setLocalChineseName] = useState("")
-  const [localQty, setLocalQty] = useState<number | string>("")
-  const [localPrice, setLocalPrice] = useState("")
-  const [localImage, setLocalImage] = useState<File | Blob | null>(null)
-  const [editable, setEditable] = useState(false)
-  const [remarks, setRemarks] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [threshold, setThreshold] = useState<number | string>("")
-  const [newOrder, setNewOrder] = useState<string | number>("")
-  const [buying, setBuying] = useState("")
-  const { userID } = useUserDetail()
+  const [localName, setLocalName] = useState("");
+  const [localChineseName, setLocalChineseName] = useState("");
+  const [localQty, setLocalQty] = useState<number | string>("");
+  const [localPrice, setLocalPrice] = useState("");
+  const [localImage, setLocalImage] = useState<File | Blob | null>(null);
+  const [editable, setEditable] = useState(false);
+  const [remarks, setRemarks] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [threshold, setThreshold] = useState<number | string>("");
+  const [newOrder, setNewOrder] = useState<string | number>("");
+  const [buying, setBuying] = useState("");
+  const { userID } = useUserDetail();
 
   const uploadFiles = async (
     item: Blob | null,
-    imgRef: string | null | undefined
+    imgRef: string | null | undefined,
   ) => {
-    let name = ""
+    let name = "";
     if (imgRef) {
-      name = imgRef
+      name = imgRef;
     } else {
-      name = new Date().getTime().toString() + ".png"
+      name = new Date().getTime().toString() + ".png";
     }
     return new Promise((resolve, reject) => {
       if (!item) {
         if (imgRef) {
-          resolve(imgRef)
+          resolve(imgRef);
         } else {
-          resolve(null)
+          resolve(null);
         }
       } else {
         const metadata = {
           contentType: "image/png",
-        }
-        const storageRef = ref(storage, `products/` + name)
-        const uploadTask = uploadBytesResumable(storageRef, item, metadata)
+        };
+        const storageRef = ref(storage, `products/` + name);
+        const uploadTask = uploadBytesResumable(storageRef, item, metadata);
         uploadTask.on(
           "state_changed",
           (snapshot) => {
             const progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-            console.log("Upload is " + progress + "% done")
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
             switch (snapshot.state) {
               case "paused":
-                console.log("Upload is paused")
-                break
+                console.log("Upload is paused");
+                break;
               case "running":
-                console.log("Upload is running")
-                break
+                console.log("Upload is running");
+                break;
             }
           },
           (error) => {
-            setLoading(false)
-            reject(error)
+            setLoading(false);
+            reject(error);
           },
           () => {
-            resolve(name)
-          }
-        )
+            resolve(name);
+          },
+        );
       }
-    })
-  }
+    });
+  };
 
   async function handleSave(id: number, imgRef: string | null | undefined) {
     if (localPrice && isNaN(Number(localPrice))) {
-      toast.error("Price must be a number")
-      return
+      toast.error("Price must be a number");
+      return;
     }
 
     if (localQty && isNaN(Number(localQty))) {
-      toast.error("Quantity must be a number")
-      return
+      toast.error("Quantity must be a number");
+      return;
     }
 
     if (threshold && isNaN(Number(threshold))) {
-      toast.error("Threshold must be a number")
-      return
+      toast.error("Threshold must be a number");
+      return;
     }
 
     if (newOrder && isNaN(Number(newOrder))) {
-      toast.error("New order must be a number")
-      return
+      toast.error("New order must be a number");
+      return;
     }
 
     if (buying && isNaN(Number(buying))) {
-      toast.error("Buying price must be a number")
-      return
+      toast.error("Buying price must be a number");
+      return;
     }
 
     const formData: any = {
       name: localName,
       chinese_name: localChineseName,
       remarks: remarks,
-    }
+    };
 
     if (!isNaN(Number(localPrice))) {
-      formData.price = Number(localPrice)
+      formData.price = Number(localPrice);
     }
 
     if (!isNaN(Number(localQty))) {
-      formData.qty = Number(localQty)
+      formData.qty = Number(localQty);
     }
 
     if (!isNaN(Number(threshold))) {
-      formData.threshold = Number(threshold)
+      formData.threshold = Number(threshold);
     }
     if (!isNaN(Number(newOrder))) {
-      formData.new_order = Number(newOrder)
+      formData.new_order = Number(newOrder);
     }
 
     if (!isNaN(Number(buying))) {
-      formData.buying = Number(buying)
+      formData.buying = Number(buying);
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const result = await uploadFiles(localImage, imgRef)
+      const result = await uploadFiles(localImage, imgRef);
       if (result) {
-        formData.img = result
+        formData.img = result;
       }
 
-      await axios.put(`/${userID}/pos/${id}`, formData)
+      await axios.put(`/${userID}/pos/${id}`, formData);
 
-      onRefresh?.()
+      onRefresh?.();
     } catch (error) {
-      toast.error("Failed to upload image or data. Try again")
+      toast.error("Failed to upload image or data. Try again");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -197,7 +197,7 @@ const RenderStockItemsOtherView = ({
           <Dropzone
             value={localImage ? URL.createObjectURL(localImage) : null}
             onDropFile={(file) => {
-              setLocalImage(file)
+              setLocalImage(file);
             }}
             title="Click to upload"
             subheading="or drag and drop"
@@ -239,7 +239,7 @@ const RenderStockItemsOtherView = ({
                 value={localPrice}
                 className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                 onChange={(e) => {
-                  setLocalPrice(e.target.value)
+                  setLocalPrice(e.target.value);
                 }}
               />
             </label>
@@ -252,7 +252,7 @@ const RenderStockItemsOtherView = ({
                 className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                 value={threshold}
                 onChange={(e) => {
-                  setThreshold(e.target.value)
+                  setThreshold(e.target.value);
                 }}
               />
             </label>
@@ -265,7 +265,7 @@ const RenderStockItemsOtherView = ({
                 className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                 value={newOrder}
                 onChange={(e) => {
-                  setNewOrder(e.target.value)
+                  setNewOrder(e.target.value);
                 }}
               />
             </label>
@@ -280,7 +280,7 @@ const RenderStockItemsOtherView = ({
                   className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                   value={buying}
                   onChange={(e) => {
-                    setBuying(e.target.value)
+                    setBuying(e.target.value);
                   }}
                 />
               </label>
@@ -296,7 +296,7 @@ const RenderStockItemsOtherView = ({
                   className="h-8 w-full min-w-0 rounded-md border bg-background px-2 text-xs outline-none focus:border-primary"
                   value={remarks}
                   onChange={(e) => {
-                    setRemarks(e.target.value)
+                    setRemarks(e.target.value);
                   }}
                 />
               </label>
@@ -322,7 +322,7 @@ const RenderStockItemsOtherView = ({
               style={{ opacity: editable ? 0.5 : 1 }}
               onClick={() => {
                 if (!editable) {
-                  handleDecrease?.(item)
+                  handleDecrease?.(item);
                 }
               }}
             >
@@ -338,7 +338,7 @@ const RenderStockItemsOtherView = ({
               style={{ opacity: editable ? 0.5 : 1 }}
               onClick={() => {
                 if (!editable) {
-                  handleIncrease?.(item)
+                  handleIncrease?.(item);
                 }
               }}
             >
@@ -348,14 +348,14 @@ const RenderStockItemsOtherView = ({
           <div
             className="flex h-8 w-8 items-center justify-center rounded-md border bg-background hover:cursor-pointer hover:bg-muted"
             onClick={() => {
-              setLocalName(item.name || "")
-              setLocalChineseName(item.chinese_name || "")
-              setLocalQty(item?.qty || "")
-              setLocalPrice(item?.price || "")
-              setThreshold(item?.threshold || "")
-              setNewOrder(item?.new_order || "")
-              setRemarks(item?.remarks || "")
-              setEditable(!editable)
+              setLocalName(item.name || "");
+              setLocalChineseName(item.chinese_name || "");
+              setLocalQty(item?.qty || "");
+              setLocalPrice(item?.price || "");
+              setThreshold(item?.threshold || "");
+              setNewOrder(item?.new_order || "");
+              setRemarks(item?.remarks || "");
+              setEditable(!editable);
             }}
           >
             <PencilIcon className="h-3.5 w-3.5" />
@@ -363,7 +363,7 @@ const RenderStockItemsOtherView = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default RenderStockItemsOtherView
+export default RenderStockItemsOtherView;

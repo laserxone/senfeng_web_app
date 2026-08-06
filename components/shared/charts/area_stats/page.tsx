@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { TrendingUp } from "lucide-react";
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   Card,
@@ -10,12 +10,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
 export function AreaStats({ data }) {
   const chartConfig = {
@@ -27,7 +27,7 @@ export function AreaStats({ data }) {
       label: "Unsatisfactory",
       color: "var(--chart-1)",
     },
-  }
+  };
 
   return (
     <Card>
@@ -94,5 +94,5 @@ export function AreaStats({ data }) {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

@@ -1,14 +1,14 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ userid: string }> }
+  { params }: { params: Promise<{ userid: string }> },
 ) {
-  const { searchParams } = new URL(req.url)
-  const userId = searchParams.get("userId")
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get("userId");
   if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 })
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
   }
 
   try {
@@ -22,8 +22,8 @@ export async function GET(
       LEFT JOIN users u2 ON c.participant_2 = u2.id
       WHERE c.participant_1 = $1 OR c.participant_2 = $1
       ORDER BY c.last_updated DESC`,
-      [userId]
-    )
+      [userId],
+    );
 
     const countRes = await pool.query(
       `SELECT COUNT(*) AS unread_count
@@ -32,10 +32,10 @@ export async function GET(
      WHERE (c.participant_1 = $1 OR c.participant_2 = $1)
        AND m.sender_id != $1
        AND m.is_read = false`,
-      [userId]
-    )
+      [userId],
+    );
 
-    const unreadCount = parseInt(countRes.rows[0].unread_count, 10)
+    const unreadCount = parseInt(countRes.rows[0].unread_count, 10);
 
     const conversations = result.rows.map((row) => ({
       id: row.id,
@@ -52,83 +52,83 @@ export async function GET(
         name: row.participant_2_name,
       },
       unreadCount,
-    }))
+    }));
 
-    return NextResponse.json(conversations, { status: 200 })
+    return NextResponse.json(conversations, { status: 200 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
   try {
-    const { user1, user2 } = await req.json()
+    const { user1, user2 } = await req.json();
 
-    const { uid } = await params
+    const { uid } = await params;
 
     if (!user1 || !user2) {
-      return NextResponse.json({ error: "Missing user ids" }, { status: 400 })
+      return NextResponse.json({ error: "Missing user ids" }, { status: 400 });
     }
 
     const existing = await pool.query(
       `SELECT * FROM conversations 
        WHERE (participant_1 = $1 AND participant_2 = $2) 
           OR (participant_1 = $2 AND participant_2 = $1)`,
-      [user1, user2]
-    )
+      [user1, user2],
+    );
 
     if (existing.rows.length > 0) {
-      const conversation = existing.rows[0]
+      const conversation = existing.rows[0];
       const otherUserId =
         Number(conversation.participant_1) === Number(uid)
           ? conversation.participant_2
-          : conversation.participant_1
+          : conversation.participant_1;
 
       const userResult = await pool.query(
         `SELECT id, name, dp FROM users WHERE id = $1`,
-        [otherUserId]
-      )
+        [otherUserId],
+      );
 
-      const otherUser = userResult.rows[0]
+      const otherUser = userResult.rows[0];
       return NextResponse.json(
         { ...existing.rows[0], otherUser },
-        { status: 200 }
-      )
+        { status: 200 },
+      );
     }
 
     const result = await pool.query(
       `INSERT INTO conversations (participant_1, participant_2) 
        VALUES ($1, $2) RETURNING *`,
-      [user1, user2]
-    )
+      [user1, user2],
+    );
 
-    const conversation = result.rows[0]
+    const conversation = result.rows[0];
 
     const otherUserId =
       Number(conversation.participant_1) === Number(uid)
         ? conversation.participant_2
-        : conversation.participant_1
+        : conversation.participant_1;
 
     const userResult = await pool.query(
       `SELECT id, name, dp FROM users WHERE id = $1`,
-      [Number(otherUserId)]
-    )
+      [Number(otherUserId)],
+    );
 
-    const otherUser = userResult.rows[0]
+    const otherUser = userResult.rows[0];
 
     return NextResponse.json(
       {
         ...conversation.id,
         otherUser,
       },
-      { status: 201 }
-    )
+      { status: 201 },
+    );
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

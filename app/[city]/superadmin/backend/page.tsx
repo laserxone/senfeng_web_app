@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { useEffect, useMemo, useState } from "react"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Select,
@@ -10,14 +10,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
-import Heading from "@/components/ui/heading"
-import Spinner from "@/components/ui/spinner"
+import Heading from "@/components/ui/heading";
+import Spinner from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -25,244 +25,245 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useIsMobile } from "@/hooks/use-mobile"
+} from "@/components/ui/table";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type TableType = {
-  table_name: string
-}
+  table_name: string;
+};
 
 type ColumnType = {
-  name: string
-  type: string
-}
+  name: string;
+  type: string;
+};
 
 export default function BackendPage() {
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
-  const [tables, setTables] = useState<TableType[]>([])
-  const [selected, setSelected] = useState("")
+  const [tables, setTables] = useState<TableType[]>([]);
+  const [selected, setSelected] = useState("");
 
-  const [columns, setColumns] = useState<ColumnType[]>([])
-  const [rows, setRows] = useState<any[]>([])
-  const [originalRows, setOriginalRows] = useState([])
+  const [columns, setColumns] = useState<ColumnType[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
+  const [originalRows, setOriginalRows] = useState([]);
 
-  const [search, setSearch] = useState("")
-  const [sortConfig, setSortConfig] = useState({ key: "", direction: "" })
-  const [saveLoading, setSaveLoading] = useState(false)
+  const [search, setSearch] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+  const [saveLoading, setSaveLoading] = useState(false);
 
-  const isMobile = useIsMobile()
-  const [page, setPage] = useState(1)
-  const PAGE_SIZE = 15
+  const isMobile = useIsMobile();
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
 
-  const [editedRows, setEditedRows] = useState<any>({})
+  const [editedRows, setEditedRows] = useState<any>({});
 
   const hasChanges = useMemo(
     () => Object.keys(editedRows).length > 0,
-    [editedRows]
-  )
+    [editedRows],
+  );
 
   useEffect(() => {
-    if (!userID) return
+    if (!userID) return;
     axios.get(`/${userID}/backend/tables`).then((res) => {
-      setTables(res.data || [])
-    })
-  }, [userID])
+      setTables(res.data || []);
+    });
+  }, [userID]);
 
   useEffect(() => {
-    if (!userID || !selected) return
+    if (!userID || !selected) return;
 
-    setEditedRows({})
-    setRows([])
-    setOriginalRows([])
-    setColumns([])
-    setPage(1)
+    setEditedRows({});
+    setRows([]);
+    setOriginalRows([]);
+    setColumns([]);
+    setPage(1);
 
     axios.get(`/${userID}/backend/table/${selected}`).then((res) => {
-      const data = res.data || {}
-      setColumns(data.columns || [])
-      setRows(data.rows || [])
+      const data = res.data || {};
+      setColumns(data.columns || []);
+      setRows(data.rows || []);
 
-      setOriginalRows(data.rows ? JSON.parse(JSON.stringify(data.rows)) : [])
-      setEditedRows({})
-      setPage(1)
-      setSortConfig({ key: "", direction: "" })
-      setSearch("")
-    })
-  }, [userID, selected])
+      setOriginalRows(data.rows ? JSON.parse(JSON.stringify(data.rows)) : []);
+      setEditedRows({});
+      setPage(1);
+      setSortConfig({ key: "", direction: "" });
+      setSearch("");
+    });
+  }, [userID, selected]);
 
   const filteredRows = useMemo(() => {
-    const q = (search || "").toLowerCase()
+    const q = (search || "").toLowerCase();
 
     let list = (rows || []).filter((r) =>
       Object.values(r).some((v) =>
         String(v ?? "")
           .toLowerCase()
-          .includes(q)
-      )
-    )
+          .includes(q),
+      ),
+    );
 
     if (sortConfig.key) {
-      const key = sortConfig.key
-      const dir = sortConfig.direction === "asc" ? 1 : -1
+      const key = sortConfig.key;
+      const dir = sortConfig.direction === "asc" ? 1 : -1;
       list = [...list].sort((a, b) => {
-        const x = a[key]
-        const y = b[key]
+        const x = a[key];
+        const y = b[key];
 
-        if (x == null && y != null) return 1
-        if (x != null && y == null) return -1
-        if (x == null && y == null) return 0
+        if (x == null && y != null) return 1;
+        if (x != null && y == null) return -1;
+        if (x == null && y == null) return 0;
 
-        if (typeof x === "number" && typeof y === "number") return (x - y) * dir
+        if (typeof x === "number" && typeof y === "number")
+          return (x - y) * dir;
 
-        return String(x).localeCompare(String(y)) * dir
-      })
+        return String(x).localeCompare(String(y)) * dir;
+      });
     }
 
-    return list
-  }, [rows, search, sortConfig])
+    return list;
+  }, [rows, search, sortConfig]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const paginatedRows = filteredRows.slice(
     (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  )
+    page * PAGE_SIZE,
+  );
 
   function isoToLocalInput(iso: string) {
-    if (!iso) return ""
-    const d = new Date(iso)
-    const tzOffset = d.getTimezoneOffset() * 60000
-    const local = new Date(d.getTime() - tzOffset)
-    return local.toISOString().slice(0, 16)
+    if (!iso) return "";
+    const d = new Date(iso);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    const local = new Date(d.getTime() - tzOffset);
+    return local.toISOString().slice(0, 16);
   }
   function localInputToIso(localValue: string) {
-    if (!localValue) return null
-    const d = new Date(localValue)
-    return d.toISOString()
+    if (!localValue) return null;
+    const d = new Date(localValue);
+    return d.toISOString();
   }
 
   function handleEdit(
     rowId: number,
     colName: string,
-    newValue: string | null | string[] | boolean | number
+    newValue: string | null | string[] | boolean | number,
   ) {
     setEditedRows((prev: any) => {
-      const next: any = { ...prev }
-      const rowEdits = { ...(next[rowId] || {}) }
+      const next: any = { ...prev };
+      const rowEdits = { ...(next[rowId] || {}) };
 
-      if (newValue === "") rowEdits[colName] = null
-      else rowEdits[colName] = newValue
+      if (newValue === "") rowEdits[colName] = null;
+      else rowEdits[colName] = newValue;
 
       const origRow = originalRows.find(
-        (r: { id: number }) => String(r.id) === String(rowId)
-      )
-      const origVal = origRow ? origRow[colName] : undefined
+        (r: { id: number }) => String(r.id) === String(rowId),
+      );
+      const origVal = origRow ? origRow[colName] : undefined;
 
       const changed =
         (origVal === null && rowEdits[colName] !== null) ||
         (origVal !== null && rowEdits[colName] === null) ||
         (typeof origVal === "object" && typeof rowEdits[colName] === "object"
           ? JSON.stringify(origVal) !== JSON.stringify(rowEdits[colName])
-          : String(origVal ?? "") !== String(rowEdits[colName] ?? ""))
+          : String(origVal ?? "") !== String(rowEdits[colName] ?? ""));
 
       if (!changed) {
-        delete rowEdits[colName]
+        delete rowEdits[colName];
       }
 
       if (Object.keys(rowEdits).length === 0) {
-        delete next[rowId]
+        delete next[rowId];
       } else {
-        next[rowId] = rowEdits
+        next[rowId] = rowEdits;
       }
 
-      return next
-    })
+      return next;
+    });
 
     setRows((prev) =>
       prev.map((r) =>
-        String(r.id) === String(rowId) ? { ...r, [colName]: newValue } : r
-      )
-    )
+        String(r.id) === String(rowId) ? { ...r, [colName]: newValue } : r,
+      ),
+    );
   }
 
   async function saveAllChanges() {
-    if (!selected || !userID) return
-    if (!hasChanges) return
+    if (!selected || !userID) return;
+    if (!hasChanges) return;
 
-    setSaveLoading(true)
+    setSaveLoading(true);
     try {
       await axios.patch(`/${userID}/backend/save/${selected}`, {
         changes: editedRows,
-      })
+      });
 
-      const res = await axios.get(`/${userID}/backend/table/${selected}`)
-      const data = res.data || {}
-      setColumns(data.columns || [])
-      setRows(data.rows || [])
-      setOriginalRows(data.rows ? JSON.parse(JSON.stringify(data.rows)) : [])
-      setEditedRows({})
-      setPage(1)
+      const res = await axios.get(`/${userID}/backend/table/${selected}`);
+      const data = res.data || {};
+      setColumns(data.columns || []);
+      setRows(data.rows || []);
+      setOriginalRows(data.rows ? JSON.parse(JSON.stringify(data.rows)) : []);
+      setEditedRows({});
+      setPage(1);
     } catch (err) {
-      console.error("Save failed", err)
+      console.error("Save failed", err);
     } finally {
-      setSaveLoading(false)
+      setSaveLoading(false);
     }
   }
 
   function revertRow(rowId: number) {
     const orig = originalRows.find(
-      (r: { id: number }) => String(r.id) === String(rowId)
-    )
-    if (!orig) return
+      (r: { id: number }) => String(r.id) === String(rowId),
+    );
+    if (!orig) return;
     setRows((prev) =>
       prev.map((r) =>
-        String(r.id) === String(rowId) ? JSON.parse(JSON.stringify(orig)) : r
-      )
-    )
+        String(r.id) === String(rowId) ? JSON.parse(JSON.stringify(orig)) : r,
+      ),
+    );
     setEditedRows((prev: any) => {
-      const next = { ...prev }
-      delete next[rowId]
-      return next
-    })
+      const next = { ...prev };
+      delete next[rowId];
+      return next;
+    });
   }
 
   function discardAll() {
-    setRows(JSON.parse(JSON.stringify(originalRows)))
-    setEditedRows({})
-    setPage(1)
+    setRows(JSON.parse(JSON.stringify(originalRows)));
+    setEditedRows({});
+    setPage(1);
   }
 
   function renderCellInput(row: any, col: ColumnType) {
-    const colName = col.name
-    const type = (col.type || "").toLowerCase()
-    const value = row[colName]
+    const colName = col.name;
+    const type = (col.type || "").toLowerCase();
+    const value = row[colName];
 
     const origRow = originalRows.find(
-      (r: { id: number }) => String(r.id) === String(row.id)
-    )
-    const origVal = origRow ? origRow[colName] : undefined
+      (r: { id: number }) => String(r.id) === String(row.id),
+    );
+    const origVal = origRow ? origRow[colName] : undefined;
 
     const changed =
       (origVal === null && value !== null) ||
       (origVal !== null && value === null) ||
       (typeof origVal === "object" && typeof value === "object"
         ? JSON.stringify(origVal) !== JSON.stringify(value)
-        : String(origVal ?? "") !== String(value ?? ""))
+        : String(origVal ?? "") !== String(value ?? ""));
 
-    const changedClass = changed ? "bg-yellow-200 dark:bg-yellow-700" : ""
+    const changedClass = changed ? "bg-yellow-200 dark:bg-yellow-700" : "";
 
     if (type.endsWith("[]") || type.includes("array")) {
-      let arrString = ""
+      let arrString = "";
 
       if (Array.isArray(value)) {
-        arrString = value.join(", ")
+        arrString = value.join(", ");
       } else if (value === null) {
-        arrString = ""
+        arrString = "";
       } else {
         try {
-          arrString = Array.isArray(value) ? value.join(", ") : String(value)
+          arrString = Array.isArray(value) ? value.join(", ") : String(value);
         } catch {
-          arrString = String(value ?? "")
+          arrString = String(value ?? "");
         }
       }
 
@@ -271,31 +272,31 @@ export default function BackendPage() {
           defaultValue={arrString}
           placeholder="Comma separated values (leave empty for NULL)"
           onBlur={(e) => {
-            const raw = e.target.value.trim()
+            const raw = e.target.value.trim();
 
             if (raw === "") {
-              handleEdit(row.id, colName, null)
-              return
+              handleEdit(row.id, colName, null);
+              return;
             }
 
-            let parsedArray = raw.split(",").map((v) => v.trim())
+            let parsedArray = raw.split(",").map((v) => v.trim());
 
             // Convert numbers if the array type is numeric
             if (
               ["int", "integer", "numeric", "bigint", "smallint"].some((t) =>
-                type.includes(t)
+                type.includes(t),
               )
             ) {
               parsedArray = parsedArray.map((n: any) =>
-                isNaN(n) ? n : Number(n)
-              )
+                isNaN(n) ? n : Number(n),
+              );
             }
 
-            handleEdit(row.id, colName, parsedArray)
+            handleEdit(row.id, colName, parsedArray);
           }}
           className={`${changedClass} min-h-[60px]`}
         />
-      )
+      );
     }
 
     // -------------------------------------------------------------
@@ -306,9 +307,9 @@ export default function BackendPage() {
         <select
           value={value === null ? "___NULL___" : value ? "true" : "false"}
           onChange={(e) => {
-            const v = e.target.value
-            if (v === "___NULL___") handleEdit(row.id, colName, null)
-            else handleEdit(row.id, colName, v === "true")
+            const v = e.target.value;
+            if (v === "___NULL___") handleEdit(row.id, colName, null);
+            else handleEdit(row.id, colName, v === "true");
           }}
           className={`rounded px-2 py-1 ${changedClass}`}
         >
@@ -316,7 +317,7 @@ export default function BackendPage() {
           <option value="true">true</option>
           <option value="false">false</option>
         </select>
-      )
+      );
     }
 
     // -------------------------------------------------------------
@@ -339,12 +340,12 @@ export default function BackendPage() {
           type="number"
           defaultValue={value ?? ""}
           onBlur={(e) => {
-            const v = e.target.value
-            handleEdit(row.id, colName, v === "" ? null : Number(v))
+            const v = e.target.value;
+            handleEdit(row.id, colName, v === "" ? null : Number(v));
           }}
           className={changedClass}
         />
-      )
+      );
     }
 
     // -------------------------------------------------------------
@@ -360,45 +361,45 @@ export default function BackendPage() {
           type="datetime-local"
           defaultValue={isoToLocalInput(value)}
           onBlur={(e) => {
-            const v = e.target.value
-            handleEdit(row.id, colName, v === "" ? null : localInputToIso(v))
+            const v = e.target.value;
+            handleEdit(row.id, colName, v === "" ? null : localInputToIso(v));
           }}
           className={changedClass}
         />
-      )
+      );
     }
 
     // -------------------------------------------------------------
     // JSON
     // -------------------------------------------------------------
     if (type.includes("json")) {
-      let textValue = ""
+      let textValue = "";
 
       try {
         textValue =
           typeof value === "object"
             ? JSON.stringify(value, null, 2)
-            : String(value ?? "")
+            : String(value ?? "");
       } catch {
-        textValue = String(value ?? "")
+        textValue = String(value ?? "");
       }
 
       return (
         <Textarea
           defaultValue={textValue}
           onBlur={(e) => {
-            const v = e.target.value
+            const v = e.target.value;
 
             try {
-              const parsed = v.trim() === "" ? null : JSON.parse(v)
-              handleEdit(row.id, colName, parsed)
+              const parsed = v.trim() === "" ? null : JSON.parse(v);
+              handleEdit(row.id, colName, parsed);
             } catch {
-              handleEdit(row.id, colName, v === "" ? null : v)
+              handleEdit(row.id, colName, v === "" ? null : v);
             }
           }}
           className={`${changedClass} min-h-[80px]`}
         />
-      )
+      );
     }
 
     // -------------------------------------------------------------
@@ -411,12 +412,12 @@ export default function BackendPage() {
           handleEdit(
             row.id,
             colName,
-            e.target.value === "" ? null : e.target.value
+            e.target.value === "" ? null : e.target.value,
           )
         }
         className={changedClass}
       />
-    )
+    );
   }
 
   return (
@@ -462,8 +463,8 @@ export default function BackendPage() {
           className="w-64"
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(1)
+            setSearch(e.target.value);
+            setPage(1);
           }}
         />
 
@@ -484,14 +485,14 @@ export default function BackendPage() {
                       key={col.name}
                       className="cursor-pointer whitespace-nowrap"
                       onClick={() => {
-                        const key = col.name
-                        let dir = "asc"
+                        const key = col.name;
+                        let dir = "asc";
                         if (
                           sortConfig.key === key &&
                           sortConfig.direction === "asc"
                         )
-                          dir = "desc"
-                        setSortConfig({ key, direction: dir })
+                          dir = "desc";
+                        setSortConfig({ key, direction: dir });
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -574,5 +575,5 @@ export default function BackendPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

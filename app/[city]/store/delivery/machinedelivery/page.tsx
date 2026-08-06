@@ -1,5 +1,5 @@
-import MachineDelivery from "@/components/features/deliveries/machine-delivery"
+import MachineDelivery from "@/components/features/deliveries/machine-delivery";
 
 export default function Page() {
-  return <MachineDelivery />
+  return <MachineDelivery />;
 }

@@ -1,50 +1,50 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { List, Search, Table2 } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-import "./Button.css"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { List, Search, Table2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import { StockProps } from "@/lib/types"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import "pdfjs-dist/legacy/web/pdf_viewer.css"
-import RenderStockItems from "./render-stock-items"
-import RenderStockItemsOtherView from "./render-stock-items-other-view"
+import { StockProps } from "@/lib/types";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import "pdfjs-dist/legacy/web/pdf_viewer.css";
+import RenderStockItems from "./render-stock-items";
+import RenderStockItemsOtherView from "./render-stock-items-other-view";
 
 export default function LowStock({
   stock,
   handleOrderStock,
 }: {
-  stock: StockProps[]
-  handleOrderStock: () => void
+  stock: StockProps[];
+  handleOrderStock: () => void;
 }) {
-  const [search, setSearch] = useState("")
-  const [lowStockStatus, setLowStockStatus] = useState(false)
-  const [view, setView] = useState(false)
-  const [page, setPage] = useState(1)
-  const pageSize = 50
+  const [search, setSearch] = useState("");
+  const [lowStockStatus, setLowStockStatus] = useState(false);
+  const [view, setView] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     if (stock.length > 0) {
       const hasLowStock = stock.some(
         (item) =>
           item.threshold != null &&
           item.threshold !== undefined &&
-          item.threshold <= (item?.qty || 0)
-      )
-      setLowStockStatus(hasLowStock)
+          item.threshold <= (item?.qty || 0),
+      );
+      setLowStockStatus(hasLowStock);
     }
-  }, [stock])
+  }, [stock]);
 
   function handleToggle() {
-    setOpen(!open)
+    setOpen(!open);
   }
 
   const filteredStock = useMemo(
@@ -54,21 +54,21 @@ export default function LowStock({
           (item) =>
             item.threshold != null &&
             item.threshold !== undefined &&
-            (item.qty || 0) <= item.threshold
+            (item.qty || 0) <= item.threshold,
         )
         .filter((item) =>
-          item?.name?.toLowerCase().includes(search.toLowerCase())
+          item?.name?.toLowerCase().includes(search.toLowerCase()),
         ),
-    [search, stock]
-  )
+    [search, stock],
+  );
 
-  const totalPages = Math.max(1, Math.ceil(filteredStock.length / pageSize))
+  const totalPages = Math.max(1, Math.ceil(filteredStock.length / pageSize));
   const paginatedStock = filteredStock.slice(
     (page - 1) * pageSize,
-    page * pageSize
-  )
-  const pageStart = filteredStock.length ? (page - 1) * pageSize + 1 : 0
-  const pageEnd = Math.min(page * pageSize, filteredStock.length)
+    page * pageSize,
+  );
+  const pageStart = filteredStock.length ? (page - 1) * pageSize + 1 : 0;
+  const pageEnd = Math.min(page * pageSize, filteredStock.length);
 
   return (
     <>
@@ -200,7 +200,7 @@ export default function LowStock({
                           item={item}
                           edit={false}
                         />
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -210,5 +210,5 @@ export default function LowStock({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

@@ -1,29 +1,29 @@
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MyCustomer } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { zodResolver } from "@hookform/resolvers/zod"
-import moment from "moment"
-import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MyCustomer } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { MapPinned } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { MapPinned } from "lucide-react";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -33,9 +33,9 @@ const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone is required"),
   company: z.string().min(1, "Company is required"),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 export default function AddVisit({
   onRefresh,
@@ -43,16 +43,16 @@ export default function AddVisit({
   onClose,
   id,
 }: {
-  id: string | null | number
-  open: boolean
-  onClose: () => void
-  onRefresh?: () => Promise<void>
+  id: string | null | number;
+  open: boolean;
+  onClose: () => void;
+  onRefresh?: () => Promise<void>;
 }) {
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
-    null
-  )
-  const [loading, setLoading] = useState(false)
-  const { route_branch } = useUserDetail()
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+  const { route_branch } = useUserDetail();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -65,47 +65,47 @@ export default function AddVisit({
       phone: "",
       company: "",
     },
-  })
+  });
 
   const onSubmit = async (values: FormValues) => {
-    setLoading(true)
+    setLoading(true);
     try {
       if (values.image) {
         const name = `${route_branch}/customer/${selectedCustomer?.id}/visit/${moment()
           .valueOf()
-          .toString()}.png`
-        await UploadImage(values.image, name)
+          .toString()}.png`;
+        await UploadImage(values.image, name);
         await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           image: name,
           customer_id: selectedCustomer?.id,
-        })
-        await onRefresh?.()
-        form.reset()
-        setSelectedCustomer(null)
-        setLoading(false)
+        });
+        await onRefresh?.();
+        form.reset();
+        setSelectedCustomer(null);
+        setLoading(false);
       } else {
         await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           customer_id: selectedCustomer?.id,
-        })
-        await onRefresh?.()
-        form.reset()
-        setSelectedCustomer(null)
-        setLoading(false)
+        });
+        await onRefresh?.();
+        form.reset();
+        setSelectedCustomer(null);
+        setLoading(false);
       }
     } catch (error) {
-      console.log(error)
-      setLoading(false)
+      console.log(error);
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose() {
-    setSelectedCustomer(null)
-    setLoading(false)
-    onClose()
+    setSelectedCustomer(null);
+    setLoading(false);
+    onClose();
   }
 
   return (
@@ -129,7 +129,7 @@ export default function AddVisit({
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
           <form
             onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log("Validation Errors", err)
+              console.log("Validation Errors", err);
             })}
             className="space-y-3 p-3.5"
           >
@@ -140,14 +140,14 @@ export default function AddVisit({
               <CustomerSearchWithData
                 value={selectedCustomer}
                 onReturn={(val) => {
-                  setSelectedCustomer(val)
-                  form.setValue("city", val?.location || "")
-                  form.setValue("name", val?.owner || "")
+                  setSelectedCustomer(val);
+                  form.setValue("city", val?.location || "");
+                  form.setValue("name", val?.owner || "");
                   form.setValue(
                     "phone",
-                    val.number ? val?.number?.join(", ") : ""
-                  )
-                  form.setValue("company", val?.name || "")
+                    val.number ? val?.number?.join(", ") : "",
+                  );
+                  form.setValue("company", val?.name || "");
                 }}
               />
             </div>
@@ -240,5 +240,5 @@ export default function AddVisit({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

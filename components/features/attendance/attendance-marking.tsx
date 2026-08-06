@@ -1,42 +1,42 @@
-"use client"
+"use client";
 
-import axios from "@/lib/axios"
-import { useCallback, useEffect, useState } from "react"
+import axios from "@/lib/axios";
+import { useCallback, useEffect, useState } from "react";
 
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Button } from "@/components/ui/button"
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CustomerSearch } from "@/components/features/customers/components/customer-search"
-import { FieldLegend, FieldSet } from "@/components/ui/field"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Skeleton } from "@/components/ui/skeleton"
-import { UserSearch } from "@/components/shared/search/user-search"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CustomerSearch } from "@/components/features/customers/components/customer-search";
+import { FieldLegend, FieldSet } from "@/components/ui/field";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UserSearch } from "@/components/shared/search/user-search";
 
 type Props = {
-  open: boolean
-  loading?: boolean
-  onClose: () => void
-  userId?: number | string
-  userDesignation?: string
-  fetchData: () => Promise<void>
-  location?: { latitude?: number; longitude?: number }
-  error?: string | null
-}
+  open: boolean;
+  loading?: boolean;
+  onClose: () => void;
+  userId?: number | string;
+  userDesignation?: string;
+  fetchData: () => Promise<void>;
+  location?: { latitude?: number; longitude?: number };
+  error?: string | null;
+};
 
-const OFFICE_COORDS = { lat: 31.587590571462428, lon: 74.41925907140265 }
+const OFFICE_COORDS = { lat: 31.587590571462428, lon: 74.41925907140265 };
 const KARACHI_OFFICE_COORDS = {
   lat: 24.902874916172255,
   lon: 67.00292730924929,
-}
-const ALLOWED_DISTANCE = 200
+};
+const ALLOWED_DISTANCE = 200;
 
 export default function RenderMarkAttendance({
   open,
@@ -47,22 +47,24 @@ export default function RenderMarkAttendance({
   error = null,
   loading = false,
 }: Props) {
-  const [note, setNote] = useState("")
-  const [task, setTask] = useState("")
-  const [reason, setReason] = useState<"Office" | "Visit">("Office")
+  const [note, setNote] = useState("");
+  const [task, setTask] = useState("");
+  const [reason, setReason] = useState<"Office" | "Visit">("Office");
 
-  const [latitude, setLatitude] = useState("")
-  const [longitude, setLongitude] = useState("")
-  const [mapsUrl, setMapsUrl] = useState("")
-  const [imageFile, setImageFile] = useState<File | null | Blob>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>("")
-  const [selectedUser, setSelectedUser] = useState<number | string | null>(null)
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [mapsUrl, setMapsUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null | Blob>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>("");
+  const [selectedUser, setSelectedUser] = useState<number | string | null>(
+    null,
+  );
   const [selectedCustomer, setSelectedCustomer] = useState<
     number | string | null
-  >(null)
-  const [saveLoading, setSaveLoading] = useState(false)
-  const [mainError, setMainError] = useState("")
-  const [office, setOffice] = useState(true)
+  >(null);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [mainError, setMainError] = useState("");
+  const [office, setOffice] = useState(true);
 
   const [errors, setErrors] = useState({
     note: "",
@@ -71,20 +73,20 @@ export default function RenderMarkAttendance({
     customer: "",
     latitude: "",
     longitude: "",
-  })
+  });
 
   useEffect(() => {
     if (location?.latitude && location?.longitude) {
-      setLatitude(location.latitude?.toString())
-      setLongitude(location.longitude?.toString())
+      setLatitude(location.latitude?.toString());
+      setLongitude(location.longitude?.toString());
     }
-  }, [location])
+  }, [location]);
 
   useEffect(() => {
     if (userId) {
-      setSelectedUser(userId)
+      setSelectedUser(userId);
     }
-  }, [userId])
+  }, [userId]);
 
   const validate = useCallback(() => {
     const nextErrors = {
@@ -94,96 +96,96 @@ export default function RenderMarkAttendance({
       customer: "",
       latitude: "",
       longitude: "",
-    }
+    };
 
-    let hasError = false
+    let hasError = false;
 
     if (!note.trim()) {
-      nextErrors.note = "Note is required"
-      hasError = true
+      nextErrors.note = "Note is required";
+      hasError = true;
     }
 
     if (!task.trim()) {
-      nextErrors.task = "Task is required"
-      hasError = true
+      nextErrors.task = "Task is required";
+      hasError = true;
     }
 
     if (!imageFile) {
-      nextErrors.image = "Image is required"
-      hasError = true
+      nextErrors.image = "Image is required";
+      hasError = true;
     }
 
     if (!latitude.trim()) {
-      nextErrors.latitude = "Latitude is required"
-      hasError = true
+      nextErrors.latitude = "Latitude is required";
+      hasError = true;
     }
 
     if (!longitude.trim()) {
-      nextErrors.longitude = "Longitude is required"
-      hasError = true
+      nextErrors.longitude = "Longitude is required";
+      hasError = true;
     }
 
     if (reason === "Visit" && !selectedCustomer) {
-      nextErrors.customer = "Customer is required"
-      hasError = true
+      nextErrors.customer = "Customer is required";
+      hasError = true;
     }
 
-    setErrors(nextErrors)
-    return !hasError
-  }, [note, task, imageFile, latitude, longitude, reason, selectedCustomer])
+    setErrors(nextErrors);
+    return !hasError;
+  }, [note, task, imageFile, latitude, longitude, reason, selectedCustomer]);
 
   useEffect(() => {
-    if (!latitude || !longitude) return
+    if (!latitude || !longitude) return;
 
     const nearMainOffice =
       calculateDistance(
         latitude,
         longitude,
         OFFICE_COORDS.lat,
-        OFFICE_COORDS.lon
-      ) <= ALLOWED_DISTANCE
+        OFFICE_COORDS.lon,
+      ) <= ALLOWED_DISTANCE;
     const nearKarachiOffice =
       calculateDistance(
         latitude,
         longitude,
         KARACHI_OFFICE_COORDS.lat,
-        KARACHI_OFFICE_COORDS.lon
-      ) <= ALLOWED_DISTANCE
+        KARACHI_OFFICE_COORDS.lon,
+      ) <= ALLOWED_DISTANCE;
 
-    setOffice(nearMainOffice || nearKarachiOffice)
-  }, [latitude, longitude])
+    setOffice(nearMainOffice || nearKarachiOffice);
+  }, [latitude, longitude]);
 
   const handleExtractCoordinates = useCallback(() => {
-    setMainError("")
+    setMainError("");
 
-    const coords = extractCoordinatesFromGoogleMapsUrl(mapsUrl)
+    const coords = extractCoordinatesFromGoogleMapsUrl(mapsUrl);
 
     if (!coords) {
-      setMainError("Could not extract coordinates from this Google Maps URL")
-      return
+      setMainError("Could not extract coordinates from this Google Maps URL");
+      return;
     }
 
-    setLatitude(coords.latitude)
-    setLongitude(coords.longitude)
+    setLatitude(coords.latitude);
+    setLongitude(coords.longitude);
 
     setErrors((prev) => ({
       ...prev,
       latitude: "",
       longitude: "",
-    }))
-  }, [mapsUrl])
+    }));
+  }, [mapsUrl]);
 
   const clearForm = useCallback(() => {
-    setNote("")
-    setMapsUrl("")
-    setTask("")
-    setReason("Office")
-    setLatitude("")
-    setLongitude("")
-    setImageFile(null)
-    setImagePreview("")
-    setSelectedCustomer(null)
-    setMainError("")
+    setNote("");
+    setMapsUrl("");
+    setTask("");
+    setReason("Office");
+    setLatitude("");
+    setLongitude("");
+    setImageFile(null);
+    setImagePreview("");
+    setSelectedCustomer(null);
+    setMainError("");
     setErrors({
       note: "",
       task: "",
@@ -191,23 +193,23 @@ export default function RenderMarkAttendance({
       customer: "",
       latitude: "",
       longitude: "",
-    })
-  }, [])
+    });
+  }, []);
 
   const handleSubmit = async () => {
-    if (!validate() || !imageFile || !selectedUser) return
+    if (!validate() || !imageFile || !selectedUser) return;
 
-    setSaveLoading(true)
-    setMainError("")
+    setSaveLoading(true);
+    setMainError("");
     try {
-      const base64 = await convertToBase64(imageFile as File)
+      const base64 = await convertToBase64(imageFile as File);
       const form: {
-        note: string
-        task: string
-        image: string
-        reason: string
-        location: [number, number]
-        customer_id?: number | string | null
+        note: string;
+        task: string;
+        image: string;
+        reason: string;
+        location: [number, number];
+        customer_id?: number | string | null;
       } = {
         note: note,
         task: task,
@@ -215,33 +217,33 @@ export default function RenderMarkAttendance({
         reason: reason,
         location: [parseFloat(latitude || "0"), parseFloat(longitude || "0")],
         customer_id: undefined,
-      }
+      };
 
       if (reason === "Visit") {
-        form.customer_id = selectedCustomer
+        form.customer_id = selectedCustomer;
       }
 
-      await axios.post(`/${selectedUser}/attendance`, form)
-      clearForm()
-      onClose()
-      await fetchData()
+      await axios.post(`/${selectedUser}/attendance`, form);
+      clearForm();
+      onClose();
+      await fetchData();
     } catch (error: any) {
-      console.log(error)
+      console.log(error);
       setMainError(
         error?.message ||
           error?.response?.data?.message ||
-          "Failed to submit attendance"
-      )
+          "Failed to submit attendance",
+      );
     } finally {
-      setSaveLoading(false)
+      setSaveLoading(false);
     }
-  }
+  };
 
-  const notAllowed = office ? reason !== "Office" : reason === "Office"
+  const notAllowed = office ? reason !== "Office" : reason === "Office";
 
   function handleClose() {
-    clearForm()
-    onClose()
+    clearForm();
+    onClose();
   }
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -494,24 +496,24 @@ export default function RenderMarkAttendance({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export const convertToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
+    const reader = new FileReader();
 
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(file);
 
     reader.onload = () => {
-      resolve(reader.result as string)
-    }
+      resolve(reader.result as string);
+    };
 
     reader.onerror = (error) => {
-      reject(error)
-    }
-  })
-}
+      reject(error);
+    };
+  });
+};
 
 const extractCoordinatesFromGoogleMapsUrl = (url: string) => {
   const patterns = [
@@ -519,45 +521,45 @@ const extractCoordinatesFromGoogleMapsUrl = (url: string) => {
     /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,
     /q=(-?\d+\.\d+),(-?\d+\.\d+)/,
     /ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
-  ]
+  ];
 
   for (const pattern of patterns) {
-    const match = url.match(pattern)
+    const match = url.match(pattern);
 
     if (match?.[1] && match?.[2]) {
       return {
         latitude: match[1],
         longitude: match[2],
-      }
+      };
     }
   }
 
-  return null
-}
+  return null;
+};
 
 function calculateDistance(lat1: any, lon1: any, lat2: any, lon2: any) {
-  const earthRadius = 6371000 // Earth's radius in meters (approximately)
+  const earthRadius = 6371000; // Earth's radius in meters (approximately)
 
   // Convert latitude and longitude from degrees to radians
-  const lat1Rad = (Math.PI / 180) * lat1
-  const lon1Rad = (Math.PI / 180) * lon1
-  const lat2Rad = (Math.PI / 180) * lat2
-  const lon2Rad = (Math.PI / 180) * lon2
+  const lat1Rad = (Math.PI / 180) * lat1;
+  const lon1Rad = (Math.PI / 180) * lon1;
+  const lat2Rad = (Math.PI / 180) * lat2;
+  const lon2Rad = (Math.PI / 180) * lon2;
 
   // Haversine formula
-  const dLat = lat2Rad - lat1Rad
-  const dLon = lon2Rad - lon1Rad
+  const dLat = lat2Rad - lat1Rad;
+  const dLon = lon2Rad - lon1Rad;
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1Rad) *
       Math.cos(lat2Rad) *
       Math.sin(dLon / 2) *
-      Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   // Calculate the distance
-  const distance = earthRadius * c
+  const distance = earthRadius * c;
 
-  return distance
+  return distance;
 }

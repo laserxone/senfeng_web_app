@@ -1,5 +1,5 @@
-"use client"
-import { Button } from "@/components/ui/button"
+"use client";
+import { Button } from "@/components/ui/button";
 import {
   ArrowUpDown,
   Banknote,
@@ -14,49 +14,49 @@ import {
   Trash,
   UserRound,
   WalletCards,
-} from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
-import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import PageTable from "@/components/shared/tables/app-table"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import PageTable from "@/components/shared/tables/app-table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { TIMEZONE } from "@/constants/data"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import exportToExcel from "@/lib/exportToExcel"
-import { UserReimbursementType } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import moment from "moment"
-import momentT from "moment-timezone"
-import Link from "next/link"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/tooltip";
+import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import exportToExcel from "@/lib/exportToExcel";
+import { UserReimbursementType } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import moment from "moment";
+import momentT from "moment-timezone";
+import Link from "next/link";
+import Spinner from "@/components/ui/spinner";
 
 export default function Page() {
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [data, setData] = useState<UserReimbursementType[]>([])
-  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null)
-  const [visible, setVisible] = useState(false)
-  const [reimbursementVisible, setReimbursementVisible] = useState(false)
-  const [total, setTotal] = useState(0)
-  const { base_route, userID } = useUserDetail()
-  const [resetLoading, setResetLoading] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [selectedItem, setSelectedItem] = useState<number | null>(null)
-  const [deleteItem, setDeleteItem] = useState<number | null>(null)
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<UserReimbursementType[]>([]);
+  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [reimbursementVisible, setReimbursementVisible] = useState(false);
+  const [total, setTotal] = useState(0);
+  const { base_route, userID } = useUserDetail();
+  const [resetLoading, setResetLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<number | null>(null);
+  const [deleteItem, setDeleteItem] = useState<number | null>(null);
 
   useEffect(() => {
     if (userID) {
@@ -65,41 +65,41 @@ export default function Page() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      fetchData(startDate, endDate)
+        .toISOString();
+      fetchData(startDate, endDate);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(
     startDate: string,
     endDate: string,
-    user: null | number = null
+    user: null | number = null,
   ) {
     return new Promise((resolve, reject) => {
       axios
         .get(
           `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
             user || ""
-          }`
+          }`,
         )
         .then((response) => {
-          setData(response.data)
-          resolve(true)
+          setData(response.data);
+          resolve(true);
         })
         .catch((e) => {
-          console.log(e)
-          reject(null)
+          console.log(e);
+          reject(null);
         })
         .finally(() => {
-          setLoading(false)
-        })
-    })
+          setLoading(false);
+        });
+    });
   }
 
   const columns: ColumnDef<UserReimbursementType>[] = [
@@ -115,7 +115,7 @@ export default function Page() {
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -166,10 +166,10 @@ export default function Page() {
             Purpose
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        return <div className="ml-2">{row.getValue("title")}</div>
+        return <div className="ml-2">{row.getValue("title")}</div>;
       },
     },
 
@@ -185,10 +185,10 @@ export default function Page() {
             Customer
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
         if (currentItem.customer_id)
           return (
             <Link
@@ -202,7 +202,7 @@ export default function Page() {
                 {row.getValue("customer")}
               </div>
             </Link>
-          )
+          );
       },
     },
 
@@ -218,12 +218,12 @@ export default function Page() {
             Manager
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
         if (currentItem.ownership_id)
-          return <div className="ml-2">{row.getValue("ownership_name")}</div>
+          return <div className="ml-2">{row.getValue("ownership_name")}</div>;
       },
     },
 
@@ -239,7 +239,7 @@ export default function Page() {
             Submitted By
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">{row.getValue("submitted_by_name")}</div>
@@ -258,7 +258,7 @@ export default function Page() {
             City
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("city")}</div>,
     },
@@ -274,7 +274,7 @@ export default function Page() {
             Amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -291,7 +291,7 @@ export default function Page() {
             Description
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
@@ -300,9 +300,9 @@ export default function Page() {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const currentItem = row.original
-        const isVerifying = selectedItem === currentItem?.id
-        const isDeleting = deleteItem === currentItem?.id
+        const currentItem = row.original;
+        const isVerifying = selectedItem === currentItem?.id;
+        const isDeleting = deleteItem === currentItem?.id;
 
         return (
           <div className="inline-flex flex-col items-center gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 shadow-sm">
@@ -313,8 +313,8 @@ export default function Page() {
               disabled={isVerifying || isDeleting}
               aria-label="Verify reimbursement"
               onClick={(e) => {
-                e.stopPropagation()
-                handleVerify(currentItem?.id)
+                e.stopPropagation();
+                handleVerify(currentItem?.id);
               }}
             >
               {isVerifying ? (
@@ -332,8 +332,8 @@ export default function Page() {
               disabled={isDeleting || isVerifying}
               aria-label="Delete reimbursement"
               onClick={(e) => {
-                e.stopPropagation()
-                handleDelete(currentItem?.id)
+                e.stopPropagation();
+                handleDelete(currentItem?.id);
               }}
             >
               {isDeleting ? (
@@ -344,68 +344,68 @@ export default function Page() {
               Delete
             </Button>
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleVerify(id: number) {
-    if (!id) return
+    if (!id) return;
 
-    setSelectedItem(id)
+    setSelectedItem(id);
     try {
       await axios.put(`/${userID}/reimbursement/${id}`, {
         verified: true,
-      })
+      });
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      await fetchData(startDate, endDate)
+        .toISOString();
+      await fetchData(startDate, endDate);
     } finally {
-      setSelectedItem(null)
+      setSelectedItem(null);
     }
   }
 
   async function handleDelete(id: number) {
-    if (!id) return
+    if (!id) return;
 
-    setDeleteItem(id)
+    setDeleteItem(id);
     try {
-      await axios.delete(`/${userID}/reimbursement/${id}`)
+      await axios.delete(`/${userID}/reimbursement/${id}`);
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      await fetchData(startDate, endDate)
+        .toISOString();
+      await fetchData(startDate, endDate);
     } finally {
-      setDeleteItem(null)
+      setDeleteItem(null);
     }
   }
 
   useEffect(() => {
-    let localTotal = 0
+    let localTotal = 0;
     data.forEach((item) => {
-      localTotal = localTotal + Number(item.amount)
-    })
-    setTotal(localTotal)
-  }, [data])
+      localTotal = localTotal + Number(item.amount);
+    });
+    setTotal(localTotal);
+  }, [data]);
 
   return (
     <div className="flex flex-1 flex-col gap-5">
@@ -476,8 +476,8 @@ export default function Page() {
           columns={columns}
           data={data}
           onRowClick={(val) => {
-            setImageURL(val)
-            setVisible(true)
+            setImageURL(val);
+            setVisible(true);
           }}
           download
           filter
@@ -485,21 +485,21 @@ export default function Page() {
           resetLoading={resetLoading}
           onFilterPress={() => setFilterVisible(true)}
           onResetPress={async () => {
-            setResetLoading(true)
+            setResetLoading(true);
             const startDate = momentT
               .tz(TIMEZONE)
               .startOf("month")
               .startOf("day")
               .utc()
-              .toISOString()
+              .toISOString();
             const endDate = momentT
               .tz(TIMEZONE)
               .endOf("month")
               .endOf("day")
               .utc()
-              .toISOString()
-            await fetchData(startDate, endDate)
-            setResetLoading(false)
+              .toISOString();
+            await fetchData(startDate, endDate);
+            setResetLoading(false);
           }}
         />
       </section>
@@ -513,15 +513,15 @@ export default function Page() {
             .startOf("month")
             .startOf("day")
             .utc()
-            .toISOString()
+            .toISOString();
           const endDate = momentT
             .tz(TIMEZONE)
             .endOf("month")
             .endOf("day")
             .utc()
-            .toISOString()
-          await fetchData(startDate, endDate)
-          setReimbursementVisible(false)
+            .toISOString();
+          await fetchData(startDate, endDate);
+          setReimbursementVisible(false);
         }}
       />
 
@@ -530,7 +530,7 @@ export default function Page() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user)
+          await fetchData(val.start, val.end, val.user);
         }}
       />
       <ImageSheet
@@ -541,13 +541,13 @@ export default function Page() {
         submittedBy={imageURL?.submitted_by_name || null}
         id={imageURL?.id || null}
         onRefresh={async (id) => {
-          const tempData = [...data.filter((item) => item.id !== id)]
-          setData([...tempData])
-          return true
+          const tempData = [...data.filter((item) => item.id !== id)];
+          setData([...tempData]);
+          return true;
         }}
       />
     </div>
-  )
+  );
 }
 const ImageSheet = ({
   visible,
@@ -558,30 +558,30 @@ const ImageSheet = ({
   id,
   onRefresh,
 }: {
-  visible: boolean
-  onClose: () => void
-  img: string | null
-  submittedBy: string | null
-  description: string | null
-  id: number | null
-  onRefresh: (id: number) => void
+  visible: boolean;
+  onClose: () => void;
+  img: string | null;
+  submittedBy: string | null;
+  description: string | null;
+  id: number | null;
+  onRefresh: (id: number) => void;
 }) => {
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const handleClose = useCallback(() => {
-    onClose()
-  }, [onClose])
+    onClose();
+  }, [onClose]);
 
   async function handleDelete() {
-    if (!id) return
+    if (!id) return;
 
     try {
-      await axios.delete(`/${userID}/reimbursement/${id}`)
-      onRefresh(id)
+      await axios.delete(`/${userID}/reimbursement/${id}`);
+      onRefresh(id);
     } finally {
-      setDeleteLoading(false)
-      handleClose()
+      setDeleteLoading(false);
+      handleClose();
     }
   }
 
@@ -644,9 +644,9 @@ const ImageSheet = ({
                 // e.stopPropagation()
                 // setSelectedCustomerId(currentItem?.id);
                 // setShowConfirmation(true);
-                if (!id) return
-                setDeleteLoading(true)
-                handleDelete()
+                if (!id) return;
+                setDeleteLoading(true);
+                handleDelete();
               }}
             >
               {deleteLoading ? (
@@ -660,5 +660,5 @@ const ImageSheet = ({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};

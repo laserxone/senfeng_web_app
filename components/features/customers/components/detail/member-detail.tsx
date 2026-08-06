@@ -1,8 +1,8 @@
-"use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+"use client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
-import axios from "@/lib/axios"
+import axios from "@/lib/axios";
 import {
   Calendar,
   CircleDollarSign,
@@ -17,28 +17,28 @@ import {
   Trash2,
   UserRound,
   Wrench,
-} from "lucide-react"
-import { useRouter } from "next/navigation"
-import { ReactNode, useCallback, useEffect, useState } from "react"
-import { FaWhatsapp } from "react-icons/fa"
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ReactNode, useCallback, useEffect, useState } from "react";
+import { FaWhatsapp } from "react-icons/fa";
 
-import CustomerTask from "@/components/features/customer-relations/customer-task"
-import VisitTab from "@/components/features/customer-relations/visit-tab"
-import EditCustomerDialog from "@/components/features/customers/components/edit customer"
-import AddMachine from "@/components/features/machines/add-machine"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
+import CustomerTask from "@/components/features/customer-relations/customer-task";
+import VisitTab from "@/components/features/customer-relations/visit-tab";
+import EditCustomerDialog from "@/components/features/customers/components/edit customer";
+import AddMachine from "@/components/features/machines/add-machine";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/components/ui/accordion";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Timeline,
   TimelineDescription,
@@ -46,20 +46,20 @@ import {
   TimelineItem,
   TimelineTime,
   TimelineTitle,
-} from "@/components/ui/timeline"
-import useUserDetail from "@/hooks/use-user-detail"
-import { debounce } from "@/lib/debounce"
-import { GetProfileImage } from "@/lib/getProfileImage"
+} from "@/components/ui/timeline";
+import useUserDetail from "@/hooks/use-user-detail";
+import { debounce } from "@/lib/debounce";
+import { GetProfileImage } from "@/lib/getProfileImage";
 
-import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback"
-import AddParts from "@/components/features/machines/add-parts"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
+import AddParts from "@/components/features/machines/add-parts";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { useIsMobile } from "@/hooks/use-mobile"
+} from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   CustomerFeedbackProps,
   CustomerTaskProps,
@@ -67,35 +67,35 @@ import {
   MachineProps,
   MyCustomer,
   PartsProps,
-} from "@/lib/types"
-import { Scrollbar } from "@radix-ui/react-scroll-area"
-import { CheckCircle, Clock } from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { buildStyles, CircularProgressbar } from "react-circular-progressbar"
-import "react-circular-progressbar/dist/styles.css"
-import { toast } from "sonner"
-import InvoiceDetails from "./invoice-details"
+} from "@/lib/types";
+import { Scrollbar } from "@radix-ui/react-scroll-area";
+import { CheckCircle, Clock } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+import { toast } from "sonner";
+import InvoiceDetails from "./invoice-details";
 
 type MemberDetailProps = {
-  ownership?: boolean
-  from?: any
-  customer_id?: any
-  onReturn?: (a: number, b?: string) => void
-  onLoading?: (val: boolean) => void
-  route?: any
-  height?: string
-}
+  ownership?: boolean;
+  from?: any;
+  customer_id?: any;
+  onReturn?: (a: number, b?: string) => void;
+  onLoading?: (val: boolean) => void;
+  route?: any;
+  height?: string;
+};
 
 type LocalCustomerDetailProps = Omit<MyCustomer, "machines"> & {
-  bill_received: number
-  bill_total: number
-  profile_completion: number
-  lead_name?: string
-  parts: PartsProps[]
-  machines: MachineProps[]
-  missing_fields: string[]
-}
+  bill_received: number;
+  bill_total: number;
+  profile_completion: number;
+  lead_name?: string;
+  parts: PartsProps[];
+  machines: MachineProps[];
+  missing_fields: string[];
+};
 
 export default function MemberDetail({
   ownership = false,
@@ -106,92 +106,92 @@ export default function MemberDetail({
   route,
   height,
 }: MemberDetailProps) {
-  const [data, setData] = useState<LocalCustomerDetailProps | null>(null)
-  const { userID, designation, base_route } = useUserDetail()
-  const [feedback, setFeedback] = useState<CustomerFeedbackProps[]>([])
-  const [editVisible, setEditVisible] = useState(false)
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [data, setData] = useState<LocalCustomerDetailProps | null>(null);
+  const { userID, designation, base_route } = useUserDetail();
+  const [feedback, setFeedback] = useState<CustomerFeedbackProps[]>([]);
+  const [editVisible, setEditVisible] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const router = useRouter()
-  const [visitData, setVisitData] = useState<CustomerVisitProps[]>([])
-  const [profileCompletion, setProfileCompletion] = useState(0)
-  const [taskData, setTaskData] = useState<CustomerTaskProps[]>([])
-  const [activeTab, setActiveTab] = useState("timeline")
-  const isMobile = useIsMobile()
+  const router = useRouter();
+  const [visitData, setVisitData] = useState<CustomerVisitProps[]>([]);
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [taskData, setTaskData] = useState<CustomerTaskProps[]>([]);
+  const [activeTab, setActiveTab] = useState("timeline");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (customer_id && userID) {
-      debouncedFetchCustomerData()
+      debouncedFetchCustomerData();
     }
-  }, [userID, customer_id])
+  }, [userID, customer_id]);
 
   const debouncedFetchCustomerData = debounce(() => {
-    fetchCustomerTask()
-    fetchCustomerVisit()
-    fetchCustomerFeedback()
-    fetchCustomerDashboard()
-  }, 500)
+    fetchCustomerTask();
+    fetchCustomerVisit();
+    fetchCustomerFeedback();
+    fetchCustomerDashboard();
+  }, 500);
 
   async function fetchCustomerTask() {
     axios.get(`/${userID}/customer/${customer_id}/task`).then((response) => {
-      setTaskData(response.data)
-    })
+      setTaskData(response.data);
+    });
   }
   async function fetchCustomerVisit() {
     axios.get(`/${userID}/customer/${customer_id}/visit`).then((response) => {
-      setVisitData(response.data)
-    })
+      setVisitData(response.data);
+    });
   }
   async function fetchCustomerFeedback() {
     axios
       .get(`/${userID}/customer/${customer_id}/feedback`)
       .then((response) => {
-        setFeedback(response.data)
-      })
+        setFeedback(response.data);
+      });
   }
 
   async function fetchCustomerDashboard() {
     if (onLoading) {
-      onLoading(true)
+      onLoading(true);
     }
 
     try {
       const response = await axios.get(
-        `/${userID}/customer/${customer_id}/dashboard`
-      )
-      const data = response.data.customer
-      setData(data)
+        `/${userID}/customer/${customer_id}/dashboard`,
+      );
+      const data = response.data.customer;
+      setData(data);
 
-      const customerCompletion = Number(data.profile_completion) || 0
+      const customerCompletion = Number(data.profile_completion) || 0;
       const machines: MachineProps & { percentage_completion: number }[] =
-        data.machines || []
+        data.machines || [];
 
       const totalMachineCompletion = machines.reduce(
         (sum, item) => sum + Number(item.percentage_completion || 0),
-        0
-      )
+        0,
+      );
 
       const overallCompletion =
-        (customerCompletion + totalMachineCompletion) / (machines.length + 1)
-      setProfileCompletion(Number(overallCompletion.toFixed(0)))
+        (customerCompletion + totalMachineCompletion) / (machines.length + 1);
+      setProfileCompletion(Number(overallCompletion.toFixed(0)));
     } finally {
-      if (onLoading) onLoading(false)
+      if (onLoading) onLoading(false);
     }
   }
 
   async function handleDelete(id: number | undefined) {
-    if (!id) return
-    setDeleteLoading(true)
+    if (!id) return;
+    setDeleteLoading(true);
     try {
-      await axios.delete(`/${userID}/customer/${id}`)
-      toast.success("Customer Deleted")
+      await axios.delete(`/${userID}/customer/${id}`);
+      toast.success("Customer Deleted");
 
-      router.push(`/${base_route}/${from}`)
+      router.push(`/${base_route}/${from}`);
     } finally {
-      setDeleteLoading(false)
-      setShowConfirmation(false)
-      setData(null)
+      setDeleteLoading(false);
+      setShowConfirmation(false);
+      setData(null);
     }
   }
 
@@ -214,8 +214,8 @@ export default function MemberDetail({
         height={height}
         onRefresh={fetchCustomerVisit}
       />
-    )
-  }, [visitData, customer_id, height])
+    );
+  }, [visitData, customer_id, height]);
 
   const RenderTaskTab = useCallback(() => {
     return (
@@ -230,8 +230,8 @@ export default function MemberDetail({
           />
         </CardContent>
       </Card>
-    )
-  }, [taskData, customer_id])
+    );
+  }, [taskData, customer_id]);
 
   const RenderFeedbackTabs = useCallback(() => {
     return (
@@ -242,11 +242,11 @@ export default function MemberDetail({
         data={feedback || []}
         onRefresh={fetchCustomerDashboard}
       />
-    )
-  }, [data, feedback])
+    );
+  }, [data, feedback]);
 
-  const hasMissingFields = !!data?.missing_fields?.length
-  const isProfileIncomplete = profileCompletion < 100
+  const hasMissingFields = !!data?.missing_fields?.length;
+  const isProfileIncomplete = profileCompletion < 100;
 
   return (
     <div className="flex w-full flex-col pb-2">
@@ -259,12 +259,12 @@ export default function MemberDetail({
               if (data?.id) {
                 if (designation === "Sales" || designation === "Engineer") {
                   if (data?.ownership === userID) {
-                    setEditVisible(true)
+                    setEditVisible(true);
                   } else {
-                    toast.error("You are not authorized to edit this member")
+                    toast.error("You are not authorized to edit this member");
                   }
                 } else {
-                  setEditVisible(true)
+                  setEditVisible(true);
                 }
               }
             }}
@@ -431,7 +431,7 @@ export default function MemberDetail({
         onPressCancel={() => setShowConfirmation(false)}
       />
     </div>
-  )
+  );
 }
 
 const ProfilePicture = ({
@@ -439,27 +439,27 @@ const ProfilePicture = ({
   name,
   onClick,
 }: {
-  img?: string
-  name?: string
-  onClick: () => void
+  img?: string;
+  name?: string;
+  onClick: () => void;
 }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
-  const [hover, setHover] = useState(false)
+  const [localImage, setLocalImage] = useState<string | null>(null);
+  const [hover, setHover] = useState(false);
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img)
+        setLocalImage(img);
       } else {
-        const imgResult = await GetProfileImage(img)
-        setLocalImage(imgResult)
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
       }
     }
 
     if (img) {
-      fetchImage()
+      fetchImage();
     }
-  }, [img])
+  }, [img]);
 
   return (
     <div
@@ -483,15 +483,15 @@ const ProfilePicture = ({
         <Wrench className="h-5 w-5 text-white" />
       </div>
     </div>
-  )
-}
+  );
+};
 
 const ClientCard = ({ data }: { data: LocalCustomerDetailProps | null }) => {
-  if (!data) return
-  const joinedNumber = data?.number?.join(", ") || "N/A"
+  if (!data) return;
+  const joinedNumber = data?.number?.join(", ") || "N/A";
   const createdAt = data?.created_at
     ? moment(data.created_at).format("YYYY-MM-DD hh:mm A")
-    : "N/A"
+    : "N/A";
 
   return (
     <Card className="w-full rounded-2xl bg-white p-6 text-zinc-800 shadow-xl dark:bg-zinc-900 dark:text-white">
@@ -537,17 +537,17 @@ const ClientCard = ({ data }: { data: LocalCustomerDetailProps | null }) => {
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 const InfoRow = ({
   icon,
   label,
   link,
 }: {
-  icon: ReactNode
-  label: string
-  link?: string
+  icon: ReactNode;
+  label: string;
+  link?: string;
 }) => (
   <div className="flex items-center gap-3 text-sm">
     <div className="text-muted-foreground">{icon}</div>
@@ -559,16 +559,16 @@ const InfoRow = ({
       <span>{label}</span>
     )}
   </div>
-)
+);
 
 const BillingInformation = ({
   total,
   received,
   balance,
 }: {
-  total: number | undefined
-  received: number | undefined
-  balance: number
+  total: number | undefined;
+  received: number | undefined;
+  balance: number;
 }) => {
   return (
     <div className="mt-4 w-full rounded-lg bg-gray-100 p-4 shadow-sm sm:w-auto dark:bg-gray-800 dark:text-white">
@@ -600,11 +600,11 @@ const BillingInformation = ({
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
 function AboutTab({ data }: { data: LocalCustomerDetailProps | null }) {
-  return <ClientCard data={data} />
+  return <ClientCard data={data} />;
 }
 
 function CustomersTab({
@@ -615,37 +615,39 @@ function CustomersTab({
   onReturn,
   route,
 }: {
-  data?: MachineProps[] | []
-  customer_id?: number
-  user_id: number | string
-  onRefresh: () => Promise<void>
-  onReturn?: (a: number, b?: string) => void
-  route: string
+  data?: MachineProps[] | [];
+  customer_id?: number;
+  user_id: number | string;
+  onRefresh: () => Promise<void>;
+  onReturn?: (a: number, b?: string) => void;
+  route: string;
 }) {
-  const [visible, setVisible] = useState(false)
-  const [visibleParts, setVisibleParts] = useState(false)
-  const { base_route } = useUserDetail()
+  const [visible, setVisible] = useState(false);
+  const [visibleParts, setVisibleParts] = useState(false);
+  const { base_route } = useUserDetail();
   const machineCount =
-    data?.filter((item) => item.type === "Machine").length || 0
-  const partsCount = data?.filter((item) => item.type !== "Machine").length || 0
+    data?.filter((item) => item.type === "Machine").length || 0;
+  const partsCount =
+    data?.filter((item) => item.type !== "Machine").length || 0;
   const totalValue =
-    data?.reduce((sum, item) => sum + Number(item.price || 0), 0) || 0
+    data?.reduce((sum, item) => sum + Number(item.price || 0), 0) || 0;
 
   const RenderEachMachine = ({
     machine,
     index,
   }: {
     machine: MachineProps & {
-      percentage_completion?: number
-    }
-    index: number
+      percentage_completion?: number;
+    };
+    index: number;
   }) => {
     const totalPayments = machine?.payments
       .filter((item) => item.clearance_date)
-      ?.reduce((sum, payment) => sum + Number(payment.amount), 0)
-    const total = Number(machine.price || 0)
-    const paymentComplete = Number(machine.price) === totalPayments
-    const fullyReady = paymentComplete && machine?.percentage_completion === 100
+      ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const total = Number(machine.price || 0);
+    const paymentComplete = Number(machine.price) === totalPayments;
+    const fullyReady =
+      paymentComplete && machine?.percentage_completion === 100;
     return (
       <AccordionItem
         key={machine.id}
@@ -725,7 +727,7 @@ function CustomersTab({
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                          "en-GB"
+                          "en-GB",
                         )
                       : "N/A"
                   }
@@ -745,24 +747,25 @@ function CustomersTab({
           </AccordionContent>
         </Card>
       </AccordionItem>
-    )
-  }
+    );
+  };
 
   const RenderEachPart = ({
     machine,
     index,
   }: {
     machine: MachineProps & {
-      percentage_completion?: number
-    }
-    index: number
+      percentage_completion?: number;
+    };
+    index: number;
   }) => {
     const totalPayments = machine?.payments
       .filter((item) => item.clearance_date)
-      ?.reduce((sum, payment) => sum + Number(payment.amount), 0)
-    const total = Number(machine.price || 0)
-    const paymentComplete = Number(machine.price) === totalPayments
-    const fullyReady = paymentComplete && machine?.percentage_completion === 100
+      ?.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const total = Number(machine.price || 0);
+    const paymentComplete = Number(machine.price) === totalPayments;
+    const fullyReady =
+      paymentComplete && machine?.percentage_completion === 100;
     return (
       <AccordionItem
         key={machine.id}
@@ -832,7 +835,7 @@ function CustomersTab({
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                          "en-GB"
+                          "en-GB",
                         )
                       : "N/A"
                   }
@@ -852,8 +855,8 @@ function CustomersTab({
           </AccordionContent>
         </Card>
       </AccordionItem>
-    )
-  }
+    );
+  };
 
   return (
     <Card className="flex flex-1 overflow-hidden border-0 bg-white p-0 shadow-sm ring-1 ring-slate-200/80 dark:bg-zinc-950 dark:ring-white/10">
@@ -913,14 +916,14 @@ function CustomersTab({
                     machine={machine}
                     index={index + 1}
                   />
-                )
+                ),
               )}
             </Accordion>
           )}
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function CompactDetail({ label, value }: { label: string; value: ReactNode }) {
@@ -931,7 +934,7 @@ function CompactDetail({ label, value }: { label: string; value: ReactNode }) {
       </p>
       <div className="mt-0.5 truncate text-sm font-medium">{value}</div>
     </div>
-  )
+  );
 }
 
 function FeedbackTab({
@@ -941,34 +944,34 @@ function FeedbackTab({
   onRefresh,
   type,
 }: {
-  userID: number | string
-  customerID: number
-  data: CustomerFeedbackProps[]
-  onRefresh: () => Promise<void>
-  type: string
+  userID: number | string;
+  customerID: number;
+  data: CustomerFeedbackProps[];
+  onRefresh: () => Promise<void>;
+  type: string;
 }) {
-  const [selectedDelete, setSelectedDelete] = useState<number | null>(null)
-  const [open, setOpen] = useState(false)
+  const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
 
   const [localData] = useState(
     data
       .filter((item) => item?.type === type)
       .sort(
         (a, b) =>
-          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf()
-      )
-  )
+          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf(),
+      ),
+  );
 
   async function handleDelete(id: number) {
-    setSelectedDelete(id)
+    setSelectedDelete(id);
     axios
       .delete(`/${userID}/feedback/${id}`)
       .then(async () => {
-        await onRefresh()
+        await onRefresh();
       })
       .finally(() => {
-        setSelectedDelete(null)
-      })
+        setSelectedDelete(null);
+      });
   }
 
   return (
@@ -1015,7 +1018,7 @@ function FeedbackTab({
                     <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
                       {moment(new Date(item.created_at)).format(
-                        "YYYY-MM-DD hh:mm A"
+                        "YYYY-MM-DD hh:mm A",
                       )}
                     </span>
                   </div>
@@ -1068,7 +1071,7 @@ function FeedbackTab({
                     <span className="font-medium">Next</span>
                     <span>
                       {moment(new Date(item.next_followup)).format(
-                        "YYYY-MM-DD"
+                        "YYYY-MM-DD",
                       )}
                     </span>
                   </div>
@@ -1087,19 +1090,19 @@ function FeedbackTab({
         customer_id={customerID}
       />
     </div>
-  )
+  );
 }
 
 const BillingInformationMachine = ({
   payment,
 }: {
-  payment: [number, number]
+  payment: [number, number];
 }) => {
-  const formattedTotal = <CurrencyFormatter amount={payment[0]} />
-  const formattedReceived = <CurrencyFormatter amount={payment[1]} />
+  const formattedTotal = <CurrencyFormatter amount={payment[0]} />;
+  const formattedReceived = <CurrencyFormatter amount={payment[1]} />;
   const formattedBalance = (
     <CurrencyFormatter amount={(payment[0] || 0) - (payment[1] || 0)} />
-  )
+  );
 
   return (
     <div className="mt-4 rounded-lg bg-gray-100 p-4 shadow-sm dark:bg-gray-800 dark:text-white">
@@ -1128,8 +1131,8 @@ const BillingInformationMachine = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const RenderTimeline = ({
   feedbackData,
@@ -1138,18 +1141,18 @@ const RenderTimeline = ({
   customerDetail,
   height,
 }: {
-  feedbackData: CustomerFeedbackProps[]
-  visitData: CustomerVisitProps[]
-  taskData: CustomerTaskProps[]
-  customerDetail: LocalCustomerDetailProps | null
-  height?: string
+  feedbackData: CustomerFeedbackProps[];
+  visitData: CustomerVisitProps[];
+  taskData: CustomerTaskProps[];
+  customerDetail: LocalCustomerDetailProps | null;
+  height?: string;
 }) => {
   const [timelineData, setTimelineData] = useState<
     { id: string; time: string; title: string; description: string }[]
-  >([])
+  >([]);
 
   useEffect(() => {
-    const localData: any[] = []
+    const localData: any[] = [];
 
     taskData.forEach((task) => {
       localData.push({
@@ -1157,8 +1160,8 @@ const RenderTimeline = ({
         title: `Task: ${task.task_name.split("-")[0]}`,
         description: `Task assigned to ${task.user_name}`,
         time: task.created_at,
-      })
-    })
+      });
+    });
 
     visitData.forEach((visit) => {
       localData.push({
@@ -1168,8 +1171,8 @@ const RenderTimeline = ({
           visit?.solution || "Nil"
         } Note: ${visit.note}`,
         time: visit.created_at,
-      })
-    })
+      });
+    });
 
     feedbackData.forEach((feedback) => {
       localData.push({
@@ -1177,8 +1180,8 @@ const RenderTimeline = ({
         title: `Feedback taken by ${feedback.user_name}`,
         description: `${feedback.feedback}`,
         time: feedback.created_at,
-      })
-    })
+      });
+    });
 
     if (customerDetail) {
       customerDetail?.machines?.forEach((machine) => {
@@ -1192,7 +1195,7 @@ const RenderTimeline = ({
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
-          })
+          });
 
           machine.payments?.forEach((payment) => {
             localData.push({
@@ -1208,8 +1211,8 @@ const RenderTimeline = ({
                   : "Pending"
               }`,
               time: payment.transaction_date,
-            })
-          })
+            });
+          });
         } else {
           localData.push({
             id: `machine-${machine.id}`,
@@ -1222,7 +1225,7 @@ const RenderTimeline = ({
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
-          })
+          });
 
           machine.payments?.forEach((payment) => {
             localData.push({
@@ -1238,10 +1241,10 @@ const RenderTimeline = ({
                   : "Pending"
               }`,
               time: payment.transaction_date,
-            })
-          })
+            });
+          });
         }
-      })
+      });
 
       localData.push({
         id: `customer-${customerDetail.id}`,
@@ -1250,28 +1253,28 @@ const RenderTimeline = ({
           customerDetail.owner || "Nil"
         }, Location: ${customerDetail.location}`,
         time: customerDetail.created_at,
-      })
+      });
     }
 
     localData.sort((a, b) => {
-      const dateA = moment(a.time)
-      const dateB = moment(b.time)
+      const dateA = moment(a.time);
+      const dateB = moment(b.time);
 
-      if (dateA.isBefore(dateB)) return 1
-      if (dateA.isAfter(dateB)) return -1
+      if (dateA.isBefore(dateB)) return 1;
+      if (dateA.isAfter(dateB)) return -1;
 
       // Same date: prioritize by type
       const getPriority = (id: string) => {
-        if (id.startsWith("payment-")) return 1
-        if (id.startsWith("machine-")) return 2
-        return 3
-      }
+        if (id.startsWith("payment-")) return 1;
+        if (id.startsWith("machine-")) return 2;
+        return 3;
+      };
 
-      return getPriority(a.id) - getPriority(b.id)
-    })
+      return getPriority(a.id) - getPriority(b.id);
+    });
 
-    setTimelineData(localData)
-  }, [feedbackData, visitData, taskData, customerDetail])
+    setTimelineData(localData);
+  }, [feedbackData, visitData, taskData, customerDetail]);
 
   return (
     <Card className="flex flex-1 self-center rounded-2xl p-4 shadow-lg">
@@ -1309,15 +1312,15 @@ const RenderTimeline = ({
         ))}
       </Timeline>
     </Card>
-  )
-}
+  );
+};
 
 const PartsTab = ({
   data,
   height,
 }: {
-  data?: PartsProps[]
-  height?: string
+  data?: PartsProps[];
+  height?: string;
 }) => {
   return (
     <Card className="flex flex-1 border-0 p-0">
@@ -1335,10 +1338,11 @@ const PartsTab = ({
         </CardContent>
       )}
     </Card>
-  )
-}
+  );
+};
 
 function toMyCustomer(data: LocalCustomerDetailProps): MyCustomer {
-  const { bill_received, bill_total, profile_completion, parts, ...rest } = data
-  return { ...rest, machines: [""] }
+  const { bill_received, bill_total, profile_completion, parts, ...rest } =
+    data;
+  return { ...rest, machines: [""] };
 }

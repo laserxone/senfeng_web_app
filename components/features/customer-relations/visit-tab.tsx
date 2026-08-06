@@ -1,19 +1,19 @@
-import AddCustomerDialog from "@/components/features/customers/components/add-customer"
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+import AddCustomerDialog from "@/components/features/customers/components/add-customer";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
   MachineProps,
   MyCustomer,
   PartsProps,
   SalesVisitTypes,
-} from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { zodResolver } from "@hookform/resolvers/zod"
+} from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CalendarDays,
   Camera,
@@ -29,19 +29,19 @@ import {
   Sparkles,
   Trash2,
   UserRound,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { ReactNode, useEffect, useMemo, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
-import Spinner from "@/components/ui/spinner"
-import FilterSheet from "@/components/features/users/filter-sheet"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
+import FilterSheet from "@/components/features/users/filter-sheet";
 
 const formSchema = z.object({
   note: z.string().min(1, "Note cannot be empty"),
@@ -51,33 +51,33 @@ const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone is required"),
   company: z.string().min(1, "Company is required"),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 type LocalCustomerDetailProps = Omit<MyCustomer, "machines"> & {
-  bill_received: number
-  bill_total: number
-  profile_completion: number
-  lead_name?: string
-  parts: PartsProps[]
-  machines: MachineProps[]
-}
+  bill_received: number;
+  bill_total: number;
+  profile_completion: number;
+  lead_name?: string;
+  parts: PartsProps[];
+  machines: MachineProps[];
+};
 
 type VisitTabProps = {
-  id: number | null | string
-  data: SalesVisitTypes[]
-  onRefresh: () => Promise<void>
+  id: number | null | string;
+  data: SalesVisitTypes[];
+  onRefresh: () => Promise<void>;
   customer_data?: {
-    id?: number
-    location?: string
-    owner?: string
-    number?: string[]
-    name?: string
-  } | null
-  height?: string
-  onFetchData?: (a: string, b: string, c?: number) => Promise<void>
-}
+    id?: number;
+    location?: string;
+    owner?: string;
+    number?: string[];
+    name?: string;
+  } | null;
+  height?: string;
+  onFetchData?: (a: string, b: string, c?: number) => Promise<void>;
+};
 export default function VisitTab({
   id,
   data,
@@ -85,22 +85,22 @@ export default function VisitTab({
   customer_data,
   onFetchData,
 }: VisitTabProps) {
-  const [loading, setLoading] = useState(false)
-  const [addCustomer, setAddCustomer] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [addCustomer, setAddCustomer] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
-    null
-  )
-  const { userID, designation, base_route, route_branch } = useUserDetail()
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [selectedDelete, setSelectedDelete] = useState<number | null>(null)
+    null,
+  );
+  const { userID, designation, base_route, route_branch } = useUserDetail();
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
   const feedbacks = useMemo(
     () =>
       [...(data || [])].sort(
         (a, b) =>
-          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf()
+          moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf(),
       ),
-    [data]
-  )
+    [data],
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -113,73 +113,73 @@ export default function VisitTab({
       phone: "",
       company: "",
     },
-  })
+  });
 
   useEffect(() => {
     if (customer_data?.id) {
-      setSelectedCustomer({ id: customer_data.id })
-      form.setValue("city", customer_data?.location || "")
-      form.setValue("name", customer_data?.owner || "")
+      setSelectedCustomer({ id: customer_data.id });
+      form.setValue("city", customer_data?.location || "");
+      form.setValue("name", customer_data?.owner || "");
       form.setValue(
         "phone",
-        customer_data.number ? customer_data?.number?.join(", ") : ""
-      )
-      form.setValue("company", customer_data?.name || "")
+        customer_data.number ? customer_data?.number?.join(", ") : "",
+      );
+      form.setValue("company", customer_data?.name || "");
     }
-  }, [customer_data])
+  }, [customer_data]);
 
   const onSubmit = async (values: FormValues) => {
-    setLoading(true)
+    setLoading(true);
     try {
       if (values.image) {
         const name = `${route_branch}/customer/${selectedCustomer?.id}/visit/${moment()
           .valueOf()
-          .toString()}.png`
-        await UploadImage(values.image, name)
+          .toString()}.png`;
+        await UploadImage(values.image, name);
         await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           image: name,
           customer_id: selectedCustomer?.id,
-        })
-        await onRefresh()
-        form.reset()
+        });
+        await onRefresh();
+        form.reset();
         setSelectedCustomer(
-          customer_data?.id ? { id: customer_data?.id } : null
-        )
-        setLoading(false)
+          customer_data?.id ? { id: customer_data?.id } : null,
+        );
+        setLoading(false);
       } else {
         await axios.post(`/${id}/visit`, {
           ...values,
           user_id: id,
           customer_id: selectedCustomer?.id,
-        })
-        await onRefresh()
-        form.reset()
+        });
+        await onRefresh();
+        form.reset();
         setSelectedCustomer(
-          customer_data?.id ? { id: customer_data?.id } : null
-        )
-        setLoading(false)
+          customer_data?.id ? { id: customer_data?.id } : null,
+        );
+        setLoading(false);
       }
     } catch (error) {
-      console.log(error)
-      setLoading(false)
+      console.log(error);
+      setLoading(false);
     }
-  }
+  };
 
   async function handleDelete(item: SalesVisitTypes) {
     try {
-      setSelectedDelete(item.id)
+      setSelectedDelete(item.id);
       axios
         .delete(`/${userID}/visit/${item.id}`)
         .then(async () => {
-          await onRefresh()
+          await onRefresh();
         })
         .finally(() => {
-          setSelectedDelete(null)
-        })
+          setSelectedDelete(null);
+        });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -211,7 +211,7 @@ export default function VisitTab({
             </div>
             <form
               onSubmit={form.handleSubmit(onSubmit, (err) => {
-                console.log("Validation Errors", err)
+                console.log("Validation Errors", err);
               })}
               className="space-y-2.5 p-3"
             >
@@ -224,14 +224,14 @@ export default function VisitTab({
                     <CustomerSearchWithData
                       value={selectedCustomer}
                       onReturn={(val) => {
-                        setSelectedCustomer(val)
-                        form.setValue("city", val?.location || "")
-                        form.setValue("name", val?.owner || "")
+                        setSelectedCustomer(val);
+                        form.setValue("city", val?.location || "");
+                        form.setValue("name", val?.owner || "");
                         form.setValue(
                           "phone",
-                          val.number ? val?.number?.join(", ") : ""
-                        )
-                        form.setValue("company", val?.name || "")
+                          val.number ? val?.number?.join(", ") : "",
+                        );
+                        form.setValue("company", val?.name || "");
                       }}
                     />
                   </div>
@@ -251,8 +251,8 @@ export default function VisitTab({
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setSelectedCustomer(null)
-                      form.reset()
+                      setSelectedCustomer(null);
+                      form.reset();
                     }}
                   >
                     Clear
@@ -272,7 +272,7 @@ export default function VisitTab({
                     visible={filterVisible}
                     onClose={() => setFilterVisible(false)}
                     onReturn={async (val) => {
-                      await onFetchData?.(val.start, val.end, val.user)
+                      await onFetchData?.(val.start, val.end, val.user);
                     }}
                   />
 
@@ -292,8 +292,8 @@ export default function VisitTab({
                       const finalData = {
                         ...newRow,
                         search: newRow.name || newRow.owner,
-                      }
-                      setSelectedCustomer(finalData)
+                      };
+                      setSelectedCustomer(finalData);
                     }}
                   />
                 </div>
@@ -442,7 +442,7 @@ export default function VisitTab({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function VisitRecord({
@@ -451,19 +451,19 @@ function VisitRecord({
   deleting,
   onDelete,
 }: {
-  feedback: SalesVisitTypes
-  baseRoute: string
-  deleting: boolean
-  onDelete: () => void
+  feedback: SalesVisitTypes;
+  baseRoute: string;
+  deleting: boolean;
+  onDelete: () => void;
 }) {
-  const hasLocation = feedback.location && feedback.location.length > 0
+  const hasLocation = feedback.location && feedback.location.length > 0;
   const customerLabel =
     feedback?.customer_name ||
     feedback?.company ||
     feedback?.customer_owner ||
-    "Customer"
+    "Customer";
   const customerNumber =
-    feedback?.customer_number?.join(", ") || feedback.phone || "No phone"
+    feedback?.customer_number?.join(", ") || feedback.phone || "No phone";
 
   return (
     <div className="group bg-background/95 transition-colors hover:bg-slate-50/70 dark:hover:bg-zinc-900/70">
@@ -507,9 +507,9 @@ function VisitRecord({
                 className="h-7 rounded-full px-2 text-xs"
                 disabled={!hasLocation}
                 onClick={() => {
-                  if (!hasLocation) return
-                  const mapUrl = `https://www.google.com/maps?q=${feedback.location[0]},${feedback.location[1]}`
-                  window.open(mapUrl, "_blank")
+                  if (!hasLocation) return;
+                  const mapUrl = `https://www.google.com/maps?q=${feedback.location[0]},${feedback.location[1]}`;
+                  window.open(mapUrl, "_blank");
                 }}
               >
                 {hasLocation ? (
@@ -588,7 +588,7 @@ function VisitRecord({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function VisitDetail({ label, value }: { label: string; value: string }) {
@@ -601,7 +601,7 @@ function VisitDetail({ label, value }: { label: string; value: string }) {
         {value}
       </p>
     </div>
-  )
+  );
 }
 
 function MediaPreview({
@@ -609,9 +609,9 @@ function MediaPreview({
   label,
   children,
 }: {
-  icon: ReactNode
-  label: string
-  children: ReactNode
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
 }) {
   return (
     <div className="min-w-0 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
@@ -623,5 +623,5 @@ function MediaPreview({
         {children}
       </div>
     </div>
-  )
+  );
 }

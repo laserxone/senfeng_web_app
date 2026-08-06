@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { Button } from "@/components/ui/button"
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +17,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Field,
   FieldGroup,
   FieldLabel,
   FieldLegend,
-} from "@/components/ui/field"
-import Heading from "@/components/ui/heading"
-import { Input } from "@/components/ui/input"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/field";
+import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import Spinner from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -35,13 +35,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
-import { UserSearch } from "@/components/shared/search/user-search"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { Loan, LoanPayment } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { UserSearch } from "@/components/shared/search/user-search";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { Loan, LoanPayment } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
 import {
   ChevronRight,
   CreditCard,
@@ -50,30 +50,30 @@ import {
   Pencil,
   Plus,
   Wallet,
-} from "lucide-react"
-import moment from "moment"
-import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import moment from "moment";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 type LoansByUser = {
   [userId: number]: {
-    name: string
-    loans: Loan[]
-  }
-}
+    name: string;
+    loans: Loan[];
+  };
+};
 
 export default function EmployeeLoans() {
-  const [loans, setLoans] = useState<Loan[]>([])
-  const { userID } = useUserDetail()
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
-    if (userID) fetchLoans()
-  }, [userID])
+    if (userID) fetchLoans();
+  }, [userID]);
 
   const fetchLoans = async () => {
-    const res = await axios.get(`/${userID}/loans`)
-    setLoans(res.data)
-  }
+    const res = await axios.get(`/${userID}/loans`);
+    setLoans(res.data);
+  };
 
   const loansByUser = useMemo(() => {
     return loans.reduce<LoansByUser>((acc, loan) => {
@@ -81,20 +81,20 @@ export default function EmployeeLoans() {
         acc[loan.user_id] = {
           name: loan.user_name,
           loans: [],
-        }
+        };
       }
 
-      acc[loan.user_id].loans.push(loan)
-      return acc
-    }, {})
-  }, [loans])
+      acc[loan.user_id].loans.push(loan);
+      return acc;
+    }, {});
+  }, [loans]);
 
-  const totalLoans = loans.length
-  const activeLoans = loans.filter((loan) => loan.status === "active").length
+  const totalLoans = loans.length;
+  const activeLoans = loans.filter((loan) => loan.status === "active").length;
   const totalRemaining = loans.reduce(
     (sum, loan) => sum + Number(loan.remaining_amount || 0),
-    0
-  )
+    0,
+  );
 
   return (
     <div className="flex flex-1 flex-col space-y-4 pb-6">
@@ -138,7 +138,7 @@ export default function EmployeeLoans() {
         onUpdate={fetchLoans}
       />
     </div>
-  )
+  );
 }
 
 function SummaryCard({
@@ -146,9 +146,9 @@ function SummaryCard({
   value,
   icon,
 }: {
-  title: string
-  value: string | number
-  icon: React.ReactNode
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
@@ -160,47 +160,47 @@ function SummaryCard({
         <span className="truncate text-sm font-bold">{value}</span>
       </div>
     </div>
-  )
+  );
 }
 
 export function LoanIssueModal({
   userID,
   onSuccess,
 }: {
-  userID: number | string
-  onSuccess: () => Promise<void>
+  userID: number | string;
+  onSuccess: () => Promise<void>;
 }) {
-  const [open, setOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<number | null>(null)
-  const [loanAmount, setLoanAmount] = useState("")
-  const [description, setDescription] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [loanAmount, setLoanAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const createLoan = async () => {
     if (!selectedUser || !loanAmount) {
-      toast.error("Employee and amount required")
-      return
+      toast.error("Employee and amount required");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.post(`/${userID}/loans`, {
         user_id: selectedUser,
         loan_amount: Number(loanAmount),
         description,
-      })
+      });
 
-      setLoanAmount("")
-      setDescription("")
-      setSelectedUser(null)
-      setOpen(false)
+      setLoanAmount("");
+      setDescription("");
+      setSelectedUser(null);
+      setOpen(false);
 
-      await onSuccess()
+      await onSuccess();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -261,7 +261,7 @@ export function LoanIssueModal({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export function LoanPaymentModal({
@@ -269,33 +269,33 @@ export function LoanPaymentModal({
   loan,
   onSuccess,
 }: {
-  userID: number | string
-  loan: Loan
-  onSuccess: () => Promise<void>
+  userID: number | string;
+  loan: Loan;
+  onSuccess: () => Promise<void>;
 }) {
-  const [open, setOpen] = useState(false)
-  const [repaymentAmount, setRepaymentAmount] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [repaymentAmount, setRepaymentAmount] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const makePayment = async () => {
-    if (!repaymentAmount) return
+    if (!repaymentAmount) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.post(`/${userID}/loans/repayment`, {
         loan_id: loan.id,
         amount: Number(repaymentAmount),
-      })
+      });
 
-      setRepaymentAmount("")
-      setOpen(false)
+      setRepaymentAmount("");
+      setOpen(false);
 
-      await onSuccess()
+      await onSuccess();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -373,7 +373,7 @@ export function LoanPaymentModal({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export function LoanCollapsibleList({
@@ -381,11 +381,11 @@ export function LoanCollapsibleList({
   userID,
   onUpdate,
 }: {
-  loansByUser: LoansByUser
-  userID: number | string
-  onUpdate: () => Promise<void>
+  loansByUser: LoansByUser;
+  userID: number | string;
+  onUpdate: () => Promise<void>;
 }) {
-  const entries = Object.entries(loansByUser)
+  const entries = Object.entries(loansByUser);
 
   if (!entries.length) {
     return (
@@ -395,7 +395,7 @@ export function LoanCollapsibleList({
           Issued loans will appear here.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -403,13 +403,13 @@ export function LoanCollapsibleList({
       {entries.map(([userId, userData]) => {
         const userTotal = userData.loans.reduce(
           (sum, loan) => sum + Number(loan.loan_amount || 0),
-          0
-        )
+          0,
+        );
 
         const userRemaining = userData.loans.reduce(
           (sum, loan) => sum + Number(loan.remaining_amount || 0),
-          0
-        )
+          0,
+        );
 
         return (
           <Collapsible
@@ -453,10 +453,10 @@ export function LoanCollapsibleList({
               </div>
             </CollapsibleContent>
           </Collapsible>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 function LoanCard({
@@ -464,9 +464,9 @@ function LoanCard({
   userID,
   onUpdate,
 }: {
-  loan: Loan
-  userID: number | string
-  onUpdate: () => Promise<void>
+  loan: Loan;
+  userID: number | string;
+  onUpdate: () => Promise<void>;
 }) {
   return (
     <div className="rounded-xl border bg-background p-4">
@@ -493,7 +493,7 @@ function LoanCard({
 
       <PaymentHistory loan={loan} onUpdate={onUpdate} />
     </div>
-  )
+  );
 }
 
 function InfoBox({ label, value }: { label: string; value: React.ReactNode }) {
@@ -504,15 +504,15 @@ function InfoBox({ label, value }: { label: string; value: React.ReactNode }) {
       </p>
       <p className="mt-1 text-sm font-medium break-words">{value}</p>
     </div>
-  )
+  );
 }
 
 function PaymentHistory({
   loan,
   onUpdate,
 }: {
-  loan: Loan
-  onUpdate: () => Promise<void>
+  loan: Loan;
+  onUpdate: () => Promise<void>;
 }) {
   return (
     <Collapsible className="group mt-4 rounded-lg border">
@@ -576,7 +576,7 @@ function PaymentHistory({
         </div>
       </CollapsibleContent>
     </Collapsible>
-  )
+  );
 }
 
 const EditPaymentLoan = ({
@@ -584,40 +584,40 @@ const EditPaymentLoan = ({
   user_id,
   onRefresh,
 }: {
-  p: LoanPayment
-  user_id: number
-  onRefresh: () => Promise<void>
+  p: LoanPayment;
+  user_id: number;
+  onRefresh: () => Promise<void>;
 }) => {
   const [selectedPayment, setSelectedPayment] = useState<LoanPayment | null>(
-    null
-  )
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   async function handleSave() {
-    if (!selectedPayment?.id) return
+    if (!selectedPayment?.id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const name = !p?.slip
         ? `/users/${user_id}/loans/payment_slip/${selectedPayment?.id}.png`
-        : p.slip
+        : p.slip;
 
       if (selectedPayment?.slip !== p?.slip) {
-        await UploadImage(selectedPayment?.slip, name, "image/png")
+        await UploadImage(selectedPayment?.slip, name, "image/png");
       }
 
       await axios.put(`/${userID}/loans/repayment`, {
         id: selectedPayment?.id,
         payment_date: selectedPayment?.payment_date,
         slip: name,
-      })
+      });
 
-      await onRefresh()
-      setSelectedPayment(null)
+      await onRefresh();
+      setSelectedPayment(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -648,9 +648,9 @@ const EditPaymentLoan = ({
                     value={selectedPayment?.slip ?? null}
                     onDrop={(file) => {
                       setSelectedPayment((prev) => {
-                        if (!prev) return prev
-                        return { ...prev, slip: file ?? "" }
-                      })
+                        if (!prev) return prev;
+                        return { ...prev, slip: file ?? "" };
+                      });
                     }}
                   />
                 </Field>
@@ -661,9 +661,9 @@ const EditPaymentLoan = ({
                     date={selectedPayment?.payment_date}
                     onChange={(date) => {
                       setSelectedPayment((prev) => {
-                        if (!prev) return prev
-                        return { ...prev, payment_date: date }
-                      })
+                        if (!prev) return prev;
+                        return { ...prev, payment_date: date };
+                      });
                     }}
                   />
                 </Field>
@@ -687,35 +687,35 @@ const EditPaymentLoan = ({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};
 
 const EditDescription = ({
   loan,
   onRefresh,
 }: {
-  loan: Loan
-  onRefresh: () => Promise<void>
+  loan: Loan;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null)
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   async function handleSave() {
-    if (!selectedLoan?.id) return
+    if (!selectedLoan?.id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.put(`/${userID}/loans`, {
         id: selectedLoan?.id,
         description: selectedLoan?.description,
-      })
+      });
 
-      await onRefresh()
-      setSelectedLoan(null)
+      await onRefresh();
+      setSelectedLoan(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -745,9 +745,9 @@ const EditDescription = ({
                     placeholder="Enter loan description"
                     onChange={(e) => {
                       setSelectedLoan((prev) => {
-                        if (!prev) return prev
-                        return { ...prev, description: e.target.value }
-                      })
+                        if (!prev) return prev;
+                        return { ...prev, description: e.target.value };
+                      });
                     }}
                   />
                 </Field>
@@ -767,5 +767,5 @@ const EditDescription = ({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};

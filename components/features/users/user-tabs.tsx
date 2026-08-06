@@ -1,29 +1,29 @@
-import { LucideProps } from "lucide-react"
-import { ForwardRefExoticComponent, RefAttributes } from "react"
-import { Badge } from "@/components/ui/badge"
+import { LucideProps } from "lucide-react";
+import { ForwardRefExoticComponent, RefAttributes } from "react";
+import { Badge } from "@/components/ui/badge";
 
 type TabsProps = {
-  value: string
-  label: string
+  value: string;
+  label: string;
   icon: ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
-  >
-  count: number | null
-}[]
+  >;
+  count: number | null;
+}[];
 const UserTabs = ({
   tabs,
   routeTo,
   activeTab,
 }: {
-  tabs: TabsProps
-  routeTo: (val: string) => void
-  activeTab: string
+  tabs: TabsProps;
+  routeTo: (val: string) => void;
+  activeTab: string;
 }) => {
   return (
     <div className="flex flex-1 gap-1.5 pt-2">
       {tabs.map((tab) => {
-        const Icon = tab.icon
-        const isActive = activeTab === tab.value
+        const Icon = tab.icon;
+        const isActive = activeTab === tab.value;
 
         return (
           <button
@@ -52,10 +52,10 @@ const UserTabs = ({
               </Badge>
             )}
           </button>
-        )
+        );
       })}
     </div>
-  )
-}
+  );
+};
 
-export default UserTabs
+export default UserTabs;

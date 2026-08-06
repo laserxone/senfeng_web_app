@@ -1,7 +1,7 @@
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import useUserDetail from "@/hooks/use-user-detail"
-import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import useUserDetail from "@/hooks/use-user-detail";
+import { cn } from "@/lib/utils";
 import {
   CalendarDays,
   Check,
@@ -10,27 +10,27 @@ import {
   Package,
   User,
   X,
-} from "lucide-react"
+} from "lucide-react";
 
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import Link from "next/link"
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import Link from "next/link";
 import {
   formatCurrency,
   formatDate,
   formatDateTime,
   formatStatus,
-} from "./backup-helper-functions"
-import { statusColors } from "./backup-status-color"
-import { BackupApplication } from "./backup-types"
+} from "./backup-helper-functions";
+import { statusColors } from "./backup-status-color";
+import { BackupApplication } from "./backup-types";
 
 export default function BackupApplicationDetails({
   application,
   currentUserId,
 }: {
-  application: BackupApplication
-  currentUserId: number | string
+  application: BackupApplication;
+  currentUserId: number | string;
 }) {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
   return (
     <div className="space-y-6 px-2 pb-4">
       {/* STATUS */}
@@ -39,7 +39,7 @@ export default function BackupApplicationDetails({
         <Badge
           className={cn(
             "px-3 py-1 text-sm capitalize",
-            statusColors[application.status]
+            statusColors[application.status],
           )}
         >
           {formatStatus(application.status)}
@@ -50,7 +50,7 @@ export default function BackupApplicationDetails({
             "px-3 py-1 text-sm",
             application.issued
               ? "bg-violet-100 text-violet-700"
-              : "bg-gray-100 text-gray-700"
+              : "bg-gray-100 text-gray-700",
           )}
         >
           {application.issued ? "Issued" : "Not Issued"}
@@ -200,15 +200,15 @@ export default function BackupApplicationDetails({
         />
       )}
     </div>
-  )
+  );
 }
 
 function ApprovalTimeline({
   application,
   currentUserId,
 }: {
-  application: BackupApplication
-  currentUserId: number | string
+  application: BackupApplication;
+  currentUserId: number | string;
 }) {
   return (
     <Card>
@@ -241,7 +241,7 @@ function ApprovalTimeline({
                       step.approval_order === application.current_approver_order
                       ? "border-blue-400 bg-blue-100 text-blue-700 ring-2 ring-blue-200"
                       : step.status === "pending" &&
-                          "border-gray-200 bg-gray-100 text-gray-500"
+                          "border-gray-200 bg-gray-100 text-gray-500",
                   )}
                 >
                   {step.status === "approved" ? (
@@ -260,7 +260,7 @@ function ApprovalTimeline({
 
                       step.status === "approved"
                         ? "bg-emerald-300"
-                        : "bg-gray-200"
+                        : "bg-gray-200",
                     )}
                   />
                 )}
@@ -298,7 +298,7 @@ function ApprovalTimeline({
                       step.status === "pending" &&
                         step.approval_order ===
                           application.current_approver_order &&
-                        "border-blue-200 bg-blue-50 text-blue-700"
+                        "border-blue-200 bg-blue-50 text-blue-700",
                     )}
                   >
                     {step.status === "pending" &&
@@ -329,7 +329,7 @@ function ApprovalTimeline({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function DetailRow({
@@ -337,9 +337,9 @@ function DetailRow({
   value,
   route,
 }: {
-  label: string
-  value: string | number
-  route?: string
+  label: string;
+  value: string | number;
+  route?: string;
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -352,7 +352,7 @@ function DetailRow({
         <span className="text-right font-medium">{value}</span>
       )}
     </div>
-  )
+  );
 }
 
 function DateInfo({ label, value }: { label: string; value: string | null }) {
@@ -362,5 +362,5 @@ function DateInfo({ label, value }: { label: string; value: string | null }) {
 
       <p className="font-medium">{formatDate(value)}</p>
     </div>
-  )
+  );
 }

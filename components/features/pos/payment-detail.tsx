@@ -1,24 +1,24 @@
-"use client"
-import PageTable from "@/components/shared/tables/app-table"
-import { MyImg } from "@/components/features/machines/machine-component"
-import AddPOSPayment from "@/components/features/pos/add-pos-payment"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+"use client";
+import PageTable from "@/components/shared/tables/app-table";
+import { MyImg } from "@/components/features/machines/machine-component";
+import AddPOSPayment from "@/components/features/pos/add-pos-payment";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { DeleteFromStorage } from "@/lib/deleteFunction"
-import { POSPaymentDetailProps, Payment } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { POSPaymentDetailProps, Payment } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
   Building2,
@@ -37,34 +37,34 @@ import {
   TriangleAlert,
   UserRound,
   WalletCards,
-} from "lucide-react"
-import moment from "moment"
-import { Params } from "next/dist/server/request/params"
+} from "lucide-react";
+import moment from "moment";
+import { Params } from "next/dist/server/request/params";
 import {
   useCallback,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
-} from "react"
-import type { LucideIcon } from "lucide-react"
-import { toast } from "sonner"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
+} from "react";
+import type { LucideIcon } from "lucide-react";
+import { toast } from "sonner";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
+} from "@/components/ui/tooltip";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
 
 function DetailTile({
   icon: Icon,
   label,
   value,
 }: {
-  icon: LucideIcon
-  label: string
-  value: ReactNode
+  icon: LucideIcon;
+  label: string;
+  value: ReactNode;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-3 rounded-xl border bg-muted/20 p-3">
@@ -78,70 +78,70 @@ function DetailTile({
         <div className="mt-0.5 truncate text-sm font-semibold">{value}</div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function PaymentDetail({ params }: { params: Params }) {
-  const [data, setData] = useState<POSPaymentDetailProps | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [show, setShow] = useState(false)
-  const { userID, isAdmin } = useUserDetail()
-  const [imageURL, setImageURL] = useState<Payment | null>(null)
-  const [visible, setVisible] = useState(false)
-  const [totalAmount, setTotalAmount] = useState(0)
+  const [data, setData] = useState<POSPaymentDetailProps | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
+  const { userID, isAdmin } = useUserDetail();
+  const [imageURL, setImageURL] = useState<Payment | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
 
   const updatePaymentQuery = useCallback((paymentId?: string | number) => {
-    const url = new URL(window.location.href)
+    const url = new URL(window.location.href);
 
     if (paymentId !== undefined) {
-      url.searchParams.set("mp", String(paymentId))
-      window.history.pushState({}, "", url)
+      url.searchParams.set("mp", String(paymentId));
+      window.history.pushState({}, "", url);
     } else {
-      url.searchParams.delete("mp")
-      window.history.replaceState({}, "", url)
+      url.searchParams.delete("mp");
+      window.history.replaceState({}, "", url);
     }
 
-    window.dispatchEvent(new PopStateEvent("popstate"))
-  }, [])
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   useEffect(() => {
     if (userID && params?.id) {
-      fetchData()
+      fetchData();
     }
-  }, [userID, params])
+  }, [userID, params]);
 
   const paid = Number(
     data?.payments
       ?.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-      .toFixed(0) || 0
-  )
+      .toFixed(0) || 0,
+  );
 
   useEffect(() => {
     const syncPaymentImageFromUrl = () => {
-      const paymentId = new URLSearchParams(window.location.search).get("mp")
+      const paymentId = new URLSearchParams(window.location.search).get("mp");
       const payment = paymentId
         ? data?.payments?.find((item) => String(item.id) === paymentId)
-        : undefined
+        : undefined;
 
-      setImageURL(payment || null)
-      setVisible(Boolean(payment))
-    }
+      setImageURL(payment || null);
+      setVisible(Boolean(payment));
+    };
 
-    syncPaymentImageFromUrl()
-    window.addEventListener("popstate", syncPaymentImageFromUrl)
+    syncPaymentImageFromUrl();
+    window.addEventListener("popstate", syncPaymentImageFromUrl);
 
     return () => {
-      window.removeEventListener("popstate", syncPaymentImageFromUrl)
-    }
-  }, [data?.payments])
+      window.removeEventListener("popstate", syncPaymentImageFromUrl);
+    };
+  }, [data?.payments]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await axios.get(`/${userID}/pos/payment/${params.id}`)
-      setData(response.data)
+      const response = await axios.get(`/${userID}/pos/payment/${params.id}`);
+      setData(response.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -159,7 +159,7 @@ export default function PaymentDetail({ params }: { params: Params }) {
           </Button>
         ),
         cell: ({ row }) => {
-          const currentItem = row.original
+          const currentItem = row.original;
           return (
             <div className="flex items-center">
               {currentItem?.status === "rejected" ? (
@@ -201,7 +201,7 @@ export default function PaymentDetail({ params }: { params: Params }) {
               )}
               <span className="font-medium">{row.getValue("note")}</span>
             </div>
-          )
+          );
         },
       },
       {
@@ -270,7 +270,7 @@ export default function PaymentDetail({ params }: { params: Params }) {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
-          const payment = row.original
+          const payment = row.original;
 
           return (
             <div className="flex items-center gap-2">
@@ -279,7 +279,7 @@ export default function PaymentDetail({ params }: { params: Params }) {
                   className="cursor-pointer"
                   onClick={() => {
                     if (payment.id) {
-                      updatePaymentQuery(payment.id)
+                      updatePaymentQuery(payment.id);
                     }
                   }}
                 >
@@ -290,48 +290,48 @@ export default function PaymentDetail({ params }: { params: Params }) {
                 <RenderVerifyButton
                   item={payment}
                   onRefresh={async () => {
-                    await fetchData()
+                    await fetchData();
                   }}
                 />
               )}
             </div>
-          )
+          );
         },
       },
     ],
-    [isAdmin, updatePaymentQuery]
-  )
+    [isAdmin, updatePaymentQuery],
+  );
 
   useEffect(() => {
     if (data && data?.fields?.length > 0) {
-      let total = 0
-      const dis = Number(data?.discount) || 0
+      let total = 0;
+      const dis = Number(data?.discount) || 0;
       data?.fields?.forEach((item) => {
-        total = total + Number(item.total)
-      })
-      setTotalAmount(Number((total - dis).toFixed(0)))
+        total = total + Number(item.total);
+      });
+      setTotalAmount(Number((total - dis).toFixed(0)));
     } else {
-      setTotalAmount(0)
+      setTotalAmount(0);
     }
-  }, [data])
+  }, [data]);
 
   function calculateStatus() {
-    if (totalAmount === 0) return "Paid"
-    else if (paid === 0) return "Pending"
-    else if (totalAmount - paid !== 0) return "Partial"
-    else return "Paid"
+    if (totalAmount === 0) return "Paid";
+    else if (paid === 0) return "Pending";
+    else if (totalAmount - paid !== 0) return "Partial";
+    else return "Paid";
   }
 
-  const status = calculateStatus()
-  const pending = Math.max(totalAmount - paid, 0)
+  const status = calculateStatus();
+  const pending = Math.max(totalAmount - paid, 0);
   const itemsSubtotal = (data?.fields || []).reduce(
     (sum, item) => sum + Number(item.total || 0),
-    0
-  )
+    0,
+  );
   const totalQuantity = (data?.fields || []).reduce(
     (sum, item) => sum + Number(item.qty || 0),
-    0
-  )
+    0,
+  );
   return (
     <div className="flex w-full flex-col gap-4">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
@@ -574,7 +574,7 @@ export default function PaymentDetail({ params }: { params: Params }) {
         editAllowed={isAdmin}
         visible={visible}
         onClose={() => {
-          updatePaymentQuery()
+          updatePaymentQuery();
         }}
         img={imageURL?.image || null}
         note={imageURL?.note || null}
@@ -582,7 +582,7 @@ export default function PaymentDetail({ params }: { params: Params }) {
         remarks={imageURL?.remarks || null}
         id={imageURL?.id}
         onRefresh={async () => {
-          await fetchData()
+          await fetchData();
         }}
       />
 
@@ -592,62 +592,62 @@ export default function PaymentDetail({ params }: { params: Params }) {
         part_id={data?.id}
         customer_id={data?.customer_id}
         onRefresh={async () => {
-          setLoading(true)
-          await fetchData()
-          setShow(false)
+          setLoading(true);
+          await fetchData();
+          setShow(false);
         }}
       />
     </div>
-  )
+  );
 }
 
 const RenderVerifyButton = ({
   item,
   onRefresh,
 }: {
-  item: Payment
-  onRefresh: () => Promise<void>
+  item: Payment;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
   async function handleVerify(item: Payment) {
-    setLoading(true)
+    setLoading(true);
     await axios
       .put(`/${userID}/pos/payment-verification`, {
         status: "approved",
         id: item.id,
       })
       .then(async () => {
-        await onRefresh()
+        await onRefresh();
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
   return (
     <Button
       disabled={loading}
       onClick={() => {
-        handleVerify(item)
+        handleVerify(item);
       }}
     >
       {loading && <Spinner />} {loading ? "Verifying" : "Verify"}
     </Button>
-  )
-}
+  );
+};
 
 type ImageSheetProps = {
-  payment_lock: boolean | undefined
-  visible: boolean
-  onClose: () => void
-  img: string | null
-  note: string | null
-  remarks: string | null
-  id: number | undefined
-  onRefresh: () => Promise<void>
-  editAllowed: boolean
-  cheque_id: string | null
-}
+  payment_lock: boolean | undefined;
+  visible: boolean;
+  onClose: () => void;
+  img: string | null;
+  note: string | null;
+  remarks: string | null;
+  id: number | undefined;
+  onRefresh: () => Promise<void>;
+  editAllowed: boolean;
+  cheque_id: string | null;
+};
 
 const ImageSheet = ({
   payment_lock,
@@ -661,25 +661,25 @@ const ImageSheet = ({
   editAllowed,
   cheque_id,
 }: ImageSheetProps) => {
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   function handleClose() {
-    onClose()
+    onClose();
   }
 
   async function handleDelete(id: string | number) {
     try {
       if (img && !img.includes("https")) {
-        await DeleteFromStorage(img)
+        await DeleteFromStorage(img);
       }
 
-      await axios.delete(`/${userID}/pos/payment/${id}`)
-      await onRefresh()
-      handleClose()
-      toast.success("Payment Deleted")
+      await axios.delete(`/${userID}/pos/payment/${id}`);
+      await onRefresh();
+      handleClose();
+      toast.success("Payment Deleted");
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
@@ -709,9 +709,9 @@ const ImageSheet = ({
                   size="sm"
                   disabled={deleteLoading}
                   onClick={() => {
-                    if (!id) return
-                    setDeleteLoading(true)
-                    handleDelete(id)
+                    if (!id) return;
+                    setDeleteLoading(true);
+                    handleDelete(id);
                   }}
                 >
                   {deleteLoading ? <Spinner /> : <Trash className="size-4" />}
@@ -776,8 +776,8 @@ const ImageSheet = ({
         </div>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 function ReceiptField({
   icon: Icon,
@@ -785,10 +785,10 @@ function ReceiptField({
   value,
   multiline = false,
 }: {
-  icon: LucideIcon
-  label: string
-  value: string
-  multiline?: boolean
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  multiline?: boolean;
 }) {
   return (
     <div className="h-full rounded-xl border bg-muted/20 p-3">
@@ -804,5 +804,5 @@ function ReceiptField({
         {value}
       </Label>
     </div>
-  )
+  );
 }

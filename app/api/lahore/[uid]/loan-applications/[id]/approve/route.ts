@@ -1,54 +1,54 @@
-import pool from "@/config/db"
-import { sendNotification } from "@/lib/sendNotification"
-import { NOTIFICATION_TYPES } from "@/constants/notifications"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { sendNotification } from "@/lib/sendNotification";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params
-    const body = await request.json()
-    const { approver_id, action, comments } = body
+    const { id } = await params;
+    const body = await request.json();
+    const { approver_id, action, comments } = body;
 
     if (!approver_id || !action) {
       return NextResponse.json(
         { error: "Approver ID and action are required" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    let applicantID = null
-    let approverID = null
+    let applicantID = null;
+    let approverID = null;
 
-    const applicationId = parseInt(id)
+    const applicationId = parseInt(id);
 
     // Get application
     const applicationRes = await pool.query(
       `SELECT * FROM loan_applications WHERE id = $1`,
-      [applicationId]
-    )
+      [applicationId],
+    );
 
-    const application = applicationRes.rows[0]
+    const application = applicationRes.rows[0];
 
     if (!application) {
       return NextResponse.json(
         { error: "Application not found" },
-        { status: 404 }
-      )
+        { status: 404 },
+      );
     }
 
-    applicantID = application.applicant_id
+    applicantID = application.applicant_id;
 
     //Check user role
     const userRes = await pool.query(
       `SELECT designation, full_access FROM users WHERE id = $1`,
-      [approver_id]
-    )
+      [approver_id],
+    );
 
-    const user = userRes.rows[0]
-    const isAdmin = user?.designation === "Owner" || user?.full_access === true
+    const user = userRes.rows[0];
+    const isAdmin = user?.designation === "Owner" || user?.full_access === true;
 
     // ================= CURRENT APPROVAL =================
     const currentApprovalRes = await pool.query(
@@ -59,10 +59,10 @@ export async function POST(
         AND status = 'pending'
         AND approval_order = $3
       `,
-      [applicationId, approver_id, application.current_approver_order]
-    )
+      [applicationId, approver_id, application.current_approver_order],
+    );
 
-    const currentApproval = currentApprovalRes.rows[0]
+    const currentApproval = currentApprovalRes.rows[0];
 
     // ================= ADMIN FALLBACK =================
     if (!currentApproval) {
@@ -74,10 +74,10 @@ export async function POST(
             AND status = 'pending'
             AND approval_order = $2
           `,
-          [applicationId, application.current_approver_order]
-        )
+          [applicationId, application.current_approver_order],
+        );
 
-        const pendingApproval = pendingRes.rows[0]
+        const pendingApproval = pendingRes.rows[0];
 
         if (pendingApproval) {
           await pool.query(
@@ -92,8 +92,8 @@ export async function POST(
               action,
               comments ? `[Admin] ${comments}` : "[Admin Override]",
               pendingApproval.id,
-            ]
-          )
+            ],
+          );
 
           if (action === "rejected") {
             await pool.query(
@@ -103,8 +103,8 @@ export async function POST(
                   updated_at = CURRENT_TIMESTAMP
               WHERE id = $1
               `,
-              [applicationId]
-            )
+              [applicationId],
+            );
           } else if (action === "approved") {
             const nextRes = await pool.query(
               `
@@ -112,13 +112,13 @@ export async function POST(
               WHERE loan_application_id = $1
                 AND approval_order = $2
               `,
-              [applicationId, application.current_approver_order + 1]
-            )
+              [applicationId, application.current_approver_order + 1],
+            );
 
-            const nextApprover = nextRes.rows[0]
+            const nextApprover = nextRes.rows[0];
 
             if (nextApprover) {
-              approverID = nextApprover.approver_id
+              approverID = nextApprover.approver_id;
               await pool.query(
                 `
                 UPDATE loan_applications
@@ -126,8 +126,8 @@ export async function POST(
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = $2
                 `,
-                [application.current_approver_order + 1, applicationId]
-              )
+                [application.current_approver_order + 1, applicationId],
+              );
             } else {
               const res = await pool.query(
                 `
@@ -136,9 +136,9 @@ export async function POST(
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = $1 RETURNING applicant_id, loan_amount, purpose 
                 `,
-                [applicationId]
-              )
-              const returningRes = res.rows?.[0] ?? null
+                [applicationId],
+              );
+              const returningRes = res.rows?.[0] ?? null;
               if (returningRes) {
                 await pool.query(
                   `
@@ -150,22 +150,22 @@ export async function POST(
                     returningRes.loan_amount,
                     returningRes.purpose,
                     applicationId,
-                  ]
-                )
+                  ],
+                );
               }
             }
           }
 
-          await notify(action, applicantID, approverID, applicationId)
+          await notify(action, applicantID, approverID, applicationId);
 
-          return NextResponse.json({ success: true })
+          return NextResponse.json({ success: true });
         }
       }
 
       return NextResponse.json(
         { error: "This application is not pending your approval" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     // ================= NORMAL APPROVAL =================
@@ -177,8 +177,8 @@ export async function POST(
           acted_at = CURRENT_TIMESTAMP
       WHERE id = $3
       `,
-      [action, comments || null, currentApproval.id]
-    )
+      [action, comments || null, currentApproval.id],
+    );
 
     if (action === "rejected") {
       await pool.query(
@@ -188,8 +188,8 @@ export async function POST(
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $1
         `,
-        [applicationId]
-      )
+        [applicationId],
+      );
     } else if (action === "approved") {
       const nextRes = await pool.query(
         `
@@ -197,13 +197,13 @@ export async function POST(
         WHERE loan_application_id = $1
           AND approval_order = $2
         `,
-        [applicationId, application.current_approver_order + 1]
-      )
+        [applicationId, application.current_approver_order + 1],
+      );
 
-      const nextApprover = nextRes.rows[0]
+      const nextApprover = nextRes.rows[0];
 
       if (nextApprover) {
-        approverID = nextApprover.approver_id
+        approverID = nextApprover.approver_id;
         await pool.query(
           `
           UPDATE loan_applications
@@ -211,8 +211,8 @@ export async function POST(
               updated_at = CURRENT_TIMESTAMP
           WHERE id = $2
           `,
-          [application.current_approver_order + 1, applicationId]
-        )
+          [application.current_approver_order + 1, applicationId],
+        );
       } else {
         const res = await pool.query(
           `
@@ -221,9 +221,9 @@ export async function POST(
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = $1 RETURNING applicant_id, loan_amount, purpose 
                 `,
-          [applicationId]
-        )
-        const returningRes = res.rows?.[0] ?? null
+          [applicationId],
+        );
+        const returningRes = res.rows?.[0] ?? null;
         if (returningRes) {
           await pool.query(
             `
@@ -235,22 +235,22 @@ export async function POST(
               returningRes.loan_amount,
               returningRes.purpose,
               applicationId,
-            ]
-          )
+            ],
+          );
         }
       }
     }
 
-    await notify(action, applicantID, approverID, applicationId)
+    await notify(action, applicantID, approverID, applicationId);
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error processing approval:", error)
+    console.error("Error processing approval:", error);
 
     return NextResponse.json(
       { error: "Failed to process approval" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
@@ -258,7 +258,7 @@ async function notify(
   action: string,
   applicantID: string,
   approverID: string,
-  applicationId: number
+  applicationId: number,
 ) {
   if (action === "rejected") {
     await sendNotification(
@@ -266,21 +266,21 @@ async function notify(
       `applications/loan?l=${applicationId}`,
       applicantID,
       NOTIFICATION_TYPES.loan_application_rejected.title,
-      NOTIFICATION_TYPES.loan_application_rejected.category
-    )
+      NOTIFICATION_TYPES.loan_application_rejected.category,
+    );
   }
   if (action === "approved" && approverID) {
     const nameQuery = await pool.query(`SELECT name FROM users WHERE id = $1`, [
       applicantID,
-    ])
-    const name = nameQuery.rows?.[0]?.name ?? ""
+    ]);
+    const name = nameQuery.rows?.[0]?.name ?? "";
     sendNotification(
       `${name} submitted loan application requesting your approval`,
       `applications/loan?l=${applicationId}`,
       approverID,
       NOTIFICATION_TYPES.loan_application_submitted.title,
-      NOTIFICATION_TYPES.loan_application_submitted.category
-    )
+      NOTIFICATION_TYPES.loan_application_submitted.category,
+    );
   }
   if (action === "approved" && !approverID) {
     sendNotification(
@@ -288,7 +288,7 @@ async function notify(
       `applications/loan?l=${applicationId}`,
       applicantID,
       NOTIFICATION_TYPES.loan_application_approved.title,
-      NOTIFICATION_TYPES.loan_application_approved.category
-    )
+      NOTIFICATION_TYPES.loan_application_approved.category,
+    );
   }
 }

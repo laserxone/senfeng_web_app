@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 interface StatusDonutChartProps {
   data: {
-    status: string
-    total: number
-  }[]
+    status: string;
+    total: number;
+  }[];
 }
 
-const COLORS = ["#22c55e", "#f59e0b", "#3b82f6", "#ef4444"]
+const COLORS = ["#22c55e", "#f59e0b", "#3b82f6", "#ef4444"];
 
 export function OrderDonutChart({ data }: StatusDonutChartProps) {
   const chartData = data.map((item) => ({
     name: item.status,
     value: Number(item.total) || 0,
-  }))
+  }));
 
-  const total = chartData.reduce((sum, item) => sum + item.value, 0)
-  const displayData = total > 0 ? chartData : [{ name: "No Orders", value: 1 }]
+  const total = chartData.reduce((sum, item) => sum + item.value, 0);
+  const displayData = total > 0 ? chartData : [{ name: "No Orders", value: 1 }];
 
   return (
     <div className="relative h-full min-h-[72px] w-full min-w-[72px]">
@@ -48,5 +48,5 @@ export function OrderDonutChart({ data }: StatusDonutChartProps) {
         <span className="text-xs font-bold text-foreground">{total}</span>
       </div>
     </div>
-  )
+  );
 }

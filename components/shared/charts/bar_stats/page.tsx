@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import * as React from "react";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   Card,
@@ -9,33 +9,33 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
-export const description = "An interactive bar chart"
+export const description = "An interactive bar chart";
 
 const chartConfig = {
   total_machines_sold: {
     label: "Machines Sold",
     color: "var(--chart-1)",
   },
-}
+};
 
 export function BarStats({ data }) {
-  const [activeChart, setActiveChart] = React.useState("total_machines_sold")
+  const [activeChart, setActiveChart] = React.useState("total_machines_sold");
 
   const totalMachinesSold = React.useMemo(
     () =>
       data.reduce(
         (acc, curr) => acc + (Number(curr.total_machines_sold) || 0),
-        0
+        0,
       ),
-    [data]
-  )
+    [data],
+  );
 
   return (
     <Card>
@@ -81,11 +81,11 @@ export function BarStats({ data }) {
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value)
+                const date = new Date(value);
                 return date.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
-                })
+                });
               }}
             />
             <ChartTooltip
@@ -98,7 +98,7 @@ export function BarStats({ data }) {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
-                    })
+                    });
                   }}
                 />
               }
@@ -111,5 +111,5 @@ export function BarStats({ data }) {
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

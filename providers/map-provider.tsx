@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { Libraries, useJsApiLoader } from "@react-google-maps/api"
-import { ReactNode } from "react"
+import { Libraries, useJsApiLoader } from "@react-google-maps/api";
+import { ReactNode } from "react";
 
-const libraries: Libraries = ["places", "drawing", "geometry"]
+const libraries: Libraries = ["places", "drawing", "geometry"];
 
 export function MapProvider({ children }: { children: ReactNode }) {
   const { isLoaded: scriptLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_MAP_API_KEY || "",
     libraries: libraries,
-  })
+  });
 
-  if (loadError) return <p>Encountered error while loading google maps</p>
-  if (!scriptLoaded) return <p className="pl-4">Map Script is loading ...</p>
-  return children
+  if (loadError) return <p>Encountered error while loading google maps</p>;
+  if (!scriptLoaded) return <p className="pl-4">Map Script is loading ...</p>;
+  return children;
 }

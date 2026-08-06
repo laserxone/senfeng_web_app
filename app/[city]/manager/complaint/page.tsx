@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import ComplaintSystem from "@/components/page-compositions/general/complaint-system"
+import ComplaintSystem from "@/components/page-compositions/general/complaint-system";
 
 export default function Page() {
-  return <ComplaintSystem />
+  return <ComplaintSystem />;
 }

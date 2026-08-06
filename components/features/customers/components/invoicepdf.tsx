@@ -7,9 +7,9 @@ import {
   Svg,
   Text,
   View,
-} from "@react-pdf/renderer"
-import type { SourceObject } from "@react-pdf/types"
-import moment from "moment"
+} from "@react-pdf/renderer";
+import type { SourceObject } from "@react-pdf/types";
+import moment from "moment";
 
 const styles = StyleSheet.create({
   page: {
@@ -154,44 +154,44 @@ const styles = StyleSheet.create({
     height: 15,
     marginRight: 5,
   },
-})
+});
 
 type LocalData = {
-  customer: string | undefined
-  name: string | undefined
-  contact: string | undefined
-  model: string | undefined
-  serial: string | undefined
-  manager: string
+  customer: string | undefined;
+  name: string | undefined;
+  contact: string | undefined;
+  model: string | undefined;
+  serial: string | undefined;
+  manager: string;
   payments: {
-    balance: number
-    id: number
-    transaction_date: string
-    amount: string
-    machine_id: number
-    image: string
-    mode: string
-    note: string
-    received_by: string
-    clearance_date: string
-    remarks: string
-    firebase_img: string | null
-    status: string
-    comment: string | null
-    payment_lock: boolean
-    cheque_id: string
-    track: number
-  }[]
-  received: number
-  total: number
-}
+    balance: number;
+    id: number;
+    transaction_date: string;
+    amount: string;
+    machine_id: number;
+    image: string;
+    mode: string;
+    note: string;
+    received_by: string;
+    clearance_date: string;
+    remarks: string;
+    firebase_img: string | null;
+    status: string;
+    comment: string | null;
+    payment_lock: boolean;
+    cheque_id: string;
+    track: number;
+  }[];
+  received: number;
+  total: number;
+};
 
 const InvoicePDF = ({
   data,
   logoSrc = "/logo.png",
 }: {
-  data: LocalData
-  logoSrc?: SourceObject
+  data: LocalData;
+  logoSrc?: SourceObject;
 }) => {
   return (
     <Document>
@@ -287,7 +287,7 @@ const InvoicePDF = ({
                       {header}
                     </Text>
                   </View>
-                )
+                ),
               )}
             </View>
 
@@ -522,8 +522,8 @@ const InvoicePDF = ({
         <Footer />
       </Page>
     </Document>
-  )
-}
+  );
+};
 
 const FormField = ({ data }: { data: LocalData }) => {
   return (
@@ -577,11 +577,11 @@ const FormField = ({ data }: { data: LocalData }) => {
               </Text>
             </View>
           </View>
-        )
+        ),
       )}
     </View>
-  )
-}
+  );
+};
 
 const CompanyDetails = () => {
   return (
@@ -614,8 +614,8 @@ const CompanyDetails = () => {
         </Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const Header = ({ logoSrc }: { logoSrc: SourceObject }) => {
   return (
@@ -656,8 +656,8 @@ const Header = ({ logoSrc }: { logoSrc: SourceObject }) => {
         </Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const Disclaimer = () => {
   return (
@@ -677,8 +677,8 @@ const Disclaimer = () => {
         signature.
       </Text>
     </View>
-  )
-}
+  );
+};
 
 const Footer = () => {
   return (
@@ -729,18 +729,18 @@ const Footer = () => {
         <Text style={{ fontSize: 10 }}>www.senfenglaserpk.com</Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 function truncateText(text: string) {
-  return text.length > 13 ? text.slice(0, 13) + "..." : text
+  return text.length > 13 ? text.slice(0, 13) + "..." : text;
 }
 
 function formatCurrency(number: number) {
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
     useGrouping: true,
-  }).format(number)
+  }).format(number);
 }
 
-export default InvoicePDF
+export default InvoicePDF;

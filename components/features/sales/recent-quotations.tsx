@@ -1,21 +1,21 @@
-import { ArrowUpDown, ArrowUpRight, FileText } from "lucide-react"
-import moment from "moment"
+import { ArrowUpDown, ArrowUpRight, FileText } from "lucide-react";
+import moment from "moment";
 
-import PageTable from "@/components/shared/tables/app-table"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import useUserDetail from "@/hooks/use-user-detail"
-import { QuotationData } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import PageTable from "@/components/shared/tables/app-table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import useUserDetail from "@/hooks/use-user-detail";
+import { QuotationData } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 export default function RecentQuotations({
   data = [],
 }: {
-  data?: QuotationData[]
+  data?: QuotationData[];
 }) {
-  const quotations = data.slice(0, 10)
-  const { base_route } = useUserDetail()
+  const quotations = data.slice(0, 10);
+  const { base_route } = useUserDetail();
   const columns: ColumnDef<QuotationData>[] = [
     {
       accessorKey: "id",
@@ -29,7 +29,7 @@ export default function RecentQuotations({
             ID
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>#{row.getValue("id")}</div>,
     },
@@ -46,7 +46,7 @@ export default function RecentQuotations({
             Customer
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="min-w-0">
@@ -71,7 +71,7 @@ export default function RecentQuotations({
             Amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{formatPrice(row.original.price)}</div>,
     },
@@ -88,11 +88,11 @@ export default function RecentQuotations({
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{formatDate(row.original.date)}</div>,
     },
-  ]
+  ];
 
   return (
     <Card className="flex h-full w-full flex-col overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-full">
@@ -141,28 +141,28 @@ export default function RecentQuotations({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function formatDate(date?: Date | string | null) {
-  if (!date) return "-"
+  if (!date) return "-";
 
-  const value = moment(date)
-  return value.isValid() ? value.format("YYYY-MM-DD") : "-"
+  const value = moment(date);
+  return value.isValid() ? value.format("YYYY-MM-DD") : "-";
 }
 
 function formatPrice(price?: string | number | null) {
-  if (price === undefined || price === null || price === "") return "-"
+  if (price === undefined || price === null || price === "") return "-";
 
-  const number = Number(String(price).replace(/[^\d.-]/g, ""))
+  const number = Number(String(price).replace(/[^\d.-]/g, ""));
 
   if (Number.isNaN(number)) {
-    return String(price)
+    return String(price);
   }
 
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "PKR",
     maximumFractionDigits: 0,
-  }).format(number)
+  }).format(number);
 }

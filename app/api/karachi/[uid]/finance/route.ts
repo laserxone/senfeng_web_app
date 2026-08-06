@@ -1,23 +1,23 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams
-  const start_date = searchParams.get("start_date")
-  const end_date = searchParams.get("end_date")
-  const user = searchParams.get("user")
+  const searchParams = req.nextUrl.searchParams;
+  const start_date = searchParams.get("start_date");
+  const end_date = searchParams.get("end_date");
+  const user = searchParams.get("user");
 
-  const office = "karachi"
+  const office = "karachi";
 
-  let whereClause = ``
-  const queryParams = [start_date, end_date]
+  let whereClause = ``;
+  const queryParams = [start_date, end_date];
 
   if (user) {
-    whereClause += ` AND COALESCE(c.ownership, s.sell_by) = $3`
-    queryParams.push(user)
+    whereClause += ` AND COALESCE(c.ownership, s.sell_by) = $3`;
+    queryParams.push(user);
   } else {
-    whereClause += ` AND c.office = $3`
-    queryParams.push(office)
+    whereClause += ` AND c.office = $3`;
+    queryParams.push(office);
   }
 
   try {
@@ -47,40 +47,42 @@ export async function GET(req: NextRequest) {
         FROM cancelled_machine cm
         WHERE cm.machine_id = s.id
     ) ${whereClause}
-  `
+  `;
 
-    const { rows: sales } = await pool.query(query, queryParams)
+    const { rows: sales } = await pool.query(query, queryParams);
 
-    const machineIds = sales.map((s) => s.machine_id)
-    let payments = []
+    const machineIds = sales.map((s) => s.machine_id);
+    let payments = [];
     if (machineIds.length > 0) {
       const paymentQuery = `
       SELECT *
       FROM payment
       WHERE machine_id = ANY($1)
-    `
-      const { rows: paymentRows } = await pool.query(paymentQuery, [machineIds])
-      payments = paymentRows
+    `;
+      const { rows: paymentRows } = await pool.query(paymentQuery, [
+        machineIds,
+      ]);
+      payments = paymentRows;
     }
 
     const normalizedSales = sales.map((sale) => {
       const salePayments = payments.filter(
-        (p) => p.machine_id === sale.machine_id
-      )
+        (p) => p.machine_id === sale.machine_id,
+      );
       const totalPaymentReceived = salePayments.reduce(
         (sum, p) => sum + Number(p.amount),
-        0
-      )
+        0,
+      );
       const speedMoneyDeduction = sale.speed_money
         ? sale.speed_money_amount
           ? Number(sale.speed_money_amount)
           : 0
-        : 0
+        : 0;
       const balance =
         Number(sale.total_generated) -
         totalPaymentReceived -
-        speedMoneyDeduction
-      const pending = balance > 0 ? balance : 0
+        speedMoneyDeduction;
+      const pending = balance > 0 ? balance : 0;
 
       return {
         ...sale,
@@ -88,16 +90,16 @@ export async function GET(req: NextRequest) {
         total_payment_received: totalPaymentReceived,
         total_balance: balance,
         pending,
-      }
-    })
+      };
+    });
 
-    const pendingMachines = normalizedSales.filter((sale) => sale.pending > 0)
+    const pendingMachines = normalizedSales.filter((sale) => sale.pending > 0);
 
-    return NextResponse.json(pendingMachines, { status: 200 })
+    return NextResponse.json(pendingMachines, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

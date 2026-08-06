@@ -1,6 +1,6 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+"use client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   AlertCircle,
   Building2,
@@ -15,23 +15,23 @@ import {
   Search,
   Trash2,
   User,
-} from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-import FilterSheet from "@/components/features/users/filter-sheet"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import exportToExcel from "@/lib/exportToExcel"
-import { UserReimbursementType, UserReimbursementTypes } from "@/lib/types"
-import { cn } from "@/lib/utils"
-import moment from "moment"
-import AddReimbursementDialog from "./add-reimbursement"
+import FilterSheet from "@/components/features/users/filter-sheet";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import exportToExcel from "@/lib/exportToExcel";
+import { UserReimbursementType, UserReimbursementTypes } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import moment from "moment";
+import AddReimbursementDialog from "./add-reimbursement";
 
 export default function Reimbursement({
   id,
@@ -40,19 +40,19 @@ export default function Reimbursement({
   onFilterReturn,
   onReset,
 }: UserReimbursementTypes) {
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [data, setData] = useState<UserReimbursementType[]>([])
-  const [resetLoading, setResetLoading] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<UserReimbursementType[]>([]);
+  const [resetLoading, setResetLoading] = useState(false);
   const [selectedForDelete, setSelectedForDelete] =
-    useState<UserReimbursementType | null>(null)
+    useState<UserReimbursementType | null>(null);
 
-  const [search, setSearch] = useState("")
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    setData([...passingData])
-  }, [passingData])
+    setData([...passingData]);
+  }, [passingData]);
 
   function handleDownload() {
     const headers = [
@@ -62,7 +62,7 @@ export default function Reimbursement({
       "Amount",
       "Description",
       "Submitted By",
-    ]
+    ];
 
     const formattedData = [...data].map((item) => [
       moment(item.date).format("YYYY-MM-DD"),
@@ -71,7 +71,7 @@ export default function Reimbursement({
       Number(item.amount || 0),
       item.description,
       item.submitted_by_name,
-    ])
+    ]);
     exportToExcel(
       headers,
       formattedData,
@@ -79,34 +79,34 @@ export default function Reimbursement({
       false,
       "",
       false,
-      id
-    )
+      id,
+    );
   }
 
   async function handleDelete() {
-    if (!selectedForDelete?.id) return
-    setDeleteLoading(true)
+    if (!selectedForDelete?.id) return;
+    setDeleteLoading(true);
     try {
-      await axios.delete(`/${id}/reimbursement/${selectedForDelete.id}`)
-      await onAddRefresh()
+      await axios.delete(`/${id}/reimbursement/${selectedForDelete.id}`);
+      await onAddRefresh();
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return data
-    const q = search.toLowerCase()
+    if (!search.trim()) return data;
+    const q = search.toLowerCase();
     return data.filter(
       (r) =>
         r.title?.toLowerCase().includes(q) ||
         r.customer?.toLowerCase().includes(q) ||
         r.city?.toLowerCase().includes(q) ||
-        r.description?.toLowerCase().includes(q)
-    )
-  }, [data, search])
+        r.description?.toLowerCase().includes(q),
+    );
+  }, [data, search]);
 
-  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0)
+  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -163,11 +163,11 @@ export default function Reimbursement({
               variant="destructive"
               disabled={resetLoading}
               onClick={async () => {
-                setResetLoading(true)
-                const startDate = moment().startOf("month").toISOString()
-                const endDate = moment().endOf("month").toISOString()
-                await onReset(startDate, endDate)
-                setResetLoading(false)
+                setResetLoading(true);
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await onReset(startDate, endDate);
+                setResetLoading(false);
               }}
             >
               {resetLoading ? <Spinner /> : <RotateCcw />}
@@ -213,7 +213,7 @@ export default function Reimbursement({
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await onFilterReturn(val.start, val.end)
+          await onFilterReturn(val.start, val.end);
         }}
       />
 
@@ -226,7 +226,7 @@ export default function Reimbursement({
         onPressCancel={() => setSelectedForDelete(null)}
       />
     </div>
-  )
+  );
 }
 
 const purposeColors: Record<string, string> = {
@@ -235,7 +235,7 @@ const purposeColors: Record<string, string> = {
   Overhauling: "bg-amber-100 text-amber-700 border-amber-200",
   "New Installation": "bg-emerald-100 text-emerald-700 border-emerald-200",
   "Final Hand Over": "bg-violet-100 text-violet-700 border-violet-200",
-}
+};
 
 function ReimbursementCard({
   onRefresh,
@@ -243,29 +243,29 @@ function ReimbursementCard({
   onClickDelete,
   id,
 }: {
-  id: string | number
-  item: UserReimbursementType
-  onClickDelete: (item: UserReimbursementType) => void
-  onRefresh: () => Promise<void>
+  id: string | number;
+  item: UserReimbursementType;
+  onClickDelete: (item: UserReimbursementType) => void;
+  onRefresh: () => Promise<void>;
 }) {
   const purposeClass =
-    purposeColors[item.title] ?? "bg-slate-100 text-slate-700 border-slate-200"
-  const { reimbursement_approval } = useUserDetail()
+    purposeColors[item.title] ?? "bg-slate-100 text-slate-700 border-slate-200";
+  const { reimbursement_approval } = useUserDetail();
   const [selectedForApproval, setSelectedForApproval] = useState<number | null>(
-    null
-  )
+    null,
+  );
 
   async function handleVerify(rid: number) {
-    if (!id || !rid) return
-    setSelectedForApproval(rid)
+    if (!id || !rid) return;
+    setSelectedForApproval(rid);
     try {
       await axios.put(`/${id}/reimbursement/${rid}`, {
         verified: true,
-      })
+      });
 
-      await onRefresh()
+      await onRefresh();
     } finally {
-      setSelectedForApproval(null)
+      setSelectedForApproval(null);
     }
   }
   return (
@@ -285,7 +285,7 @@ function ReimbursementCard({
               variant="outline"
               className={cn(
                 "max-w-full rounded-md border px-2 py-0.5 text-[10px] font-semibold",
-                purposeClass
+                purposeClass,
               )}
             >
               {item.title}
@@ -374,7 +374,7 @@ function ReimbursementCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // const AddPurpose = ({ item, visible, onClose, onUpdate }: { item: UserReimbursementType | null, visible: boolean, onClose: () => void, onUpdate: (val: UserReimbursementType) => void }) => {

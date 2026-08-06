@@ -1,17 +1,17 @@
-import moment from "moment"
-import admin from "./firebaseAdmin"
-import { NotificationCategory } from "@/constants/notifications"
+import moment from "moment";
+import admin from "./firebaseAdmin";
+import { NotificationCategory } from "@/constants/notifications";
 
 export const sendNotification = async (
   description: string,
   page: string,
   sendTo: string,
   title: string,
-  category: NotificationCategory
+  category: NotificationCategory,
 ) => {
-  if (!sendTo) return
+  if (!sendTo) return;
   try {
-    const TimeStamp = moment().valueOf()
+    const TimeStamp = moment().valueOf();
 
     const notification = {
       TimeStamp,
@@ -21,14 +21,14 @@ export const sendNotification = async (
       sendTo,
       category,
       description,
-    }
+    };
 
-    const db = admin.firestore()
-    const docRef = db.collection("Notification").doc()
-    await docRef.set(notification)
+    const db = admin.firestore();
+    const docRef = db.collection("Notification").doc();
+    await docRef.set(notification);
 
-    console.log("Notification sent")
+    console.log("Notification sent");
   } catch (error) {
-    console.error("Error sending notification:", error)
+    console.error("Error sending notification:", error);
   }
-}
+};

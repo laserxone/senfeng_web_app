@@ -1,44 +1,44 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { List, Search, Table2 } from "lucide-react"
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react"
-import "./Button.css"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { List, Search, Table2 } from "lucide-react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import { InvoiceItem, StockProps } from "@/lib/types"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import "pdfjs-dist/legacy/web/pdf_viewer.css"
-import RenderStockItems from "./render-stock-items"
-import RenderStockItemsOtherView from "./render-stock-items-other-view"
+import { InvoiceItem, StockProps } from "@/lib/types";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import "pdfjs-dist/legacy/web/pdf_viewer.css";
+import RenderStockItems from "./render-stock-items";
+import RenderStockItemsOtherView from "./render-stock-items-other-view";
 
 type AddItemDialogProp = {
-  designation: string
-  visible: boolean
-  onClose: (val: boolean) => void
-  handleDecrease: (item: StockProps) => void
-  showOther: boolean
-  setShowOther: Dispatch<SetStateAction<boolean>>
-  stock: StockProps[]
-  invoiceItems: InvoiceItem[]
-  price: string | number
-  setPrice: Dispatch<SetStateAction<string | number>>
-  setQty: Dispatch<SetStateAction<string | number>>
-  qty: string | number
-  other: string
-  setOther: Dispatch<SetStateAction<string>>
-  handleIncrease: (item: StockProps) => void
-  handleAddToInvoice: () => void
-  onRefresh: () => void
-  handleOrderStock: () => void
-  dialogVisible: boolean
-  onCloseDialog: Dispatch<SetStateAction<boolean>>
-}
+  designation: string;
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  handleDecrease: (item: StockProps) => void;
+  showOther: boolean;
+  setShowOther: Dispatch<SetStateAction<boolean>>;
+  stock: StockProps[];
+  invoiceItems: InvoiceItem[];
+  price: string | number;
+  setPrice: Dispatch<SetStateAction<string | number>>;
+  setQty: Dispatch<SetStateAction<string | number>>;
+  qty: string | number;
+  other: string;
+  setOther: Dispatch<SetStateAction<string>>;
+  handleIncrease: (item: StockProps) => void;
+  handleAddToInvoice: () => void;
+  onRefresh: () => void;
+  handleOrderStock: () => void;
+  dialogVisible: boolean;
+  onCloseDialog: Dispatch<SetStateAction<boolean>>;
+};
 
 const AddItemDialog = ({
   designation,
@@ -62,12 +62,12 @@ const AddItemDialog = ({
   dialogVisible,
   onCloseDialog,
 }: AddItemDialogProp) => {
-  const [search, setSearch] = useState("")
-  const [lowStockStatus, setLowStockStatus] = useState(false)
-  const [clickedLowStock, setClickedLowStock] = useState(false)
-  const [view, setView] = useState(false)
-  const [page, setPage] = useState(1)
-  const pageSize = 50
+  const [search, setSearch] = useState("");
+  const [lowStockStatus, setLowStockStatus] = useState(false);
+  const [clickedLowStock, setClickedLowStock] = useState(false);
+  const [view, setView] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
   const filteredStock = useMemo(
     () =>
@@ -77,20 +77,20 @@ const AddItemDialog = ({
             ? item.threshold != null &&
               item.threshold !== undefined &&
               (item.qty || 0) <= item.threshold
-            : item
+            : item,
         )
         .filter((item) =>
-          item?.name?.toLowerCase().includes(search.toLowerCase())
+          item?.name?.toLowerCase().includes(search.toLowerCase()),
         ),
-    [clickedLowStock, search, stock]
-  )
-  const totalPages = Math.max(1, Math.ceil(filteredStock.length / pageSize))
+    [clickedLowStock, search, stock],
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredStock.length / pageSize));
   const paginatedStock = filteredStock.slice(
     (page - 1) * pageSize,
-    page * pageSize
-  )
-  const pageStart = filteredStock.length ? (page - 1) * pageSize + 1 : 0
-  const pageEnd = Math.min(page * pageSize, filteredStock.length)
+    page * pageSize,
+  );
+  const pageStart = filteredStock.length ? (page - 1) * pageSize + 1 : 0;
+  const pageEnd = Math.min(page * pageSize, filteredStock.length);
 
   useEffect(() => {
     if (stock.length > 0) {
@@ -98,24 +98,24 @@ const AddItemDialog = ({
         (item) =>
           item.threshold != null &&
           item.threshold !== undefined &&
-          item.threshold <= (item?.qty || 0)
-      )
-      setLowStockStatus(hasLowStock)
+          item.threshold <= (item?.qty || 0),
+      );
+      setLowStockStatus(hasLowStock);
     }
-  }, [stock])
+  }, [stock]);
 
   useEffect(() => {
-    setPage(1)
-  }, [clickedLowStock, search, view])
+    setPage(1);
+  }, [clickedLowStock, search, view]);
 
   useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages)
+      setPage(totalPages);
     }
-  }, [page, totalPages])
+  }, [page, totalPages]);
 
   function handleLowStock() {
-    setClickedLowStock(!clickedLowStock)
+    setClickedLowStock(!clickedLowStock);
   }
 
   return (
@@ -196,10 +196,10 @@ const AddItemDialog = ({
                           : "bg-background"
                       }`}
                       onClick={() => {
-                        setShowOther(!showOther)
-                        setOther("")
-                        setQty("")
-                        setPrice("")
+                        setShowOther(!showOther);
+                        setOther("");
+                        setQty("");
+                        setPrice("");
                       }}
                     >
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -347,7 +347,7 @@ const AddItemDialog = ({
                           onRefresh={onRefresh}
                           designation={designation}
                         />
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -357,7 +357,7 @@ const AddItemDialog = ({
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default AddItemDialog
+export default AddItemDialog;

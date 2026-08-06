@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { db } from "@/config/firebase"
-import useUserDetail from "@/hooks/use-user-detail"
-import type { NotificationItem } from "@/store/context/NotificationContext"
+import { Button } from "@/components/ui/button";
+import { db } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
+import type { NotificationItem } from "@/store/context/NotificationContext";
 import {
   collection,
   deleteDoc,
@@ -12,7 +12,7 @@ import {
   query,
   updateDoc,
   where,
-} from "firebase/firestore"
+} from "firebase/firestore";
 import {
   Banknote,
   Bell,
@@ -37,10 +37,10 @@ import {
   UserRound,
   Wrench,
   type LucideIcon,
-} from "lucide-react"
-import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const ADMIN_FILTERS = [
   "unread",
@@ -48,11 +48,11 @@ const ADMIN_FILTERS = [
   "sales",
   "engineering",
   "tasks",
-] as const
-const USER_FILTERS = ["unread", "all"] as const
-const PAGE_SIZE = 20
+] as const;
+const USER_FILTERS = ["unread", "all"] as const;
+const PAGE_SIZE = 20;
 
-type NotificationFilter = (typeof ADMIN_FILTERS)[number]
+type NotificationFilter = (typeof ADMIN_FILTERS)[number];
 
 const notificationIconRules: Array<[string[], LucideIcon]> = [
   [["customer"], UserRound],
@@ -65,202 +65,205 @@ const notificationIconRules: Array<[string[], LucideIcon]> = [
   [["repair", "engineering"], Wrench],
   [["part"], Cog],
   [["quotation"], FileText],
-]
+];
 
 function getNotificationIcon(title?: string) {
-  const normalizedTitle = title?.toLowerCase() ?? ""
+  const normalizedTitle = title?.toLowerCase() ?? "";
   return (
     notificationIconRules.find(([keywords]) =>
-      keywords.some((keyword) => normalizedTitle.includes(keyword))
+      keywords.some((keyword) => normalizedTitle.includes(keyword)),
     )?.[1] ?? Bell
-  )
+  );
 }
 
 function formatRelativeTime(timestamp?: number) {
-  if (!timestamp) return null
+  if (!timestamp) return null;
 
   const elapsedSeconds = Math.max(
     0,
-    Math.floor((Date.now() - timestamp) / 1000)
-  )
-  if (elapsedSeconds < 60) return "Just now"
+    Math.floor((Date.now() - timestamp) / 1000),
+  );
+  if (elapsedSeconds < 60) return "Just now";
 
-  const minutes = Math.floor(elapsedSeconds / 60)
+  const minutes = Math.floor(elapsedSeconds / 60);
   if (minutes < 60)
-    return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`
+    return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
 
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours} ${hours === 1 ? "hr" : "hrs"} ago`
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? "hr" : "hrs"} ago`;
 
-  const days = Math.floor(hours / 24)
-  return `${days} ${days === 1 ? "day" : "days"} ago`
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? "day" : "days"} ago`;
 }
 
 export default function Notification() {
-  const { base_route, isAdmin, userID } = useUserDetail()
-  const [notifications, setNotifications] = useState<NotificationItem[]>([])
-  const [activeFilter, setActiveFilter] = useState<NotificationFilter>("unread")
-  const [page, setPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isMarkingAll, setIsMarkingAll] = useState(false)
+  const { base_route, isAdmin, userID } = useUserDetail();
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [activeFilter, setActiveFilter] =
+    useState<NotificationFilter>("unread");
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
   const [updatingNotification, setUpdatingNotification] = useState<
     string | null
-  >(null)
+  >(null);
   const [deletingNotification, setDeletingNotification] = useState<
     string | null
-  >(null)
-  const [, refreshRelativeTimes] = useState(0)
+  >(null);
+  const [, refreshRelativeTimes] = useState(0);
 
   useEffect(() => {
     const interval = window.setInterval(
       () => refreshRelativeTimes((current) => current + 1),
-      60_000
-    )
-    return () => window.clearInterval(interval)
-  }, [])
+      60_000,
+    );
+    return () => window.clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!userID) {
-      setNotifications([])
-      setIsLoading(false)
-      return
+      setNotifications([]);
+      setIsLoading(false);
+      return;
     }
 
-    let cancelled = false
-    setIsLoading(true)
+    let cancelled = false;
+    setIsLoading(true);
 
     void getDocs(
-      query(collection(db, "Notification"), where("sendTo", "==", userID))
+      query(collection(db, "Notification"), where("sendTo", "==", userID)),
     )
       .then((snapshot) => {
-        if (cancelled) return
+        if (cancelled) return;
         const items = snapshot.docs.map((document) => ({
           ...document.data(),
           id: document.id,
-        })) as NotificationItem[]
+        })) as NotificationItem[];
 
         setNotifications(
-          items.sort((a, b) => (b.TimeStamp ?? 0) - (a.TimeStamp ?? 0))
-        )
+          items.sort((a, b) => (b.TimeStamp ?? 0) - (a.TimeStamp ?? 0)),
+        );
       })
       .catch((error) => {
-        console.error("Unable to load notifications", error)
-        toast.error("Unable to load notifications")
+        console.error("Unable to load notifications", error);
+        toast.error("Unable to load notifications");
       })
       .finally(() => {
-        if (!cancelled) setIsLoading(false)
-      })
+        if (!cancelled) setIsLoading(false);
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [userID])
+      cancelled = true;
+    };
+  }, [userID]);
 
   const filteredNotifications = useMemo(() => {
-    if (activeFilter === "all") return notifications
+    if (activeFilter === "all") return notifications;
     if (activeFilter === "unread") {
-      return notifications.filter((notification) => notification.read === false)
+      return notifications.filter(
+        (notification) => notification.read === false,
+      );
     }
     if (activeFilter === "tasks") {
       return notifications.filter(
         (notification) =>
           notification.category?.toLowerCase() === "tasks" ||
-          notification.title?.toLowerCase().includes("task")
-      )
+          notification.title?.toLowerCase().includes("task"),
+      );
     }
     return notifications.filter(
-      (notification) => notification.category?.toLowerCase() === activeFilter
-    )
-  }, [activeFilter, notifications])
+      (notification) => notification.category?.toLowerCase() === activeFilter,
+    );
+  }, [activeFilter, notifications]);
 
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredNotifications.length / PAGE_SIZE)
-  )
+    Math.ceil(filteredNotifications.length / PAGE_SIZE),
+  );
   const visibleNotifications = filteredNotifications.slice(
     (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  )
+    page * PAGE_SIZE,
+  );
   const unreadCount = notifications.filter(
-    (notification) => notification.read === false
-  ).length
+    (notification) => notification.read === false,
+  ).length;
   const pageStart = filteredNotifications.length
     ? (page - 1) * PAGE_SIZE + 1
-    : 0
-  const pageEnd = Math.min(page * PAGE_SIZE, filteredNotifications.length)
+    : 0;
+  const pageEnd = Math.min(page * PAGE_SIZE, filteredNotifications.length);
 
   useEffect(() => {
-    setPage(1)
-  }, [activeFilter])
+    setPage(1);
+  }, [activeFilter]);
 
   useEffect(() => {
-    if (page > totalPages) setPage(totalPages)
-  }, [page, totalPages])
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const markAsRead = async (notificationId: string) => {
-    if (updatingNotification || deletingNotification) return
-    setUpdatingNotification(notificationId)
+    if (updatingNotification || deletingNotification) return;
+    setUpdatingNotification(notificationId);
 
     try {
-      await updateDoc(doc(db, "Notification", notificationId), { read: true })
-      await new Promise((resolve) => window.setTimeout(resolve, 700))
+      await updateDoc(doc(db, "Notification", notificationId), { read: true });
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
       setNotifications((current) =>
         current.map((notification) =>
           notification.id === notificationId
             ? { ...notification, read: true }
-            : notification
-        )
-      )
+            : notification,
+        ),
+      );
     } catch (error) {
-      console.error("Unable to mark notification as read", error)
-      toast.error("Unable to mark notification as read")
+      console.error("Unable to mark notification as read", error);
+      toast.error("Unable to mark notification as read");
     } finally {
-      setUpdatingNotification(null)
+      setUpdatingNotification(null);
     }
-  }
+  };
 
   const deleteNotification = async (notificationId: string) => {
-    if (deletingNotification || updatingNotification) return
-    setDeletingNotification(notificationId)
+    if (deletingNotification || updatingNotification) return;
+    setDeletingNotification(notificationId);
 
     try {
-      await deleteDoc(doc(db, "Notification", notificationId))
-      await new Promise((resolve) => window.setTimeout(resolve, 700))
+      await deleteDoc(doc(db, "Notification", notificationId));
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
       setNotifications((current) =>
-        current.filter((notification) => notification.id !== notificationId)
-      )
+        current.filter((notification) => notification.id !== notificationId),
+      );
     } catch (error) {
-      console.error("Unable to delete notification", error)
-      toast.error("Unable to delete notification")
+      console.error("Unable to delete notification", error);
+      toast.error("Unable to delete notification");
     } finally {
-      setDeletingNotification(null)
+      setDeletingNotification(null);
     }
-  }
+  };
 
   const markAllAsRead = async () => {
     const unreadNotifications = notifications.filter(
-      (notification) => notification.read === false
-    )
-    if (!unreadNotifications.length || isMarkingAll) return
+      (notification) => notification.read === false,
+    );
+    if (!unreadNotifications.length || isMarkingAll) return;
 
-    setIsMarkingAll(true)
+    setIsMarkingAll(true);
     try {
       await Promise.all(
         unreadNotifications.map((notification) =>
-          updateDoc(doc(db, "Notification", notification.id), { read: true })
-        )
-      )
+          updateDoc(doc(db, "Notification", notification.id), { read: true }),
+        ),
+      );
       setNotifications((current) =>
-        current.map((notification) => ({ ...notification, read: true }))
-      )
-      toast.success("All notifications marked as read")
+        current.map((notification) => ({ ...notification, read: true })),
+      );
+      toast.success("All notifications marked as read");
     } catch (error) {
-      console.error("Unable to mark all notifications as read", error)
-      toast.error("Unable to mark all notifications as read")
+      console.error("Unable to mark all notifications as read", error);
+      toast.error("Unable to mark all notifications as read");
     } finally {
-      setIsMarkingAll(false)
+      setIsMarkingAll(false);
     }
-  }
+  };
 
   return (
     <div className="relative flex min-w-0 flex-1 flex-col gap-4 lg:h-[calc(100dvh-5rem)] lg:overflow-hidden">
@@ -397,10 +400,12 @@ export default function Notification() {
               </div>
             ) : visibleNotifications.length ? (
               visibleNotifications.map((notification) => {
-                const NotificationIcon = getNotificationIcon(notification.title)
+                const NotificationIcon = getNotificationIcon(
+                  notification.title,
+                );
                 const isBeingMarkedRead =
-                  updatingNotification === notification.id
-                const isBeingDeleted = deletingNotification === notification.id
+                  updatingNotification === notification.id;
+                const isBeingDeleted = deletingNotification === notification.id;
 
                 return (
                   <article
@@ -487,7 +492,7 @@ export default function Notification() {
                           title="Mark as read"
                           aria-label="Mark notification as read"
                           disabled={Boolean(
-                            updatingNotification || deletingNotification
+                            updatingNotification || deletingNotification,
                           )}
                           onClick={() => void markAsRead(notification.id)}
                           className="rounded-full text-primary hover:bg-primary/10 hover:text-primary"
@@ -501,7 +506,7 @@ export default function Notification() {
                         title="Delete notification"
                         aria-label="Delete notification"
                         disabled={Boolean(
-                          updatingNotification || deletingNotification
+                          updatingNotification || deletingNotification,
                         )}
                         onClick={() => void deleteNotification(notification.id)}
                         className="rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
@@ -510,7 +515,7 @@ export default function Notification() {
                       </Button>
                     </div>
                   </article>
-                )
+                );
               })
             ) : (
               <div className="flex min-h-72 flex-col items-center justify-center px-6 text-center">
@@ -552,7 +557,7 @@ export default function Notification() {
                       (pageNumber) =>
                         pageNumber === 1 ||
                         pageNumber === totalPages ||
-                        Math.abs(pageNumber - page) <= 1
+                        Math.abs(pageNumber - page) <= 1,
                     )
                     .map((pageNumber, index, pages) => (
                       <div key={pageNumber} className="flex items-center gap-1">
@@ -589,5 +594,5 @@ export default function Notification() {
         </section>
       </div>
     </div>
-  )
+  );
 }

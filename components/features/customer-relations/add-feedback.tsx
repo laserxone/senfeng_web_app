@@ -1,23 +1,23 @@
-import axios from "@/lib/axios"
-import { CheckCircle, MessageSquareText, Star } from "lucide-react"
-import { useEffect, useState } from "react"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import StarRating from "@/components/shared/common/startRating"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import axios from "@/lib/axios";
+import { CheckCircle, MessageSquareText, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import StarRating from "@/components/shared/common/startRating";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Spinner from "@/components/ui/spinner"
-import { CustomerSearch } from "@/components/features/customers/components/customer-search"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
+import { CustomerSearch } from "@/components/features/customers/components/customer-search";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function AddFeedbackDialog({
   open,
@@ -26,22 +26,22 @@ export default function AddFeedbackDialog({
   customer_id,
   onRefresh,
 }: {
-  open: boolean
-  onClose: () => void
-  user_id: number | string
-  customer_id?: number | undefined
-  onRefresh?: () => Promise<void>
+  open: boolean;
+  onClose: () => void;
+  user_id: number | string;
+  customer_id?: number | undefined;
+  onRefresh?: () => Promise<void>;
 }) {
-  const [feedback, setFeedback] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [next, setNext] = useState<Date | undefined>(undefined)
-  const [top, setTop] = useState(false)
-  const [satisfactory, setSatisfactory] = useState(false)
-  const [rating, setRating] = useState(0)
-  const [customer, setCustomer] = useState<number | string | undefined>()
+  const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [next, setNext] = useState<Date | undefined>(undefined);
+  const [top, setTop] = useState(false);
+  const [satisfactory, setSatisfactory] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [customer, setCustomer] = useState<number | string | undefined>();
 
   async function handleSaveFeedback() {
-    setLoading(true)
+    setLoading(true);
     axios
       .post(`/${user_id}/feedback`, {
         feedback,
@@ -54,31 +54,31 @@ export default function AddFeedbackDialog({
         rating,
       })
       .then(async () => {
-        await onRefresh?.()
-        handleClose()
-        resetForm()
+        await onRefresh?.();
+        handleClose();
+        resetForm();
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   function handleClose() {
-    onClose()
-    resetForm()
+    onClose();
+    resetForm();
   }
 
   function resetForm() {
-    setFeedback("")
-    setNext(undefined)
-    setTop(false)
-    setSatisfactory(false)
-    setRating(0)
+    setFeedback("");
+    setNext(undefined);
+    setTop(false);
+    setSatisfactory(false);
+    setRating(0);
   }
 
   useEffect(() => {
-    if (customer_id) setCustomer(customer_id)
-  }, [customer_id])
+    if (customer_id) setCustomer(customer_id);
+  }, [customer_id]);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -146,7 +146,7 @@ export default function AddFeedbackDialog({
                 <Checkbox
                   checked={top}
                   onCheckedChange={(checked) => {
-                    setTop(checked as boolean)
+                    setTop(checked as boolean);
                   }}
                 />
               </label>
@@ -159,7 +159,7 @@ export default function AddFeedbackDialog({
                 <Checkbox
                   checked={satisfactory}
                   onCheckedChange={(checked) => {
-                    setSatisfactory(checked as boolean)
+                    setSatisfactory(checked as boolean);
                   }}
                 />
               </label>
@@ -178,7 +178,7 @@ export default function AddFeedbackDialog({
               className="h-9 w-full rounded-lg"
               disabled={loading || !next || !feedback || rating === 0}
               onClick={() => {
-                handleSaveFeedback()
+                handleSaveFeedback();
               }}
             >
               {loading && <Spinner />} Save Feedback
@@ -187,5 +187,5 @@ export default function AddFeedbackDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

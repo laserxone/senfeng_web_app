@@ -1,13 +1,13 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function EmptyState({
   title,
   description,
   icon,
 }: {
-  title: string
-  description: string
-  icon: React.ReactNode
+  title: string;
+  description: string;
+  icon: React.ReactNode;
 }) {
   return (
     <Card className="border-dashed">
@@ -23,5 +23,5 @@ export default function EmptyState({
         </p>
       </CardContent>
     </Card>
-  )
+  );
 }

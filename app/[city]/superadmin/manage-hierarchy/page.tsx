@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -9,16 +9,16 @@ import {
   ChevronRight,
   Building2,
   Mail,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -27,154 +27,154 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import axios from "@/lib/axios"
-import useUserDetail from "@/hooks/use-user-detail"
-import { UserSearch } from "@/components/shared/search/user-search"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Heading from "@/components/ui/heading"
+} from "@/components/ui/select";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import axios from "@/lib/axios";
+import useUserDetail from "@/hooks/use-user-detail";
+import { UserSearch } from "@/components/shared/search/user-search";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Heading from "@/components/ui/heading";
 
 type User = {
-  id: number
-  name: string
-  email: string
-  designation: string
-}
+  id: number;
+  name: string;
+  email: string;
+  designation: string;
+};
 
 type Approver = {
-  id: number
-  user_id: number
-  approval_order: number
-  user_name: string
-  user_email: string
-  user_designation: string
-}
+  id: number;
+  user_id: number;
+  approval_order: number;
+  user_name: string;
+  user_email: string;
+  user_designation: string;
+};
 
 type Hierarchy = {
-  id: number
-  name: string
-  hierarchy_type: string
-  description: string | null
-  is_active: boolean
-  approvers: Approver[] | null
-  created_at: string
-}
+  id: number;
+  name: string;
+  hierarchy_type: string;
+  description: string | null;
+  is_active: boolean;
+  approvers: Approver[] | null;
+  created_at: string;
+};
 
 export default function HierarchyPage() {
-  const [hierarchies, setHierarchies] = useState<Hierarchy[]>([])
-  const [users, setUsers] = useState<User[]>([])
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [hierarchyName, setHierarchyName] = useState("")
-  const [hierarchyDescription, setHierarchyDescription] = useState("")
-  const [selectedApprovers, setSelectedApprovers] = useState<number[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-  const [hierarchyType, setHierarchyType] = useState("loan")
-  const { userID } = useUserDetail()
+  const [hierarchies, setHierarchies] = useState<Hierarchy[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [hierarchyName, setHierarchyName] = useState("");
+  const [hierarchyDescription, setHierarchyDescription] = useState("");
+  const [selectedApprovers, setSelectedApprovers] = useState<number[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [hierarchyType, setHierarchyType] = useState("loan");
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     if (userID) {
-      fetchData()
-      fetchUsers()
+      fetchData();
+      fetchUsers();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
     try {
-      const res = await axios.get(`/${userID}/hierarchies`)
-      setHierarchies(res.data)
+      const res = await axios.get(`/${userID}/hierarchies`);
+      setHierarchies(res.data);
     } finally {
     }
   }
 
   async function fetchUsers() {
     try {
-      const res = await axios.get(`/${userID}/hierarchies/users`)
-      setUsers(res.data)
+      const res = await axios.get(`/${userID}/hierarchies/users`);
+      setUsers(res.data);
     } finally {
     }
   }
 
   const handleAddApprover = (userId: string | null) => {
-    if (!userId) return
-    const id = parseInt(userId)
+    if (!userId) return;
+    const id = parseInt(userId);
     if (!selectedApprovers.includes(id)) {
-      setSelectedApprovers([...selectedApprovers, id])
+      setSelectedApprovers([...selectedApprovers, id]);
     }
-  }
+  };
 
   const handleRemoveApprover = (userId: number) => {
-    setSelectedApprovers(selectedApprovers.filter((id) => id !== userId))
-  }
+    setSelectedApprovers(selectedApprovers.filter((id) => id !== userId));
+  };
 
   const handleDragStart = (index: number) => {
-    setDraggedIndex(index)
-  }
+    setDraggedIndex(index);
+  };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault()
-    if (draggedIndex === null || draggedIndex === index) return
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
 
-    const newApprovers = [...selectedApprovers]
-    const draggedItem = newApprovers[draggedIndex]
-    newApprovers.splice(draggedIndex, 1)
-    newApprovers.splice(index, 0, draggedItem)
-    setSelectedApprovers(newApprovers)
-    setDraggedIndex(index)
-  }
+    const newApprovers = [...selectedApprovers];
+    const draggedItem = newApprovers[draggedIndex];
+    newApprovers.splice(draggedIndex, 1);
+    newApprovers.splice(index, 0, draggedItem);
+    setSelectedApprovers(newApprovers);
+    setDraggedIndex(index);
+  };
 
   const handleDragEnd = () => {
-    setDraggedIndex(null)
-  }
+    setDraggedIndex(null);
+  };
 
   const handleSubmit = async () => {
-    if (!hierarchyName || selectedApprovers.length === 0) return
+    if (!hierarchyName || selectedApprovers.length === 0) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       await axios.post(`/${userID}/hierarchies`, {
         name: hierarchyName,
         description: hierarchyDescription,
         hierarchy_type: hierarchyType,
         approvers: selectedApprovers,
-      })
+      });
 
-      await fetchData()
-      setIsDialogOpen(false)
-      setHierarchyName("")
-      setHierarchyDescription("")
-      setSelectedApprovers([])
+      await fetchData();
+      setIsDialogOpen(false);
+      setHierarchyName("");
+      setHierarchyDescription("");
+      setSelectedApprovers([]);
     } catch (error) {
-      console.error("Error creating hierarchy:", error)
+      console.error("Error creating hierarchy:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleDeleteHierarchy = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this hierarchy?")) return
+    if (!confirm("Are you sure you want to delete this hierarchy?")) return;
 
     try {
-      await axios.delete(`/${userID}/hierarchies/${id}`)
-      await fetchData()
+      await axios.delete(`/${userID}/hierarchies/${id}`);
+      await fetchData();
     } catch (error) {
-      console.error("Error deleting hierarchy:", error)
+      console.error("Error deleting hierarchy:", error);
     }
-  }
+  };
 
   const getSelectedUserDetails = (userId: number) => {
-    return users?.find((user) => user.id === userId)
-  }
+    return users?.find((user) => user.id === userId);
+  };
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -353,8 +353,8 @@ export default function HierarchyPage() {
                   </FieldLabel>
                   <div className="space-y-2">
                     {selectedApprovers.map((userId, index) => {
-                      const user = getSelectedUserDetails(userId)
-                      if (!user) return null
+                      const user = getSelectedUserDetails(userId);
+                      if (!user) return null;
                       return (
                         <div
                           key={userId}
@@ -365,7 +365,7 @@ export default function HierarchyPage() {
                           className={cn(
                             "flex cursor-move items-center gap-3 rounded-lg border bg-card p-3 transition-all",
                             draggedIndex === index &&
-                              "border-emerald-500 opacity-50"
+                              "border-emerald-500 opacity-50",
                           )}
                         >
                           <GripVertical className="size-5 flex-shrink-0 text-muted-foreground" />
@@ -388,7 +388,7 @@ export default function HierarchyPage() {
                             <Trash2 className="size-4" />
                           </Button>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -418,5 +418,5 @@ export default function HierarchyPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

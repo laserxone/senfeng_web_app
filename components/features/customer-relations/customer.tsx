@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   ArrowUpDown,
   Building2,
@@ -7,38 +7,38 @@ import {
   Phone,
   Plus,
   Users,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useEffect, useMemo, useState } from "react"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import PageTable from "@/components/shared/tables/app-table"
-import AddCustomerDialog from "@/components/features/customers/components/add-customer"
-import useUserDetail from "@/hooks/use-user-detail"
-import { ExtraCustomer, NewlyAssignedCustomer } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import moment from "moment"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import PageTable from "@/components/shared/tables/app-table";
+import AddCustomerDialog from "@/components/features/customers/components/add-customer";
+import useUserDetail from "@/hooks/use-user-detail";
+import { ExtraCustomer, NewlyAssignedCustomer } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import moment from "moment";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
 
 type CustomerEmployeeProps = {
-  customer_data: ExtraCustomer[]
-  onRefresh: () => Promise<void>
-  ownership: boolean
-  totalCustomerText?: string
-  height?: string
+  customer_data: ExtraCustomer[];
+  onRefresh: () => Promise<void>;
+  ownership: boolean;
+  totalCustomerText?: string;
+  height?: string;
 
-  newly_assigned?: null | { total: number; data: NewlyAssignedCustomer[] }
-}
+  newly_assigned?: null | { total: number; data: NewlyAssignedCustomer[] };
+};
 
 export default function CustomerEmployee({
   customer_data,
@@ -48,22 +48,22 @@ export default function CustomerEmployee({
 
   newly_assigned,
 }: CustomerEmployeeProps) {
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [data, setData] = useState<ExtraCustomer[]>([])
-  const [addCustomer, setAddCustomer] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [data, setData] = useState<ExtraCustomer[]>([]);
+  const [addCustomer, setAddCustomer] = useState(false);
   const { userID, designation, customer_add_access, base_route, route_branch } =
-    useUserDetail()
+    useUserDetail();
   const [selectedCustomer, setSelectedCustomer] =
-    useState<ExtraCustomer | null>(null)
-  const [showFeedback, setShowFeedback] = useState(false)
+    useState<ExtraCustomer | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     if (customer_data && customer_data.length > 0) {
-      setData(customer_data)
+      setData(customer_data);
     }
-  }, [customer_data])
+  }, [customer_data]);
 
   const columns = useMemo(() => {
     const baseColumns: ColumnDef<ExtraCustomer>[] = [
@@ -155,7 +155,7 @@ export default function CustomerEmployee({
           </div>
         ),
       },
-    ]
+    ];
 
     if (
       designation === "Customer Relationship Manager" ||
@@ -164,24 +164,24 @@ export default function CustomerEmployee({
       baseColumns.push({
         id: "actions",
         cell: ({ row }) => {
-          const currentItem = row.original
+          const currentItem = row.original;
           return (
             <Button
               onClick={(e) => {
-                e.stopPropagation()
-                setSelectedCustomer(currentItem)
-                setShowFeedback(true)
+                e.stopPropagation();
+                setSelectedCustomer(currentItem);
+                setShowFeedback(true);
               }}
             >
               Take Feedback
             </Button>
-          )
+          );
         },
-      })
+      });
     }
 
-    return baseColumns
-  }, [userID])
+    return baseColumns;
+  }, [userID]);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -193,12 +193,12 @@ export default function CustomerEmployee({
           if (val?.id) {
             const url = `/${base_route}/${
               val?.member ? "member" : "customer"
-            }/${val.id}`
+            }/${val.id}`;
 
             if (event.ctrlKey || event.metaKey) {
-              window.open(url, "_blank")
+              window.open(url, "_blank");
             } else {
-              router.push(url)
+              router.push(url);
             }
           }
         }}
@@ -223,8 +223,8 @@ export default function CustomerEmployee({
         visible={addCustomer}
         onClose={setAddCustomer}
         onRefresh={async () => {
-          setData([])
-          await onRefresh()
+          setData([]);
+          await onRefresh();
         }}
       />
 
@@ -232,8 +232,8 @@ export default function CustomerEmployee({
         open={showFeedback}
         customer_id={selectedCustomer?.id}
         onClose={() => {
-          setSelectedCustomer(null)
-          setShowFeedback(false)
+          setSelectedCustomer(null);
+          setShowFeedback(false);
         }}
         onRefresh={onRefresh}
         user_id={userID}
@@ -247,21 +247,21 @@ export default function CustomerEmployee({
         onPressCancel={() => setShowConfirmation(false)}
       />
     </div>
-  )
+  );
 }
 
 const RenderNewlyAssigned = ({
   data,
 }: {
-  data: { total: number; data: NewlyAssignedCustomer[] }
+  data: { total: number; data: NewlyAssignedCustomer[] };
 }) => {
-  const { base_route } = useUserDetail()
-  const customers = data?.data || []
+  const { base_route } = useUserDetail();
+  const customers = data?.data || [];
 
   const formatNumber = (value: NewlyAssignedCustomer["number"]) => {
-    if (Array.isArray(value)) return value.filter(Boolean).join(", ")
-    return value || "N/A"
-  }
+    if (Array.isArray(value)) return value.filter(Boolean).join(", ");
+    return value || "N/A";
+  };
 
   return (
     <Dialog>
@@ -355,5 +355,5 @@ const RenderNewlyAssigned = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

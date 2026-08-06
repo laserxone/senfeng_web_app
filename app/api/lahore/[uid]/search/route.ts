@@ -1,5 +1,5 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 type SearchTable =
   | "customer"
@@ -10,58 +10,58 @@ type SearchTable =
   | "customer_parts"
   | "lab_tasks"
   | "complaints"
-  | "task"
+  | "task";
 
 type SearchRow = {
-  id: number
-  table: SearchTable
-  title: string
-  customer_id: number | null
-  description: string | null
-}
+  id: number;
+  table: SearchTable;
+  title: string;
+  customer_id: number | null;
+  description: string | null;
+};
 
 type SearchUser = {
-  id: number
-  designation: string
-  full_access: boolean
-  limited_access: boolean
-  complaint_assigned: boolean
-  repairing_and_maintenance: boolean
-  pos_assigned: boolean
-}
+  id: number;
+  designation: string;
+  full_access: boolean;
+  limited_access: boolean;
+  complaint_assigned: boolean;
+  repairing_and_maintenance: boolean;
+  pos_assigned: boolean;
+};
 
 type PaymentSearchRow = SearchRow & {
-  machine_id: number
-}
+  machine_id: number;
+};
 
 type POSSearchRow = SearchRow & {
-  invoice_id: number
-}
+  invoice_id: number;
+};
 
 const CUSTOMER_ONLY_ROLES = new Set([
   "Customer Relationship Manager",
   "Customer Relationship Manager (After Sales)",
   "Social Media Manager",
-])
+]);
 
-const CUSTOMER_AND_SALE_ROLES = new Set(["Sales", "Manager", "Dealer"])
+const CUSTOMER_AND_SALE_ROLES = new Set(["Sales", "Manager", "Dealer"]);
 const ALL_TASK_ACCESS_ROLES = new Set([
   "Manager",
   "Customer Relationship Manager",
   "Customer Relationship Manager (After Sales)",
-])
+]);
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
-  const searchParams = req.nextUrl.searchParams
-  const q = searchParams.get("q")?.trim()
-  const baseRoute = searchParams.get("base_route")?.replace(/^\/+|\/+$/g, "")
+  const { uid } = await params;
+  const searchParams = req.nextUrl.searchParams;
+  const q = searchParams.get("q")?.trim();
+  const baseRoute = searchParams.get("base_route")?.replace(/^\/+|\/+$/g, "");
 
   if (!q || !baseRoute) {
-    return NextResponse.json([], { status: 200 })
+    return NextResponse.json([], { status: 200 });
   }
 
   try {
@@ -79,54 +79,57 @@ export async function GET(
         WHERE id = $1
         LIMIT 1
       `,
-      [uid]
-    )
-    const user = userResult.rows[0]
+      [uid],
+    );
+    const user = userResult.rows[0];
 
     if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 })
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const isAdmin = user.full_access || user.designation === "Owner"
-    const hasCustomerOnlyRole = CUSTOMER_ONLY_ROLES.has(user.designation)
-    const hasCustomerAndSaleRole = CUSTOMER_AND_SALE_ROLES.has(user.designation)
+    const isAdmin = user.full_access || user.designation === "Owner";
+    const hasCustomerOnlyRole = CUSTOMER_ONLY_ROLES.has(user.designation);
+    const hasCustomerAndSaleRole = CUSTOMER_AND_SALE_ROLES.has(
+      user.designation,
+    );
     const canSearchCustomers =
-      isAdmin || hasCustomerOnlyRole || hasCustomerAndSaleRole
+      isAdmin || hasCustomerOnlyRole || hasCustomerAndSaleRole;
     const canSearchSales =
       isAdmin ||
       hasCustomerAndSaleRole ||
-      (hasCustomerOnlyRole && !user.limited_access)
-    const isEngineer = user.designation === "Engineer"
-    const canSearchComplaints = isAdmin || isEngineer || user.complaint_assigned
+      (hasCustomerOnlyRole && !user.limited_access);
+    const isEngineer = user.designation === "Engineer";
+    const canSearchComplaints =
+      isAdmin || isEngineer || user.complaint_assigned;
     const canSearchRepairs =
-      isAdmin || isEngineer || user.repairing_and_maintenance
+      isAdmin || isEngineer || user.repairing_and_maintenance;
     const canSearchPOS =
-      isAdmin || user.designation === "Store Manager" || user.pos_assigned
+      isAdmin || user.designation === "Store Manager" || user.pos_assigned;
     const restrictComplaintsToUser =
-      isEngineer && !isAdmin && !user.complaint_assigned
+      isEngineer && !isAdmin && !user.complaint_assigned;
     const restrictRepairsToUser =
-      isEngineer && !isAdmin && !user.repairing_and_maintenance
-    const canSearchTasks = isAdmin || user.designation !== "Dealer"
+      isEngineer && !isAdmin && !user.repairing_and_maintenance;
+    const canSearchTasks = isAdmin || user.designation !== "Dealer";
     const canSearchAllTasks =
-      isAdmin || ALL_TASK_ACCESS_ROLES.has(user.designation)
+      isAdmin || ALL_TASK_ACCESS_ROLES.has(user.designation);
     const usesLimitedUserScope =
-      user.limited_access && !isAdmin && canSearchCustomers
+      user.limited_access && !isAdmin && canSearchCustomers;
     const usesUserIdParameter =
       usesLimitedUserScope ||
       (canSearchTasks && !canSearchAllTasks) ||
       restrictComplaintsToUser ||
-      restrictRepairsToUser
+      restrictRepairsToUser;
 
-    let customerScope = "FALSE"
+    let customerScope = "FALSE";
     if (isAdmin || (canSearchCustomers && !user.limited_access)) {
-      customerScope = "TRUE"
+      customerScope = "TRUE";
     } else if (hasCustomerOnlyRole) {
-      customerScope = "c.lead_id = $2"
+      customerScope = "c.lead_id = $2";
     } else if (hasCustomerAndSaleRole) {
-      customerScope = "c.ownership = $2"
+      customerScope = "c.ownership = $2";
     }
 
-    const searchParts: string[] = []
+    const searchParts: string[] = [];
 
     if (canSearchCustomers) {
       searchParts.push(`
@@ -137,7 +140,7 @@ export async function GET(
           NULL::integer AS customer_id,
           NULL::text AS description
         FROM matched_customers
-      `)
+      `);
     }
 
     if (isAdmin) {
@@ -149,12 +152,12 @@ export async function GET(
           NULL::integer AS customer_id,
           designation AS description
         FROM matched_users
-      `)
+      `);
     }
 
     if (canSearchSales) {
       const saleScope =
-        user.limited_access && !isAdmin ? "AND s.sell_by = $2" : ""
+        user.limited_access && !isAdmin ? "AND s.sell_by = $2" : "";
       searchParts.push(`
         SELECT * FROM (
           SELECT
@@ -186,11 +189,11 @@ export async function GET(
           ORDER BY s.created_at DESC NULLS LAST, s.id DESC
           LIMIT 10
         ) AS sale_results
-      `)
+      `);
     }
 
     if (canSearchRepairs) {
-      const repairScope = restrictRepairsToUser ? "AND lt.user_id = $2" : ""
+      const repairScope = restrictRepairsToUser ? "AND lt.user_id = $2" : "";
       searchParts.push(`
         SELECT * FROM (
           SELECT
@@ -216,13 +219,13 @@ export async function GET(
           ORDER BY lt.assign_date DESC NULLS LAST, lt.id DESC
           LIMIT 10
         ) AS repair_results
-      `)
+      `);
     }
 
     if (canSearchComplaints) {
       const complaintScope = restrictComplaintsToUser
         ? "AND ca.engineer_id = $2"
-        : ""
+        : "";
       searchParts.push(`
         SELECT * FROM (
           SELECT
@@ -253,11 +256,11 @@ export async function GET(
           ORDER BY co.created_at DESC NULLS LAST, co.id DESC
           LIMIT 10
         ) AS complaint_results
-      `)
+      `);
     }
 
     if (canSearchTasks) {
-      const taskScope = canSearchAllTasks ? "" : "AND t.assigned_to = $2"
+      const taskScope = canSearchAllTasks ? "" : "AND t.assigned_to = $2";
       searchParts.push(`
         SELECT * FROM (
           SELECT
@@ -283,7 +286,7 @@ export async function GET(
           ORDER BY t.created_at DESC NULLS LAST, t.id DESC
           LIMIT 10
         ) AS task_results
-      `)
+      `);
     }
 
     const paymentRowsPromise: Promise<PaymentSearchRow[]> = canSearchSales
@@ -324,18 +327,18 @@ export async function GET(
                 LIMIT 10
               ) AS payment_results
             `,
-            user.limited_access && !isAdmin ? [`%${q}%`, user.id] : [`%${q}%`]
+            user.limited_access && !isAdmin ? [`%${q}%`, user.id] : [`%${q}%`],
           )
           .then((paymentResult) => paymentResult.rows)
-      : Promise.resolve([])
+      : Promise.resolve([]);
 
-    const isKarachiRequest = req.nextUrl.pathname.startsWith("/api/karachi/")
+    const isKarachiRequest = req.nextUrl.pathname.startsWith("/api/karachi/");
     const invoiceTable = isKarachiRequest
       ? "savedinvoices_karachi"
-      : "savedinvoices"
+      : "savedinvoices";
     const customerPartsTable = isKarachiRequest
       ? "customer_parts_karachi"
-      : "customer_parts"
+      : "customer_parts";
     const posRowsPromise: Promise<POSSearchRow[]> = canSearchPOS
       ? pool
           .query<POSSearchRow>(
@@ -388,10 +391,10 @@ export async function GET(
                 LIMIT 10
               ) AS customer_part_results
             `,
-            [`%${q}%`]
+            [`%${q}%`],
           )
           .then((posResult) => posResult.rows)
-      : Promise.resolve([])
+      : Promise.resolve([]);
 
     const [result, paymentRows, posRows] = await Promise.all([
       pool.query<SearchRow>(
@@ -414,11 +417,11 @@ export async function GET(
         ${searchParts.join("\nUNION ALL\n")}
         ORDER BY "table", title
       `,
-        usesUserIdParameter ? [`%${q}%`, user.id] : [`%${q}%`]
+        usesUserIdParameter ? [`%${q}%`, user.id] : [`%${q}%`],
       ),
       paymentRowsPromise,
       posRowsPromise,
-    ])
+    ]);
 
     const results = result.rows.map((row) => {
       const routes: Record<SearchTable, string> = {
@@ -431,17 +434,17 @@ export async function GET(
         lab_tasks: `/${baseRoute}/repairandmaintenance?r=${row.id}`,
         complaints: `/${baseRoute}/complaint?c=${row.id}`,
         task: `/${baseRoute}/task?t=${row.id}`,
-      }
+      };
 
-      return { ...row, route: routes[row.table] }
-    })
+      return { ...row, route: routes[row.table] };
+    });
 
     results.push(
       ...paymentRows.map((row) => ({
         ...row,
         route: `/${baseRoute}/member/${row.customer_id}/${row.machine_id}?mp=${row.id}`,
-      }))
-    )
+      })),
+    );
     results.push(
       ...posRows.map((row) => ({
         ...row,
@@ -449,17 +452,17 @@ export async function GET(
           row.table === "customer_parts"
             ? `/${baseRoute}/pos/${row.invoice_id}?mp=${row.id}`
             : `/${baseRoute}/pos/${row.invoice_id}`,
-      }))
-    )
+      })),
+    );
 
-    return NextResponse.json(results, { status: 200 })
+    return NextResponse.json(results, { status: 200 });
   } catch (error) {
-    console.error("Global search failed:", error)
+    console.error("Global search failed:", error);
     return NextResponse.json(
       { message: "Unable to perform search" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

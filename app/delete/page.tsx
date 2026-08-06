@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import PageContainer from "@/components/core/layout/page-container"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { useCallback } from "react"
+import PageContainer from "@/components/core/layout/page-container";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useCallback } from "react";
 
 export default function Page() {
-  const emailAddress = "laserzone.pk@gmail.com"
+  const emailAddress = "laserzone.pk@gmail.com";
 
   const handleEmailClick = useCallback(() => {
-    window.location.href = `mailto:${emailAddress}?subject=Data Deletion Request&body=Please delete my account and associated data. My account email is: [your-email-here]`
-  }, [])
+    window.location.href = `mailto:${emailAddress}?subject=Data Deletion Request&body=Please delete my account and associated data. My account email is: [your-email-here]`;
+  }, []);
 
   return (
     <PageContainer scrollable={true}>
@@ -67,5 +67,5 @@ export default function Page() {
         </section>
       </div>
     </PageContainer>
-  )
+  );
 }

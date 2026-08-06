@@ -1,35 +1,35 @@
-import { ArrowUpDown } from "lucide-react"
-import { Dispatch, SetStateAction, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { ArrowUpDown } from "lucide-react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import "./Button.css"
-import PageTable from "@/components/shared/tables/app-table"
+} from "@/components/ui/select";
+import "./Button.css";
+import PageTable from "@/components/shared/tables/app-table";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import useUserDetail from "@/hooks/use-user-detail"
-import formatCurrency from "@/lib/formatCurrency"
-import { SearchItem } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import Link from "next/link"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import "pdfjs-dist/legacy/web/pdf_viewer.css"
-import axios from "axios"
-import Spinner from "@/components/ui/spinner"
+import useUserDetail from "@/hooks/use-user-detail";
+import formatCurrency from "@/lib/formatCurrency";
+import { SearchItem } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import "pdfjs-dist/legacy/web/pdf_viewer.css";
+import axios from "axios";
+import Spinner from "@/components/ui/spinner";
 
 type PageTableRef = {
-  handleClear: () => void
-}
+  handleClear: () => void;
+};
 
 const SearchResultModal = ({
   visible,
@@ -39,14 +39,14 @@ const SearchResultModal = ({
   showSelect = true,
   total = 0,
 }: {
-  visible: boolean
-  onClose: Dispatch<SetStateAction<boolean>>
-  data: SearchItem[]
-  onselect?: (item: SearchItem) => void
-  showSelect?: boolean
-  total: number
+  visible: boolean;
+  onClose: Dispatch<SetStateAction<boolean>>;
+  data: SearchItem[];
+  onselect?: (item: SearchItem) => void;
+  showSelect?: boolean;
+  total: number;
 }) => {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
 
   const columns: ColumnDef<SearchItem>[] = [
     {
@@ -60,7 +60,7 @@ const SearchResultModal = ({
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -81,7 +81,7 @@ const SearchResultModal = ({
             Invoice No
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("invoicenumber")}</div>,
     },
@@ -97,7 +97,7 @@ const SearchResultModal = ({
             Name
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("name")}</div>,
     },
@@ -113,7 +113,7 @@ const SearchResultModal = ({
             Company
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("company")}</div>,
     },
@@ -129,7 +129,7 @@ const SearchResultModal = ({
             Location
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("customer_location")}</div>,
     },
@@ -145,7 +145,7 @@ const SearchResultModal = ({
             Sale Person
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("manager")}</div>,
     },
@@ -161,7 +161,7 @@ const SearchResultModal = ({
             Invoice Amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("total")}</div>,
     },
@@ -177,7 +177,7 @@ const SearchResultModal = ({
             Status
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("status")}</div>,
     },
@@ -186,7 +186,7 @@ const SearchResultModal = ({
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const id = row.original?.id ?? null
+        const id = row.original?.id ?? null;
         return (
           <div className="flex gap-2">
             {showSelect && (
@@ -203,10 +203,10 @@ const SearchResultModal = ({
               </Link>
             )}
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
@@ -231,7 +231,7 @@ const SearchResultModal = ({
         </PageTable>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default SearchResultModal
+export default SearchResultModal;

@@ -1,10 +1,10 @@
-import Machine from "@/components/features/machines/machine-component"
+import Machine from "@/components/features/machines/machine-component";
 
 export default async function Page({
   params,
 }: {
-  params: Promise<{ mid: string }>
+  params: Promise<{ mid: string }>;
 }) {
-  const { mid } = await params
-  return <Machine id={mid} />
+  const { mid } = await params;
+  return <Machine id={mid} />;
 }

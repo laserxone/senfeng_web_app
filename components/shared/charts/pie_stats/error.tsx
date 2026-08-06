@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function StatsError({ error }) {
   return (
@@ -12,5 +12,5 @@ export default function StatsError({ error }) {
         Failed to load statistics: {error.message}
       </AlertDescription>
     </Alert>
-  )
+  );
 }

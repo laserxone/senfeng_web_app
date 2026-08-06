@@ -1,7 +1,7 @@
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Dispatch, SetStateAction, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -9,16 +9,16 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { ChequeProp } from "@/lib/types"
+} from "@/components/ui/select";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { ChequeProp } from "@/lib/types";
 import {
   Banknote,
   CalendarDays,
   ImageUp,
   ListChecks,
   ReceiptText,
-} from "lucide-react"
+} from "lucide-react";
 
 const ChequeCredit = ({
   total,
@@ -26,10 +26,10 @@ const ChequeCredit = ({
   setTotal,
   setValue,
 }: {
-  total: ChequeProp[]
-  value: string | undefined
-  setTotal: Dispatch<SetStateAction<ChequeProp[]>>
-  setValue: Dispatch<SetStateAction<string | undefined>>
+  total: ChequeProp[];
+  value: string | undefined;
+  setTotal: Dispatch<SetStateAction<ChequeProp[]>>;
+  setValue: Dispatch<SetStateAction<string | undefined>>;
 }) => {
   useEffect(() => {
     if (Number(value) > 0) {
@@ -38,21 +38,21 @@ const ChequeCredit = ({
           date: undefined,
           amount: 0,
           img: "",
-        }))
-      )
+        })),
+      );
     }
-  }, [setTotal, value])
+  }, [setTotal, value]);
 
   function handleUpdateData<K extends keyof ChequeProp>(
     val: ChequeProp[K],
     i: number,
-    key: K
+    key: K,
   ) {
     setTotal((prevState) => {
-      const newState = [...prevState]
-      newState[i][key] = val
-      return newState
-    })
+      const newState = [...prevState];
+      newState[i][key] = val;
+      return newState;
+    });
   }
 
   return (
@@ -157,8 +157,8 @@ const ChequeCredit = ({
                         handleUpdateData(
                           Number(e.target.value),
                           index,
-                          "amount"
-                        )
+                          "amount",
+                        );
                       }
                     }}
                   />
@@ -173,7 +173,7 @@ const ChequeCredit = ({
                     <Dropzone
                       value={item.img}
                       onDrop={(file) => {
-                        handleUpdateData(file, index, "img")
+                        handleUpdateData(file, index, "img");
                       }}
                       title="Click to upload"
                       subheading="or drag and drop"
@@ -188,7 +188,7 @@ const ChequeCredit = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ChequeCredit
+export default ChequeCredit;

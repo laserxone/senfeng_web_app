@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { memo } from "react"
-import { LayoutPanelTop, UserPen } from "lucide-react"
-import { usePathname } from "next/navigation"
-import useUserDetail from "@/hooks/use-user-detail"
+import { memo } from "react";
+import { LayoutPanelTop, UserPen } from "lucide-react";
+import { usePathname } from "next/navigation";
+import useUserDetail from "@/hooks/use-user-detail";
 
 type HeadingProps = {
-  title: string
-  description?: string
-  className?: string
-  panel?: boolean
-}
+  title: string;
+  description?: string;
+  className?: string;
+  panel?: boolean;
+};
 
 function Heading({
   title,
@@ -18,14 +18,14 @@ function Heading({
   className,
   panel = false,
 }: HeadingProps) {
-  const pathname = usePathname()
-  const { base_route } = useUserDetail()
+  const pathname = usePathname();
+  const { base_route } = useUserDetail();
   const isExcludeRoutes =
     pathname.includes(`${base_route}/customer`) ||
-    pathname.includes(`${base_route}/member`)
-  const usePanel = !isExcludeRoutes
+    pathname.includes(`${base_route}/member`);
+  const usePanel = !isExcludeRoutes;
 
-  console.log(usePanel)
+  console.log(usePanel);
 
   if (usePanel) {
     return (
@@ -49,7 +49,7 @@ function Heading({
           ) : null}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -57,7 +57,7 @@ function Heading({
       <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
       <p className="text-sm text-muted-foreground">{description}</p>
     </div>
-  )
+  );
 }
 
-export default memo(Heading)
+export default memo(Heading);

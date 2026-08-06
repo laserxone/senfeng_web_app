@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetClose,
@@ -11,11 +11,11 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios, { cancelRequest } from "@/lib/axios"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/sheet";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios, { cancelRequest } from "@/lib/axios";
+import { cn } from "@/lib/utils";
 import {
   ClipboardList,
   CreditCard,
@@ -28,10 +28,10 @@ import {
   WalletCards,
   Wrench,
   X,
-} from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 type SearchTable =
   | "customer"
@@ -42,17 +42,17 @@ type SearchTable =
   | "customer_parts"
   | "lab_tasks"
   | "complaints"
-  | "task"
-type SearchFilter = "all" | SearchTable
+  | "task";
+type SearchFilter = "all" | SearchTable;
 
 type SearchResult = {
-  id: number
-  table: SearchTable
-  title: string
-  customer_id: number | null
-  description: string | null
-  route: string
-}
+  id: number;
+  table: SearchTable;
+  title: string;
+  customer_id: number | null;
+  description: string | null;
+  route: string;
+};
 
 const tableOrder: SearchTable[] = [
   "customer",
@@ -64,7 +64,7 @@ const tableOrder: SearchTable[] = [
   "lab_tasks",
   "complaints",
   "task",
-]
+];
 
 const resultMeta = {
   customer: { label: "Customers", icon: UsersRound },
@@ -79,22 +79,22 @@ const resultMeta = {
     icon: MessageSquareWarning,
   },
   task: { label: "Tasks", icon: ClipboardList },
-} satisfies Record<SearchTable, { label: string; icon: typeof UserRound }>
+} satisfies Record<SearchTable, { label: string; icon: typeof UserRound }>;
 
 export default function AppSearch() {
-  const router = useRouter()
-  const [search, setSearch] = useState("")
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [activeFilter, setActiveFilter] = useState<SearchFilter>("all")
-  const debouncedSearch = useDebounce(search.trim(), 400)
-  const { userID, base_route, designation } = useUserDetail()
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<SearchFilter>("all");
+  const debouncedSearch = useDebounce(search.trim(), 400);
+  const { userID, base_route, designation } = useUserDetail();
 
   useEffect(() => {
-    if (!debouncedSearch || !userID) return
+    if (!debouncedSearch || !userID) return;
 
-    const cancelKey = `global-search-${userID}`
+    const cancelKey = `global-search-${userID}`;
 
     axios
       .get<SearchResult[]>(`/${userID}/search`, {
@@ -105,65 +105,65 @@ export default function AppSearch() {
         cancelKey,
       })
       .then((response) => {
-        setResults(response.data)
-        setLoading(false)
+        setResults(response.data);
+        setLoading(false);
       })
       .catch((error) => {
-        if (error?.code === "ERR_CANCELED") return
-        setResults([])
+        if (error?.code === "ERR_CANCELED") return;
+        setResults([]);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
 
-    return () => cancelRequest(cancelKey)
-  }, [base_route, debouncedSearch, userID])
+    return () => cancelRequest(cancelKey);
+  }, [base_route, debouncedSearch, userID]);
 
   const availableTables = useMemo(
     () =>
       tableOrder.filter((table) =>
-        results.some((item) => item.table === table)
+        results.some((item) => item.table === table),
       ),
-    [results]
-  )
+    [results],
+  );
 
   const effectiveFilter =
     activeFilter === "all" || availableTables.includes(activeFilter)
       ? activeFilter
-      : "all"
+      : "all";
 
   const groupedResults = useMemo(
     () =>
       tableOrder
         .filter(
-          (table) => effectiveFilter === "all" || table === effectiveFilter
+          (table) => effectiveFilter === "all" || table === effectiveFilter,
         )
         .map((table) => ({
           table,
           items: results.filter((result) => result.table === table),
         }))
         .filter((group) => group.items.length > 0),
-    [effectiveFilter, results]
-  )
+    [effectiveFilter, results],
+  );
 
   function updateSearch(value: string) {
-    const hasSearch = Boolean(value.trim())
+    const hasSearch = Boolean(value.trim());
 
-    setSearch(value)
-    setResults([])
-    setActiveFilter("all")
-    setLoading(hasSearch && Boolean(userID))
+    setSearch(value);
+    setResults([]);
+    setActiveFilter("all");
+    setLoading(hasSearch && Boolean(userID));
   }
 
   function openResult(result: SearchResult) {
-    setSheetOpen(false)
-    setSearch("")
-    setResults([])
-    setActiveFilter("all")
-    router.push(result.route)
+    setSheetOpen(false);
+    setSearch("");
+    setResults([]);
+    setActiveFilter("all");
+    router.push(result.route);
   }
 
-  if (!designation) return null
+  if (!designation) return null;
 
   return (
     <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -263,7 +263,7 @@ export default function AppSearch() {
               />
             ) : groupedResults.length ? (
               groupedResults.map(({ table, items }) => {
-                const Icon = resultMeta[table].icon
+                const Icon = resultMeta[table].icon;
 
                 return (
                   <div key={table} className="mb-4 last:mb-0">
@@ -282,7 +282,7 @@ export default function AppSearch() {
                           <div
                             className={cn(
                               "flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left",
-                              "transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
+                              "transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none",
                             )}
                           >
                             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -301,7 +301,7 @@ export default function AppSearch() {
                       ))}
                     </div>
                   </div>
-                )
+                );
               })
             ) : (
               <SearchMessage
@@ -313,15 +313,15 @@ export default function AppSearch() {
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
 
 function SearchMessage({
   title,
   description,
 }: {
-  title: string
-  description: string
+  title: string;
+  description: string;
 }) {
   return (
     <div className="flex h-56 flex-col items-center justify-center px-6 text-center">
@@ -333,5 +333,5 @@ function SearchMessage({
         {description}
       </p>
     </div>
-  )
+  );
 }

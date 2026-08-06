@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Check, ChevronsUpDown, SearchIcon } from "lucide-react"
-import * as React from "react"
+import { Check, ChevronsUpDown, SearchIcon } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -11,91 +11,91 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/command";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { cn } from "@/lib/utils";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@/components/ui/input-group"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/input-group";
+import Spinner from "@/components/ui/spinner";
 
 type BackupInventoryType = {
-  id: number
-  name: string
-  serial_no: string
-  power: string
-  size: string
-}
+  id: number;
+  name: string;
+  serial_no: string;
+  power: string;
+  size: string;
+};
 
 type DataTypes = BackupInventoryType & {
-  label: string
-  value: number
-}
+  label: string;
+  value: number;
+};
 
 export function BackupInventory({
   value,
   onReturn,
 }: {
-  value: number | null
-  onReturn: (val: number) => void
+  value: number | null;
+  onReturn: (val: number) => void;
 }) {
-  const [open, setOpen] = React.useState(false)
-  const [data, setData] = React.useState<DataTypes[]>([])
-  const [search, setSearch] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
-  const { userID } = useUserDetail()
+  const [open, setOpen] = React.useState(false);
+  const [data, setData] = React.useState<DataTypes[]>([]);
+  const [search, setSearch] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const { userID } = useUserDetail();
 
   React.useEffect(() => {
-    let active = true
+    let active = true;
 
     async function fetchData() {
-      setLoading(true)
-      setData([])
+      setLoading(true);
+      setData([]);
 
       try {
-        const response = await axios.get(`/${userID}/backup-inventory`)
-        const data: BackupInventoryType[] = response.data
+        const response = await axios.get(`/${userID}/backup-inventory`);
+        const data: BackupInventoryType[] = response.data;
 
         const apiData = data.map((item, index) => {
           return {
             ...item,
             label: `${index + 1}- ${item.serial_no ?? ""} ${item.power ?? ""} ${item.size ?? ""}`,
             value: item.id,
-          }
-        })
+          };
+        });
 
-        if (active) setData(apiData)
+        if (active) setData(apiData);
       } catch (error) {
-        if (active) setData([])
+        if (active) setData([]);
       } finally {
-        if (active) setLoading(false)
+        if (active) setLoading(false);
       }
     }
     if (userID) {
-      fetchData()
+      fetchData();
     } else {
-      setData([])
-      setLoading(false)
+      setData([]);
+      setLoading(false);
     }
 
     return () => {
-      active = false
-    }
-  }, [userID])
+      active = false;
+    };
+  }, [userID]);
 
-  const debouncedSearch = useDebounce(search, 500)
+  const debouncedSearch = useDebounce(search, 500);
 
   const filteredData = data.filter((item) => {
     const matchesSearch = item?.label
       ?.toLowerCase()
-      .includes(debouncedSearch.toLowerCase())
+      .includes(debouncedSearch.toLowerCase());
 
-    return matchesSearch
-  })
+    return matchesSearch;
+  });
 
   return (
     <>
@@ -106,8 +106,8 @@ export function BackupInventory({
         className="w-full justify-between"
         disabled={loading}
         onClick={(e) => {
-          e.preventDefault()
-          setOpen(!open)
+          e.preventDefault();
+          setOpen(!open);
         }}
       >
         {value
@@ -152,15 +152,15 @@ export function BackupInventory({
                   key={item.value}
                   value={item.label}
                   onSelect={() => {
-                    onReturn(Number(item.value))
-                    setOpen(false)
+                    onReturn(Number(item.value));
+                    setOpen(false);
                   }}
                 >
                   {item.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === item.value ? "opacity-100" : "opacity-0"
+                      value === item.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>
@@ -170,5 +170,5 @@ export function BackupInventory({
         </Command>
       </CommandDialog>
     </>
-  )
+  );
 }

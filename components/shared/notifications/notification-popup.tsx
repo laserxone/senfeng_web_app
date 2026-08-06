@@ -1,69 +1,71 @@
-"use client"
+"use client";
 
-import { db } from "@/config/firebase"
-import useUserDetail from "@/hooks/use-user-detail"
-import { useNotification } from "@/store/context/NotificationContext"
-import { doc, updateDoc } from "firebase/firestore"
-import { ArrowRight, Bell, Sparkles, X } from "lucide-react"
-import { useRouter } from "nextjs-toploader/app"
-import { useCallback, useEffect, useState } from "react"
+import { db } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
+import { useNotification } from "@/store/context/NotificationContext";
+import { doc, updateDoc } from "firebase/firestore";
+import { ArrowRight, Bell, Sparkles, X } from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
+import { useCallback, useEffect, useState } from "react";
 
-const NOTIFICATION_AUTO_DISMISS_MS = 5000
-const NOTIFICATION_EXIT_ANIMATION_MS = 250
-const MAX_VISIBLE_NOTIFICATIONS = 4
+const NOTIFICATION_AUTO_DISMISS_MS = 5000;
+const NOTIFICATION_EXIT_ANIMATION_MS = 250;
+const MAX_VISIBLE_NOTIFICATIONS = 4;
 
 type PopupCardProps = {
-  notification: ReturnType<typeof useNotification>["PopupNotifications"][number]
-  baseRoute: string
-  onDismiss: (id: string) => void
-}
+  notification: ReturnType<
+    typeof useNotification
+  >["PopupNotifications"][number];
+  baseRoute: string;
+  onDismiss: (id: string) => void;
+};
 
 function PopupCard({ notification, baseRoute, onDismiss }: PopupCardProps) {
-  const router = useRouter()
-  const [isPaused, setIsPaused] = useState(false)
-  const [isOpening, setIsOpening] = useState(false)
-  const [isExiting, setIsExiting] = useState(false)
+  const router = useRouter();
+  const [isPaused, setIsPaused] = useState(false);
+  const [isOpening, setIsOpening] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
 
   const dismissWithAnimation = useCallback(() => {
-    if (isExiting) return
-    setIsExiting(true)
+    if (isExiting) return;
+    setIsExiting(true);
     window.setTimeout(
       () => onDismiss(notification.id),
-      NOTIFICATION_EXIT_ANIMATION_MS
-    )
-  }, [isExiting, notification.id, onDismiss])
+      NOTIFICATION_EXIT_ANIMATION_MS,
+    );
+  }, [isExiting, notification.id, onDismiss]);
 
   useEffect(() => {
-    if (isPaused || isOpening || isExiting) return
+    if (isPaused || isOpening || isExiting) return;
 
     const timeout = window.setTimeout(
       dismissWithAnimation,
-      NOTIFICATION_AUTO_DISMISS_MS
-    )
+      NOTIFICATION_AUTO_DISMISS_MS,
+    );
 
-    return () => window.clearTimeout(timeout)
-  }, [dismissWithAnimation, isExiting, isOpening, isPaused])
+    return () => window.clearTimeout(timeout);
+  }, [dismissWithAnimation, isExiting, isOpening, isPaused]);
 
   const openNotification = async () => {
-    if (isOpening) return
-    setIsOpening(true)
+    if (isOpening) return;
+    setIsOpening(true);
 
     try {
       await updateDoc(doc(db, "Notification", notification.id), {
         read: true,
-      })
+      });
     } catch (error) {
-      console.error("Unable to mark notification as read:", error)
+      console.error("Unable to mark notification as read:", error);
     }
 
-    onDismiss(notification.id)
+    onDismiss(notification.id);
 
     if (notification.page) {
-      const page = notification.page.replace(/^\/+/, "")
-      const route = baseRoute.replace(/^\/+|\/+$/g, "")
-      router.push(`/${route}/${page}`)
+      const page = notification.page.replace(/^\/+/, "");
+      const route = baseRoute.replace(/^\/+|\/+$/g, "");
+      router.push(`/${route}/${page}`);
     }
-  }
+  };
 
   return (
     <article
@@ -141,18 +143,18 @@ function PopupCard({ notification, baseRoute, onDismiss }: PopupCardProps) {
         />
       </div>
     </article>
-  )
+  );
 }
 
 export default function NotificationPopup() {
-  const { PopupNotifications, dismissPopupNotification } = useNotification()
-  const { base_route } = useUserDetail()
+  const { PopupNotifications, dismissPopupNotification } = useNotification();
+  const { base_route } = useUserDetail();
   const visibleNotifications = PopupNotifications.slice(
     0,
-    MAX_VISIBLE_NOTIFICATIONS
-  )
+    MAX_VISIBLE_NOTIFICATIONS,
+  );
 
-  if (visibleNotifications.length === 0) return null
+  if (visibleNotifications.length === 0) return null;
 
   return (
     <aside
@@ -173,5 +175,5 @@ export default function NotificationPopup() {
         </div>
       )}
     </aside>
-  )
+  );
 }

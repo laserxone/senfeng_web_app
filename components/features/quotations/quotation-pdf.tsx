@@ -1,6 +1,6 @@
-import { Colors } from "@/constants/data"
-import { publicFile } from "@/lib/publicFile"
-import { QuotationData } from "@/lib/types"
+import { Colors } from "@/constants/data";
+import { publicFile } from "@/lib/publicFile";
+import { QuotationData } from "@/lib/types";
 import {
   Document,
   Image,
@@ -8,8 +8,8 @@ import {
   StyleSheet,
   Text,
   View,
-} from "@react-pdf/renderer"
-import moment from "moment"
+} from "@react-pdf/renderer";
+import moment from "moment";
 
 const styles = StyleSheet.create({
   bannerLeft: {
@@ -357,10 +357,10 @@ const styles = StyleSheet.create({
     color: "#1F2A44",
     lineHeight: 1.35,
   },
-})
+});
 
 interface QuotationPDFProps {
-  data: QuotationData
+  data: QuotationData;
 }
 
 export function QuotationPDF({ data }: QuotationPDFProps) {
@@ -674,5 +674,5 @@ export function QuotationPDF({ data }: QuotationPDFProps) {
         </View>
       </Page>
     </Document>
-  )
+  );
 }

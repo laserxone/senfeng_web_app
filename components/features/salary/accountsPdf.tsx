@@ -7,8 +7,8 @@ import {
   Svg,
   Text,
   View,
-} from "@react-pdf/renderer"
-import moment from "moment"
+} from "@react-pdf/renderer";
+import moment from "moment";
 
 const styles = StyleSheet.create({
   page: {
@@ -153,16 +153,16 @@ const styles = StyleSheet.create({
     height: 15,
     marginRight: 5,
   },
-})
+});
 
 const AccountsPdf = ({
   data,
   headings,
   total,
 }: {
-  data: any[]
-  total: number
-  headings: any
+  data: any[];
+  total: number;
+  headings: any;
 }) => {
   return (
     <Document>
@@ -298,8 +298,8 @@ const AccountsPdf = ({
         <Footer />
       </Page>
     </Document>
-  )
-}
+  );
+};
 
 const FormField = ({ data }: { data: any }) => {
   return (
@@ -342,8 +342,8 @@ const FormField = ({ data }: { data: any }) => {
         </View>
       ))}
     </View>
-  )
-}
+  );
+};
 
 const CompanyDetails = () => {
   return (
@@ -376,8 +376,8 @@ const CompanyDetails = () => {
         </Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const Header = () => {
   return (
@@ -415,8 +415,8 @@ const Header = () => {
         </Text>
       </div>
     </View>
-  )
-}
+  );
+};
 
 const Disclaimer = () => {
   return (
@@ -436,8 +436,8 @@ const Disclaimer = () => {
         signature.
       </Text>
     </View>
-  )
-}
+  );
+};
 
 const Footer = () => {
   return (
@@ -488,14 +488,14 @@ const Footer = () => {
         <Text style={{ fontSize: 10 }}>www.senfenglaserpk.com</Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 function formatCurrency(number: number) {
   return new Intl.NumberFormat("en-US", {
     maximumFractionDigits: 0,
     useGrouping: true,
-  }).format(number)
+  }).format(number);
 }
 
-export default AccountsPdf
+export default AccountsPdf;

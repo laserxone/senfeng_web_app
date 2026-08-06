@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { Button } from "@/components/ui/button"
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { Payment } from "@/lib/types"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { Payment } from "@/lib/types";
 import {
   Banknote,
   CalendarDays,
@@ -29,66 +29,66 @@ import {
   ShieldCheck,
   XCircle,
   Zap,
-} from "lucide-react"
-import moment from "moment"
-import { useEffect, useRef, useState, type ElementType } from "react"
-import { toast } from "sonner"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
+} from "lucide-react";
+import moment from "moment";
+import { useEffect, useRef, useState, type ElementType } from "react";
+import { toast } from "sonner";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 
 type Machine = {
-  machine_id: number
-  serial_no: string
-  power: string
-  source: string
-  contract_date: string
-  payments: Payment[]
-  order_no_arr: string[]
-}
+  machine_id: number;
+  serial_no: string;
+  power: string;
+  source: string;
+  contract_date: string;
+  payments: Payment[];
+  order_no_arr: string[];
+};
 
 type CustomerMachinePayments = {
-  customer_id: number
-  customer_name: string
-  customer_owner: string
-  customer_number: string[]
-  machines: Machine[]
-}
+  customer_id: number;
+  customer_name: string;
+  customer_owner: string;
+  customer_number: string[];
+  machines: Machine[];
+};
 
 export default function PaymentVerification() {
-  const { userID } = useUserDetail()
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<CustomerMachinePayments[]>([])
-  const hasFetched = useRef(false)
-  const [search, setSearch] = useState("")
-  const [comment, setComment] = useState("")
-  const [selectedPayment, setSelectedPayment] = useState<number | null>(null)
-  const [visible, setVisible] = useState(false)
-  const [approveLoadingId, setApproveLoadingId] = useState<number | null>(null)
-  const [rejectionLoading, setRejectionLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<CustomerMachinePayments[]>([]);
+  const hasFetched = useRef(false);
+  const [search, setSearch] = useState("");
+  const [comment, setComment] = useState("");
+  const [selectedPayment, setSelectedPayment] = useState<number | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [approveLoadingId, setApproveLoadingId] = useState<number | null>(null);
+  const [rejectionLoading, setRejectionLoading] = useState(false);
   const [machineApproveLoadingId, setMachineApproveLoadingId] = useState<
     number | null
-  >(null)
+  >(null);
 
   useEffect(() => {
     if (userID && !hasFetched.current) {
-      hasFetched.current = true
-      fetchData()
+      hasFetched.current = true;
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await axios.get(`/${userID}/payment-verification`)
-      setData(response.data)
+      const response = await axios.get(`/${userID}/payment-verification`);
+      setData(response.data);
     } catch (err) {
-      console.error("Failed to fetch data:", err)
+      console.error("Failed to fetch data:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -96,67 +96,67 @@ export default function PaymentVerification() {
     try {
       await axios.put(`/${userID}/payment-verification/${paymentId}`, {
         status: "approved",
-      })
+      });
 
       setData((prevData) =>
         prevData.map((customer) => ({
           ...customer,
           machines: customer.machines.map((machine) => {
-            if (machine.machine_id !== machineId) return machine
+            if (machine.machine_id !== machineId) return machine;
             return {
               ...machine,
               payments: machine.payments.map((payment) =>
                 payment.id === paymentId
                   ? { ...payment, status: "approved", payment_lock: true }
-                  : payment
+                  : payment,
               ),
-            }
+            };
           }),
-        }))
-      )
+        })),
+      );
     } catch (err) {
-      console.error("Approve failed", err)
+      console.error("Approve failed", err);
     } finally {
-      setApproveLoadingId(null)
+      setApproveLoadingId(null);
     }
-  }
+  };
 
   const handleApproveAll = async (machineId: number) => {
-    setMachineApproveLoadingId(machineId)
+    setMachineApproveLoadingId(machineId);
 
     try {
-      const pendingPayments: number[] = []
+      const pendingPayments: number[] = [];
 
       data.forEach((customer) => {
         customer.machines.forEach((machine) => {
           if (machine.machine_id === machineId) {
             machine.payments.forEach((payment) => {
               if (payment.status !== "approved") {
-                pendingPayments.push(payment.id)
+                pendingPayments.push(payment.id);
               }
-            })
+            });
           }
-        })
-      })
+        });
+      });
 
       await Promise.all(
-        pendingPayments.map((paymentId) => handleApprove(paymentId, machineId))
-      )
-      toast.success("All Payments updated")
+        pendingPayments.map((paymentId) => handleApprove(paymentId, machineId)),
+      );
+      toast.success("All Payments updated");
     } catch (err) {
-      toast.error("Bulk approval failed")
+      toast.error("Bulk approval failed");
     } finally {
-      setMachineApproveLoadingId(null)
+      setMachineApproveLoadingId(null);
     }
-  }
+  };
   const handleReject = async (paymentId: number | null) => {
-    if (!paymentId) return
-    setRejectionLoading(true)
+    if (!paymentId) return;
+    setRejectionLoading(true);
     try {
       await axios.put(`/${userID}/payment-verification/${paymentId}`, {
         status: "rejected",
         comment: comment,
-      })
+      });
 
       setData((prevData) =>
         prevData.map((customer) => ({
@@ -166,57 +166,57 @@ export default function PaymentVerification() {
             payments: machine.payments.map((payment) =>
               payment.id === paymentId
                 ? { ...payment, status: "rejected", comment }
-                : payment
+                : payment,
             ),
           })),
-        }))
-      )
+        })),
+      );
 
-      setVisible(false)
-      setComment("")
+      setVisible(false);
+      setComment("");
     } catch (err) {
-      console.error("Reject failed", err)
+      console.error("Reject failed", err);
     } finally {
-      setRejectionLoading(false)
+      setRejectionLoading(false);
     }
-  }
+  };
 
   const filteredData = data.filter((item) =>
     `${item.customer_name} ${item.customer_owner}`
       .toLowerCase()
-      .includes(search.toLowerCase())
-  )
+      .includes(search.toLowerCase()),
+  );
 
   const getUnverifiedPaymentCount = (data: CustomerMachinePayments[]) => {
-    let count = 0
+    let count = 0;
 
     data.forEach((customer) => {
       customer.machines.forEach((machine) => {
         machine.payments.forEach((payment) => {
           if (payment.status !== "approved") {
-            count++
+            count++;
           }
-        })
-      })
-    })
+        });
+      });
+    });
 
-    return count
-  }
+    return count;
+  };
 
-  const unverifiedCount = getUnverifiedPaymentCount(data)
+  const unverifiedCount = getUnverifiedPaymentCount(data);
   const machineCount = data.reduce(
     (sum, customer) => sum + customer.machines.length,
-    0
-  )
+    0,
+  );
   const paymentCount = data.reduce(
     (sum, customer) =>
       sum +
       customer.machines.reduce(
         (machineSum, machine) => machineSum + machine.payments.length,
-        0
+        0,
       ),
-    0
-  )
+    0,
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-5">
@@ -371,7 +371,7 @@ export default function PaymentVerification() {
                                   value={
                                     machine.contract_date
                                       ? moment(
-                                          new Date(machine.contract_date)
+                                          new Date(machine.contract_date),
                                         ).format("YYYY-MM-DD")
                                       : "N/A"
                                   }
@@ -436,7 +436,7 @@ export default function PaymentVerification() {
                                           icon={Banknote}
                                           label="Amount"
                                           value={String(
-                                            payment.amount ?? "N/A"
+                                            payment.amount ?? "N/A",
                                           )}
                                         />
                                         <InfoTile
@@ -476,11 +476,11 @@ export default function PaymentVerification() {
                                               approveLoadingId === payment.id
                                             }
                                             onClick={() => {
-                                              setApproveLoadingId(payment.id)
+                                              setApproveLoadingId(payment.id);
                                               handleApprove(
                                                 payment.id,
-                                                machine.machine_id
-                                              )
+                                                machine.machine_id,
+                                              );
                                             }}
                                           >
                                             {approveLoadingId === payment.id ? (
@@ -495,8 +495,8 @@ export default function PaymentVerification() {
                                             variant="destructive"
                                             className="flex-1 gap-2 lg:flex-none"
                                             onClick={() => {
-                                              setSelectedPayment(payment.id)
-                                              setVisible(true)
+                                              setSelectedPayment(payment.id);
+                                              setVisible(true);
                                             }}
                                           >
                                             <XCircle className="h-4 w-4" />
@@ -561,7 +561,7 @@ export default function PaymentVerification() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 function SummaryTile({
@@ -570,10 +570,10 @@ function SummaryTile({
   value,
   iconClassName,
 }: {
-  icon: ElementType
-  label: string
-  value: number
-  iconClassName: string
+  icon: ElementType;
+  label: string;
+  value: number;
+  iconClassName: string;
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:px-5 xl:border-t-0 sm:[&:nth-child(2)]:border-t-0">
@@ -585,7 +585,7 @@ function SummaryTile({
         <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
-  )
+  );
 }
 
 function InfoTile({
@@ -593,9 +593,9 @@ function InfoTile({
   label,
   value,
 }: {
-  icon: ElementType
-  label: string
-  value: string
+  icon: ElementType;
+  label: string;
+  value: string;
 }) {
   return (
     <div className="rounded-xl border bg-background p-3">
@@ -607,7 +607,7 @@ function InfoTile({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -616,7 +616,7 @@ function StatusPill({ status }: { status: string }) {
       ? "border-emerald-100 bg-emerald-50 text-emerald-700"
       : status === "rejected"
         ? "border-red-100 bg-red-50 text-red-700"
-        : "border-amber-100 bg-amber-50 text-amber-700"
+        : "border-amber-100 bg-amber-50 text-amber-700";
 
   return (
     <span
@@ -624,5 +624,5 @@ function StatusPill({ status }: { status: string }) {
     >
       {status || "pending"}
     </span>
-  )
+  );
 }

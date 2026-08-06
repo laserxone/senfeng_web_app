@@ -1,32 +1,32 @@
-import { InvoiceItem } from "@/lib/types"
-import { pdf } from "@react-pdf/renderer"
-import { CalendarDays, Copy, Globe, Phone } from "lucide-react"
-import moment from "moment"
-import * as pdfjsLib from "pdfjs-dist"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import "pdfjs-dist/legacy/web/pdf_viewer.css"
-import { useRef } from "react"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { SelectedUser } from "./POS"
-import InvoicePDFClient from "./invoicePDFClient"
+import { InvoiceItem } from "@/lib/types";
+import { pdf } from "@react-pdf/renderer";
+import { CalendarDays, Copy, Globe, Phone } from "lucide-react";
+import moment from "moment";
+import * as pdfjsLib from "pdfjs-dist";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import "pdfjs-dist/legacy/web/pdf_viewer.css";
+import { useRef } from "react";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { SelectedUser } from "./POS";
+import InvoicePDFClient from "./invoicePDFClient";
 
 type ViewableInvoice = {
-  companyName: string
-  name: string
-  phoneNumber: string
-  address: string
-  manager: string
-  selectedUser: SelectedUser
-  nextInvoice: string
-  invoiceItems: InvoiceItem[]
-  totalAmount: number
-  warranty: boolean
-  warrantyYear: number
-  discount: string | number
-  createdAt: string | Date
-}
+  companyName: string;
+  name: string;
+  phoneNumber: string;
+  address: string;
+  manager: string;
+  selectedUser: SelectedUser;
+  nextInvoice: string;
+  invoiceItems: InvoiceItem[];
+  totalAmount: number;
+  warranty: boolean;
+  warrantyYear: number;
+  discount: string | number;
+  createdAt: string | Date;
+};
 
 export default function ViewableInvoice({
   companyName,
@@ -43,14 +43,14 @@ export default function ViewableInvoice({
   discount,
   createdAt,
 }: ViewableInvoice) {
-  const pdfRef = useRef(null)
+  const pdfRef = useRef(null);
   const invoiceDate = createdAt
     ? moment(new Date(createdAt)).format("YYYY-MM-DD")
-    : moment().format("YYYY-MM-DD")
-  const receiverLabel = selectedUser?.id ? "Engineer" : "Invoice No"
-  const receiverValue = selectedUser?.id ? selectedUser?.label : nextInvoice
+    : moment().format("YYYY-MM-DD");
+  const receiverLabel = selectedUser?.id ? "Engineer" : "Invoice No";
+  const receiverValue = selectedUser?.id ? selectedUser?.label : nextInvoice;
   const blankRows =
-    !warranty && invoiceItems.length <= 9 ? 9 - invoiceItems.length : 0
+    !warranty && invoiceItems.length <= 9 ? 9 - invoiceItems.length : 0;
 
   const captureAndCopyToClipboard = async () => {
     const blob = await pdf(
@@ -66,33 +66,33 @@ export default function ViewableInvoice({
         discount={discount}
         warranty={warranty}
         warrantyYear={warrantyYear}
-      />
-    ).toBlob()
+      />,
+    ).toBlob();
 
     // Convert PDF to PNG and Copy to Clipboard
-    const arrayBuffer = await blob.arrayBuffer()
-    const pdfData = new Uint8Array(arrayBuffer)
+    const arrayBuffer = await blob.arrayBuffer();
+    const pdfData = new Uint8Array(arrayBuffer);
 
-    const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise
-    const page = await pdfDoc.getPage(1)
+    const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+    const page = await pdfDoc.getPage(1);
 
-    const viewport = page.getViewport({ scale: 2 })
-    const canvas = document.createElement("canvas")
-    const context = canvas.getContext("2d")
-    canvas.height = viewport.height
-    canvas.width = viewport.width
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
 
     if (context) {
-      await page.render({ canvasContext: context, viewport, canvas }).promise
+      await page.render({ canvasContext: context, viewport, canvas }).promise;
     }
 
     canvas.toBlob(async (blob) => {
-      if (!blob) return
-      const item = new ClipboardItem({ "image/png": blob })
-      await navigator.clipboard.write([item])
-      alert("Image copied to clipboard!")
-    })
-  }
+      if (!blob) return;
+      const item = new ClipboardItem({ "image/png": blob });
+      await navigator.clipboard.write([item]);
+      alert("Image copied to clipboard!");
+    });
+  };
 
   const customerFields = [
     { label: "Company", value: companyName },
@@ -101,7 +101,7 @@ export default function ViewableInvoice({
     { label: "Address", value: address },
     { label: "Manager", value: manager },
     { label: receiverLabel, value: receiverValue },
-  ]
+  ];
 
   const bankRows = [
     ["Bank", "United Bank Limited (UBL)"],
@@ -109,7 +109,7 @@ export default function ViewableInvoice({
     ["Account Number", "321618245"],
     ["IBAN", "PK33UNIL0109000321618245"],
     ["Branch Code", "0508"],
-  ]
+  ];
 
   return (
     <section className="mb-5 w-full min-w-0 rounded-md border border-[#BBD9F4] bg-[#F1F7FF] p-2 shadow-sm sm:p-3">
@@ -338,5 +338,5 @@ export default function ViewableInvoice({
         </div>
       </div>
     </section>
-  )
+  );
 }

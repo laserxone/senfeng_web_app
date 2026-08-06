@@ -1,58 +1,58 @@
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { ChequeProp } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import moment from "moment"
-import { useContext, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { AvailableMachines } from "./available-machines"
-import ChequeCredit from "./cheque-credit"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ChequeProp } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import { useContext, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { AvailableMachines } from "./available-machines";
+import ChequeCredit from "./cheque-credit";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, Wrench } from "lucide-react"
-import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Wrench } from "lucide-react";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
 
 const AddMachine = ({
   customer_id,
   user_id,
   onRefresh,
 }: {
-  customer_id?: number
-  user_id: number | string
-  onRefresh: () => Promise<void>
+  customer_id?: number;
+  user_id: number | string;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [isSpeedMoney, setIsSpeedMoney] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [selectedMachine, setSelectedMachine] = useState<number | null>(null)
-  const [cheque, setCheque] = useState(false)
-  const [value, setValue] = useState<string | undefined>()
-  const [total, setTotal] = useState<ChequeProp[]>([])
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [manual, setManual] = useState(false)
-  const [open, setOpen] = useState(false)
-  const { isAdmin } = useUserDetail()
+  const [isSpeedMoney, setIsSpeedMoney] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [selectedMachine, setSelectedMachine] = useState<number | null>(null);
+  const [cheque, setCheque] = useState(false);
+  const [value, setValue] = useState<string | undefined>();
+  const [total, setTotal] = useState<ChequeProp[]>([]);
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [manual, setManual] = useState(false);
+  const [open, setOpen] = useState(false);
+  const { isAdmin } = useUserDetail();
 
   const formSchema = z
     .object({
@@ -73,17 +73,17 @@ const AddMachine = ({
     .refine(
       (data) => {
         if (manual) {
-          return true
+          return true;
         }
-        return typeof data.order_item === "number" && data.order_item > 0
+        return typeof data.order_item === "number" && data.order_item > 0;
       },
       {
         message: "Machine selection is required",
         path: ["order_item"],
-      }
-    )
+      },
+    );
 
-  type FormValues = z.infer<typeof formSchema>
+  type FormValues = z.infer<typeof formSchema>;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -100,13 +100,13 @@ const AddMachine = ({
       order_item: null,
       note: "",
     },
-  })
+  });
 
   function onSubmit(values: FormValues) {
-    setLoading(true)
-    let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`
+    setLoading(true);
+    let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`;
     if (manual) {
-      baseLink = `/${user_id}/machine?cheque=${cheque}`
+      baseLink = `/${user_id}/machine?cheque=${cheque}`;
     }
     axios
       .post(baseLink, {
@@ -128,7 +128,7 @@ const AddMachine = ({
       .then(async (response) => {
         if (response.data?.sale_id) {
           if (cheque) {
-            const saleID = response.data.sale_id
+            const saleID = response.data.sale_id;
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
@@ -136,38 +136,38 @@ const AddMachine = ({
                   OfficeState.value.data
                 }/customer/${customer_id}/machine/${saleID}/installments/${moment()
                   .valueOf()
-                  .toString()}_${idx}.png`
-                const imgRef = await UploadImage(item.img, name)
+                  .toString()}_${idx}.png`;
+                const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
                   image: name,
                   amount: item.amount,
                   sale_id: saleID,
-                })
-              })
-            )
+                });
+              }),
+            );
 
-            console.log("All installments saved:", res)
-            TriggerFirebaseForChequeAlerts()
+            console.log("All installments saved:", res);
+            TriggerFirebaseForChequeAlerts();
           }
         }
-        onRefresh()
-        handleClose(false)
+        onRefresh();
+        handleClose(false);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    setOpen(false)
-    setSelectedMachine(null)
-    setManual(false)
+    form.reset();
+    setOpen(false);
+    setSelectedMachine(null);
+    setManual(false);
   }
 
-  const isKarachi = OfficeState?.value?.data?.toLowerCase() === "karachi"
-  const manualShow = isAdmin || isKarachi
+  const isKarachi = OfficeState?.value?.data?.toLowerCase() === "karachi";
+  const manualShow = isAdmin || isKarachi;
 
   return (
     <>
@@ -243,13 +243,13 @@ const AddMachine = ({
                                 value={selectedMachine}
                                 onReturn={setSelectedMachine}
                                 onReturnItem={(val) => {
-                                  field.onChange(val.id)
+                                  field.onChange(val.id);
                                   form.setValue(
                                     "machineModel",
-                                    val.machine_model
-                                  )
-                                  form.setValue("power", val.machine_power)
-                                  form.setValue("source", val.machine_source)
+                                    val.machine_model,
+                                  );
+                                  form.setValue("power", val.machine_power);
+                                  form.setValue("source", val.machine_source);
                                 }}
                               />
                               {fieldState.invalid && (
@@ -405,11 +405,11 @@ const AddMachine = ({
                                 <Checkbox
                                   checked={isSpeedMoney}
                                   onCheckedChange={(checked: boolean) => {
-                                    setIsSpeedMoney(checked)
-                                    field.onChange(checked)
+                                    setIsSpeedMoney(checked);
+                                    field.onChange(checked);
                                     if (!checked) {
-                                      form.setValue("speedMoney", 0)
-                                      form.setValue("speedMoneyNote", "")
+                                      form.setValue("speedMoney", 0);
+                                      form.setValue("speedMoneyNote", "");
                                     }
                                   }}
                                 />
@@ -489,7 +489,7 @@ const AddMachine = ({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};
 
-export default AddMachine
+export default AddMachine;

@@ -1,4 +1,4 @@
-import { UserSalaryProps } from "@/lib/types"
+import { UserSalaryProps } from "@/lib/types";
 import {
   Document,
   Image,
@@ -8,8 +8,8 @@ import {
   Svg,
   Text,
   View,
-} from "@react-pdf/renderer"
-import moment from "moment"
+} from "@react-pdf/renderer";
+import moment from "moment";
 
 const styles = StyleSheet.create({
   page: {
@@ -221,13 +221,13 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: "#2563EB",
   },
-})
+});
 
 const SalaryPdf = ({ data }: { data: UserSalaryProps }) => {
   const commissionDetail =
     data?.issued_commissions_detail?.filter(
-      (item) => Number(item.commission_amount) > 0
-    ) ?? []
+      (item) => Number(item.commission_amount) > 0,
+    ) ?? [];
 
   return (
     <Document>
@@ -600,8 +600,8 @@ const SalaryPdf = ({ data }: { data: UserSalaryProps }) => {
         <Footer />
       </Page>
     </Document>
-  )
-}
+  );
+};
 
 const FormField = ({ data }: { data: UserSalaryProps }) => {
   return (
@@ -674,8 +674,8 @@ const FormField = ({ data }: { data: UserSalaryProps }) => {
         </View>
       ))}
     </View>
-  )
-}
+  );
+};
 
 const CompanyDetails = () => {
   return (
@@ -708,8 +708,8 @@ const CompanyDetails = () => {
         </Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const Header = () => {
   return (
@@ -747,8 +747,8 @@ const Header = () => {
         </Text>
       </div>
     </View>
-  )
-}
+  );
+};
 
 const Disclaimer = () => {
   return (
@@ -768,8 +768,8 @@ const Disclaimer = () => {
         signature.
       </Text>
     </View>
-  )
-}
+  );
+};
 
 const Footer = () => {
   return (
@@ -820,11 +820,11 @@ const Footer = () => {
         <Text style={{ fontSize: 10 }}>www.senfenglaserpk.com</Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 function truncateText(text: string) {
-  return text.length > 13 ? text.slice(0, 13) + "..." : text
+  return text.length > 13 ? text.slice(0, 13) + "..." : text;
 }
 
 function formatCurrency(number: number) {
@@ -832,7 +832,7 @@ function formatCurrency(number: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     useGrouping: true,
-  }).format(number)
+  }).format(number);
 }
 
-export default SalaryPdf
+export default SalaryPdf;

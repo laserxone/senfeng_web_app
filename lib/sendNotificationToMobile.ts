@@ -1,7 +1,7 @@
-import pool from "@/config/db"
-import axios from "axios"
+import pool from "@/config/db";
+import axios from "axios";
 
-const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 export const sendNotificationToMobile = async (
   title: string,
@@ -9,16 +9,16 @@ export const sendNotificationToMobile = async (
   sendTo: string,
   passingdata: any,
   type: string,
-  url: string
+  url: string,
 ) => {
   try {
     const result = await pool.query(`SELECT token FROM users WHERE id = $1`, [
       sendTo,
-    ])
+    ]);
 
     if (!result.rows.length || !result.rows[0].token) {
-      console.log("No token found for user", sendTo)
-      return
+      console.log("No token found for user", sendTo);
+      return;
     }
 
     const message = {
@@ -27,11 +27,11 @@ export const sendNotificationToMobile = async (
       title: heading,
       body: title,
       data: { ...passingdata, type, url },
-    }
+    };
 
-    const maxRetries = 3
-    let attempt = 0
-    let success = false
+    const maxRetries = 3;
+    let attempt = 0;
+    let success = false;
 
     while (attempt < maxRetries && !success) {
       try {
@@ -44,33 +44,33 @@ export const sendNotificationToMobile = async (
               "Accept-Encoding": "gzip, deflate",
               "Content-Type": "application/json",
             },
-          }
-        )
+          },
+        );
 
         console.log(
           `Notification sent (attempt ${attempt + 1}):`,
-          response.data
-        )
+          response.data,
+        );
 
         if (response.data?.data?.status === "ok") {
-          success = true
+          success = true;
         } else {
-          throw new Error("Expo notification status not ok")
+          throw new Error("Expo notification status not ok");
         }
       } catch (err: any) {
-        console.log(`Attempt ${attempt + 1} failed:`, err?.message || err)
-        attempt++
+        console.log(`Attempt ${attempt + 1} failed:`, err?.message || err);
+        attempt++;
         if (attempt < maxRetries) {
-          console.log("Retrying in 1 second...")
-          await delay(1000)
+          console.log("Retrying in 1 second...");
+          await delay(1000);
         }
       }
     }
 
     if (!success) {
-      console.log("All notification attempts failed.")
+      console.log("All notification attempts failed.");
     }
   } catch (error: any) {
-    console.log("Error sending notification:", error?.message || error)
+    console.log("Error sending notification:", error?.message || error);
   }
-}
+};

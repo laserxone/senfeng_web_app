@@ -1,4 +1,4 @@
-import PageTable from "@/components/shared/tables/app-table"
+import PageTable from "@/components/shared/tables/app-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,39 +8,39 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import Spinner from "@/components/ui/spinner"
-import { Resume } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import axios from "axios"
-import { ArrowUpDown, FileText, MoreVertical } from "lucide-react"
-import { useState } from "react"
+} from "@/components/ui/dropdown-menu";
+import Spinner from "@/components/ui/spinner";
+import { Resume } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import axios from "axios";
+import { ArrowUpDown, FileText, MoreVertical } from "lucide-react";
+import { useState } from "react";
 
 export default function ResumesTable({
   resumes,
   onRefresh,
   loading,
 }: {
-  resumes: Resume[]
-  onRefresh: () => Promise<void>
-  loading: boolean
+  resumes: Resume[];
+  onRefresh: () => Promise<void>;
+  loading: boolean;
 }) {
-  const [openCover, setOpenCover] = useState<string | null>(null)
-  const [selectedDelete, setSelectedDelete] = useState<number | null>(null)
+  const [openCover, setOpenCover] = useState<string | null>(null);
+  const [selectedDelete, setSelectedDelete] = useState<number | null>(null);
 
   const columns: ColumnDef<Resume>[] = [
     {
@@ -55,7 +55,7 @@ export default function ResumesTable({
             Application
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="flex flex-col">
@@ -77,7 +77,7 @@ export default function ResumesTable({
             Phone
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
     },
     {
@@ -92,7 +92,7 @@ export default function ResumesTable({
             Location
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
     },
 
@@ -108,7 +108,7 @@ export default function ResumesTable({
             Position
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
     },
 
@@ -124,7 +124,7 @@ export default function ResumesTable({
             Experience
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
     },
 
@@ -140,14 +140,14 @@ export default function ResumesTable({
             Status
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
     },
 
     {
       id: "actions",
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
         return (
           <div className="flex justify-end">
@@ -193,10 +193,10 @@ export default function ResumesTable({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   return (
     <>
@@ -249,28 +249,28 @@ export default function ResumesTable({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
 
 const DeleteDialog = ({
   resume,
   onRefresh,
 }: {
-  resume: Resume
-  onRefresh: () => Promise<void>
+  resume: Resume;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
-    if (!resume.id) return
-    setLoading(true)
+    if (!resume.id) return;
+    setLoading(true);
     try {
-      await axios.delete(`/api/careers/applications/${resume.id}`)
-      await onRefresh()
-      setOpen(false)
+      await axios.delete(`/api/careers/applications/${resume.id}`);
+      await onRefresh();
+      setOpen(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
   return (
@@ -295,8 +295,8 @@ const DeleteDialog = ({
               disabled={loading}
               variant={"destructive"}
               onClick={(e) => {
-                e.preventDefault()
-                handleDelete()
+                e.preventDefault();
+                handleDelete();
               }}
             >
               {loading && <Spinner />} Delete
@@ -305,5 +305,5 @@ const DeleteDialog = ({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
-}
+  );
+};

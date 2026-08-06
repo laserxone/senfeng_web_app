@@ -1,5 +1,5 @@
-import ProfilePage from "@/components/page-compositions/general/profile"
+import ProfilePage from "@/components/page-compositions/general/profile";
 
 export default function Page() {
-  return <ProfilePage />
+  return <ProfilePage />;
 }

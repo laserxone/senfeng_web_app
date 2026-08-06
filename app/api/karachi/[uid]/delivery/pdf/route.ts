@@ -1,20 +1,20 @@
-import React from "react"
-import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
-import DOPDFGatepass from "@/components/features/deliveries/do-pdf-gatepass"
+import React from "react";
+import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
+import DOPDFGatepass from "@/components/features/deliveries/do-pdf-gatepass";
 
-export const runtime = "nodejs"
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const data = body?.data
-    const format = body?.format
+    const body = await request.json();
+    const data = body?.data;
+    const format = body?.format;
 
     if (!data) {
       return Response.json(
         { message: "Delivery PDF data is required" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     const deliveryDocument = React.createElement(DOPDFGatepass, {
@@ -30,17 +30,17 @@ export async function POST(request: Request) {
       gatepassType: "Outward Gate Pass",
       time: data.tod,
       items: data.checklist,
-    }) as React.ReactElement<DocumentProps>
+    }) as React.ReactElement<DocumentProps>;
 
-    const pdfBuffer = await renderToBuffer(deliveryDocument)
-    const fileName = getDeliveryFileName(data)
+    const pdfBuffer = await renderToBuffer(deliveryDocument);
+    const fileName = getDeliveryFileName(data);
 
     if (format === "base64") {
       return Response.json({
         fileName,
         mimeType: "application/pdf",
         base64: Buffer.from(pdfBuffer).toString("base64"),
-      })
+      });
     }
 
     return new Response(Buffer.from(pdfBuffer), {
@@ -50,26 +50,26 @@ export async function POST(request: Request) {
         "Content-Disposition": `attachment; filename="${fileName}"`,
         "Cache-Control": "no-store",
       },
-    })
+    });
   } catch (error) {
-    console.error("Delivery PDF generation failed:", error)
+    console.error("Delivery PDF generation failed:", error);
 
     return Response.json(
       { message: "Failed to generate delivery PDF" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 function getDeliveryFileName(data: any) {
-  const fileName = `${data?.gate_pass || "Delivery"}-${data?.order_no || "Gatepass"}.pdf`
+  const fileName = `${data?.gate_pass || "Delivery"}-${data?.order_no || "Gatepass"}.pdf`;
 
-  return cleanFileName(fileName)
+  return cleanFileName(fileName);
 }
 
 function cleanFileName(name: string) {
   return name
     .replace(/[<>:"/\\|?*]+/g, "")
     .replace(/\s+/g, " ")
-    .trim()
+    .trim();
 }

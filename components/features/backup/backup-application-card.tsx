@@ -1,22 +1,22 @@
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { Check, ChevronRight, Eye, Trash2, User, X } from "lucide-react"
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { Check, ChevronRight, Eye, Trash2, User, X } from "lucide-react";
 
 import {
   formatCurrency,
   formatDate,
   formatStatus,
-} from "./backup-helper-functions"
-import { statusColors } from "./backup-status-color"
-import { BackupApplication } from "./backup-types"
+} from "./backup-helper-functions";
+import { statusColors } from "./backup-status-color";
+import { BackupApplication } from "./backup-types";
 
 export default function BackupApplicationCard({
   application,
@@ -29,15 +29,15 @@ export default function BackupApplicationCard({
   showUser = false,
   currentUserId,
 }: {
-  application: BackupApplication
-  onViewDetails: () => void
-  onApprove?: () => void
-  onReject?: () => void
-  onDelete?: () => void
-  showActions?: boolean
-  showDelete?: boolean
-  showUser?: boolean
-  currentUserId: number | string
+  application: BackupApplication;
+  onViewDetails: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
+  onDelete?: () => void;
+  showActions?: boolean;
+  showDelete?: boolean;
+  showUser?: boolean;
+  currentUserId: number | string;
 }) {
   return (
     <Card className="overflow-hidden">
@@ -49,7 +49,7 @@ export default function BackupApplicationCard({
           application.status === "in_progress" && "bg-blue-500",
           application.status === "pending" && "bg-amber-500",
           application.status === "issued" && "bg-violet-500",
-          application.status === "returned" && "bg-cyan-500"
+          application.status === "returned" && "bg-cyan-500",
         )}
       />
 
@@ -93,7 +93,7 @@ export default function BackupApplicationCard({
                       ? "bg-emerald-100 text-emerald-700"
                       : application.my_approval_status === "rejected"
                         ? "bg-red-100 text-red-700"
-                        : "bg-gray-100 text-gray-700"
+                        : "bg-gray-100 text-gray-700",
                   )}
                 >
                   You {application.my_approval_status}
@@ -194,18 +194,18 @@ export default function BackupApplicationCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function ApprovalProgress({
   application,
   currentUserId,
 }: {
-  application: BackupApplication
-  currentUserId: number | string
+  application: BackupApplication;
+  currentUserId: number | string;
 }) {
   if (!application.approval_steps || application.approval_steps.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -237,7 +237,7 @@ function ApprovalProgress({
                       "border-gray-200 bg-gray-100 text-gray-500",
 
                 String(step.approver_id) === String(currentUserId) &&
-                  "ring-2 ring-purple-400 ring-offset-1"
+                  "ring-2 ring-purple-400 ring-offset-1",
               )}
               title={`${step.approver_name} - ${step.status}`}
             >
@@ -257,5 +257,5 @@ function ApprovalProgress({
         ))}
       </div>
     </div>
-  )
+  );
 }

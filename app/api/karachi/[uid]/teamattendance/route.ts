@@ -1,27 +1,27 @@
-import pool from "@/config/db"
-import { checkSuperadmin } from "@/lib/checkSuperadmin"
-import admin from "@/lib/firebaseAdmin"
-import UploadImageForMobile from "@/lib/uploadImageForMobile"
-import moment from "moment"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import admin from "@/lib/firebaseAdmin";
+import UploadImageForMobile from "@/lib/uploadImageForMobile";
+import moment from "moment";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const searchParams = req.nextUrl.searchParams
-  const start_date = searchParams.get("start_date")
-  const end_date = searchParams.get("end_date")
-  const user = searchParams.get("user")
+  const searchParams = req.nextUrl.searchParams;
+  const start_date = searchParams.get("start_date");
+  const end_date = searchParams.get("end_date");
+  const user = searchParams.get("user");
 
-  const { uid } = await params
+  const { uid } = await params;
 
   if (!uid) {
-    return NextResponse.json({ message: "ID is missing" }, { status: 400 })
+    return NextResponse.json({ message: "ID is missing" }, { status: 400 });
   }
 
   try {
-    const isSuper = await checkSuperadmin(uid)
+    const isSuper = await checkSuperadmin(uid);
 
     let query = `
         SELECT 
@@ -32,55 +32,55 @@ export async function GET(
         FROM attendance t
         INNER JOIN users u ON t.user_id = u.id
         WHERE designation = 'Engineer'
-    `
+    `;
 
-    const queryParams = []
+    const queryParams = [];
 
     if (start_date && end_date) {
-      query += ` AND t.time_in BETWEEN $1 AND $2`
-      queryParams.push(start_date, end_date)
+      query += ` AND t.time_in BETWEEN $1 AND $2`;
+      queryParams.push(start_date, end_date);
     }
 
     if (user) {
-      query += ` AND t.user_id = $3`
-      queryParams.push(user)
+      query += ` AND t.user_id = $3`;
+      queryParams.push(user);
     }
 
-    query += ` ORDER BY t.time_in DESC;`
+    query += ` ORDER BY t.time_in DESC;`;
 
-    const result = await pool.query(query, queryParams)
+    const result = await pool.query(query, queryParams);
 
-    const db = admin.firestore()
+    const db = admin.firestore();
 
-    const processedStartDate = moment(start_date).startOf("day")
-    const processedEndDate = moment(end_date).endOf("day")
-    let snapshot
+    const processedStartDate = moment(start_date).startOf("day");
+    const processedEndDate = moment(end_date).endOf("day");
+    let snapshot;
     if (!user) {
       snapshot = await db
         .collection("EmployeeAttendance")
         .where("timeIn", ">=", processedStartDate.valueOf())
         .where("timeIn", "<=", processedEndDate.valueOf())
-        .get()
+        .get();
     } else {
       const userResult = await pool.query(
         `SELECT email FROM users WHERE id = $1`,
-        [user]
-      )
+        [user],
+      );
       if (userResult.rows.length > 0) {
-        const userEmail = userResult.rows[0].email
+        const userEmail = userResult.rows[0].email;
         snapshot = await db
           .collection("EmployeeAttendance")
           .where("timeIn", ">=", processedStartDate.valueOf())
           .where("timeIn", "<=", processedEndDate.valueOf())
           .where("attendanceBy", "==", userEmail)
-          .get()
+          .get();
       }
     }
 
     const attendanceRecords = snapshot?.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }))
+    }));
     const preparedData = attendanceRecords?.map((item: any) => {
       return {
         time_in: item?.timeIn
@@ -96,49 +96,49 @@ export async function GET(
         location_time_out: item?.locationTimeOut || [],
         image_time_out: item?.imageTimeOut || null,
         user_email: item?.attendanceBy || null,
-      }
-    })
+      };
+    });
 
-    const userQuery = await pool.query(`SELECT name, email FROM users`)
+    const userQuery = await pool.query(`SELECT name, email FROM users`);
 
-    const userMap: any = {}
+    const userMap: any = {};
     userQuery.rows.forEach((user) => {
-      userMap[user.email] = user.name
-    })
+      userMap[user.email] = user.name;
+    });
 
     const enrichedData: any = preparedData?.map((item) => ({
       ...item,
       user_name: userMap[item.user_email] || "Unknown",
-    }))
+    }));
 
-    const finalData = [...result.rows, ...enrichedData]
+    const finalData = [...result.rows, ...enrichedData];
 
     finalData.sort(
-      (a, b) => new Date(b.time_in).getTime() - new Date(a.time_in).getTime()
-    )
+      (a, b) => new Date(b.time_in).getTime() - new Date(a.time_in).getTime(),
+    );
     if (user) {
-      const uniqueData: any[] = []
-      const seenDates = new Set()
+      const uniqueData: any[] = [];
+      const seenDates = new Set();
 
       finalData.forEach((item) => {
-        const formattedDate = moment(item.time_in).format("YYYY-MM-DD")
+        const formattedDate = moment(item.time_in).format("YYYY-MM-DD");
         if (!seenDates.has(formattedDate)) {
-          seenDates.add(formattedDate)
-          uniqueData.push(item)
+          seenDates.add(formattedDate);
+          uniqueData.push(item);
         }
-      })
+      });
 
-      return NextResponse.json(uniqueData, { status: 200 })
+      return NextResponse.json(uniqueData, { status: 200 });
     } else {
-      return NextResponse.json(finalData, { status: 200 })
+      return NextResponse.json(finalData, { status: 200 });
     }
   } catch (error: any) {
-    console.log("Error inserting data: ", error)
+    console.log("Error inserting data: ", error);
     return NextResponse.json(
       { message: error?.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

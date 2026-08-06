@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { CitiesSearch } from "@/components/shared/search/cities-search"
-import { IndustrySearch } from "@/components/shared/search/industry-search"
-import { NumberSearch } from "@/components/shared/search/number-search"
-import { UserSearch } from "@/components/shared/search/user-search"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { CitiesSearch } from "@/components/shared/search/cities-search";
+import { IndustrySearch } from "@/components/shared/search/industry-search";
+import { NumberSearch } from "@/components/shared/search/number-search";
+import { UserSearch } from "@/components/shared/search/user-search";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -32,13 +32,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { debounce, debouncePromise } from "@/lib/debounce"
-import { CustomerFormData, MyCustomer } from "@/lib/types"
-import { zodResolver } from "@hookform/resolvers/zod"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { debounce, debouncePromise } from "@/lib/debounce";
+import { CustomerFormData, MyCustomer } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   BriefcaseBusiness,
   Building2,
@@ -49,22 +49,22 @@ import {
   Sparkles,
   Trash,
   UserPlus,
-} from "lucide-react"
-import Link from "next/link"
-import { memo, useCallback, useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "lucide-react";
+import Link from "next/link";
+import { memo, useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 type AddCustomerDialogProps = {
-  onRefresh?: (val: MyCustomer) => Promise<void>
-  visible: boolean
-  onClose: (val: boolean) => void
-  user_id: number | string
-  ownership: boolean
-  user_designation?: string | null
-  office: string | null
-}
+  onRefresh?: (val: MyCustomer) => Promise<void>;
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  user_id: number | string;
+  ownership: boolean;
+  user_designation?: string | null;
+  office: string | null;
+};
 
 const formSchema = z.object({
   company: z.string().min(1, { message: "Company name is required" }),
@@ -84,9 +84,9 @@ const formSchema = z.object({
   ownership: z.number().nullable().optional(),
   created_at: z.date().optional(),
   office: z.string().min(1, { message: "Office is required" }),
-})
+});
 
-type FormSchemaValues = z.infer<typeof formSchema>
+type FormSchemaValues = z.infer<typeof formSchema>;
 
 function AddCustomerDialog({
   onRefresh,
@@ -97,13 +97,13 @@ function AddCustomerDialog({
   user_designation = null,
   office = "islamabad",
 }: AddCustomerDialogProps) {
-  const [numbers, setNumbers] = useState([""])
-  const [numberError, setNumberError] = useState("")
-  const [loading, setLoading] = useState(false)
-  const { designation, base_route, isAdmin } = useUserDetail()
-  const [checking, setChecking] = useState(false)
-  const [customerInfo, setCustomerInfo] = useState<MyCustomer[]>([])
-  const [selectedNumber, setSelectedNumber] = useState(["+92"])
+  const [numbers, setNumbers] = useState([""]);
+  const [numberError, setNumberError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { designation, base_route, isAdmin } = useUserDetail();
+  const [checking, setChecking] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState<MyCustomer[]>([]);
+  const [selectedNumber, setSelectedNumber] = useState(["+92"]);
 
   const form = useForm<FormSchemaValues>({
     resolver: zodResolver(formSchema),
@@ -126,7 +126,7 @@ function AddCustomerDialog({
       created_at: undefined,
       office: office || "lahore",
     },
-  })
+  });
 
   useEffect(() => {
     if (user_designation && user_designation === "Social Media Manager") {
@@ -148,55 +148,55 @@ function AddCustomerDialog({
         ownership: null,
         created_at: undefined,
         office: office || "lahore",
-      })
+      });
     }
-  }, [user_designation, user_id])
+  }, [user_designation, user_id]);
 
-  const { control } = form
+  const { control } = form;
 
   function handleClose(val: boolean) {
-    setNumberError("")
-    setNumbers([""])
-    form.reset()
-    onClose(val)
+    setNumberError("");
+    setNumbers([""]);
+    form.reset();
+    onClose(val);
   }
 
   const debouncedSaveData: any = useCallback(
     debouncePromise(saveData, 1000),
-    []
-  )
+    [],
+  );
 
   async function saveData(formData: CustomerFormData): Promise<MyCustomer> {
     const response = await axios.post<{ data: MyCustomer }>(
       `/${user_id}/customer`,
-      formData
-    )
+      formData,
+    );
 
-    return response.data.data
+    return response.data.data;
   }
 
   async function onSubmit(values: FormSchemaValues) {
     const hasInvalidNumber = selectedNumber.some((code, index) => {
-      const number = numbers[index]
-      if (!number) return true
+      const number = numbers[index];
+      if (!number) return true;
 
-      const isAllDigits = /^\d+$/.test(number)
-      return !isAllDigits
-    })
+      const isAllDigits = /^\d+$/.test(number);
+      return !isAllDigits;
+    });
 
     if (hasInvalidNumber) {
-      setNumberError("Invalid number format")
-      return
+      setNumberError("Invalid number format");
+      return;
     }
 
-    setNumberError("")
+    setNumberError("");
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const finalData = numbers.map((item, index) => {
-        return selectedNumber[index] + item
-      })
+        return selectedNumber[index] + item;
+      });
 
       const formData = {
         name: values.company,
@@ -228,75 +228,75 @@ function AddCustomerDialog({
         created_by: user_id,
         created_at: values.created_at || undefined,
         office: values.office,
-      }
+      };
 
-      const response: MyCustomer = await debouncedSaveData(formData)
+      const response: MyCustomer = await debouncedSaveData(formData);
 
-      toast.success("Customer Addedd successfully")
+      toast.success("Customer Addedd successfully");
 
-      await onRefresh?.(response)
-      handleClose(false)
+      await onRefresh?.(response);
+      handleClose(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const addNumberField = () => {
-    setNumbers((prevState) => [...prevState, ""])
-    setSelectedNumber((prevState) => [...prevState, "+92"])
-  }
+    setNumbers((prevState) => [...prevState, ""]);
+    setSelectedNumber((prevState) => [...prevState, "+92"]);
+  };
 
   const removeNumberField = (index: number) => {
-    setNumbers((prevState) => prevState.filter((_, ind) => ind !== index))
+    setNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
     setSelectedNumber((prevState) =>
-      prevState.filter((_, ind) => ind !== index)
-    )
-  }
+      prevState.filter((_, ind) => ind !== index),
+    );
+  };
 
   const handleNumberChange = (index: number, value: string) => {
     if (numberError) {
-      setNumberError("")
+      setNumberError("");
     }
 
     setNumbers((prevState) => {
-      const newState = [...prevState]
-      newState[index] = value
-      return newState
-    })
-    if (value) debouncedCheckNumber(selectedNumber[index] + value)
-  }
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
+    if (value) debouncedCheckNumber(selectedNumber[index] + value);
+  };
 
   const handlePrefixChange = (index: number, value: string) => {
     setSelectedNumber((prevState) => {
-      const newState = [...prevState]
-      newState[index] = value
-      return newState
-    })
-  }
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
+  };
 
   const checkNumberInDatabase = async (number: string) => {
-    setCustomerInfo([])
-    setChecking(true)
+    setCustomerInfo([]);
+    setChecking(true);
     try {
       const response = await axios.post(
         `/${user_id}/check-number`,
         { number },
         {
           cancelKey: `check-number-${user_id}`,
-        }
-      )
-      setCustomerInfo(response.data)
+        },
+      );
+      setCustomerInfo(response.data);
     } catch (error) {
-      console.log("Error checking number:", error)
+      console.log("Error checking number:", error);
     } finally {
-      setChecking(false)
+      setChecking(false);
     }
-  }
+  };
 
   const debouncedCheckNumber = useCallback(
     debounce(checkNumberInDatabase, 1000),
-    []
-  )
+    [],
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -375,8 +375,8 @@ function AddCustomerDialog({
                                   variant="destructive"
                                   size="icon-sm"
                                   onClick={() => {
-                                    removeNumberField(index)
-                                    setCustomerInfo([])
+                                    removeNumberField(index);
+                                    setCustomerInfo([]);
                                   }}
                                 >
                                   <Trash size={14} />
@@ -607,7 +607,7 @@ function AddCustomerDialog({
                                     <SelectItem key={item} value={item}>
                                       {item}
                                     </SelectItem>
-                                  )
+                                  ),
                                 )}
                               </SelectGroup>
                             </SelectContent>
@@ -699,9 +699,9 @@ function AddCustomerDialog({
                                 if (
                                   val.designation === "Social Media Manager"
                                 ) {
-                                  form.setValue("platform", "SOCIAL MEDIA")
+                                  form.setValue("platform", "SOCIAL MEDIA");
                                 } else {
-                                  form.setValue("platform", "")
+                                  form.setValue("platform", "");
                                 }
                               }}
                             />
@@ -827,7 +827,7 @@ function AddCustomerDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-export default memo(AddCustomerDialog)
+export default memo(AddCustomerDialog);

@@ -1,69 +1,69 @@
-import pool from "@/config/db"
-import { sendNotification } from "@/lib/sendNotification"
-import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile"
-import { NOTIFICATION_TYPES } from "@/constants/notifications"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { sendNotification } from "@/lib/sendNotification";
+import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const data = await req.json()
-    const { ...updates } = data
-    const { id } = await params
+    const data = await req.json();
+    const { ...updates } = data;
+    const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ message: "ID is required" }, { status: 400 })
+      return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields: string[] = []
-    const values = []
+    const fields: string[] = [];
+    const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
       if (value !== undefined) {
-        fields.push(`${key} = $${index + 1}`)
-        values.push(value)
+        fields.push(`${key} = $${index + 1}`);
+        values.push(value);
       }
-    })
+    });
 
     if (fields.length === 0) {
       return NextResponse.json(
         { message: "No valid data provided for update" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    values.push(id)
+    values.push(id);
     const query = `
           UPDATE payment 
           SET ${fields.join(", ")}
           WHERE id = $${values.length}
-      `
+      `;
 
-    await pool.query(query, values)
+    await pool.query(query, values);
 
-    sendNotificationToOwnership(id, data?.status, data?.comment)
+    sendNotificationToOwnership(id, data?.status, data?.comment);
 
     return NextResponse.json(
       { message: "Updated successfully" },
-      { status: 200 }
-    )
+      { status: 200 },
+    );
   } catch (error) {
-    console.error("Error updating data:", error)
+    console.error("Error updating data:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;
 
 async function sendNotificationToOwnership(
   paymentId: string,
   status = "",
-  comment = ""
+  comment = "",
 ) {
   const result = await pool.query(
     `
@@ -80,27 +80,27 @@ async function sendNotificationToOwnership(
   INNER JOIN users u ON c.ownership = u.id
   WHERE p.id = $1
 `,
-    [paymentId]
-  )
+    [paymentId],
+  );
 
   if (result.rows.length > 0) {
-    const user = result.rows[0]
+    const user = result.rows[0];
     const title =
-      status === "approved" ? "Payment verified" : "Payment rejected"
+      status === "approved" ? "Payment verified" : "Payment rejected";
     sendNotification(
       title,
       `member/${user.customer_id}/${user.sale_id}?mp=${paymentId}`,
       user.user_id,
       NOTIFICATION_TYPES.payment_verified.title,
-      NOTIFICATION_TYPES.payment_verified.category
-    )
+      NOTIFICATION_TYPES.payment_verified.category,
+    );
     sendNotificationToMobile(
       title,
       "Payment",
       user.user_id,
       user,
       "client",
-      `/dashboard/customer/${user.customer_id}/machine/${user.sale_id}`
-    )
+      `/dashboard/customer/${user.customer_id}/machine/${user.sale_id}`,
+    );
   }
 }

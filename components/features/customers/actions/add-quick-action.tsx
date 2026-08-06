@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { cn } from "@/lib/utils"
-import { Check, ChevronsUpDown, ListChecks } from "lucide-react"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown, ListChecks } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
   CommandDialog,
@@ -15,22 +15,22 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { MyCustomer, UserDashboard } from "@/lib/types"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { MyCustomer, UserDashboard } from "@/lib/types";
 
 type CustomerWithChecked = MyCustomer & {
-  checked?: boolean
-}
+  checked?: boolean;
+};
 
 const AddQuickAction = ({
   data,
@@ -38,33 +38,33 @@ const AddQuickAction = ({
   onClose,
   onRefresh,
 }: {
-  data: MyCustomer[]
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: (a: number, b?: number, c?: string) => void
+  data: MyCustomer[];
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: (a: number, b?: number, c?: string) => void;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [users, setUsers] = useState<{ value: number; label: string }[]>([])
-  const [localData, setLocalData] = useState<CustomerWithChecked[]>(data)
-  const [loadMore, setLoadMore] = useState(50)
-  const [search, setSearch] = useState("")
-  const [checkedAll, setCheckedAll] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<{ value: number; label: string }[]>([]);
+  const [localData, setLocalData] = useState<CustomerWithChecked[]>(data);
+  const [loadMore, setLoadMore] = useState(50);
+  const [search, setSearch] = useState("");
+  const [checkedAll, setCheckedAll] = useState(false);
   const [batchId, setBatchId] = useState<{
-    value: number
-    label: string
-  } | null>(null)
-  const [batchLoading, setBatchLoading] = useState(false)
-  const [batchData, setBatchData] = useState<CustomerWithChecked[]>([])
-  const { userID } = useUserDetail()
+    value: number;
+    label: string;
+  } | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchData, setBatchData] = useState<CustomerWithChecked[]>([]);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
-    if (userID) setLocalData(data.map((item) => ({ ...item, checked: false })))
-  }, [data, userID])
+    if (userID) setLocalData(data.map((item) => ({ ...item, checked: false })));
+  }, [data, userID]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axios.get(`/${userID}/user`)
+        const response = await axios.get(`/${userID}/user`);
         if (response.data.length > 0) {
           const finalData = response.data
             .filter((item: any) => {
@@ -72,46 +72,46 @@ const AddQuickAction = ({
                 item.designation === "Sales" ||
                 item.designation === "Manager"
               )
-                return item
+                return item;
             })
             .map((item: any) => ({
               value: item.id,
               label: item?.name || item.email,
-            }))
-          setUsers(finalData)
+            }));
+          setUsers(finalData);
         }
       } catch (error) {
-        console.error("Error fetching users:", error)
+        console.error("Error fetching users:", error);
       }
     }
-    if (visible) fetchData()
-  }, [visible])
+    if (visible) fetchData();
+  }, [visible]);
 
   const handleUpdate = async (
     id: number,
     ownership: number | undefined = undefined,
-    ownership_name: string | undefined = ""
+    ownership_name: string | undefined = "",
   ): Promise<void> => {
-    if (!id || !ownership) return
-    setLoading(true)
+    if (!id || !ownership) return;
+    setLoading(true);
     try {
       const response = await axios.put(
         `/${userID}/customer/${id}?notify=true`,
         {
           ownership: ownership,
-        }
-      )
-      onRefresh(id, ownership, ownership_name)
+        },
+      );
+      onRefresh(id, ownership, ownership_name);
     } catch (error) {
-      console.error("Error updating ownership:", error)
+      console.error("Error updating ownership:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    setLoadMore(50)
-    onClose(val)
+    setLoadMore(50);
+    onClose(val);
   }
 
   const filteredData = localData
@@ -119,40 +119,40 @@ const AddQuickAction = ({
       (item) =>
         item?.name?.toLowerCase().includes(search.toLowerCase()) ||
         item?.owner?.toLowerCase().includes(search.toLowerCase()) ||
-        item?.location?.toLowerCase().includes(search.toLowerCase())
+        item?.location?.toLowerCase().includes(search.toLowerCase()),
     )
-    .slice(0, loadMore)
+    .slice(0, loadMore);
 
   function handleSingleChecked(val: boolean, id: number) {
     setLocalData((prevState) => {
       const temp = prevState.map((item) =>
-        item.id === id ? { ...item, checked: val } : item
-      )
+        item.id === id ? { ...item, checked: val } : item,
+      );
 
-      const updatedBatch = temp.filter((item) => item.checked)
-      setBatchData(updatedBatch)
+      const updatedBatch = temp.filter((item) => item.checked);
+      setBatchData(updatedBatch);
 
-      return temp
-    })
+      return temp;
+    });
   }
 
   function handleCheckVisible(val: boolean) {
-    setCheckedAll(val)
+    setCheckedAll(val);
 
     const updatedData = localData.map((item) => {
-      const isVisible = filteredData.some((f) => f.id === item.id)
-      return isVisible ? { ...item, checked: val } : item
-    })
+      const isVisible = filteredData.some((f) => f.id === item.id);
+      return isVisible ? { ...item, checked: val } : item;
+    });
 
-    const updatedBatch = updatedData.filter((item) => item.checked)
+    const updatedBatch = updatedData.filter((item) => item.checked);
 
-    setLocalData(updatedData)
-    setBatchData(updatedBatch)
+    setLocalData(updatedData);
+    setBatchData(updatedBatch);
   }
 
   async function handleBatchUpdate() {
-    if (!checkedAll || batchData.length == 0) return
-    setBatchLoading(true)
+    if (!checkedAll || batchData.length == 0) return;
+    setBatchLoading(true);
 
     try {
       const promises = batchData.map((item) =>
@@ -161,15 +161,15 @@ const AddQuickAction = ({
             ownership: batchId?.value,
           })
           .then(() => {
-            onRefresh(item.id, batchId?.value, batchId?.label)
-          })
-      )
+            onRefresh(item.id, batchId?.value, batchId?.label);
+          }),
+      );
 
-      await Promise.all(promises)
+      await Promise.all(promises);
     } catch (error) {
-      console.log("Batch update failed:", error)
+      console.log("Batch update failed:", error);
     } finally {
-      setBatchLoading(false)
+      setBatchLoading(false);
     }
   }
 
@@ -200,7 +200,7 @@ const AddQuickAction = ({
                 <Checkbox
                   checked={checkedAll}
                   onCheckedChange={(checked: boolean) => {
-                    handleCheckVisible(checked)
+                    handleCheckVisible(checked);
                   }}
                 />
                 <div className="w-1/5 pl-2 text-sm font-bold">Name</div>
@@ -253,7 +253,7 @@ const AddQuickAction = ({
                   className="h-9 w-full rounded-lg"
                   onClick={() => {
                     if (loadMore <= filteredData.length)
-                      setLoadMore(loadMore + 50)
+                      setLoadMore(loadMore + 50);
                   }}
                 >
                   Load More
@@ -264,8 +264,8 @@ const AddQuickAction = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const RenderEachRow = ({
   id,
@@ -277,20 +277,20 @@ const RenderEachRow = ({
   checked,
   setChecked,
 }: {
-  id: number
-  name?: string
-  owner?: string
-  handleUpdate: (a: number, b?: number, c?: string) => Promise<void>
-  users: { value: number; label: string }[]
-  location?: string
-  checked?: boolean
-  setChecked: (val: boolean, id: number) => void
+  id: number;
+  name?: string;
+  owner?: string;
+  handleUpdate: (a: number, b?: number, c?: string) => Promise<void>;
+  users: { value: number; label: string }[];
+  location?: string;
+  checked?: boolean;
+  setChecked: (val: boolean, id: number) => void;
 }) => {
   const [selectedOwnership, setSelectedOwnership] = useState<{
-    value: number
-    label: string
-  } | null>(null)
-  const [loading, setLoading] = useState(false)
+    value: number;
+    label: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="flex min-h-11 items-center gap-4 rounded-lg border border-border bg-muted/30 p-2.5 text-foreground">
@@ -298,7 +298,7 @@ const RenderEachRow = ({
         <Checkbox
           checked={checked}
           onCheckedChange={(checked: boolean) => {
-            setChecked(checked, id)
+            setChecked(checked, id);
           }}
         />
       </div>
@@ -315,13 +315,13 @@ const RenderEachRow = ({
       <div className="w-1/5 text-sm">
         <Button
           onClick={async () => {
-            setLoading(true)
+            setLoading(true);
             await handleUpdate(
               id,
               selectedOwnership?.value,
-              selectedOwnership?.label
-            )
-            setLoading(false)
+              selectedOwnership?.label,
+            );
+            setLoading(false);
           }}
           disabled={loading}
           className="h-8 rounded-lg"
@@ -330,19 +330,19 @@ const RenderEachRow = ({
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export function CustomUserSearch({
   value,
   onReturn,
   data,
 }: {
-  value?: number | null
-  onReturn: (a: number, b: string) => void
-  data: { value: number; label: string }[]
+  value?: number | null;
+  onReturn: (a: number, b: string) => void;
+  data: { value: number; label: string }[];
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="flex flex-col space-y-4">
@@ -370,15 +370,15 @@ export function CustomUserSearch({
                   key={item.value}
                   value={item.label}
                   onSelect={() => {
-                    onReturn(item.value, item.label)
-                    setOpen(false)
+                    onReturn(item.value, item.label);
+                    setOpen(false);
                   }}
                 >
                   {item.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === item.value ? "opacity-100" : "opacity-0"
+                      value === item.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>
@@ -388,7 +388,7 @@ export function CustomUserSearch({
         </Command>
       </CommandDialog>
     </div>
-  )
+  );
 }
 
-export default AddQuickAction
+export default AddQuickAction;

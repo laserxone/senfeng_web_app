@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { CustomerSearch } from "@/components/features/customers/components/customer-search"
-import { Button } from "@/components/ui/button"
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { CustomerSearch } from "@/components/features/customers/components/customer-search";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,44 +10,39 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
-import axios from "@/lib/axios"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { CalendarDays, ListTodo } from "lucide-react"
-import { useMemo, useState, type ReactNode } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
+import axios from "@/lib/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDays, ListTodo } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
-type AddTaskMode = "self" | "team"
+type AddTaskMode = "self" | "team";
 
 type AddTaskDialogProps = {
-  onRefresh: () => Promise<void>
-  mode?: AddTaskMode
-  user_id?: number | string
-  assigned_by?: number | string
-  title?: string
-  placeholder?: string
-  icon?: boolean
+  onRefresh: () => Promise<void>;
+  mode?: AddTaskMode;
+  user_id?: number | string;
+  assigned_by?: number | string;
+  title?: string;
+  placeholder?: string;
+  icon?: boolean;
   variant?:
-    | "default"
-    | "link"
-    | "outline"
-    | "secondary"
-    | "ghost"
-    | "destructive"
+    "default" | "link" | "outline" | "secondary" | "ghost" | "destructive";
   size?:
     | "default"
     | "icon"
@@ -58,10 +53,10 @@ type AddTaskDialogProps = {
     | "icon-sm"
     | "icon-lg"
     | null
-    | undefined
-  btnClassname?: string
-  children?: ReactNode
-}
+    | undefined;
+  btnClassname?: string;
+  children?: ReactNode;
+};
 
 const defaultValues = {
   radio: "office" as const,
@@ -70,14 +65,14 @@ const defaultValues = {
   user: undefined,
   problem: "",
   solution: "",
-}
+};
 
 const TaskTypeRadio = ({
   onSelection,
   value,
 }: {
-  onSelection: (val: string) => void
-  value: string
+  onSelection: (val: string) => void;
+  value: string;
 }) => {
   return (
     <RadioGroup
@@ -94,8 +89,8 @@ const TaskTypeRadio = ({
         <Label htmlFor="task-client">Client</Label>
       </div>
     </RadioGroup>
-  )
-}
+  );
+};
 
 export default function AddTaskDialog({
   icon = false,
@@ -109,10 +104,10 @@ export default function AddTaskDialog({
   title = "Add new task",
   placeholder = "Add Task",
 }: AddTaskDialogProps) {
-  const [loading, setLoading] = useState(false)
-  const isTeamTask = mode === "team"
-  const creatorId = user_id
-  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const isTeamTask = mode === "team";
+  const creatorId = user_id;
+  const [open, setOpen] = useState(false);
 
   const formSchema = useMemo(
     () =>
@@ -133,7 +128,7 @@ export default function AddTaskDialog({
               path: ["user"],
               code: z.ZodIssueCode.custom,
               message: "User is required",
-            })
+            });
           }
 
           if (data.radio === "client" && !data.client) {
@@ -141,40 +136,40 @@ export default function AddTaskDialog({
               path: ["client"],
               code: z.ZodIssueCode.custom,
               message: "Client is required.",
-            })
+            });
 
             if (isTeamTask) {
               ctx.addIssue({
                 path: ["problem"],
                 code: z.ZodIssueCode.custom,
                 message: "Problem is required.",
-              })
+              });
 
               ctx.addIssue({
                 path: ["solution"],
                 code: z.ZodIssueCode.custom,
                 message: "Solution is required.",
-              })
+              });
             }
           }
         }),
-    [isTeamTask]
-  )
+    [isTeamTask],
+  );
 
-  type TaskFormValues = z.infer<typeof formSchema>
+  type TaskFormValues = z.infer<typeof formSchema>;
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
-  })
+  });
 
-  const { watch, reset, handleSubmit, control } = form
-  const selectedRadio = watch("radio")
+  const { watch, reset, handleSubmit, control } = form;
+  const selectedRadio = watch("radio");
 
   const onSubmit = (values: TaskFormValues) => {
-    if (!creatorId) return
+    if (!creatorId) return;
 
-    setLoading(true)
+    setLoading(true);
 
     const payload = isTeamTask
       ? {
@@ -193,25 +188,25 @@ export default function AddTaskDialog({
           client: values.client,
           status: "Pending",
           assigned_to: creatorId,
-        }
+        };
 
     axios
       .post(isTeamTask ? `${creatorId}/task` : `/${creatorId}/task`, payload)
       .then(() => {
-        onRefresh()
-        handleClose(false)
-        toast.success("Task created successfully")
+        onRefresh();
+        handleClose(false);
+        toast.success("Task created successfully");
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }
+        setLoading(false);
+      });
+  };
 
   function handleClose(val: boolean) {
-    setOpen(val)
+    setOpen(val);
 
     if (!val) {
-      reset(defaultValues)
+      reset(defaultValues);
     }
   }
 
@@ -247,7 +242,7 @@ export default function AddTaskDialog({
           <div className="p-3.5">
             <form
               onSubmit={handleSubmit(onSubmit, (e) => {
-                console.log(e)
+                console.log(e);
               })}
               className="space-y-3 [&_input]:h-9 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
             >
@@ -264,7 +259,7 @@ export default function AddTaskDialog({
                       <TaskTypeRadio
                         value={field.value}
                         onSelection={(val) => {
-                          field.onChange(val)
+                          field.onChange(val);
                         }}
                       />
 
@@ -400,7 +395,7 @@ export default function AddTaskDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-export { AddTaskDialog }
+export { AddTaskDialog };

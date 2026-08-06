@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
 import {
   Dialog,
   DialogContent,
   DialogOverlay,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useEffect, useState } from "react"
-import { useFines } from "@/hooks/use-fine"
-import axios from "@/lib/axios"
-import useUserDetail from "@/hooks/use-user-detail"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { useFines } from "@/hooks/use-fine";
+import axios from "@/lib/axios";
+import useUserDetail from "@/hooks/use-user-detail";
 
 export default function FinePopup() {
-  const [open, setOpen] = useState(false)
-  const { userID } = useUserDetail()
-  const { fine } = useFines()
+  const [open, setOpen] = useState(false);
+  const { userID } = useUserDetail();
+  const { fine } = useFines();
 
   useEffect(() => {
     if (fine?.id) {
       // setOpen(true);
     }
-  }, [fine])
+  }, [fine]);
 
   async function handleRead(id: number | undefined) {
-    if (!id) return
-    setOpen(false)
-    axios.put(`/${userID}/fine/${id}`, { is_read: true })
+    if (!id) return;
+    setOpen(false);
+    axios.put(`/${userID}/fine/${id}`, { is_read: true });
   }
   return (
     <Dialog open={open}>
@@ -47,5 +47,5 @@ export default function FinePopup() {
         </Button>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

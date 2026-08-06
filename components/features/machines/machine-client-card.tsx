@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { ShieldCheck, TriangleAlert, User } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { ShieldCheck, TriangleAlert, User } from "lucide-react";
 import {
   Dispatch,
   Fragment,
@@ -7,27 +7,27 @@ import {
   SetStateAction,
   useEffect,
   useState,
-} from "react"
+} from "react";
 
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import { downloadCustomerZip } from "@/components/shared/media/downloadzip"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import Spinner from "@/components/ui/spinner"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { downloadCustomerZip } from "@/components/shared/media/downloadzip";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Spinner from "@/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/tooltip";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
   InstallmentProps,
   MachinePayment,
   MachineProps,
   MachineResponse,
-} from "@/lib/types"
+} from "@/lib/types";
 import {
   Banknote,
   CalendarClock,
@@ -41,10 +41,10 @@ import {
   Trash2,
   Truck,
   Unlock,
-} from "lucide-react"
-import moment from "moment"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import { toast } from "sonner"
+} from "lucide-react";
+import moment from "moment";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -52,8 +52,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import CancelDeal from "./cancel-deal"
+} from "@/components/ui/dropdown-menu";
+import CancelDeal from "./cancel-deal";
 
 const ClientCard = memo(
   ({
@@ -77,58 +77,58 @@ const ClientCard = memo(
     setRevokeDelivery,
     setReadyForDelivery,
   }: {
-    data?: MachineResponse
-    payment: [number, number]
-    machine: MachineProps | null
-    unmatched: string[]
-    setImagesVisible: Dispatch<SetStateAction<boolean>>
-    payments: MachinePayment[]
-    setEditParts: Dispatch<SetStateAction<boolean>>
-    setEditMachine: Dispatch<SetStateAction<boolean>>
-    override: boolean
-    setOverride: Dispatch<SetStateAction<boolean>>
-    setCredit: Dispatch<SetStateAction<boolean>>
-    onRefresh: () => Promise<void>
-    installments: InstallmentProps[]
-    setInstallmentVisible: Dispatch<SetStateAction<boolean>>
-    setAddPayment: Dispatch<SetStateAction<boolean>>
-    setOpenChange: Dispatch<SetStateAction<boolean>>
-    setOpenDelete: Dispatch<SetStateAction<boolean>>
-    setRevokeDelivery: Dispatch<SetStateAction<MachineResponse | null>>
-    setReadyForDelivery: Dispatch<SetStateAction<MachineResponse | null>>
+    data?: MachineResponse;
+    payment: [number, number];
+    machine: MachineProps | null;
+    unmatched: string[];
+    setImagesVisible: Dispatch<SetStateAction<boolean>>;
+    payments: MachinePayment[];
+    setEditParts: Dispatch<SetStateAction<boolean>>;
+    setEditMachine: Dispatch<SetStateAction<boolean>>;
+    override: boolean;
+    setOverride: Dispatch<SetStateAction<boolean>>;
+    setCredit: Dispatch<SetStateAction<boolean>>;
+    onRefresh: () => Promise<void>;
+    installments: InstallmentProps[];
+    setInstallmentVisible: Dispatch<SetStateAction<boolean>>;
+    setAddPayment: Dispatch<SetStateAction<boolean>>;
+    setOpenChange: Dispatch<SetStateAction<boolean>>;
+    setOpenDelete: Dispatch<SetStateAction<boolean>>;
+    setRevokeDelivery: Dispatch<SetStateAction<MachineResponse | null>>;
+    setReadyForDelivery: Dispatch<SetStateAction<MachineResponse | null>>;
   }) => {
-    const [showAlert, setShowAlert] = useState(false)
-    const [zipDownloading, setZipDwonloading] = useState(false)
-    const [ledgerDownloading, setLedgerDownloading] = useState(false)
-    const { userID, isAdmin } = useUserDetail()
+    const [showAlert, setShowAlert] = useState(false);
+    const [zipDownloading, setZipDwonloading] = useState(false);
+    const [ledgerDownloading, setLedgerDownloading] = useState(false);
+    const { userID, isAdmin } = useUserDetail();
 
     useEffect(() => {
-      if (!machine) return
+      if (!machine) return;
 
-      const payments = machine?.payments ?? []
-      const result = findDuplicateNotes(payments)
-      setShowAlert(result.length > 0)
-    }, [machine])
+      const payments = machine?.payments ?? [];
+      const result = findDuplicateNotes(payments);
+      setShowAlert(result.length > 0);
+    }, [machine]);
 
     function findDuplicateNotes(array: MachinePayment[]) {
-      const noteMap = new Map()
-      const duplicates = []
+      const noteMap = new Map();
+      const duplicates = [];
 
       for (const item of array) {
         if (noteMap.has(item.note)) {
-          duplicates.push(item.note)
+          duplicates.push(item.note);
         } else {
-          noteMap.set(item.note, true)
+          noteMap.set(item.note, true);
         }
       }
 
-      return [...new Set(duplicates)]
+      return [...new Set(duplicates)];
     }
 
     async function handleDownloadLedger() {
-      if (ledgerDownloading) return
+      if (ledgerDownloading) return;
 
-      setLedgerDownloading(true)
+      setLedgerDownloading(true);
       try {
         const response = await axios.post(
           `/${userID}/ledger-pdf`,
@@ -143,24 +143,24 @@ const ClientCard = memo(
             headers: {
               "Content-Type": "application/json",
             },
-          }
-        )
+          },
+        );
 
         const blob = new Blob([response.data], {
           type: "application/pdf",
-        })
+        });
 
-        const url = URL.createObjectURL(blob)
+        const url = URL.createObjectURL(blob);
 
-        window.open(url, "_blank")
+        window.open(url, "_blank");
 
         setTimeout(() => {
-          URL.revokeObjectURL(url)
-        }, 600000)
+          URL.revokeObjectURL(url);
+        }, 600000);
       } catch (error) {
-        console.log("Ledger PDF error:", error)
+        console.log("Ledger PDF error:", error);
       } finally {
-        setLedgerDownloading(false)
+        setLedgerDownloading(false);
       }
     }
 
@@ -173,7 +173,7 @@ const ClientCard = memo(
           {value || "N/A"}
         </p>
       </div>
-    )
+    );
 
     return (
       <div className="space-y-3">
@@ -322,9 +322,9 @@ const ClientCard = memo(
                       <DropdownMenuItem
                         className="text-xs"
                         onClick={async () => {
-                          setZipDwonloading(true)
-                          await downloadCustomerZip(data)
-                          setZipDwonloading(false)
+                          setZipDwonloading(true);
+                          await downloadCustomerZip(data);
+                          setZipDwonloading(false);
                         }}
                       >
                         {zipDownloading ? (
@@ -347,14 +347,14 @@ const ClientCard = memo(
                       className="h-7 rounded-md px-2.5 text-xs"
                       onClick={() => {
                         if (!data?.editAllowed) {
-                          toast.info("You are not allowed to edit machine")
-                          return
+                          toast.info("You are not allowed to edit machine");
+                          return;
                         }
 
                         if (data?.machine?.type === "Parts") {
-                          setEditParts(true)
+                          setEditParts(true);
                         } else {
-                          setEditMachine(true)
+                          setEditMachine(true);
                         }
                       }}
                     >
@@ -384,12 +384,12 @@ const ClientCard = memo(
                               onClick={() => {
                                 if (!data?.editAllowed) {
                                   toast.info(
-                                    "You are not allowed to add payment"
-                                  )
-                                  return
+                                    "You are not allowed to add payment",
+                                  );
+                                  return;
                                 }
 
-                                setAddPayment(true)
+                                setAddPayment(true);
                               }}
                             >
                               <CreditCard className="mr-1.5 h-3.5 w-3.5" />
@@ -575,11 +575,11 @@ const ClientCard = memo(
                                       {val || "N/A"}
                                     </span>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           </div>
-                        )
+                        ),
                       )}
                     </div>
 
@@ -587,7 +587,7 @@ const ClientCard = memo(
                       "Contract Date",
                       machine.contract_date
                         ? moment(machine.contract_date).format("YYYY-MM-DD")
-                        : "N/A"
+                        : "N/A",
                     )}
                   </div>
                 ) : (
@@ -604,7 +604,7 @@ const ClientCard = memo(
                     "Contract",
                     machine.contract_date
                       ? moment(machine.contract_date).format("YYYY-MM-DD")
-                      : "N/A"
+                      : "N/A",
                   )}
                   {infoItem("Group", data?.customer?.customer_group)}
 
@@ -619,7 +619,7 @@ const ClientCard = memo(
                   {machine.delivery_date &&
                     infoItem(
                       "Delivery Date",
-                      moment(machine.delivery_date).format("DD MMM YYYY")
+                      moment(machine.delivery_date).format("DD MMM YYYY"),
                     )}
                   <div className="col-span-1 md:col-span-2 xl:col-span-3">
                     {machine?.note && (
@@ -703,8 +703,8 @@ const ClientCard = memo(
           </Card>
         </div>
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-export default ClientCard
+export default ClientCard;

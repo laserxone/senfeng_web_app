@@ -1,35 +1,35 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 export default function PwaInstallButton() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [isVisible, setIsVisible] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const handler = (e) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-      setIsVisible(true) // show button when install available
-    }
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsVisible(true); // show button when install available
+    };
 
-    window.addEventListener("beforeinstallprompt", handler)
+    window.addEventListener("beforeinstallprompt", handler);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handler)
-    }
-  }, [])
+      window.removeEventListener("beforeinstallprompt", handler);
+    };
+  }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    console.log(`User response: ${outcome}`)
-    setDeferredPrompt(null)
-    setIsVisible(false) // hide after interaction
-  }
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response: ${outcome}`);
+    setDeferredPrompt(null);
+    setIsVisible(false); // hide after interaction
+  };
 
-  if (!isVisible) return null
+  if (!isVisible) return null;
 
   return (
     <button
@@ -38,21 +38,21 @@ export default function PwaInstallButton() {
     >
       Install App
     </button>
-  )
+  );
 }
 
 export function InstallPrompt() {
-  const [isIOS, setIsIOS] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream)
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
 
-    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches)
-  }, [])
+    setIsStandalone(window.matchMedia("(display-mode: standalone)").matches);
+  }, []);
 
   if (isStandalone) {
-    return null // Don't show install button if already installed
+    return null; // Don't show install button if already installed
   }
 
   return (
@@ -75,5 +75,5 @@ export function InstallPrompt() {
         </p>
       )}
     </div>
-  )
+  );
 }

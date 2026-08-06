@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
   Line,
@@ -12,15 +12,15 @@ import {
   Legend,
   Area,
   AreaChart,
-} from "recharts"
+} from "recharts";
 
 interface OverviewChartProps {
   data: {
-    month: string
-    total_assigned: number
-    total_completed: number
-    completion_rate: number
-  }[]
+    month: string;
+    total_assigned: number;
+    total_completed: number;
+    completion_rate: number;
+  }[];
 }
 
 export function OverviewChart({ data }: OverviewChartProps) {
@@ -28,7 +28,7 @@ export function OverviewChart({ data }: OverviewChartProps) {
     name: item.month,
     completed: item.total_completed,
     pending: item.total_assigned - item.total_completed,
-  }))
+  }));
 
   return (
     <Card className="border border-border bg-card shadow-sm">
@@ -120,5 +120,5 @@ export function OverviewChart({ data }: OverviewChartProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

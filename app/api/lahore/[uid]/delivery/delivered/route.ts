@@ -1,9 +1,9 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{}> }
+  { params }: { params: Promise<{}> },
 ) {
   try {
     const queryResult = await pool.query(`
@@ -35,12 +35,12 @@ export async function GET(
     AND s.delivery_date IS NOT NULL
     AND c.office = 'lahore'
   ORDER BY s.delivery_date DESC
-`)
-    return NextResponse.json(queryResult.rows, { status: 200 })
+`);
+    return NextResponse.json(queryResult.rows, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { AddExpensesDialog } from "@/components/features/employee-finance/employee-expense"
-import EngineerModal from "@/components/features/pos/engineer-modal"
-import GatePassSlip from "@/components/features/pos/gatepass-slip"
-import NotificationBadge from "@/components/features/pos/NotificationBadge"
-import { OrderDonutChart } from "@/components/features/pos/order-donut-chart"
-import SearchResultModal from "@/components/features/pos/search-result-modal"
-import Reimbursement from "@/components/features/reimbursements/Reimbursement"
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog"
-import TaskDetail from "@/components/features/tasks/task-detail"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import PageTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
+import { AddExpensesDialog } from "@/components/features/employee-finance/employee-expense";
+import EngineerModal from "@/components/features/pos/engineer-modal";
+import GatePassSlip from "@/components/features/pos/gatepass-slip";
+import NotificationBadge from "@/components/features/pos/NotificationBadge";
+import { OrderDonutChart } from "@/components/features/pos/order-donut-chart";
+import SearchResultModal from "@/components/features/pos/search-result-modal";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import TaskDetail from "@/components/features/tasks/task-detail";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import PageTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { useMachineDelivery } from "@/hooks/use-machine-delivery"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { useMachineDelivery } from "@/hooks/use-machine-delivery";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
   StoreAvailableStock,
   StoreDashboardResponse,
@@ -34,8 +34,8 @@ import {
   StoreStockItem,
   TaskProps,
   UserReimbursementType,
-} from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
+} from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -55,69 +55,71 @@ import {
   Truck,
   Users,
   Wrench,
-} from "lucide-react"
-import moment from "moment"
-import { useRouter } from "nextjs-toploader/app"
-import { useCallback, useEffect, useState } from "react"
+} from "lucide-react";
+import moment from "moment";
+import { useRouter } from "nextjs-toploader/app";
+import { useCallback, useEffect, useState } from "react";
 
 export default function StoreManagerDashboard({
   id: userID,
 }: {
-  id: string | number
+  id: string | number;
 }) {
-  const { base_route } = useUserDetail()
-  const [data, setData] = useState<StoreDashboardResponse | null>(null)
-  const [selectedMachines, setSelectedMachines] = useState<StoreStockItem[]>([])
-  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null)
-  const [engineerLoading, setEngineerLoading] = useState(false)
-  const [allEngineersData, setAllEngineersData] = useState([])
-  const [engineersModal, setEngineersModal] = useState(false)
-  const [expense, setExpense] = useState(false)
-  const [gatePass, setGatePass] = useState(false)
-  const [lowStock, setLowStock] = useState(false)
+  const { base_route } = useUserDetail();
+  const [data, setData] = useState<StoreDashboardResponse | null>(null);
+  const [selectedMachines, setSelectedMachines] = useState<StoreStockItem[]>(
+    [],
+  );
+  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
+  const [engineerLoading, setEngineerLoading] = useState(false);
+  const [allEngineersData, setAllEngineersData] = useState([]);
+  const [engineersModal, setEngineersModal] = useState(false);
+  const [expense, setExpense] = useState(false);
+  const [gatePass, setGatePass] = useState(false);
+  const [lowStock, setLowStock] = useState(false);
   const [selectedData, setSelectedData] = useState<StorePosStatsEach | null>(
-    null
-  )
-  const router = useRouter()
-  const { pendingDelivery } = useMachineDelivery()
+    null,
+  );
+  const router = useRouter();
+  const { pendingDelivery } = useMachineDelivery();
   const [reimbursementData, setReimbursementData] = useState<
     UserReimbursementType[]
-  >([])
+  >([]);
 
   useEffect(() => {
     if (userID) {
-      const startDate = moment().startOf("month").toISOString()
-      const endDate = moment().endOf("month").toISOString()
-      fetchReimbursementData(startDate, endDate)
-      fetchData()
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchReimbursementData(startDate, endDate);
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
     axios.get(`/${userID}/dashboard`).then((response) => {
-      setData(response.data)
-    })
+      setData(response.data);
+    });
   }
 
   async function handleEngineerItems() {
     try {
-      setEngineerLoading(true)
-      const response = await axios.get(`/${userID}/pos/engineer`)
+      setEngineerLoading(true);
+      const response = await axios.get(`/${userID}/pos/engineer`);
 
-      setAllEngineersData(response.data)
-      setEngineersModal(true)
-      return true
+      setAllEngineersData(response.data);
+      setEngineersModal(true);
+      return true;
     } finally {
-      setEngineerLoading(false)
+      setEngineerLoading(false);
     }
   }
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
     const response = await axios.get(
-      `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
-    )
+      `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`,
+    );
 
-    setReimbursementData(response.data)
+    setReimbursementData(response.data);
   }
 
   const quickActions = [
@@ -126,7 +128,7 @@ export default function StoreManagerDashboard({
       icon: Truck,
       color: "text-blue-600",
       onClick: () => {
-        router.push(`/${base_route}/delivery/machinedelivery`)
+        router.push(`/${base_route}/delivery/machinedelivery`);
       },
       count: pendingDelivery,
     },
@@ -141,7 +143,7 @@ export default function StoreManagerDashboard({
       icon: CreditCard,
       color: "text-green-600",
       onClick: () => {
-        router.push(`/${base_route}/pos`)
+        router.push(`/${base_route}/pos`);
       },
     },
     {
@@ -150,7 +152,7 @@ export default function StoreManagerDashboard({
       color: "text-red-600",
       count: data?.pos_stats?.pending?.length || 0,
       onClick: () => {
-        setSelectedData(data?.pos_stats?.pending || null)
+        setSelectedData(data?.pos_stats?.pending || null);
       },
     },
     {
@@ -158,7 +160,7 @@ export default function StoreManagerDashboard({
       icon: Wrench,
       color: "text-purple-600",
       onClick: () => {
-        handleEngineerItems()
+        handleEngineerItems();
       },
       loading: engineerLoading,
     },
@@ -168,7 +170,7 @@ export default function StoreManagerDashboard({
       color: "text-green-600",
       showExpenses: true,
       onClick: () => {
-        setExpense(true)
+        setExpense(true);
       },
     },
     {
@@ -183,7 +185,7 @@ export default function StoreManagerDashboard({
       icon: FileText,
       color: "text-cyan-600",
       onClick: () => {
-        setGatePass(true)
+        setGatePass(true);
       },
     },
     {
@@ -210,7 +212,7 @@ export default function StoreManagerDashboard({
       color: "text-orange-500",
       count: data?.low_stock?.total || 0,
       onClick: () => {
-        setLowStock(true)
+        setLowStock(true);
       },
     },
     {
@@ -219,7 +221,7 @@ export default function StoreManagerDashboard({
       color: "text-green-600",
       onClick: () => {},
     },
-  ]
+  ];
 
   const machineColumns: ColumnDef<StoreStockGroup>[] = [
     {
@@ -234,7 +236,7 @@ export default function StoreManagerDashboard({
             Model
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">{row.getValue("machine_model")}</div>
@@ -252,7 +254,7 @@ export default function StoreManagerDashboard({
             Power
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("machine_power")}</div>,
     },
@@ -269,7 +271,7 @@ export default function StoreManagerDashboard({
             Quantity
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("quantity")}</div>,
     },
@@ -277,26 +279,26 @@ export default function StoreManagerDashboard({
     {
       id: "actions",
       header: ({ column }) => {
-        return <Button variant="ghost">Action</Button>
+        return <Button variant="ghost">Action</Button>;
       },
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
         return (
           <Button
             size={"sm"}
             variant={"outline"}
             onClick={(e) => {
-              e.stopPropagation()
-              setSelectedMachines(row.original.data)
+              e.stopPropagation();
+              setSelectedMachines(row.original.data);
             }}
           >
             View
           </Button>
-        )
+        );
       },
     },
-  ]
+  ];
 
   const taskColumns: ColumnDef<TaskProps>[] = [
     {
@@ -311,7 +313,7 @@ export default function StoreManagerDashboard({
             Status
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2 flex items-center gap-1">
@@ -338,7 +340,7 @@ export default function StoreManagerDashboard({
             Task Name
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("task_name")}</div>,
     },
@@ -355,7 +357,7 @@ export default function StoreManagerDashboard({
             Assign Time
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -379,7 +381,7 @@ export default function StoreManagerDashboard({
             Assign Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -387,13 +389,13 @@ export default function StoreManagerDashboard({
         </div>
       ),
     },
-  ]
+  ];
 
   function getAllStoreStockItems(
-    availableStock: StoreAvailableStock | null
+    availableStock: StoreAvailableStock | null,
   ): StoreStockItem[] {
-    if (!availableStock) return []
-    return availableStock.groups.flatMap((group) => group.data)
+    if (!availableStock) return [];
+    return availableStock.groups.flatMap((group) => group.data);
   }
 
   const ordersOverview = [
@@ -417,7 +419,7 @@ export default function StoreManagerDashboard({
       count: data?.pos_stats?.cancelled?.length || 0,
       onClick: () => setSelectedData(data?.pos_stats?.cancelled || null),
     },
-  ]
+  ];
 
   const RenderReimbursement = useCallback(() => {
     return (
@@ -425,26 +427,26 @@ export default function StoreManagerDashboard({
         id={userID}
         passingData={reimbursementData || []}
         onAddRefresh={async () => {
-          const startDate = moment().startOf("month").toISOString()
-          const endDate = moment().endOf("month").toISOString()
-          await fetchReimbursementData(startDate, endDate)
+          const startDate = moment().startOf("month").toISOString();
+          const endDate = moment().endOf("month").toISOString();
+          await fetchReimbursementData(startDate, endDate);
         }}
         onFilterReturn={async (start, end) => {
-          await fetchReimbursementData(start, end)
+          await fetchReimbursementData(start, end);
         }}
         onReset={async (start: string, end: string) => {
-          await fetchReimbursementData(start, end)
+          await fetchReimbursementData(start, end);
         }}
       />
-    )
-  }, [reimbursementData])
+    );
+  }, [reimbursementData]);
 
   return (
     <div className="flex flex-1 pb-2">
       <div className="flex flex-1 flex-col gap-3">
         <section className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-7">
           {quickActions.map((action) => {
-            const Icon = action.icon
+            const Icon = action.icon;
 
             return (
               <button
@@ -509,7 +511,7 @@ export default function StoreManagerDashboard({
                   </>
                 )}
               </button>
-            )
+            );
           })}
         </section>
 
@@ -572,7 +574,7 @@ export default function StoreManagerDashboard({
               <div className="h-[82px] w-[82px] shrink-0">
                 <OrderDonutChart
                   data={ordersOverview.map((item) => {
-                    return { status: item.label, total: item.count }
+                    return { status: item.label, total: item.count };
                   })}
                 />
               </div>
@@ -644,7 +646,7 @@ export default function StoreManagerDashboard({
               columns={taskColumns}
               data={data?.today_tasks?.data || []}
               onRowClick={(val, e) => {
-                setSelectedTask(val)
+                setSelectedTask(val);
               }}
             />
           </div>
@@ -661,7 +663,7 @@ export default function StoreManagerDashboard({
                 size="sm"
                 onClick={() =>
                   setSelectedMachines(
-                    getAllStoreStockItems(data?.available_stock || null)
+                    getAllStoreStockItems(data?.available_stock || null),
                   )
                 }
               >
@@ -711,8 +713,8 @@ export default function StoreManagerDashboard({
         engineersModal={engineersModal}
         setEngineersModal={setEngineersModal}
         onRefresh={async () => {
-          await handleEngineerItems()
-          fetchData()
+          await handleEngineerItems();
+          fetchData();
         }}
       />
 
@@ -721,7 +723,7 @@ export default function StoreManagerDashboard({
         onClose={setExpense}
         user_id={userID}
         onRefresh={async () => {
-          await fetchData()
+          await fetchData();
         }}
       />
 
@@ -756,7 +758,7 @@ export default function StoreManagerDashboard({
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 const LowStockModal = ({
@@ -764,12 +766,12 @@ const LowStockModal = ({
   onClose,
   data,
 }: {
-  visible: boolean
-  onClose: () => void
-  data?: StoreLowStockData[]
+  visible: boolean;
+  onClose: () => void;
+  data?: StoreLowStockData[];
 }) => {
-  const [view, setView] = useState<"list" | "cards">("list")
-  const items = data || []
+  const [view, setView] = useState<"list" | "cards">("list");
+  const items = data || [];
 
   return (
     <Dialog onOpenChange={onClose} open={visible}>
@@ -925,17 +927,17 @@ const LowStockModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const LowStockMetric = ({
   label,
   value,
   tone = "default",
 }: {
-  label: string
-  value: string
-  tone?: "default" | "orange"
+  label: string;
+  value: string;
+  tone?: "default" | "orange";
 }) => {
   return (
     <div className="rounded-md border bg-muted/20 px-2 py-1.5">
@@ -948,17 +950,17 @@ const LowStockMetric = ({
         {value}
       </p>
     </div>
-  )
-}
+  );
+};
 
 const ShowMachines = ({
   visible,
   data,
   onClose,
 }: {
-  visible: boolean
-  data: StoreStockItem[]
-  onClose: () => void
+  visible: boolean;
+  data: StoreStockItem[];
+  onClose: () => void;
 }) => {
   const columns: ColumnDef<StoreStockItem>[] = [
     {
@@ -973,7 +975,7 @@ const ShowMachines = ({
             Serial
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">{row.getValue("machine_serial")}</div>
@@ -991,7 +993,7 @@ const ShowMachines = ({
             Model
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">{row.getValue("machine_model")}</div>
@@ -1009,11 +1011,11 @@ const ShowMachines = ({
             Power
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("machine_power")}</div>,
     },
-  ]
+  ];
 
   return (
     <Dialog open={visible} onOpenChange={() => onClose()}>
@@ -1025,5 +1027,5 @@ const ShowMachines = ({
         <PageTable data={data} columns={columns} />
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

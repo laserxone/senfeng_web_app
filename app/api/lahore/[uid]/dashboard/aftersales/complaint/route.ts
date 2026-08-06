@@ -1,24 +1,24 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const searchParams = req.nextUrl.searchParams
-  const start = searchParams.get("start")
-  const end = searchParams.get("end")
-  const { uid } = await params
+  const searchParams = req.nextUrl.searchParams;
+  const start = searchParams.get("start");
+  const end = searchParams.get("end");
+  const { uid } = await params;
 
   try {
-    const queryParams = []
-    let query = ""
+    const queryParams = [];
+    let query = "";
 
     const userQuery = await pool.query(
       `SELECT complaint_assigned FROM users WHERE id = $1`,
-      [uid]
-    )
-    const user = userQuery.rows[0]
+      [uid],
+    );
+    const user = userQuery.rows[0];
 
     if (user.complaint_assigned) {
       query = `
@@ -88,25 +88,25 @@ export async function GET(
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
         WHERE c.customer_id IS NOT NULL AND c.managing_office = 'lahore'
-      `
+      `;
 
       if (start && end) {
-        const paramIndex = queryParams.length + 1
-        query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`
-        queryParams.push(start, end)
+        const paramIndex = queryParams.length + 1;
+        query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+        queryParams.push(start, end);
       }
 
-      query += ` ORDER BY c.created_at DESC`
+      query += ` ORDER BY c.created_at DESC`;
     } else {
-      return NextResponse.json([])
+      return NextResponse.json([]);
     }
-    const result = await pool.query(query, queryParams)
-    return NextResponse.json(result.rows, { status: 200 })
+    const result = await pool.query(query, queryParams);
+    return NextResponse.json(result.rows, { status: 200 });
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
     return NextResponse.json(
       { message: error?.message || "Server error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

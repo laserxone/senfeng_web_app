@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button"
-import { Eye } from "lucide-react"
-import { ReactElement, ReactNode } from "react"
-import MiniMetric from "./aftersales-minimetric"
-import SectionTitle from "./aftersales-section-tile"
-import { MetricTone } from "./aftersales-types"
+import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
+import { ReactElement, ReactNode } from "react";
+import MiniMetric from "./aftersales-minimetric";
+import SectionTitle from "./aftersales-section-tile";
+import { MetricTone } from "./aftersales-types";
 
 export default function DashboardStatsCard({
   title,
@@ -14,20 +14,20 @@ export default function DashboardStatsCard({
   button = false,
   option,
 }: {
-  title: string
-  subtitle: string
-  icon: ReactNode
+  title: string;
+  subtitle: string;
+  icon: ReactNode;
   metrics: {
-    label: string
-    value: ReactNode
-    icon: ReactElement
-    tone: MetricTone
-  }[]
-  onClick?: () => void
-  button?: boolean
-  option: number
+    label: string;
+    value: ReactNode;
+    icon: ReactElement;
+    tone: MetricTone;
+  }[];
+  onClick?: () => void;
+  button?: boolean;
+  option: number;
 }) {
-  const interactive = Boolean(onClick)
+  const interactive = Boolean(onClick);
 
   return (
     <article
@@ -48,8 +48,8 @@ export default function DashboardStatsCard({
             variant="outline"
             className="h-7 rounded-full border-border bg-muted/50 px-3 text-foreground hover:bg-muted"
             onClick={(event) => {
-              event.stopPropagation()
-              onClick?.()
+              event.stopPropagation();
+              onClick?.();
             }}
           >
             <Eye className="size-3.5" /> Open
@@ -62,5 +62,5 @@ export default function DashboardStatsCard({
         ))}
       </div>
     </article>
-  )
+  );
 }

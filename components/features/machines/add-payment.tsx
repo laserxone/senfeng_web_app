@@ -1,47 +1,47 @@
-import Dropzone from "@/components/shared/uploads/dropzone"
+import Dropzone from "@/components/shared/uploads/dropzone";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { Button } from "@/components/ui/button"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { debounce } from "@/lib/debounce"
-import { UploadImage } from "@/lib/uploadFunction"
-import { cn } from "@/lib/utils"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { WalletCards } from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useCallback, useContext, useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { debounce } from "@/lib/debounce";
+import { UploadImage } from "@/lib/uploadFunction";
+import { cn } from "@/lib/utils";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { WalletCards } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const formSchema = z
   .object({
@@ -66,18 +66,18 @@ const formSchema = z
         code: z.ZodIssueCode.custom,
         message: "Cheque ID is required when payment mode is Cheque.",
         path: ["cheque_id"],
-      })
+      });
     }
-  })
+  });
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 type ErrorType = {
-  part_id: number
-  errorMessage: string
-  machine_id: number
-  saleData: { customer_id: number }[]
-}
+  part_id: number;
+  errorMessage: string;
+  machine_id: number;
+  saleData: { customer_id: number }[];
+};
 
 const AddPayment = ({
   visible,
@@ -86,18 +86,18 @@ const AddPayment = ({
   machine_id,
   customer_id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  machine_id?: number | string
-  customer_id?: number
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  machine_id?: number | string;
+  customer_id?: number;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [checking, setChecking] = useState(false)
-  const { userID, base_route } = useUserDetail()
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [lockTID, setLockTID] = useState(false)
-  const [error, setError] = useState<ErrorType | null>(null)
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const { userID, base_route } = useUserDetail();
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [lockTID, setLockTID] = useState(false);
+  const [error, setError] = useState<ErrorType | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -112,83 +112,83 @@ const AddPayment = ({
       remarks: "",
       cheque_id: "",
     },
-  })
+  });
   async function onSubmit(values: FormValues) {
-    setLoading(true)
+    setLoading(true);
     try {
       if (values.image) {
         const name = `${OfficeState.value.data}/customer/${customer_id}/machine/${machine_id}/payment/${moment()
           .valueOf()
-          .toString()}.png`
-        const imgRef = await UploadImage(values.image, name)
+          .toString()}.png`;
+        const imgRef = await UploadImage(values.image, name);
         const response = await axios.post(`/${userID}/payment`, {
           ...values,
           machine_id: machine_id,
           image: name,
-        })
-        toast.success("Payment addedd successfully")
-        onRefresh()
-        handleClose(false)
+        });
+        toast.success("Payment addedd successfully");
+        onRefresh();
+        handleClose(false);
       } else {
-        setLoading(false)
+        setLoading(false);
       }
     } catch (e) {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    setLoading(false)
-    onClose(val)
+    form.reset();
+    setLoading(false);
+    onClose(val);
   }
 
-  const imageFile = form.watch("image")
+  const imageFile = form.watch("image");
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === "note") {
-        debouncedCheckNumber(value.note)
+        debouncedCheckNumber(value.note);
       }
-    })
+    });
 
-    return () => subscription.unsubscribe()
-  }, [form.watch])
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   const checkNumberInDatabase = async (number: string) => {
-    setChecking(true)
-    setError(null)
+    setChecking(true);
+    setError(null);
     try {
       const response = await axios.post(
         `/${userID}/check-note`,
         { number },
         {
           cancelKey: `check-note-${userID}`,
-        }
-      )
+        },
+      );
       if (Array.isArray(response.data) && response.data.length > 0) {
-        setError(response.data[0])
+        setError(response.data[0]);
       }
     } catch (error) {
-      console.log("Error checking number:", error)
+      console.log("Error checking number:", error);
     } finally {
-      setChecking(false)
+      setChecking(false);
     }
-  }
+  };
 
   const debouncedCheckNumber = useCallback(
     debounce(checkNumberInDatabase, 1000),
-    []
-  )
+    [],
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
       <DialogContent
         className={cn(
           "max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-200",
-          imageFile ? "sm:max-w-[90vw]" : "sm:max-w-md"
+          imageFile ? "sm:max-w-[90vw]" : "sm:max-w-md",
         )}
       >
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
@@ -210,14 +210,14 @@ const AddPayment = ({
         <div
           className={cn(
             "flex max-h-[80vh] gap-4",
-            imageFile ? "flex-row" : "flex-col"
+            imageFile ? "flex-row" : "flex-col",
           )}
         >
           {/* Form Section */}
           <div
             className={cn(
               "flex flex-col",
-              imageFile ? "w-[320px] shrink-0" : "w-full"
+              imageFile ? "w-[320px] shrink-0" : "w-full",
             )}
           >
             <ScrollArea className="max-h-[calc(100dvh-132px)] pb-4">
@@ -255,16 +255,16 @@ const AddPayment = ({
                           <Select
                             value={field.value}
                             onValueChange={(val) => {
-                              field.onChange(val)
+                              field.onChange(val);
                               if (val === "Cash") {
                                 form.setValue(
                                   "note",
-                                  moment().format("YYYYMMDDHHmmss")
-                                )
-                                setLockTID(true)
+                                  moment().format("YYYYMMDDHHmmss"),
+                                );
+                                setLockTID(true);
                               } else {
                                 if (form.getValues("note") && lockTID) {
-                                  setLockTID(false)
+                                  setLockTID(false);
                                 }
                               }
                             }}
@@ -468,7 +468,7 @@ const AddPayment = ({
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default AddPayment
+export default AddPayment;

@@ -1,20 +1,20 @@
-import InvoicePDFGatepass from "@/components/features/pos/invoice-pdf-gatepass"
-import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer"
-import React from "react"
+import InvoicePDFGatepass from "@/components/features/pos/invoice-pdf-gatepass";
+import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
+import React from "react";
 
-export const runtime = "nodejs"
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const data = body?.data
-    const format = body?.format
+    const body = await request.json();
+    const data = body?.data;
+    const format = body?.format;
 
     if (!data) {
       return Response.json(
         { message: "Delivery PDF data is required" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     const deliveryDocument = React.createElement(InvoicePDFGatepass, {
@@ -26,17 +26,17 @@ export async function POST(request: Request) {
       gatepass: data.gatepass,
       gatepassType: "Inward Gate Pass",
       items: data.items,
-    }) as React.ReactElement<DocumentProps>
+    }) as React.ReactElement<DocumentProps>;
 
-    const pdfBuffer = await renderToBuffer(deliveryDocument)
-    const fileName = `inward-gatepass.pdf`
+    const pdfBuffer = await renderToBuffer(deliveryDocument);
+    const fileName = `inward-gatepass.pdf`;
 
     if (format === "base64") {
       return Response.json({
         fileName,
         mimeType: "application/pdf",
         base64: Buffer.from(pdfBuffer).toString("base64"),
-      })
+      });
     }
 
     return new Response(Buffer.from(pdfBuffer), {
@@ -46,13 +46,13 @@ export async function POST(request: Request) {
         "Content-Disposition": `attachment; filename="${fileName}"`,
         "Cache-Control": "no-store",
       },
-    })
+    });
   } catch (error) {
-    console.error("PSD PDF generation failed:", error)
+    console.error("PSD PDF generation failed:", error);
 
     return Response.json(
       { message: "Failed to generate delivery PDF" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

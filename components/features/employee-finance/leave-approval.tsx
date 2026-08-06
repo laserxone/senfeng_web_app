@@ -1,18 +1,18 @@
-import useUserDetail from "@/hooks/use-user-detail"
-import { Button } from "@/components/ui/button"
+import useUserDetail from "@/hooks/use-user-detail";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import axios from "@/lib/axios"
-import { useState } from "react"
-import Spinner from "@/components/ui/spinner"
-import { UserAttendanceRecord } from "@/lib/types"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { CalendarCheck } from "lucide-react"
+} from "@/components/ui/dialog";
+import axios from "@/lib/axios";
+import { useState } from "react";
+import Spinner from "@/components/ui/spinner";
+import { UserAttendanceRecord } from "@/lib/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CalendarCheck } from "lucide-react";
 
 export default function LeaveApproval({
   data,
@@ -20,25 +20,25 @@ export default function LeaveApproval({
   onClose,
   onRefresh,
 }: {
-  data: UserAttendanceRecord | null
-  visible: boolean
-  onClose: () => void
-  onRefresh?: (val: string) => void
+  data: UserAttendanceRecord | null;
+  visible: boolean;
+  onClose: () => void;
+  onRefresh?: (val: string) => void;
 }) {
-  const { userID } = useUserDetail()
-  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false);
 
   async function UpdateStatus(status: string) {
-    if (!data?.leave_id) return
-    setLoading(true)
+    if (!data?.leave_id) return;
+    setLoading(true);
     try {
       await axios.put(`/${userID}/leave/${data?.leave_id}`, {
         status,
-      })
-      onRefresh?.(status)
-      onClose()
+      });
+      onRefresh?.(status);
+      onClose();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
   return (
@@ -84,5 +84,5 @@ export default function LeaveApproval({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

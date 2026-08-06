@@ -1,31 +1,31 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import axios from "@/lib/axios"
-import { useEffect, useMemo, useState } from "react"
-import "./Button.css"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import axios from "@/lib/axios";
+import { useEffect, useMemo, useState } from "react";
+import "./Button.css";
 
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { UserSearch } from "@/components/shared/search/user-search"
-import { Checkbox } from "@/components/ui/checkbox"
-import Spinner from "@/components/ui/spinner"
-import { storage } from "@/config/firebase"
-import useUserDetail from "@/hooks/use-user-detail"
-import exportToExcel from "@/lib/exportToExcel"
-import { StockProps } from "@/lib/types"
-import { getDownloadURL, ref } from "firebase/storage"
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { UserSearch } from "@/components/shared/search/user-search";
+import { Checkbox } from "@/components/ui/checkbox";
+import Spinner from "@/components/ui/spinner";
+import { storage } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
+import exportToExcel from "@/lib/exportToExcel";
+import { StockProps } from "@/lib/types";
+import { getDownloadURL, ref } from "firebase/storage";
 import {
   BadgeDollarSign,
   Boxes,
@@ -34,16 +34,16 @@ import {
   Search,
   Send,
   UsersRound,
-} from "lucide-react"
-import moment from "moment"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import "pdfjs-dist/legacy/web/pdf_viewer.css"
-import { toast } from "sonner"
+} from "lucide-react";
+import moment from "moment";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import "pdfjs-dist/legacy/web/pdf_viewer.css";
+import { toast } from "sonner";
 
-import "./Button.css"
+import "./Button.css";
 
-const PAGE_SIZE = 25
-const SEARCH_DEBOUNCE_MS = 300
+const PAGE_SIZE = 25;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const OrderStockDialog = ({
   dialogVisible,
@@ -51,35 +51,35 @@ const OrderStockDialog = ({
   stock,
   onRefresh,
 }: {
-  dialogVisible: boolean
-  onCloseDialog: (val: boolean) => void
-  stock: StockProps[]
-  onRefresh: () => Promise<void>
+  dialogVisible: boolean;
+  onCloseDialog: (val: boolean) => void;
+  stock: StockProps[];
+  onRefresh: () => Promise<void>;
 }) => {
-  const [search, setSearch] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
-  const [page, setPage] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [selectedItems, setSelectedItems] = useState<number[]>([])
-  const { userID, isAdmin } = useUserDetail()
-  const [sendTo, setSendTo] = useState<number | null>(null)
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const { userID, isAdmin } = useUserDetail();
+  const [sendTo, setSendTo] = useState<number | null>(null);
 
   const toggleItem = (id: number) => {
     setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    )
-  }
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
 
   const selectAll = () => {
-    setSelectedItems(stock.map((item) => item.id))
-  }
+    setSelectedItems(stock.map((item) => item.id));
+  };
 
   const deselectAll = () => {
-    setSelectedItems([])
-  }
+    setSelectedItems([]);
+  };
 
   async function handleCreateExcel() {
-    setLoading(true)
+    setLoading(true);
 
     const headers = [
       "Name",
@@ -87,7 +87,7 @@ const OrderStockDialog = ({
       "New Order",
       "Buying Price",
       "Image",
-    ]
+    ];
 
     const formattedData = stock
       .filter((item) => selectedItems.includes(item.id))
@@ -97,12 +97,12 @@ const OrderStockDialog = ({
         item.new_order,
         item.buying,
         item.img,
-      ])
+      ]);
 
     try {
       if (formattedData.length === 0) {
-        toast.info("No items selected")
-        return
+        toast.info("No items selected");
+        return;
       }
       await exportToExcel(
         headers,
@@ -111,77 +111,77 @@ const OrderStockDialog = ({
         true,
         "products",
         true,
-        userID
-      )
+        userID,
+      );
     } catch (error) {
-      console.log(error)
-      toast.error("Error creating excel")
+      console.log(error);
+      toast.error("Error creating excel");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setDebouncedSearch(search)
-    }, SEARCH_DEBOUNCE_MS)
+      setDebouncedSearch(search);
+    }, SEARCH_DEBOUNCE_MS);
 
-    return () => window.clearTimeout(timeout)
-  }, [search])
+    return () => window.clearTimeout(timeout);
+  }, [search]);
 
   const filteredStock = useMemo(() => {
-    const query = debouncedSearch.trim().toLowerCase()
+    const query = debouncedSearch.trim().toLowerCase();
 
-    return stock.filter((item) => item?.name?.toLowerCase().includes(query))
-  }, [debouncedSearch, stock])
+    return stock.filter((item) => item?.name?.toLowerCase().includes(query));
+  }, [debouncedSearch, stock]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredStock.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(filteredStock.length / PAGE_SIZE));
   const paginatedStock = filteredStock.slice(
     (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  )
-  const pageStart = filteredStock.length ? (page - 1) * PAGE_SIZE + 1 : 0
-  const pageEnd = Math.min(page * PAGE_SIZE, filteredStock.length)
+    page * PAGE_SIZE,
+  );
+  const pageStart = filteredStock.length ? (page - 1) * PAGE_SIZE + 1 : 0;
+  const pageEnd = Math.min(page * PAGE_SIZE, filteredStock.length);
 
   useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch])
+    setPage(1);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages)
+      setPage(totalPages);
     }
-  }, [page, totalPages])
+  }, [page, totalPages]);
 
   async function handleShare() {
-    setLoading(true)
+    setLoading(true);
 
     const formattedData = stock.filter((item) =>
-      selectedItems.includes(item.id)
-    )
+      selectedItems.includes(item.id),
+    );
 
     try {
       const response = await axios.post(`/${userID}/conversations`, {
         user1: userID,
         user2: sendTo,
-      })
+      });
       if (response.data?.id) {
-        const formData = { type: "neworder", content: formattedData }
+        const formData = { type: "neworder", content: formattedData };
 
         await axios
           .post(`/${userID}/conversations/${response.data?.id}`, {
             senderId: userID,
             message: `New stock order generated ${moment().format(
-              "YYYY-MM-DD"
+              "YYYY-MM-DD",
             )}`,
             data: JSON.stringify(formData),
           })
           .then(() => {
-            toast.success("Report sent")
-          })
+            toast.success("Report sent");
+          });
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -344,35 +344,35 @@ const OrderStockDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const RenderOtherStockItems = ({ item }: { item: StockProps }) => {
-  const [itemImg, setImg] = useState<string | null>(null)
+  const [itemImg, setImg] = useState<string | null>(null);
 
-  const [imageLoading, setImageLoading] = useState(false)
-  const { isAdmin } = useUserDetail()
+  const [imageLoading, setImageLoading] = useState(false);
+  const { isAdmin } = useUserDetail();
 
   useEffect(() => {
     async function getImage(refImage: string) {
-      setImageLoading(true)
-      const starsRef = ref(storage, `products/${refImage}`)
+      setImageLoading(true);
+      const starsRef = ref(storage, `products/${refImage}`);
       getDownloadURL(starsRef)
         .then((url) => {
-          setImg(url)
+          setImg(url);
         })
         .finally(() => {
-          setImageLoading(false)
-        })
+          setImageLoading(false);
+        });
     }
     if (item.img) {
-      getImage(item.img)
+      getImage(item.img);
     }
-  }, [])
+  }, []);
 
   const viewGridClass = isAdmin
     ? "md:grid-cols-[72px_minmax(180px,1fr)_minmax(130px,0.5fr)_minmax(130px,0.5fr)]"
-    : "md:grid-cols-[72px_minmax(180px,1fr)_minmax(130px,0.5fr)]"
+    : "md:grid-cols-[72px_minmax(180px,1fr)_minmax(130px,0.5fr)]";
 
   return (
     <div className="w-full min-w-0 rounded-md border border-border/70 bg-background/95 p-2.5">
@@ -430,7 +430,7 @@ const RenderOtherStockItems = ({ item }: { item: StockProps }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default OrderStockDialog
+export default OrderStockDialog;

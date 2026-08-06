@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   flexRender,
@@ -7,16 +7,16 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+} from "@tanstack/react-table";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
-} from "@radix-ui/react-icons"
+} from "@radix-ui/react-icons";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -24,16 +24,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useEffect, useImperativeHandle, useRef, useState } from "react"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+} from "@/components/ui/table";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 const PageTable = ({
   children,
@@ -47,31 +47,31 @@ const PageTable = ({
   tableHeader,
   disableInput = false,
 }) => {
-  const [sorting, setSorting] = useState([])
-  const [columnFilters, setColumnFilters] = useState([])
-  const [columnVisibility, setColumnVisibility] = useState({})
-  const [rowSelection, setRowSelection] = useState({})
+  const [sorting, setSorting] = useState([]);
+  const [columnFilters, setColumnFilters] = useState([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [rowSelection, setRowSelection] = useState({});
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const inputRef = useRef()
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const inputRef = useRef();
 
   const paginationState = {
     pageIndex: currentPage - 1,
     pageSize: pageSize,
-  }
+  };
 
-  const pageCount = Math.ceil(totalItems / pageSize)
+  const pageCount = Math.ceil(totalItems / pageSize);
 
   const handlePaginationChange = (updaterOrValue) => {
     const pagination =
       typeof updaterOrValue === "function"
         ? updaterOrValue(paginationState)
-        : updaterOrValue
+        : updaterOrValue;
 
-    setCurrentPage(pagination.pageIndex + 1)
-    setPageSize(pagination.pageSize)
-  }
+    setCurrentPage(pagination.pageIndex + 1);
+    setPageSize(pagination.pageSize);
+  };
 
   const table = useReactTable({
     data,
@@ -95,21 +95,21 @@ const PageTable = ({
     onPaginationChange: handlePaginationChange,
     // manualPagination: true,
     // manualFiltering: true
-  })
+  });
 
   // Expose the handleClear method to parent using useImperativeHandle
   useImperativeHandle(ref, () => {
     return {
       handleClear() {
         tableHeader.map((item) => {
-          table.getColumn(item.value?.toLowerCase())?.setFilterValue("")
-        })
+          table.getColumn(item.value?.toLowerCase())?.setFilterValue("");
+        });
       },
       handleLocalInput() {
-        table.getColumn("qty")?.setFilterValue("00")
+        table.getColumn("qty")?.setFilterValue("00");
       },
-    }
-  }, [])
+    };
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -147,7 +147,7 @@ const PageTable = ({
                           ? null
                           : flexRender(
                               header.column.columnDef.header,
-                              header.getContext()
+                              header.getContext(),
                             )}
                       </TableHead>
                     ))}
@@ -165,7 +165,7 @@ const PageTable = ({
                         <TableCell className="text-[13px]" key={cell.id}>
                           {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
+                            cell.getContext(),
                           )}
                         </TableCell>
                       ))}
@@ -197,7 +197,7 @@ const PageTable = ({
                 {paginationState.pageIndex * paginationState.pageSize + 1} to{" "}
                 {Math.min(
                   (paginationState.pageIndex + 1) * paginationState.pageSize,
-                  totalItems
+                  totalItems,
                 )}{" "}
                 of {totalItems} entries
               </>
@@ -213,7 +213,7 @@ const PageTable = ({
               <Select
                 value={`${paginationState.pageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value))
+                  table.setPageSize(Number(value));
                 }}
               >
                 <SelectTrigger className="h-8 w-[70px]">
@@ -281,7 +281,7 @@ const PageTable = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PageTable
+export default PageTable;

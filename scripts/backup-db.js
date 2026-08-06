@@ -1,7 +1,7 @@
-import fs from 'fs'
-import path from 'path';
-import admin from "firebase-admin"
-import { execSync } from 'child_process';
+import fs from "fs";
+import path from "path";
+import admin from "firebase-admin";
+import { execSync } from "child_process";
 
 const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 if (!serviceAccountBase64)
@@ -46,10 +46,10 @@ const bucket = admin.storage().bucket();
     });
 
     const [files] = await bucket.getFiles({ prefix: "postgres-backups/" });
-    const retainDays = 30; 
+    const retainDays = 30;
 
     for (const file of files) {
-      if (file.name === `postgres-backups/${fileName}`) continue; 
+      if (file.name === `postgres-backups/${fileName}`) continue;
       const match = file.name.match(/\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/);
       if (!match) continue;
 

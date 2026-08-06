@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { ArrowUpRight, CheckSquare } from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
+import { ArrowUpRight, CheckSquare } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import useUserDetail from "@/hooks/use-user-detail"
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import useUserDetail from "@/hooks/use-user-detail";
 
 type MyTask = {
-  task_name: string
-  created_at?: string
-  date?: string
-  status?: string
-}
+  task_name: string;
+  created_at?: string;
+  date?: string;
+  status?: string;
+};
 
 export default function MyTasks({ data = [] }: { data?: MyTask[] }) {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
   const openTasks = data
     .filter((task) => {
-      const status = task.status?.toLowerCase()
+      const status = task.status?.toLowerCase();
       return (
         !status || !["completed", "complete", "done", "closed"].includes(status)
-      )
+      );
     })
-    .slice(0, 5)
+    .slice(0, 5);
 
   return (
     <Card className="h-full w-full overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-[300px]">
@@ -84,12 +84,12 @@ export default function MyTasks({ data = [] }: { data?: MyTask[] }) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function formatDate(value?: string) {
-  if (!value) return "-"
+  if (!value) return "-";
 
-  const date = moment(value)
-  return date.isValid() ? date.format("YYYY-MM-DD") : "-"
+  const date = moment(value);
+  return date.isValid() ? date.format("YYYY-MM-DD") : "-";
 }

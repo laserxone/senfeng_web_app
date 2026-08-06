@@ -1,58 +1,58 @@
-"use client"
+"use client";
 
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 
-import Heading from "@/components/ui/heading"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+import Heading from "@/components/ui/heading";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
   CommissionCRMProps,
   CommissionMachineItemProps,
   CommissionOwnerProps,
-} from "@/lib/types"
+} from "@/lib/types";
 import {
   BadgeCheck,
   ChevronRight,
   CircleDollarSign,
   Clock3,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { memo, useEffect, useState } from "react"
-import { toast } from "sonner"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { memo, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useSidebar } from "@/components/ui/sidebar"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/select";
+import { useSidebar } from "@/components/ui/sidebar";
+import Spinner from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -60,55 +60,55 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/components/ui/tooltip";
 
 export default function Commission({
   owner,
   crm,
 }: {
-  owner?: boolean
-  crm?: boolean
+  owner?: boolean;
+  crm?: boolean;
 }) {
-  return owner ? <OwnerView /> : crm ? <CrmView /> : <OtherView />
+  return owner ? <OwnerView /> : crm ? <CrmView /> : <OtherView />;
 }
 
 const OwnerView = () => {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<CommissionOwnerProps[]>([])
-  const [loading, setLoading] = useState(true)
-  const [visibleDisapprove, setVisibleDisapprove] = useState(false)
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<CommissionOwnerProps[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [visibleDisapprove, setVisibleDisapprove] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(
-    null
-  )
-  const [disapproveMsg, setDisapproveMsg] = useState("")
-  const [disapproveLoading, setDisapproveLoading] = useState(false)
+    null,
+  );
+  const [disapproveMsg, setDisapproveMsg] = useState("");
+  const [disapproveLoading, setDisapproveLoading] = useState(false);
   const [selectedRow, setSelectedRow] = useState<CommissionOwnerProps | null>(
-    null
-  )
-  const [search, setSearch] = useState("")
-  const { state } = useSidebar()
-  const isMobile = useIsMobile()
+    null,
+  );
+  const [search, setSearch] = useState("");
+  const { state } = useSidebar();
+  const isMobile = useIsMobile();
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
     try {
-      const route = `/${userID}/commission`
-      const response = await axios.get(route)
+      const route = `/${userID}/commission`;
+      const response = await axios.get(route);
 
-      setData(response.data)
+      setData(response.data);
     } catch (error) {
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -116,26 +116,26 @@ const OwnerView = () => {
     return data.reduce((acc: any, item) => {
       const key = item.request_date
         ? moment(item.request_date).format("YYYY-MM")
-        : "Unknown"
+        : "Unknown";
 
       if (!acc[key]) {
-        acc[key] = []
+        acc[key] = [];
       }
-      acc[key].push(item)
-      return acc
-    }, {})
+      acc[key].push(item);
+      return acc;
+    }, {});
   }
 
   const filteredData = data.filter((item) => {
-    if (!search) return true
+    if (!search) return true;
     const allSearch = `${item.customer_name || ""} ${item.user_name || ""} ${
       item.customer_owner || ""
-    }`
-    return allSearch.toLowerCase().includes(search.toLowerCase())
-  })
+    }`;
+    return allSearch.toLowerCase().includes(search.toLowerCase());
+  });
 
   const groupedData: Record<string, CommissionOwnerProps[]> =
-    groupByMonth(filteredData)
+    groupByMonth(filteredData);
 
   const RenderEachRow = ({
     item,
@@ -144,75 +144,75 @@ const OwnerView = () => {
     onReturn,
     index,
   }: {
-    item: CommissionOwnerProps
-    onRefresh: () => Promise<void>
-    onDisapprove: () => void
-    onReturn: (val: CommissionOwnerProps) => void
-    index: number
+    item: CommissionOwnerProps;
+    onRefresh: () => Promise<void>;
+    onDisapprove: () => void;
+    onReturn: (val: CommissionOwnerProps) => void;
+    index: number;
   }) => {
-    const [loading, setLoading] = useState(false)
-    const { userID, base_route } = useUserDetail()
+    const [loading, setLoading] = useState(false);
+    const { userID, base_route } = useUserDetail();
     const [selectedPercentage, setSelectedPercentage] = useState<null | number>(
-      null
-    )
-    const [showManual, setShowManual] = useState(false)
-    const [manualNumber, setManualNumber] = useState("")
+      null,
+    );
+    const [showManual, setShowManual] = useState(false);
+    const [manualNumber, setManualNumber] = useState("");
 
     async function handleUpdate(
       id: number,
       is_approved: boolean | null,
       approval_date: string | Date | null,
-      commission_amount: number | null
+      commission_amount: number | null,
     ) {
-      if (!id) return
-      setLoading(true)
+      if (!id) return;
+      setLoading(true);
       try {
         await axios.put(`/${userID}/commission/${id}`, {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
-        })
-        await onRefresh()
-        setShowManual(false)
-        setManualNumber("")
-        setSelectedPercentage(null)
+        });
+        await onRefresh();
+        setShowManual(false);
+        setManualNumber("");
+        setSelectedPercentage(null);
       } catch (error) {
-        console.error("Update failed:", error)
+        console.error("Update failed:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     async function revertIssued(id: number) {
-      if (!id) return
-      setLoading(true)
+      if (!id) return;
+      setLoading(true);
       try {
         await axios.put(`/${userID}/commission/${id}`, {
           commission_issued: false,
           issue_date: null,
-        })
-        await onRefresh()
-        setShowManual(false)
-        setManualNumber("")
-        setSelectedPercentage(null)
+        });
+        await onRefresh();
+        setShowManual(false);
+        setManualNumber("");
+        setSelectedPercentage(null);
       } catch (error) {
-        console.error("Update failed:", error)
+        console.error("Update failed:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     const getRowBg = (item: CommissionOwnerProps, index: number) => {
       if (item.commission_issued === true)
-        return "bg-green-100 dark:bg-green-900 border-b-gray-400"
+        return "bg-green-100 dark:bg-green-900 border-b-gray-400";
       if (item.is_approved === false)
-        return "bg-red-100 dark:bg-red-900 border-b-gray-400"
+        return "bg-red-100 dark:bg-red-900 border-b-gray-400";
       if (item.is_approved === true)
-        return "bg-blue-100 dark:bg-blue-900 border-b-gray-400"
+        return "bg-blue-100 dark:bg-blue-900 border-b-gray-400";
       return index % 2 === 0
         ? "bg-slate-50 dark:bg-gray-900 border-b-gray-400"
-        : "bg-white dark:bg-slate-800 border-b-gray-400"
-    }
+        : "bg-white dark:bg-slate-800 border-b-gray-400";
+    };
 
     return (
       <TableRow
@@ -259,7 +259,7 @@ const OwnerView = () => {
         <TableCell className="min-w-[100px]">
           <Button
             onClick={() => {
-              onReturn(item)
+              onReturn(item);
             }}
             variant="outline"
           >
@@ -274,9 +274,9 @@ const OwnerView = () => {
               <Select
                 onValueChange={(val) => {
                   if (val === "manual") {
-                    setShowManual(true)
+                    setShowManual(true);
                   } else {
-                    setSelectedPercentage(Number(val))
+                    setSelectedPercentage(Number(val));
                   }
                 }}
                 value={String(selectedPercentage) || ""}
@@ -286,12 +286,12 @@ const OwnerView = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 9 }, (_, i) => {
-                    const val = (i + 1).toString()
+                    const val = (i + 1).toString();
                     return (
                       <SelectItem key={val} value={val}>
                         {val}%
                       </SelectItem>
-                    )
+                    );
                   })}
                   <SelectItem value={"manual"}>Manual</SelectItem>
                 </SelectContent>
@@ -301,11 +301,11 @@ const OwnerView = () => {
               <Input
                 value={manualNumber}
                 onChange={(e) => {
-                  const value = e.target.value
-                  const regex = /^\d*\.?\d*$/
+                  const value = e.target.value;
+                  const regex = /^\d*\.?\d*$/;
 
                   if (regex.test(value)) {
-                    setManualNumber(value) // Keep as string
+                    setManualNumber(value); // Keep as string
                   }
                 }}
               />
@@ -339,8 +339,8 @@ const OwnerView = () => {
                     new Date(),
                     showManual
                       ? Number(manualNumber || 0)
-                      : (item.total_amount * (selectedPercentage || 0)) / 100
-                  )
+                      : (item.total_amount * (selectedPercentage || 0)) / 100,
+                  );
                 }}
               >
                 Approve
@@ -371,12 +371,12 @@ const OwnerView = () => {
           )}
         </TableCell>
       </TableRow>
-    )
-  }
+    );
+  };
 
   async function handleDisapprove() {
-    if (!selectedItem?.id) return
-    setDisapproveLoading(true)
+    if (!selectedItem?.id) return;
+    setDisapproveLoading(true);
     try {
       await axios
         .put(`/${userID}/commission/${selectedItem?.id}`, {
@@ -386,13 +386,13 @@ const OwnerView = () => {
         .then(async () => {
           await axios.put(`/${userID}/machine/${selectedItem.sale_id}`, {
             payment_lock: false,
-          })
-        })
-      await fetchData()
-      setVisibleDisapprove(false)
-      setDisapproveMsg("")
+          });
+        });
+      await fetchData();
+      setVisibleDisapprove(false);
+      setDisapproveMsg("");
     } finally {
-      setDisapproveLoading(false)
+      setDisapproveLoading(false);
     }
   }
 
@@ -506,8 +506,8 @@ const OwnerView = () => {
                               onRefresh={fetchData}
                               onReturn={(i) => setSelectedRow(i)}
                               onDisapprove={() => {
-                                setSelectedItem(item)
-                                setVisibleDisapprove(true)
+                                setSelectedItem(item);
+                                setVisibleDisapprove(true);
                               }}
                             />
                           ))}
@@ -527,7 +527,7 @@ const OwnerView = () => {
       <Dialog
         open={visibleDisapprove}
         onOpenChange={(val) => {
-          setVisibleDisapprove(val)
+          setVisibleDisapprove(val);
         }}
       >
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
@@ -574,74 +574,74 @@ const OwnerView = () => {
         visible={!!selectedRow}
       />
     </div>
-  )
-}
+  );
+};
 
 const OtherView = () => {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<CommissionMachineItemProps[]>([])
-  const [loading, setLoading] = useState(false)
-  const [search, setSearch] = useState("")
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<CommissionMachineItemProps[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (userID) {
-      fetchData(userID)
+      fetchData(userID);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(id: string | number) {
-    setLoading(true)
+    setLoading(true);
     return new Promise(async (resolve) => {
       try {
-        const route = `/${id}/commission`
-        const response = await axios.get(route)
-        setData(response.data)
+        const route = `/${id}/commission`;
+        const response = await axios.get(route);
+        setData(response.data);
       } catch (error) {
       } finally {
-        resolve(true)
-        setLoading(false)
+        resolve(true);
+        setLoading(false);
       }
-    })
+    });
   }
 
   const RenderEachRow = ({
     item,
     onRefresh,
   }: {
-    item: CommissionMachineItemProps
-    onRefresh: () => Promise<void>
+    item: CommissionMachineItemProps;
+    onRefresh: () => Promise<void>;
   }) => {
-    const [loading, setLoading] = useState(false)
-    const { userID, base_route } = useUserDetail()
-    const [note, setNote] = useState(item?.commission?.note || "")
-    const [issueLoading, setIssueLoading] = useState(false)
-    const { state } = useSidebar()
-    const isMobile = useIsMobile()
+    const [loading, setLoading] = useState(false);
+    const { userID, base_route } = useUserDetail();
+    const [note, setNote] = useState(item?.commission?.note || "");
+    const [issueLoading, setIssueLoading] = useState(false);
+    const { state } = useSidebar();
+    const isMobile = useIsMobile();
 
     async function handleApplyCommission(
       id: number,
-      item: CommissionMachineItemProps
+      item: CommissionMachineItemProps,
     ) {
       if (item.customer.profile_completion < 100) {
         toast.error(
-          "Data incomplete in customer record, kindly enter all data in this customer"
-        )
-        return
+          "Data incomplete in customer record, kindly enter all data in this customer",
+        );
+        return;
       }
       if (item.percentage_completion < 100) {
         toast.error(
-          "Data incomplete in machine record, kindly enter all data in this machine"
-        )
+          "Data incomplete in machine record, kindly enter all data in this machine",
+        );
 
-        return
+        return;
       }
-      if (!id) return
-      setLoading(true)
+      if (!id) return;
+      setLoading(true);
 
-      let totalPrice = item.price
+      let totalPrice = item.price;
 
       if (item.speed_money_amount && Number(item.speed_money_amount) > 0) {
-        totalPrice = Number(item.price) - Number(item.speed_money_amount)
+        totalPrice = Number(item.price) - Number(item.speed_money_amount);
       }
 
       try {
@@ -660,18 +660,18 @@ const OtherView = () => {
                 payment_lock: true,
               })
               .then(async () => {
-                await onRefresh()
-              })
-          })
+                await onRefresh();
+              });
+          });
       } catch (error) {
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     async function handleApplyCommissionAgain(id: number | undefined) {
-      if (!id) return
-      setLoading(true)
+      if (!id) return;
+      setLoading(true);
 
       try {
         await axios
@@ -686,18 +686,18 @@ const OtherView = () => {
                 payment_lock: true,
               })
               .then(async () => {
-                await onRefresh()
-              })
-          })
+                await onRefresh();
+              });
+          });
       } catch (error) {
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     async function handleAlreadyReceived(val: CommissionMachineItemProps) {
-      if (!val?.id) return
-      setIssueLoading(true)
+      if (!val?.id) return;
+      setIssueLoading(true);
       try {
         if (val?.commission?.id) {
           await axios.put(`/${userID}/commission/${val.commission.id}`, {
@@ -705,7 +705,7 @@ const OtherView = () => {
             is_requested: true,
             is_approved: true,
             // lead_commission_issued: true,
-          })
+          });
         } else {
           const formData = {
             sale_id: val.id,
@@ -717,15 +717,15 @@ const OtherView = () => {
             commission_amount: 0,
             total_amount: val.price,
             commission_issued: true,
-          }
+          };
 
-          await axios.post(`/${userID}/old-commissions`, formData)
-          await fetchData(userID)
+          await axios.post(`/${userID}/old-commissions`, formData);
+          await fetchData(userID);
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
       } finally {
-        setIssueLoading(false)
+        setIssueLoading(false);
       }
     }
 
@@ -853,19 +853,19 @@ const OtherView = () => {
           </div>
         </CardContent>
       </Card>
-    )
-  }
+    );
+  };
 
   const filteredData = data.filter((item) => {
-    const customerName = item?.customer?.name?.toLowerCase() ?? ""
-    const customerOwner = item?.customer?.owner?.toLowerCase() ?? ""
-    const searchingValue = search.toLowerCase()
+    const customerName = item?.customer?.name?.toLowerCase() ?? "";
+    const customerOwner = item?.customer?.owner?.toLowerCase() ?? "";
+    const searchingValue = search.toLowerCase();
 
     return (
       customerName.includes(searchingValue) ||
       customerOwner.includes(searchingValue)
-    )
-  })
+    );
+  });
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -914,7 +914,7 @@ const OtherView = () => {
             value={search}
             placeholder={`Search...`}
             onChange={(event) => {
-              setSearch(event.target.value)
+              setSearch(event.target.value);
             }}
             className="w-[60vw] max-w-sm"
           />
@@ -927,7 +927,7 @@ const OtherView = () => {
                 key={item.id}
                 item={item}
                 onRefresh={async () => {
-                  await fetchData(userID)
+                  await fetchData(userID);
                 }}
               />
             ))
@@ -935,17 +935,17 @@ const OtherView = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 function CommissionMetric({
   icon,
   label,
   value,
 }: {
-  icon: React.ReactNode
-  label: string
-  value: number
+  icon: React.ReactNode;
+  label: string;
+  value: number;
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
@@ -957,38 +957,38 @@ function CommissionMetric({
         <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
-  )
+  );
 }
 
 const CrmView = () => {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<CommissionCRMProps[]>([])
-  const [loading, setLoading] = useState(true)
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<CommissionCRMProps[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (userID) {
-      fetchData(userID)
+      fetchData(userID);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(id: number | string) {
     return new Promise(async (resolve, reject) => {
       try {
-        const route = `/${id}/commission?lead=true`
-        const response = await axios.get(route)
-        setData(response.data)
+        const route = `/${id}/commission?lead=true`;
+        const response = await axios.get(route);
+        setData(response.data);
       } catch (error) {
       } finally {
-        resolve(true)
-        setLoading(false)
+        resolve(true);
+        setLoading(false);
       }
-    })
+    });
   }
 
   const RenderEachRow = ({ item }: { item: CommissionCRMProps }) => {
     const renderCommissionStatus = (item: CommissionCRMProps) => {
       if (item.is_approved === true) {
-        return <span className="text-green-600">Approved</span>
+        return <span className="text-green-600">Approved</span>;
       } else if (item.is_approved === false) {
         return (
           <div className="flex items-center gap-2">
@@ -1007,11 +1007,11 @@ const CrmView = () => {
               </Tooltip>
             </TooltipProvider>
           </div>
-        )
+        );
       } else {
-        return <span className="text-yellow-600">Pending</span>
+        return <span className="text-yellow-600">Pending</span>;
       }
-    }
+    };
 
     return (
       <TableRow>
@@ -1022,8 +1022,8 @@ const CrmView = () => {
 
         <TableCell>{renderCommissionStatus(item)}</TableCell>
       </TableRow>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -1064,8 +1064,8 @@ const CrmView = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 const ImageSheet = memo(
   ({
@@ -1073,12 +1073,12 @@ const ImageSheet = memo(
     visible,
     onClose,
   }: {
-    data: CommissionOwnerProps | null
-    visible: boolean
-    onClose: () => void
+    data: CommissionOwnerProps | null;
+    visible: boolean;
+    onClose: () => void;
   }) => {
     function handleClose() {
-      onClose()
+      onClose();
     }
 
     return (
@@ -1105,6 +1105,6 @@ const ImageSheet = memo(
           </SheetHeader>
         </SheetContent>
       </Sheet>
-    )
-  }
-)
+    );
+  },
+);

@@ -1,15 +1,15 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import useUserDetail from "@/hooks/use-user-detail"
-import formatCurrency from "@/lib/formatCurrency"
-import { GetProfileImage } from "@/lib/getProfileImage"
-import { AdminDashboardRecentSales } from "@/lib/types"
-import moment from "moment"
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import useUserDetail from "@/hooks/use-user-detail";
+import formatCurrency from "@/lib/formatCurrency";
+import { GetProfileImage } from "@/lib/getProfileImage";
+import { AdminDashboardRecentSales } from "@/lib/types";
+import moment from "moment";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function Sale({ data }: { data: AdminDashboardRecentSales[] }) {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
   return (
     <Card>
       <CardHeader>
@@ -59,27 +59,27 @@ export function Sale({ data }: { data: AdminDashboardRecentSales[] }) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 const RenderImage = ({ img }: { img: string }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
+  const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img)
+        setLocalImage(img);
       } else {
-        const imgResult = await GetProfileImage(img)
-        setLocalImage(imgResult)
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
       }
     }
 
     if (img) {
-      fetchImage()
+      fetchImage();
     }
-  }, [img])
+  }, [img]);
 
-  if (!localImage) return null
-  return <AvatarImage src={localImage} alt="Avatar" />
-}
+  if (!localImage) return null;
+  return <AvatarImage src={localImage} alt="Avatar" />;
+};

@@ -1,20 +1,20 @@
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 interface AppCalendarProps {
-  date: Date | undefined | null
-  onChange: (date: Date) => void
-  min?: Date
-  max?: Date | ""
-  required?: boolean
+  date: Date | undefined | null;
+  onChange: (date: Date) => void;
+  min?: Date;
+  max?: Date | "";
+  required?: boolean;
 }
 const AppCalendar = ({
   date,
@@ -23,7 +23,7 @@ const AppCalendar = ({
   max = new Date(),
   required = false,
 }: AppCalendarProps) => {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   return (
     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -32,7 +32,7 @@ const AppCalendar = ({
           variant={"outline"}
           className={cn(
             "w-full pl-3 text-left font-normal",
-            !date && "text-muted-foreground"
+            !date && "text-muted-foreground",
           )}
         >
           {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -49,29 +49,29 @@ const AppCalendar = ({
           //   defaultMonth={date ?? undefined}
           selected={date ?? undefined}
           onSelect={(e: any) => {
-            if (!e) return
-            const now = new Date()
-            const updatedDate = new Date(e)
+            if (!e) return;
+            const now = new Date();
+            const updatedDate = new Date(e);
             updatedDate.setHours(
               now.getHours(),
               now.getMinutes(),
               now.getSeconds(),
-              now.getMilliseconds()
-            )
-            onChange(updatedDate)
-            setIsCalendarOpen(false)
+              now.getMilliseconds(),
+            );
+            onChange(updatedDate);
+            setIsCalendarOpen(false);
           }}
           disabled={(date) => {
             if ((min && date < min) || (max && date >= max)) {
-              return true
+              return true;
             }
-            return false
+            return false;
           }}
           initialFocus
         />
       </PopoverContent>
     </Popover>
-  )
-}
+  );
+};
 
-export default AppCalendar
+export default AppCalendar;

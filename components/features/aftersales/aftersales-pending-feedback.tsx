@@ -1,45 +1,45 @@
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import StarRating from "@/components/shared/common/startRating"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import StarRating from "@/components/shared/common/startRating";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 import {
   CalendarDays,
   MapPin,
   MessageSquareText,
   Search,
   Star,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useMemo, useState } from "react"
-import { DashboardData } from "./aftersales-types"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { DashboardData } from "./aftersales-types";
 
 const PendingFeedbackData = ({
   data,
   onRefresh,
   user_id,
 }: {
-  user_id: string | number
-  data: DashboardData
-  onRefresh: () => Promise<void>
+  user_id: string | number;
+  data: DashboardData;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [search, setSearch] = useState("")
-  const { base_route } = useUserDetail()
+  const [search, setSearch] = useState("");
+  const { base_route } = useUserDetail();
   const filteredData = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return data.withoutFeedback
+    const query = search.trim().toLowerCase();
+    if (!query) return data.withoutFeedback;
 
     return data.withoutFeedback.filter((item) =>
-      objectValuesToSearchText(item).includes(query)
-    )
-  }, [data.withoutFeedback, search])
+      objectValuesToSearchText(item).includes(query),
+    );
+  }, [data.withoutFeedback, search]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -150,26 +150,26 @@ const PendingFeedbackData = ({
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const FeedbackForm = ({
   user_id,
   customer_id,
   onRefresh,
 }: {
-  customer_id: number
-  user_id: string | number
-  onRefresh: () => Promise<void>
+  customer_id: number;
+  user_id: string | number;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [feedback, setFeedback] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [next, setNext] = useState<Date | undefined>(undefined)
-  const [top, setTop] = useState(false)
-  const [satisfactory, setSatisfactory] = useState(false)
-  const [rating, setRating] = useState(0)
+  const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [next, setNext] = useState<Date | undefined>(undefined);
+  const [top, setTop] = useState(false);
+  const [satisfactory, setSatisfactory] = useState(false);
+  const [rating, setRating] = useState(0);
   async function handleSaveFeedback() {
-    setLoading(true)
+    setLoading(true);
     axios
       .post(`/${user_id}/feedback`, {
         feedback,
@@ -182,12 +182,12 @@ const FeedbackForm = ({
         rating,
       })
       .then(async () => {
-        await onRefresh()
-        setFeedback("")
+        await onRefresh();
+        setFeedback("");
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   return (
@@ -260,11 +260,11 @@ const FeedbackForm = ({
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const Rating = ({ rating }: { rating: number }) => {
-  const displayRating = Number.isFinite(rating) ? rating : 0
+  const displayRating = Number.isFinite(rating) ? rating : 0;
 
   return (
     <div className="mt-1 flex items-center gap-1">
@@ -280,17 +280,17 @@ const Rating = ({ rating }: { rating: number }) => {
         ({displayRating.toFixed(1)})
       </span>
     </div>
-  )
-}
+  );
+};
 
 const InfoTag = ({
   icon,
   value,
   tone = "neutral",
 }: {
-  icon?: React.ReactNode
-  value: unknown
-  tone?: "neutral" | "success" | "danger" | "warning"
+  icon?: React.ReactNode;
+  value: unknown;
+  tone?: "neutral" | "success" | "danger" | "warning";
 }) => {
   const toneClass = {
     neutral: "bg-muted/60 text-muted-foreground border-border",
@@ -300,7 +300,7 @@ const InfoTag = ({
       "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300",
     warning:
       "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300",
-  }[tone]
+  }[tone];
 
   return (
     <span
@@ -309,16 +309,17 @@ const InfoTag = ({
       {icon}
       <span className="">{formatValue(value)}</span>
     </span>
-  )
-}
+  );
+};
 
 function objectValuesToSearchText(value: unknown): string {
-  if (value === null || value === undefined) return ""
-  if (value instanceof Date) return value.toISOString().toLowerCase()
-  if (Array.isArray(value)) return value.map(objectValuesToSearchText).join(" ")
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return value.toISOString().toLowerCase();
+  if (Array.isArray(value))
+    return value.map(objectValuesToSearchText).join(" ");
   if (typeof value === "object")
-    return Object.values(value).map(objectValuesToSearchText).join(" ")
-  return String(value).toLowerCase()
+    return Object.values(value).map(objectValuesToSearchText).join(" ");
+  return String(value).toLowerCase();
 }
 
 function getInitials(value: string) {
@@ -329,27 +330,27 @@ function getInitials(value: string) {
       .slice(0, 2)
       .map((part) => part[0]?.toUpperCase())
       .join("") || "PF"
-  )
+  );
 }
 
 function formatValue(value: unknown) {
-  if (value === null || value === undefined || value === "") return "-"
-  if (Array.isArray(value)) return value.join(", ")
-  return String(value)
+  if (value === null || value === undefined || value === "") return "-";
+  if (Array.isArray(value)) return value.join(", ");
+  return String(value);
 }
 
 function formatDate(value: unknown) {
-  if (!value) return "-"
-  return moment(String(value)).format("MMM D, YYYY")
+  if (!value) return "-";
+  return moment(String(value)).format("MMM D, YYYY");
 }
 
 function getStatusTone(value: unknown) {
-  const status = String(value || "").toLowerCase()
+  const status = String(value || "").toLowerCase();
   if (status.includes("satisfactory") && !status.includes("unsatisfactory"))
-    return "success"
-  if (status.includes("unsatisfactory")) return "danger"
-  if (status.includes("pending")) return "warning"
-  return "neutral"
+    return "success";
+  if (status.includes("unsatisfactory")) return "danger";
+  if (status.includes("pending")) return "warning";
+  return "neutral";
 }
 
-export default PendingFeedbackData
+export default PendingFeedbackData;

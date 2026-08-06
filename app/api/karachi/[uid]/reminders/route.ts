@@ -1,15 +1,15 @@
-import pool from "@/config/db"
-import { checkSuperadmin } from "@/lib/checkSuperadmin"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
+  const { uid } = await params;
 
   try {
-    const isAdmin = await checkSuperadmin(uid)
+    const isAdmin = await checkSuperadmin(uid);
 
     if (isAdmin) {
       const result = await pool.query(`
@@ -38,9 +38,9 @@ WHERE
     OR (mi.date >= NOW() AND mi.date <= NOW() + INTERVAL '3 days')
   )
 ORDER BY mi.date ASC;
-`)
+`);
 
-      return NextResponse.json(result.rows, { status: 200 })
+      return NextResponse.json(result.rows, { status: 200 });
     } else {
       const result = await pool.query(
         `
@@ -74,14 +74,14 @@ ORDER BY mi.date ASC;
       )
     ORDER BY mi.date ASC;
   `,
-        [uid]
-      )
+        [uid],
+      );
 
-      return NextResponse.json(result.rows, { status: 200 })
+      return NextResponse.json(result.rows, { status: 200 });
     }
   } catch (error) {
-    return NextResponse.json({ message: "Error occured" }, { status: 500 })
+    return NextResponse.json({ message: "Error occured" }, { status: 500 });
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

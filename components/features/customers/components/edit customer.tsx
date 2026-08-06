@@ -1,50 +1,50 @@
-"use client"
+"use client";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { CitiesSearch } from "@/components/shared/search/cities-search"
-import { IndustrySearch } from "@/components/shared/search/industry-search"
-import { NumberSearch } from "@/components/shared/search/number-search"
-import { UserSearch } from "@/components/shared/search/user-search"
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { CitiesSearch } from "@/components/shared/search/cities-search";
+import { IndustrySearch } from "@/components/shared/search/industry-search";
+import { NumberSearch } from "@/components/shared/search/number-search";
+import { UserSearch } from "@/components/shared/search/user-search";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { storage } from "@/config/firebase"
-import { CountriesList } from "@/constants/data"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { debounce } from "@/lib/debounce"
-import { DeleteFromStorage } from "@/lib/deleteFunction"
-import { MyCustomer } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { getDownloadURL, ref } from "firebase/storage"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { storage } from "@/config/firebase";
+import { CountriesList } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { debounce } from "@/lib/debounce";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { MyCustomer } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { getDownloadURL, ref } from "firebase/storage";
 import {
   Building2,
   CalendarDays,
@@ -54,22 +54,22 @@ import {
   Settings2,
   Sparkles,
   Trash,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useCallback, useContext, useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 type EditCustomerDialogProps = {
-  onRefresh: () => Promise<void>
-  visible: boolean
-  onClose: (val: boolean) => void
-  data: MyCustomer
-  ownership: boolean | null
-  onClickDelete: () => void
-}
+  onRefresh: () => Promise<void>;
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  data: MyCustomer;
+  ownership: boolean | null;
+  onClickDelete: () => void;
+};
 
 const formSchema = z.object({
   company: z.string().min(1, { message: "Company name is required" }),
@@ -90,9 +90,9 @@ const formSchema = z.object({
   created_at: z.date().optional(),
   office: z.string().min(1, { message: "Office is required" }),
   image: z.string().optional(),
-})
+});
 
-type FormSchemaValues = z.infer<typeof formSchema>
+type FormSchemaValues = z.infer<typeof formSchema>;
 
 const EditCustomerDialog = ({
   onRefresh,
@@ -102,19 +102,19 @@ const EditCustomerDialog = ({
   ownership,
   onClickDelete,
 }: EditCustomerDialogProps) => {
-  const [numbers, setNumbers] = useState([""])
-  const [numberError, setNumberError] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [numbers, setNumbers] = useState([""]);
+  const [numberError, setNumberError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { userID, isAdmin, customer_delete_access, designation, base_route } =
-    useUserDetail()
-  const [checking, setChecking] = useState(false)
-  const [customerInfo, setCustomerInfo] = useState<MyCustomer[]>([])
-  const [selectedNumber, setSelectedNumber] = useState(["+92"])
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
-  const [originalUrl, setOriginalUrl] = useState<string | null>(null)
-  const { state: OfficeState } = useContext(OfficeContext)!
+    useUserDetail();
+  const [checking, setChecking] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState<MyCustomer[]>([]);
+  const [selectedNumber, setSelectedNumber] = useState(["+92"]);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+  const { state: OfficeState } = useContext(OfficeContext)!;
 
-  const canDelete = isAdmin || customer_delete_access
+  const canDelete = isAdmin || customer_delete_access;
 
   const form = useForm<FormSchemaValues>({
     resolver: zodResolver(formSchema),
@@ -138,38 +138,38 @@ const EditCustomerDialog = ({
       created_at: undefined,
       office: "islamabad",
     },
-  })
+  });
 
-  const { control } = form
+  const { control } = form;
 
   useEffect(() => {
     if (data) {
-      let tempNumbers: string[] = []
-      let tempSelectedNumber: string[] = []
+      let tempNumbers: string[] = [];
+      let tempSelectedNumber: string[] = [];
 
       data?.number?.forEach((num) => {
-        let found = false
+        let found = false;
         for (let country of CountriesList) {
           if (num.startsWith(country.num)) {
-            tempSelectedNumber.push(country.num)
-            tempNumbers.push(num.slice(country.num.length))
-            found = true
-            break
+            tempSelectedNumber.push(country.num);
+            tempNumbers.push(num.slice(country.num.length));
+            found = true;
+            break;
           }
         }
         if (!found) {
-          tempSelectedNumber.push("")
-          tempNumbers.push(num)
+          tempSelectedNumber.push("");
+          tempNumbers.push(num);
         }
-      })
+      });
 
-      setSelectedNumber([...tempSelectedNumber])
-      setNumbers([...tempNumbers])
+      setSelectedNumber([...tempSelectedNumber]);
+      setNumbers([...tempNumbers]);
       if (data.image) {
         getDownloadURL(ref(storage, data.image)).then((url) => {
-          setImageUrl(url)
-          setOriginalUrl(url)
-        })
+          setImageUrl(url);
+          setOriginalUrl(url);
+        });
       }
 
       form.reset({
@@ -191,37 +191,37 @@ const EditCustomerDialog = ({
         platform: data?.platform || "",
         created_at: data?.created_at ? new Date(data.created_at) : undefined,
         office: data?.office || "",
-      })
+      });
     }
-  }, [data, form])
+  }, [data, form]);
 
   function handleClose(val: boolean) {
-    form.reset()
-    setLoading(false)
-    onClose(val)
+    form.reset();
+    setLoading(false);
+    onClose(val);
   }
 
   async function onSubmit(values: FormSchemaValues) {
     const hasInvalidNumber = selectedNumber.some((code, index) => {
-      const number = numbers[index]
-      if (!number) return true
+      const number = numbers[index];
+      if (!number) return true;
 
-      const isAllDigits = /^\d+$/.test(number)
-      return !isAllDigits
-    })
+      const isAllDigits = /^\d+$/.test(number);
+      return !isAllDigits;
+    });
 
     if (hasInvalidNumber) {
-      setNumberError("Invalid number format")
-      return
+      setNumberError("Invalid number format");
+      return;
     }
 
-    setNumberError("")
+    setNumberError("");
 
-    setLoading(true)
+    setLoading(true);
 
     const finalData = numbers.map((item, index) => {
-      return selectedNumber[index] + item
-    })
+      return selectedNumber[index] + item;
+    });
 
     const apiData = {
       name: values.company,
@@ -242,98 +242,98 @@ const EditCustomerDialog = ({
       pin: values.pin,
       created_at: values.created_at,
       office: values.office,
-    }
+    };
 
     try {
-      let backendRoute = `/${userID}/customer/${data.id}`
+      let backendRoute = `/${userID}/customer/${data.id}`;
       if (data.image && !imageUrl) {
-        DeleteFromStorage(data.image)
+        DeleteFromStorage(data.image);
         const response = await axios.put(backendRoute, {
           ...apiData,
           image: null,
-        })
+        });
       } else if (imageUrl && !data.image) {
         const name = `${OfficeState.value.data}/customer/${
           data.id
-        }/profile/${moment().valueOf().toString()}.png`
-        const uploadRef = await UploadImage(imageUrl, name)
+        }/profile/${moment().valueOf().toString()}.png`;
+        const uploadRef = await UploadImage(imageUrl, name);
         const response = await axios.put(backendRoute, {
           ...apiData,
           image: name,
-        })
+        });
       } else if (originalUrl !== imageUrl) {
-        const name = data.image
-        const uploadRef = await UploadImage(imageUrl, name)
+        const name = data.image;
+        const uploadRef = await UploadImage(imageUrl, name);
       } else {
-        const response = await axios.put(backendRoute, apiData)
+        const response = await axios.put(backendRoute, apiData);
       }
 
-      toast.success("Customer Edited successfully")
-      await onRefresh()
-      handleClose(false)
+      toast.success("Customer Edited successfully");
+      await onRefresh();
+      handleClose(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const addNumberField = () => {
-    setNumbers((prevState) => [...prevState, ""])
-    setSelectedNumber((prevState) => [...prevState, "+92"])
-  }
+    setNumbers((prevState) => [...prevState, ""]);
+    setSelectedNumber((prevState) => [...prevState, "+92"]);
+  };
 
   const removeNumberField = (index: number) => {
-    setNumbers((prevState) => prevState.filter((_, ind) => ind !== index))
+    setNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
     setSelectedNumber((prevState) =>
-      prevState.filter((_, ind) => ind !== index)
-    )
-  }
+      prevState.filter((_, ind) => ind !== index),
+    );
+  };
 
   const handleNumberChange = (index: number, value: string) => {
     if (numberError) {
-      setNumberError("")
+      setNumberError("");
     }
     setNumbers((prevState) => {
-      const newState = [...prevState]
-      newState[index] = value
-      return newState
-    })
-    if (value) debouncedCheckNumber(selectedNumber[index] + value)
-  }
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
+    if (value) debouncedCheckNumber(selectedNumber[index] + value);
+  };
 
   const handlePrefixChange = (index: number, value: string) => {
     setSelectedNumber((prevState) => {
-      const newState = [...prevState]
-      newState[index] = value
-      return newState
-    })
-  }
+      const newState = [...prevState];
+      newState[index] = value;
+      return newState;
+    });
+  };
 
   const checkNumberInDatabase = async (number: string) => {
-    setCustomerInfo([])
-    setChecking(true)
+    setCustomerInfo([]);
+    setChecking(true);
     try {
       const response = await axios.post(
         `/${userID}/check-number`,
         { number },
         {
           cancelKey: `check-number-${userID}`,
-        }
-      )
+        },
+      );
       const finalData = response.data.filter(
-        (item: { id: number }) => item.id !== data.id
-      )
-      setCustomerInfo(finalData)
+        (item: { id: number }) => item.id !== data.id,
+      );
+      setCustomerInfo(finalData);
     } catch (error) {
-      console.log("Error checking number:", error)
+      console.log("Error checking number:", error);
     } finally {
-      setChecking(false)
+      setChecking(false);
     }
-  }
+  };
 
   const debouncedCheckNumber = useCallback(
     debounce(checkNumberInDatabase, 1000),
-    []
-  )
+    [],
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -408,8 +408,8 @@ const EditCustomerDialog = ({
                                 variant="destructive"
                                 size="icon-sm"
                                 onClick={() => {
-                                  removeNumberField(index)
-                                  setCustomerInfo([])
+                                  removeNumberField(index);
+                                  setCustomerInfo([]);
                                 }}
                               >
                                 <Trash size={14} />
@@ -654,7 +654,7 @@ const EditCustomerDialog = ({
                                 <SelectItem key={item} value={item}>
                                   {item}
                                 </SelectItem>
-                              )
+                              ),
                             )}
                           </SelectContent>
                         </Select>
@@ -842,8 +842,8 @@ const EditCustomerDialog = ({
                   <Button
                     type="button"
                     onClick={(e) => {
-                      e.preventDefault()
-                      onClickDelete()
+                      e.preventDefault();
+                      onClickDelete();
                     }}
                     variant="destructive"
                     className="mt-2 w-full"
@@ -857,7 +857,7 @@ const EditCustomerDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default EditCustomerDialog
+export default EditCustomerDialog;

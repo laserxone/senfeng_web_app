@@ -1,29 +1,34 @@
-"use client"
+"use client";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Field, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { UploadImage } from "@/lib/uploadFunction"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UploadImage } from "@/lib/uploadFunction";
+import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
@@ -48,13 +53,13 @@ import {
   Wallet,
   X,
   XCircle,
-} from "lucide-react"
-import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
-import { toast } from "sonner"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import {
   Dialog,
   DialogContent,
@@ -62,40 +67,40 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import Heading from "@/components/ui/heading"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import Heading from "@/components/ui/heading";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 interface LoanFormData {
-  employeeId: string
-  employeeName: string
-  designation: string
-  email: string
-  phone: string
-  monthlySalary: string
-  employmentTenure: string
-  loanAmount: string
-  loanType: string
-  purpose: string
-  urgencyLevel: string
-  receivingDate: Date | undefined
-  returnDate: Date | undefined
-  firstInstallmentDate: Date | undefined
-  numberOfInstallments: string
-  paymentMethod: string
-  bankAccountNumber: string
-  guarantorName: string
-  guarantorEmployeeId: string
-  guarantorDepartment: string
-  guarantorPhone: string
-  chequeImages: File[]
-  supportingDocuments: File[]
-  termsAccepted: boolean
-  salaryDeductionConsent: boolean
-  hierarchyId: string
+  employeeId: string;
+  employeeName: string;
+  designation: string;
+  email: string;
+  phone: string;
+  monthlySalary: string;
+  employmentTenure: string;
+  loanAmount: string;
+  loanType: string;
+  purpose: string;
+  urgencyLevel: string;
+  receivingDate: Date | undefined;
+  returnDate: Date | undefined;
+  firstInstallmentDate: Date | undefined;
+  numberOfInstallments: string;
+  paymentMethod: string;
+  bankAccountNumber: string;
+  guarantorName: string;
+  guarantorEmployeeId: string;
+  guarantorDepartment: string;
+  guarantorPhone: string;
+  chequeImages: File[];
+  supportingDocuments: File[];
+  termsAccepted: boolean;
+  salaryDeductionConsent: boolean;
+  hierarchyId: string;
 }
 
 const initialFormData: LoanFormData = {
@@ -125,54 +130,54 @@ const initialFormData: LoanFormData = {
   termsAccepted: false,
   salaryDeductionConsent: false,
   hierarchyId: "",
-}
+};
 
 type Approver = {
-  id: number
-  user_id: number
-  approval_order: number
-  user_name: string
-  user_email: string
-  user_designation: string
-}
+  id: number;
+  user_id: number;
+  approval_order: number;
+  user_name: string;
+  user_email: string;
+  user_designation: string;
+};
 
 type Hierarchy = {
-  id: number
-  name: string
-  hierarchy_type: string
-  description: string | null
-  approvers: Approver[] | null
-}
+  id: number;
+  name: string;
+  hierarchy_type: string;
+  description: string | null;
+  approvers: Approver[] | null;
+};
 
 type ApprovalStep = {
-  id: number
-  approver_id: number
-  approval_order: number
-  status: "pending" | "approved" | "rejected"
-  comments: string | null
-  acted_at: string | null
-  approver_name: string
-  approver_designation: string
-}
+  id: number;
+  approver_id: number;
+  approval_order: number;
+  status: "pending" | "approved" | "rejected";
+  comments: string | null;
+  acted_at: string | null;
+  approver_name: string;
+  approver_designation: string;
+};
 
 type LoanApplication = {
-  id: number
-  application_number: string
-  applicant_name: string
-  applicant_designation: string
-  hierarchy_name: string | null
-  loan_amount: number
-  loan_type: string
-  purpose: string
-  urgency_level: string
-  num_installments: number
-  status: "pending" | "in_progress" | "approved" | "rejected" | "disbursed"
-  current_approver_order: number
-  created_at: string
-  approval_steps: ApprovalStep[] | null
-  cheque_images?: string[]
-  supporting_documents?: string[]
-}
+  id: number;
+  application_number: string;
+  applicant_name: string;
+  applicant_designation: string;
+  hierarchy_name: string | null;
+  loan_amount: number;
+  loan_type: string;
+  purpose: string;
+  urgency_level: string;
+  num_installments: number;
+  status: "pending" | "in_progress" | "approved" | "rejected" | "disbursed";
+  current_approver_order: number;
+  created_at: string;
+  approval_steps: ApprovalStep[] | null;
+  cheque_images?: string[];
+  supporting_documents?: string[];
+};
 
 const statusColors: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700",
@@ -180,193 +185,197 @@ const statusColors: Record<string, string> = {
   approved: "bg-emerald-100 text-emerald-700",
   rejected: "bg-red-100 text-red-700",
   disbursed: "bg-purple-100 text-purple-700",
-}
+};
 
 const urgencyColors: Record<string, string> = {
   normal: "bg-gray-100 text-gray-700",
   urgent: "bg-orange-100 text-orange-700",
   critical: "bg-red-100 text-red-700",
-}
+};
 
 export default function LoanApplications() {
-  const { userID, base_route } = useUserDetail()
-  const [formData, setFormData] = useState<LoanFormData>(initialFormData)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { userID, base_route } = useUserDetail();
+  const [formData, setFormData] = useState<LoanFormData>(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [detailApplication, setDetailApplication] =
-    useState<LoanApplication | null>(null)
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
-  const [applications, setApplications] = useState<LoanApplication[]>([])
-  const [allApplications, setAllApplications] = useState<LoanApplication[]>([])
-  const [hierarchies, setHierarchies] = useState<Hierarchy[]>([])
-  const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState("applications")
+    useState<LoanApplication | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [applications, setApplications] = useState<LoanApplication[]>([]);
+  const [allApplications, setAllApplications] = useState<LoanApplication[]>([]);
+  const [hierarchies, setHierarchies] = useState<Hierarchy[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("applications");
   const [selectedForDelete, setSelectedForDelete] =
-    useState<LoanApplication | null>(null)
-  const [deleteLoading, setDeleteLoading] = useState(false)
+    useState<LoanApplication | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   useEffect(() => {
     if (userID) {
-      fetchData()
-      fetchHierarchy()
-      fetchDataAll()
+      fetchData();
+      fetchHierarchy();
+      fetchDataAll();
     }
-  }, [userID])
+  }, [userID]);
 
   const updateLoanApplicationQuery = useCallback(
     (applicationId?: string | number) => {
-      const url = new URL(window.location.href)
+      const url = new URL(window.location.href);
 
       if (applicationId !== undefined) {
-        url.searchParams.set("l", String(applicationId))
-        window.history.pushState({}, "", url)
+        url.searchParams.set("l", String(applicationId));
+        window.history.pushState({}, "", url);
       } else {
-        url.searchParams.delete("l")
-        window.history.replaceState({}, "", url)
+        url.searchParams.delete("l");
+        window.history.replaceState({}, "", url);
       }
 
-      window.dispatchEvent(new PopStateEvent("popstate"))
+      window.dispatchEvent(new PopStateEvent("popstate"));
     },
-    []
-  )
+    [],
+  );
 
   useEffect(() => {
     const syncLoanApplicationFromUrl = () => {
-      const applicationId = new URLSearchParams(window.location.search).get("l")
+      const applicationId = new URLSearchParams(window.location.search).get(
+        "l",
+      );
       const application = applicationId
         ? allApplications.find((item) => String(item.id) === applicationId)
-        : undefined
+        : undefined;
 
-      setDetailApplication(application || null)
-      setIsDetailOpen(Boolean(application))
-    }
+      setDetailApplication(application || null);
+      setIsDetailOpen(Boolean(application));
+    };
 
-    syncLoanApplicationFromUrl()
-    window.addEventListener("popstate", syncLoanApplicationFromUrl)
+    syncLoanApplicationFromUrl();
+    window.addEventListener("popstate", syncLoanApplicationFromUrl);
 
     return () => {
-      window.removeEventListener("popstate", syncLoanApplicationFromUrl)
-    }
-  }, [allApplications])
+      window.removeEventListener("popstate", syncLoanApplicationFromUrl);
+    };
+  }, [allApplications]);
 
   function handleDetailOpenChange(nextOpen: boolean) {
-    setIsDetailOpen(nextOpen)
+    setIsDetailOpen(nextOpen);
 
     if (!nextOpen) {
-      updateLoanApplicationQuery()
+      updateLoanApplicationQuery();
     }
   }
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     try {
       const res = await axios.get(
-        `/${userID}/loan-applications?applicant_id=${userID}`
-      )
-      setApplications(res.data)
+        `/${userID}/loan-applications?applicant_id=${userID}`,
+      );
+      setApplications(res.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function fetchDataAll() {
-    setLoading(true)
+    setLoading(true);
     try {
-      const res = await axios.get(`/${userID}/loan-applications`)
-      setAllApplications(res.data)
+      const res = await axios.get(`/${userID}/loan-applications`);
+      setAllApplications(res.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function fetchHierarchy() {
     try {
-      const res = await axios.get(`/${userID}/hierarchies`)
+      const res = await axios.get(`/${userID}/hierarchies`);
       if (res.data?.length) {
         const found = res.data?.filter(
-          (item: Hierarchy) => item.hierarchy_type === "loan"
-        )
+          (item: Hierarchy) => item.hierarchy_type === "loan",
+        );
         if (found && found?.length > 0) {
-          updateField("hierarchyId", found?.[0]?.id?.toString())
+          updateField("hierarchyId", found?.[0]?.id?.toString());
         }
       }
-      setHierarchies(res.data)
+      setHierarchies(res.data);
     } finally {
     }
   }
 
   async function handleDelete() {
-    if (!selectedForDelete?.id) return
-    setDeleteLoading(true)
+    if (!selectedForDelete?.id) return;
+    setDeleteLoading(true);
     try {
-      await axios.delete(`/${userID}/loan-applications/${selectedForDelete.id}`)
-      await fetchData()
-      await fetchDataAll()
-      setSelectedForDelete(null)
+      await axios.delete(
+        `/${userID}/loan-applications/${selectedForDelete.id}`,
+      );
+      await fetchData();
+      await fetchDataAll();
+      setSelectedForDelete(null);
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
   const updateField = <K extends keyof LoanFormData>(
     field: K,
-    value: LoanFormData[K]
+    value: LoanFormData[K],
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleChequeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      updateField("chequeImages", Array.from(e.target.files))
+      updateField("chequeImages", Array.from(e.target.files));
     }
-  }
+  };
 
   const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      updateField("supportingDocuments", Array.from(e.target.files))
+      updateField("supportingDocuments", Array.from(e.target.files));
     }
-  }
+  };
 
   const calculateEMI = () => {
-    const principal = parseFloat(formData.loanAmount) || 0
-    const installments = parseInt(formData.numberOfInstallments) || 1
+    const principal = parseFloat(formData.loanAmount) || 0;
+    const installments = parseInt(formData.numberOfInstallments) || 1;
     if (principal && installments) {
-      return (principal / installments).toFixed(0)
+      return (principal / installments).toFixed(0);
     }
-    return "0"
-  }
+    return "0";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     const supportingDocumentPaths = await Promise.all(
       formData.supportingDocuments.map(async (file: File, index: number) => {
-        const fileName = `${Date.now()}-${file.name}`
-        const path = `loan-applications/${userID}/supporting-documents/${Date.now()}-${fileName}`
+        const fileName = `${Date.now()}-${file.name}`;
+        const path = `loan-applications/${userID}/supporting-documents/${Date.now()}-${fileName}`;
         await UploadImage(
           URL.createObjectURL(file),
           path,
-          file.type || "application/octet-stream"
-        )
+          file.type || "application/octet-stream",
+        );
 
-        return path
-      })
-    )
+        return path;
+      }),
+    );
 
     // Upload cheque images
     const chequeImagePaths = await Promise.all(
       formData.chequeImages.map(async (file: File, index: number) => {
-        const fileName = `${Date.now()}-${file.name}`
-        const path = `loan-applications/${userID}/cheques/${Date.now()}-${fileName}`
+        const fileName = `${Date.now()}-${file.name}`;
+        const path = `loan-applications/${userID}/cheques/${Date.now()}-${fileName}`;
         await UploadImage(
           URL.createObjectURL(file),
           path,
-          file.type || "application/octet-stream"
-        )
+          file.type || "application/octet-stream",
+        );
 
-        return path
-      })
-    )
+        return path;
+      }),
+    );
 
     try {
       await axios.post(`/${userID}/loan-applications`, {
@@ -391,38 +400,38 @@ export default function LoanApplications() {
         terms_accepted: formData.termsAccepted,
         cheque_images: chequeImagePaths,
         supporting_documents: supportingDocumentPaths,
-      })
+      });
 
-      const { hierarchyId, ...rest } = initialFormData
-      setFormData({ ...rest, hierarchyId })
-      await fetchData()
-      await fetchHierarchy()
-      setTab("applications")
-      toast.success("Application submitted")
+      const { hierarchyId, ...rest } = initialFormData;
+      setFormData({ ...rest, hierarchyId });
+      await fetchData();
+      await fetchHierarchy();
+      setTab("applications");
+      toast.success("Application submitted");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "PKR",
       maximumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const selectedHierarchy = hierarchies?.find(
-    (h) => h.id === parseInt(formData.hierarchyId)
-  )
+    (h) => h.id === parseInt(formData.hierarchyId),
+  );
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -497,7 +506,7 @@ export default function LoanApplications() {
                         application.status === "rejected" && "bg-red-500",
                         application.status === "in_progress" && "bg-blue-500",
                         application.status === "pending" && "bg-amber-500",
-                        application.status === "disbursed" && "bg-purple-500"
+                        application.status === "disbursed" && "bg-purple-500",
                       )}
                     />
                     <CardHeader className="pb-3">
@@ -513,7 +522,7 @@ export default function LoanApplications() {
                         <Badge
                           className={cn(
                             "capitalize",
-                            statusColors[application.status]
+                            statusColors[application.status],
                           )}
                         >
                           {application.status.replace("_", " ")}
@@ -559,7 +568,7 @@ export default function LoanApplications() {
                                           application.current_approver_order
                                         ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400"
                                         : step.status === "pending" &&
-                                            "bg-gray-100 text-gray-500"
+                                            "bg-gray-100 text-gray-500",
                                     )}
                                     title={`${step.approver_name} - ${step.status}`}
                                   >
@@ -586,8 +595,8 @@ export default function LoanApplications() {
                         size="sm"
                         className="w-full"
                         onClick={() => {
-                          setDetailApplication(application)
-                          setIsDetailOpen(true)
+                          setDetailApplication(application);
+                          setIsDetailOpen(true);
                         }}
                       >
                         <Eye className="mr-2 size-4" />
@@ -679,7 +688,7 @@ export default function LoanApplications() {
                                   <ChevronRight className="mx-1 size-4 text-muted-foreground" />
                                 )}
                               </div>
-                            )
+                            ),
                           )}
                         </div>
                       </div>
@@ -1058,7 +1067,7 @@ export default function LoanApplications() {
                           onCheckedChange={(checked) =>
                             updateField(
                               "salaryDeductionConsent",
-                              checked === true
+                              checked === true,
                             )
                           }
                         />
@@ -1162,7 +1171,7 @@ export default function LoanApplications() {
                         application.status === "rejected" && "bg-red-500",
                         application.status === "in_progress" && "bg-blue-500",
                         application.status === "pending" && "bg-amber-500",
-                        application.status === "disbursed" && "bg-purple-500"
+                        application.status === "disbursed" && "bg-purple-500",
                       )}
                     />
                     <CardHeader className="pb-3">
@@ -1178,7 +1187,7 @@ export default function LoanApplications() {
                         <Badge
                           className={cn(
                             "capitalize",
-                            statusColors[application.status]
+                            statusColors[application.status],
                           )}
                         >
                           {application.status.replace("_", " ")}
@@ -1232,7 +1241,7 @@ export default function LoanApplications() {
                                           application.current_approver_order
                                         ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400"
                                         : step.status === "pending" &&
-                                            "bg-gray-100 text-gray-500"
+                                            "bg-gray-100 text-gray-500",
                                     )}
                                     title={`${step.approver_name} - ${step.status}`}
                                   >
@@ -1271,7 +1280,7 @@ export default function LoanApplications() {
                         size="sm"
                         className="w-full"
                         onClick={() => {
-                          setSelectedForDelete(application)
+                          setSelectedForDelete(application);
                         }}
                       >
                         <Trash2 className="mr-2 size-4" />
@@ -1302,7 +1311,7 @@ export default function LoanApplications() {
                   <Badge
                     className={cn(
                       "capitalize",
-                      statusColors[detailApplication.status]
+                      statusColors[detailApplication.status],
                     )}
                   >
                     {detailApplication.status.replace("_", " ")}
@@ -1377,7 +1386,7 @@ export default function LoanApplications() {
                                         detailApplication.current_approver_order
                                       ? "bg-blue-100 text-blue-700 ring-2 ring-blue-400"
                                       : step.status === "pending" &&
-                                          "bg-gray-100 text-gray-500"
+                                          "bg-gray-100 text-gray-500",
                                   )}
                                 >
                                   {step.status === "approved" ? (
@@ -1406,7 +1415,7 @@ export default function LoanApplications() {
                                         step.status === "pending" &&
                                           step.approval_order ===
                                             detailApplication.current_approver_order &&
-                                          "border-blue-200 text-blue-700"
+                                          "border-blue-200 text-blue-700",
                                       )}
                                     >
                                       {step.status === "pending" &&
@@ -1431,7 +1440,7 @@ export default function LoanApplications() {
                                   )}
                                 </div>
                               </div>
-                            )
+                            ),
                           )}
                         </div>
                       </CardContent>
@@ -1469,101 +1478,101 @@ export default function LoanApplications() {
         onPressCancel={() => setSelectedForDelete(null)}
       />
     </div>
-  )
+  );
 }
 
 type LoanApplicationApprover = {
-  id: number
-  application_number: string
-  applicant_id: number
-  applicant_name: string
-  applicant_designation: string
-  hierarchy_name: string | null
-  loan_amount: number
-  loan_type: string
-  purpose: string
-  urgency_level: string
-  receiving_date: string | null
-  return_date: string | null
-  first_installment_date: string | null
-  num_installments: number
-  payment_method: string | null
-  bank_account: string | null
-  guarantor_name: string | null
-  guarantor_department: string | null
-  guarantor_phone: string | null
-  status: "pending" | "in_progress" | "approved" | "rejected" | "disbursed"
-  current_approver_order: number
-  created_at: string
-  approval_steps: ApprovalStep[] | null
-  is_my_turn?: boolean
-  my_approval_status?: "pending" | "approved" | "rejected" | null
-  cheque_images: string[]
-  supporting_documents: string[]
-}
+  id: number;
+  application_number: string;
+  applicant_id: number;
+  applicant_name: string;
+  applicant_designation: string;
+  hierarchy_name: string | null;
+  loan_amount: number;
+  loan_type: string;
+  purpose: string;
+  urgency_level: string;
+  receiving_date: string | null;
+  return_date: string | null;
+  first_installment_date: string | null;
+  num_installments: number;
+  payment_method: string | null;
+  bank_account: string | null;
+  guarantor_name: string | null;
+  guarantor_department: string | null;
+  guarantor_phone: string | null;
+  status: "pending" | "in_progress" | "approved" | "rejected" | "disbursed";
+  current_approver_order: number;
+  created_at: string;
+  approval_steps: ApprovalStep[] | null;
+  is_my_turn?: boolean;
+  my_approval_status?: "pending" | "approved" | "rejected" | null;
+  cheque_images: string[];
+  supporting_documents: string[];
+};
 
 const RenderMyApprovals = () => {
-  const { userID } = useUserDetail()
-  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false);
   const [applications, setApplications] = useState<LoanApplicationApprover[]>(
-    []
-  )
+    [],
+  );
   const [selectedApplication, setSelectedApplication] =
-    useState<LoanApplicationApprover | null>(null)
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
-  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false)
+    useState<LoanApplicationApprover | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState<"approved" | "rejected">(
-    "approved"
-  )
-  const [approvalComments, setApprovalComments] = useState("")
-  const [isProcessing, setIsProcessing] = useState(false)
+    "approved",
+  );
+  const [approvalComments, setApprovalComments] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
     try {
       const res = await axios.get(
-        `/${userID}/loan-applications?approver_id=${userID}`
-      )
-      setApplications(res.data)
+        `/${userID}/loan-applications?approver_id=${userID}`,
+      );
+      setApplications(res.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const pendingApplications =
-    applications?.filter((app) => app.is_my_turn) || []
+    applications?.filter((app) => app.is_my_turn) || [];
   const processedApplications =
     applications?.filter((app) => !app.is_my_turn && app.my_approval_status) ||
-    []
+    [];
   const viewableApplications =
     applications?.filter((app) => !app.is_my_turn && !app.my_approval_status) ||
-    []
+    [];
 
   const handleViewDetails = (application: LoanApplicationApprover) => {
-    setSelectedApplication(application)
-    setIsDetailDialogOpen(true)
-  }
+    setSelectedApplication(application);
+    setIsDetailDialogOpen(true);
+  };
 
   const handleApprovalClick = (
     application: LoanApplicationApprover,
-    action: "approved" | "rejected"
+    action: "approved" | "rejected",
   ) => {
-    setSelectedApplication(application)
-    setApprovalAction(action)
-    setApprovalComments("")
-    setIsApprovalDialogOpen(true)
-  }
+    setSelectedApplication(application);
+    setApprovalAction(action);
+    setApprovalComments("");
+    setIsApprovalDialogOpen(true);
+  };
 
   const handleSubmitApproval = async () => {
-    if (!selectedApplication || !userID) return
+    if (!selectedApplication || !userID) return;
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
       await axios.post(
         `/${userID}/loan-applications/${selectedApplication.id}/approve`,
@@ -1571,24 +1580,24 @@ const RenderMyApprovals = () => {
           approver_id: userID,
           action: approvalAction,
           comments: approvalComments,
-        }
-      )
+        },
+      );
 
-      await fetchData()
-      setIsApprovalDialogOpen(false)
-      setSelectedApplication(null)
+      await fetchData();
+      setIsApprovalDialogOpen(false);
+      setSelectedApplication(null);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "PKR",
       maximumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
@@ -1597,15 +1606,15 @@ const RenderMyApprovals = () => {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center py-10">
         <Spinner />
       </div>
-    )
+    );
   }
 
   return (
@@ -1639,7 +1648,7 @@ const RenderMyApprovals = () => {
                   <p className="text-2xl font-bold">
                     {
                       processedApplications.filter(
-                        (a) => a.my_approval_status === "approved"
+                        (a) => a.my_approval_status === "approved",
                       ).length
                     }
                   </p>
@@ -1660,7 +1669,7 @@ const RenderMyApprovals = () => {
                   <p className="text-2xl font-bold">
                     {
                       processedApplications.filter(
-                        (a) => a.my_approval_status === "rejected"
+                        (a) => a.my_approval_status === "rejected",
                       ).length
                     }
                   </p>
@@ -1800,7 +1809,7 @@ const RenderMyApprovals = () => {
                   <Badge
                     className={cn(
                       "px-3 py-1 text-sm capitalize",
-                      statusColors[selectedApplication.status]
+                      statusColors[selectedApplication.status],
                     )}
                   >
                     {selectedApplication.status.replace("_", " ")}
@@ -1808,7 +1817,7 @@ const RenderMyApprovals = () => {
                   <Badge
                     className={cn(
                       "px-3 py-1 text-sm capitalize",
-                      urgencyColors[selectedApplication.urgency_level]
+                      urgencyColors[selectedApplication.urgency_level],
                     )}
                   >
                     {selectedApplication.urgency_level}
@@ -1856,7 +1865,7 @@ const RenderMyApprovals = () => {
                         <span className="text-muted-foreground">Amount</span>
                         <span className="font-medium">
                           {formatCurrency(
-                            Number(selectedApplication.loan_amount)
+                            Number(selectedApplication.loan_amount),
                           )}
                         </span>
                       </div>
@@ -1879,7 +1888,7 @@ const RenderMyApprovals = () => {
                         <span className="font-medium">
                           {formatCurrency(
                             Number(selectedApplication.loan_amount) /
-                              selectedApplication.num_installments
+                              selectedApplication.num_installments,
                           )}
                         </span>
                       </div>
@@ -1958,7 +1967,7 @@ const RenderMyApprovals = () => {
                                           selectedApplication.current_approver_order
                                         ? "border-blue-400 bg-blue-100 text-blue-700 ring-2 ring-blue-200"
                                         : step.status === "pending" &&
-                                            "border-gray-200 bg-gray-100 text-gray-500"
+                                            "border-gray-200 bg-gray-100 text-gray-500",
                                     )}
                                   >
                                     {step.status === "approved" ? (
@@ -1979,7 +1988,7 @@ const RenderMyApprovals = () => {
                                         "mt-2 h-8 w-0.5",
                                         step.status === "approved"
                                           ? "bg-emerald-300"
-                                          : "bg-gray-200"
+                                          : "bg-gray-200",
                                       )}
                                     />
                                   )}
@@ -2010,7 +2019,7 @@ const RenderMyApprovals = () => {
                                         step.status === "pending" &&
                                           step.approval_order ===
                                             selectedApplication.current_approver_order &&
-                                          "border-blue-200 bg-blue-50 text-blue-700"
+                                          "border-blue-200 bg-blue-50 text-blue-700",
                                       )}
                                     >
                                       {step.status === "pending" &&
@@ -2034,7 +2043,7 @@ const RenderMyApprovals = () => {
                                   )}
                                 </div>
                               </div>
-                            )
+                            ),
                           )}
                         </div>
                       </CardContent>
@@ -2066,8 +2075,8 @@ const RenderMyApprovals = () => {
               <Button
                 className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
                 onClick={() => {
-                  setIsDetailDialogOpen(false)
-                  handleApprovalClick(selectedApplication, "approved")
+                  setIsDetailDialogOpen(false);
+                  handleApprovalClick(selectedApplication, "approved");
                 }}
               >
                 <Check className="mr-2 size-4" />
@@ -2077,8 +2086,8 @@ const RenderMyApprovals = () => {
                 variant="destructive"
                 className="flex-1"
                 onClick={() => {
-                  setIsDetailDialogOpen(false)
-                  handleApprovalClick(selectedApplication, "rejected")
+                  setIsDetailDialogOpen(false);
+                  handleApprovalClick(selectedApplication, "rejected");
                 }}
               >
                 <X className="mr-2 size-4" />
@@ -2148,7 +2157,7 @@ const RenderMyApprovals = () => {
               className={cn(
                 approvalAction === "approved"
                   ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                  : "bg-red-600 hover:bg-red-700"
+                  : "bg-red-600 hover:bg-red-700",
               )}
             >
               {isProcessing
@@ -2161,8 +2170,8 @@ const RenderMyApprovals = () => {
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};
 
 function ApplicationCard({
   application,
@@ -2172,28 +2181,28 @@ function ApplicationCard({
   showActions = false,
   currentUserId,
 }: {
-  application: LoanApplicationApprover
-  onViewDetails: () => void
-  onApprove?: () => void
-  onReject?: () => void
-  showActions?: boolean
-  currentUserId: number | string
+  application: LoanApplicationApprover;
+  onViewDetails: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
+  showActions?: boolean;
+  currentUserId: number | string;
 }) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "PKR",
       maximumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   return (
     <Card className="overflow-hidden">
@@ -2204,7 +2213,7 @@ function ApplicationCard({
           application.status === "rejected" && "bg-red-500",
           application.status === "in_progress" && "bg-blue-500",
           application.status === "pending" && "bg-amber-500",
-          application.status === "disbursed" && "bg-purple-500"
+          application.status === "disbursed" && "bg-purple-500",
         )}
       />
       <CardHeader className="pb-3">
@@ -2234,7 +2243,7 @@ function ApplicationCard({
                   "text-xs",
                   application.my_approval_status === "approved"
                     ? "bg-emerald-100 text-emerald-700"
-                    : "bg-red-100 text-red-700"
+                    : "bg-red-100 text-red-700",
                 )}
               >
                 You {application.my_approval_status}
@@ -2288,7 +2297,7 @@ function ApplicationCard({
                           : step.status === "pending" &&
                               "border-gray-200 bg-gray-100 text-gray-500",
                         step.approver_id === currentUserId &&
-                          "ring-2 ring-purple-400 ring-offset-1"
+                          "ring-2 ring-purple-400 ring-offset-1",
                       )}
                       title={`${step.approver_name} - ${step.status}${step.approver_id === currentUserId ? " (You)" : ""}`}
                     >
@@ -2336,5 +2345,5 @@ function ApplicationCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

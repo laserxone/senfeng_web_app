@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   ArrowUpDown,
   CalendarDays,
@@ -8,59 +8,59 @@ import {
   Trash2,
   UserRound,
   WalletCards,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useContext, useEffect, useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useContext, useEffect, useState } from "react";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import PageTable from "@/components/shared/tables/app-table"
-import Dropzone from "@/components/shared/uploads/dropzone"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import PageTable from "@/components/shared/tables/app-table";
+import Dropzone from "@/components/shared/uploads/dropzone";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import { Textarea } from "@/components/ui/textarea"
-import { TIMEZONE } from "@/constants/data"
+} from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { TIMEZONE } from "@/constants/data";
 
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import formatCurrency from "@/lib/formatCurrency"
-import { OfficeExpenseProps } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer"
-import { ColumnDef } from "@tanstack/react-table"
-import moment from "moment"
-import momentT from "moment-timezone"
-import { useRouter } from "next/navigation"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "@/components/ui/field";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import formatCurrency from "@/lib/formatCurrency";
+import { OfficeExpenseProps } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { ColumnDef } from "@tanstack/react-table";
+import moment from "moment";
+import momentT from "moment-timezone";
+import { useRouter } from "next/navigation";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const expensePdfStyles = StyleSheet.create({
   page: {
@@ -127,7 +127,7 @@ const expensePdfStyles = StyleSheet.create({
     padding: 10,
     color: "#6B7280",
   },
-})
+});
 
 const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
   <Document>
@@ -136,7 +136,7 @@ const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
       <Text style={expensePdfStyles.totalText}>
         Total PKR:{" "}
         {formatCurrency(
-          data.reduce((sum, item) => sum + Number(item.amount || 0), 0)
+          data.reduce((sum, item) => sum + Number(item.amount || 0), 0),
         )}
       </Text>
       <View style={expensePdfStyles.table}>
@@ -203,64 +203,64 @@ const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
       </View>
     </Page>
   </Document>
-)
+);
 
 export default function EmployeeBranchExpenses() {
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [data, setData] = useState<OfficeExpenseProps[]>([])
-  const [imageURL, setImageURL] = useState<OfficeExpenseProps | null>(null)
-  const [visible, setVisible] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<OfficeExpenseProps[]>([]);
+  const [imageURL, setImageURL] = useState<OfficeExpenseProps | null>(null);
+  const [visible, setVisible] = useState(false);
   const {
     userID,
     isAdmin,
     branch_expenses_assigned,
     branch_expenses_write_access,
-  } = useUserDetail()
-  const [visibleAdd, setVisibleAdd] = useState(false)
+  } = useUserDetail();
+  const [visibleAdd, setVisibleAdd] = useState(false);
 
-  const router = useRouter()
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const router = useRouter();
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (userID) {
-      const allowed = branch_expenses_assigned || isAdmin
+      const allowed = branch_expenses_assigned || isAdmin;
       if (!allowed) {
-        router.push("/not-allowed")
+        router.push("/not-allowed");
       }
       const startDate = momentT
         .tz(TIMEZONE)
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      fetchData(startDate, endDate)
+        .toISOString();
+      fetchData(startDate, endDate);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(`/${userID}/expenses?start_date=${startDate}&end_date=${endDate}`)
         .then((response) => {
-          setData(response.data)
+          setData(response.data);
         })
         .catch((e) => {
-          console.log(e)
+          console.log(e);
         })
         .finally(() => {
-          setLoading(false)
-          resolve(true)
-        })
-    })
+          setLoading(false);
+          resolve(true);
+        });
+    });
   }
 
   const columns: ColumnDef<OfficeExpenseProps>[] = [
@@ -276,7 +276,7 @@ export default function EmployeeBranchExpenses() {
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">
@@ -299,7 +299,7 @@ export default function EmployeeBranchExpenses() {
             Note
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("note")}</div>,
     },
@@ -315,7 +315,7 @@ export default function EmployeeBranchExpenses() {
             Amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -332,34 +332,34 @@ export default function EmployeeBranchExpenses() {
             Submitted By
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("submitted_by_name")}</div>,
     },
-  ]
+  ];
 
   async function handleDelete(id: number | undefined) {
-    if (!id) return
-    setDeleteLoading(true)
+    if (!id) return;
+    setDeleteLoading(true);
     try {
-      await axios.delete(`/${userID}/expenses/${id}`)
-      toast.success("Branch Expense Deleted")
+      await axios.delete(`/${userID}/expenses/${id}`);
+      toast.success("Branch Expense Deleted");
       const startDate = moment()
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
-      const endDate = moment().endOf("month").endOf("day").utc().toISOString()
-      await fetchData(startDate, endDate)
+        .toISOString();
+      const endDate = moment().endOf("month").endOf("day").utc().toISOString();
+      await fetchData(startDate, endDate);
     } finally {
-      setDeleteLoading(false)
-      setShowConfirmation(false)
-      setVisible(false)
-      setImageURL(null)
+      setDeleteLoading(false);
+      setShowConfirmation(false);
+      setVisible(false);
+      setImageURL(null);
     }
   }
 
-  const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0)
+  const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
@@ -442,29 +442,29 @@ export default function EmployeeBranchExpenses() {
           columns={columns}
           data={data}
           onRowClick={(val, e) => {
-            setImageURL(val)
-            setVisible(true)
+            setImageURL(val);
+            setVisible(true);
           }}
           filter
           onFilterPress={() => setFilterVisible(true)}
           reset
           resetLoading={resetLoading}
           onResetPress={async () => {
-            setResetLoading(true)
+            setResetLoading(true);
             const startDate = momentT
               .tz(TIMEZONE)
               .startOf("month")
               .startOf("day")
               .utc()
-              .toISOString()
+              .toISOString();
             const endDate = momentT
               .tz(TIMEZONE)
               .endOf("month")
               .endOf("day")
               .utc()
-              .toISOString()
-            await fetchData(startDate, endDate)
-            setResetLoading(false)
+              .toISOString();
+            await fetchData(startDate, endDate);
+            setResetLoading(false);
           }}
         />
       </section>
@@ -473,7 +473,7 @@ export default function EmployeeBranchExpenses() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end)
+          await fetchData(val.start, val.end);
         }}
       />
 
@@ -489,8 +489,13 @@ export default function EmployeeBranchExpenses() {
               .startOf("day")
               .utc()
               .toISOString(),
-            momentT.tz(TIMEZONE).endOf("month").endOf("day").utc().toISOString()
-          )
+            momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString(),
+          );
         }}
       />
 
@@ -503,17 +508,17 @@ export default function EmployeeBranchExpenses() {
         date={imageURL?.date}
       />
     </div>
-  )
+  );
 }
 type ImageSheetProps = {
-  visible: boolean
-  onClose: () => void
-  img: string | null
-  submittedBy: string | null
-  onDelete: () => void
-  loading?: boolean
-  date: string | Date | undefined
-}
+  visible: boolean;
+  onClose: () => void;
+  img: string | null;
+  submittedBy: string | null;
+  onDelete: () => void;
+  loading?: boolean;
+  date: string | Date | undefined;
+};
 
 const ImageSheet = ({
   visible,
@@ -524,17 +529,17 @@ const ImageSheet = ({
   loading,
   date,
 }: ImageSheetProps) => {
-  const { isAdmin, branch_expenses_delete_access } = useUserDetail()
+  const { isAdmin, branch_expenses_delete_access } = useUserDetail();
 
-  const hasPermission = isAdmin || branch_expenses_delete_access
+  const hasPermission = isAdmin || branch_expenses_delete_access;
 
   const isCurrentOrFutureMonth =
-    date && !moment(date).startOf("day").isBefore(moment().startOf("month"))
+    date && !moment(date).startOf("day").isBefore(moment().startOf("month"));
 
-  const isAllowed = hasPermission && isCurrentOrFutureMonth
+  const isAllowed = hasPermission && isCurrentOrFutureMonth;
 
   function handleClose() {
-    onClose()
+    onClose();
   }
 
   return (
@@ -596,17 +601,17 @@ const ImageSheet = ({
         </div>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 const formSchema = z.object({
   note: z.string().min(1, { message: "TID is required." }),
   amount: z.coerce.number<number>().min(0, "Amount is required"),
   date: z.date({ error: "Date is required." }),
   image: z.string().min(1, { message: "Image is required." }),
-})
+});
 
-type ExpenseFormValues = z.infer<typeof formSchema>
+type ExpenseFormValues = z.infer<typeof formSchema>;
 
 export const AddExpensesDialog = ({
   visible,
@@ -614,13 +619,13 @@ export const AddExpensesDialog = ({
   onRefresh,
   user_id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  user_id: number | null | string
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  user_id: number | null | string;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { state: OfficeState } = useContext(OfficeContext)!
+  const [loading, setLoading] = useState(false);
+  const { state: OfficeState } = useContext(OfficeContext)!;
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(formSchema),
@@ -630,40 +635,40 @@ export const AddExpensesDialog = ({
       date: undefined,
       image: "",
     },
-  })
+  });
 
   async function onSubmit(values: ExpenseFormValues) {
-    setLoading(true)
+    setLoading(true);
     try {
       if (values.image) {
         const name = `${OfficeState.value.data}/Expenses/${moment()
           .valueOf()
-          .toString()}.png`
-        const imgRes = await UploadImage(values.image, name)
+          .toString()}.png`;
+        const imgRes = await UploadImage(values.image, name);
         const response = await axios.post(`/${user_id}/expenses`, {
           ...values,
           submitted_by: user_id,
           image: name,
-        })
-        await onRefresh()
-        handleClose(false)
+        });
+        await onRefresh();
+        handleClose(false);
       } else {
         const response = await axios.post(`/${user_id}/expenses`, {
           ...values,
           submitted_by: user_id,
-        })
-        await onRefresh()
-        handleClose(false)
+        });
+        await onRefresh();
+        handleClose(false);
       }
     } catch (error) {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    setLoading(false)
-    onClose(val)
+    form.reset();
+    setLoading(false);
+    onClose(val);
   }
 
   return (
@@ -785,5 +790,5 @@ export const AddExpensesDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

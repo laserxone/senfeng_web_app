@@ -1,7 +1,7 @@
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -10,60 +10,62 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { OldRecordProps } from "@/lib/types"
-import { zodResolver } from "@hookform/resolvers/zod"
-import moment from "moment"
-import Link from "next/link"
-import { useState } from "react"
-import { DateRange } from "react-day-picker"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
-import AppCalendarRange from "@/components/features/calendar/app-calendar-range"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { OldRecordProps } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import Link from "next/link";
+import { useState } from "react";
+import { DateRange } from "react-day-picker";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import AppCalendarRange from "@/components/features/calendar/app-calendar-range";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
 
 const formSchema = z.object({
   start: z.date({ error: "Start date is required." }),
   end: z.date({ error: "End date is required." }),
   condition: z.string({ error: "type is required" }),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 const OldRecordSheet = ({
   visible,
   onClose,
   user_id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  user_id: number | string
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  user_id: number | string;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [sendTo, setSendTo] = useState<number | null>(null)
-  const [data, setData] = useState<OldRecordProps[]>([])
-  const { userID, base_route } = useUserDetail()
-  const [sendLoading, setSendLoading] = useState(false)
-  const [filterValue, setFilterValue] = useState("All")
-  const [rangeDate, setRangeDate] = useState<DateRange | null | undefined>(null)
+  const [loading, setLoading] = useState(false);
+  const [sendTo, setSendTo] = useState<number | null>(null);
+  const [data, setData] = useState<OldRecordProps[]>([]);
+  const { userID, base_route } = useUserDetail();
+  const [sendLoading, setSendLoading] = useState(false);
+  const [filterValue, setFilterValue] = useState("All");
+  const [rangeDate, setRangeDate] = useState<DateRange | null | undefined>(
+    null,
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,91 +74,91 @@ const OldRecordSheet = ({
       end: moment().endOf("month").toDate(),
       condition: "All",
     },
-  })
+  });
 
   async function onSubmit(values: FormValues) {
-    if (!user_id) return
-    setData([])
-    setRangeDate(null)
-    setLoading(true)
-    let start = values.start.toISOString()
-    let end = values.end.toISOString()
-    let type = values.condition
+    if (!user_id) return;
+    setData([]);
+    setRangeDate(null);
+    setLoading(true);
+    let start = values.start.toISOString();
+    let end = values.end.toISOString();
+    let type = values.condition;
 
     try {
-      let query = `/${user_id}/feedback?start_date=${start}&end_date=${end}`
+      let query = `/${user_id}/feedback?start_date=${start}&end_date=${end}`;
       if (type === "Customer") {
-        query += "&member=FALSE"
+        query += "&member=FALSE";
       } else if (type === "Member") {
-        query += "&member=TRUE"
+        query += "&member=TRUE";
       }
-      const response = await axios.get(query)
+      const response = await axios.get(query);
 
-      setData(response.data)
+      setData(response.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleClose(val: boolean) {
-    onClose(val)
-    handleClear()
+    onClose(val);
+    handleClear();
   }
 
   function handleClear() {
     form.reset({
       start: moment().startOf("month").toDate(),
       end: moment().endOf("month").toDate(),
-    })
-    setData([])
+    });
+    setData([]);
   }
 
   async function handleSendReport(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault()
-    setSendLoading(true)
+    e.preventDefault();
+    setSendLoading(true);
 
     try {
       const response = await axios.post(`/${userID}/conversations`, {
         user1: userID,
         user2: sendTo,
-      })
+      });
       if (response.data?.id) {
-        let formData = { type: "feedback", content: visibleData }
-        const startDate = form.getValues("start")
-        const endDate = form.getValues("end")
+        let formData = { type: "feedback", content: visibleData };
+        const startDate = form.getValues("start");
+        const endDate = form.getValues("end");
 
         await axios
           .post(`/${userID}/conversations/${response.data?.id}`, {
             senderId: userID,
             message: `Report ${moment(startDate).format(
-              "YYYY-MM-DD"
+              "YYYY-MM-DD",
             )} to ${moment(endDate).format("YYYY-MM-DD")}`,
             data: JSON.stringify(formData),
           })
           .then(() => {
-            toast.success("Report sent")
-          })
+            toast.success("Report sent");
+          });
       }
     } finally {
-      setSendLoading(false)
+      setSendLoading(false);
     }
   }
 
-  const uniqueUserNames = [...new Set(data.map((item) => item.user_name))]
+  const uniqueUserNames = [...new Set(data.map((item) => item.user_name))];
 
   const visibleData = data
     .filter(
-      (item) => filterValue === "All" || item.user_name.includes(filterValue)
+      (item) => filterValue === "All" || item.user_name.includes(filterValue),
     )
     .filter((item) => {
       if (rangeDate?.from && rangeDate?.to) {
-        const start = moment(rangeDate.from).startOf("day")
-        const end = moment(rangeDate.to).endOf("day")
+        const start = moment(rangeDate.from).startOf("day");
+        const end = moment(rangeDate.to).endOf("day");
 
-        return moment(item.feedback_date).isBetween(start, end, null, "[]")
+        return moment(item.feedback_date).isBetween(start, end, null, "[]");
       }
-      return true
-    })
+      return true;
+    });
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
@@ -357,7 +359,7 @@ const OldRecordSheet = ({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
-export default OldRecordSheet
+export default OldRecordSheet;

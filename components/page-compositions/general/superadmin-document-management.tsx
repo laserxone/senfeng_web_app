@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from "@/components/ui/context-menu"
+} from "@/components/ui/context-menu";
 import {
   Dialog,
   DialogClose,
@@ -14,17 +14,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { supabase } from "@/lib/supabaseClient"
-import { FileNode, FolderNode } from "@/lib/types"
-import { cn } from "@/lib/utils"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { supabase } from "@/lib/supabaseClient";
+import { FileNode, FolderNode } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
   ChevronDown,
   ChevronRight,
@@ -36,102 +36,109 @@ import {
   List,
   Plus,
   Upload,
-} from "lucide-react"
-import moment from "moment"
-import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import moment from "moment";
+import {
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { toast } from "sonner";
 
 export default function SuperadminDocumentManagement() {
-  const [folderTree, setFolderTree] = useState<FolderNode | null>(null)
+  const [folderTree, setFolderTree] = useState<FolderNode | null>(null);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
-    new Set(["root"])
-  )
+    new Set(["root"]),
+  );
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(
-    "root"
-  )
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [createFolderOpen, setCreateFolderOpen] = useState(false)
-  const [renameFolderOpen, setRenameFolderOpen] = useState(false)
-  const [folderToRename, setFolderToRename] = useState<FolderNode | null>(null)
+    "root",
+  );
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const [renameFolderOpen, setRenameFolderOpen] = useState(false);
+  const [folderToRename, setFolderToRename] = useState<FolderNode | null>(null);
   const [parentFolderForCreate, setParentFolderForCreate] =
-    useState<FolderNode | null>(null)
-  const [newFolderName, setNewFolderName] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [previewOpen, setPreviewOpen] = useState(false)
-  const [previewFile, setPreviewFile] = useState<FileNode | null>(null)
-  const [previewLoading, setPreviewLoading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+    useState<FolderNode | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<FileNode | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadProgress, setUploadProgress] = useState<{
-    file: string
-    progress: number
-  } | null>(null)
+    file: string;
+    progress: number;
+  } | null>(null);
   const selectedFolder = selectedFolderId
     ? folderTree
       ? findFolderById(folderTree, selectedFolderId)
       : null
-    : null
+    : null;
   const breadcrumbPath = selectedFolderId
     ? folderTree
       ? getFolderPath(folderTree, selectedFolderId) || []
       : []
-    : []
-  const [workingFile, setWorkingFile] = useState<string[]>([])
-  const [workingFolder, setWorkingFolder] = useState<string[]>([])
-  const { userID, name, email } = useUserDetail()
-  const [newFileName, setNewFileName] = useState("")
+    : [];
+  const [workingFile, setWorkingFile] = useState<string[]>([]);
+  const [workingFolder, setWorkingFolder] = useState<string[]>([]);
+  const { userID, name, email } = useUserDetail();
+  const [newFileName, setNewFileName] = useState("");
   const [selectedFileForRename, setSelectedFileForRename] =
-    useState<FileNode | null>(null)
+    useState<FileNode | null>(null);
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
     axios.get(`/${userID}/cloud/folder`).then((response) => {
-      setFolderTree(response.data)
-    })
+      setFolderTree(response.data);
+    });
   }
 
   const handleToggleFolder = useCallback((folderId: string) => {
     setExpandedFolders((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(folderId)) {
-        next.delete(folderId)
+        next.delete(folderId);
       } else {
-        next.add(folderId)
+        next.add(folderId);
       }
-      return next
-    })
-  }, [])
+      return next;
+    });
+  }, []);
 
   const handleSelectFolder = useCallback((folder: FolderNode) => {
-    setSelectedFolderId(folder.id)
+    setSelectedFolderId(folder.id);
 
     setExpandedFolders((prev) => {
-      const next = new Set(prev)
-      next.add(folder.id)
-      return next
-    })
-  }, [])
+      const next = new Set(prev);
+      next.add(folder.id);
+      return next;
+    });
+  }, []);
 
   const handleOpenSubfolder = useCallback(
     (folder: FolderNode) => {
-      handleSelectFolder(folder)
-      const path = folderTree ? getFolderPath(folderTree, folder.id) : null
+      handleSelectFolder(folder);
+      const path = folderTree ? getFolderPath(folderTree, folder.id) : null;
       if (path) {
         setExpandedFolders((prev) => {
-          const next = new Set(prev)
-          path.forEach((f) => next.add(f.id))
-          return next
-        })
+          const next = new Set(prev);
+          path.forEach((f) => next.add(f.id));
+          return next;
+        });
       }
     },
-    [folderTree, handleSelectFolder]
-  )
+    [folderTree, handleSelectFolder],
+  );
 
   const handleCreateFolder = useCallback(() => {
-    if (!newFolderName.trim() || !parentFolderForCreate) return
-    setLoading(true)
+    if (!newFolderName.trim() || !parentFolderForCreate) return;
+    setLoading(true);
     axios
       .post(`/${userID}/cloud/folder`, {
         name: newFolderName,
@@ -141,9 +148,9 @@ export default function SuperadminDocumentManagement() {
             : parentFolderForCreate?.id,
       })
       .then(async (response) => {
-        setNewFolderName("")
+        setNewFolderName("");
         if (!response.data?.id) {
-          await fetchData()
+          await fetchData();
         } else {
           const newFolder: FolderNode = {
             id: response.data?.id,
@@ -151,32 +158,32 @@ export default function SuperadminDocumentManagement() {
             parentId: parentFolderForCreate.id,
             children: [],
             files: [],
-          }
+          };
 
           const updateTree = (node: FolderNode): FolderNode => {
             if (node.id === parentFolderForCreate.id) {
-              return { ...node, children: [...node.children, newFolder] }
+              return { ...node, children: [...node.children, newFolder] };
             }
-            return { ...node, children: node.children.map(updateTree) }
-          }
-          if (folderTree) setFolderTree(updateTree(folderTree))
+            return { ...node, children: node.children.map(updateTree) };
+          };
+          if (folderTree) setFolderTree(updateTree(folderTree));
           setExpandedFolders(
-            (prev) => new Set([...prev, parentFolderForCreate.id])
-          )
-          setNewFolderName("")
-          setCreateFolderOpen(false)
-          setParentFolderForCreate(null)
+            (prev) => new Set([...prev, parentFolderForCreate.id]),
+          );
+          setNewFolderName("");
+          setCreateFolderOpen(false);
+          setParentFolderForCreate(null);
         }
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }, [newFolderName, parentFolderForCreate, folderTree])
+        setLoading(false);
+      });
+  }, [newFolderName, parentFolderForCreate, folderTree]);
 
   const handleRenameFolder = useCallback(() => {
-    if (!newFolderName.trim() || !folderToRename) return
+    if (!newFolderName.trim() || !folderToRename) return;
 
-    setLoading(true)
+    setLoading(true);
 
     axios
       .put(`/${userID}/cloud/folder/${folderToRename?.id}`, {
@@ -185,215 +192,215 @@ export default function SuperadminDocumentManagement() {
       .then(async () => {
         const updateTree = (node: FolderNode): FolderNode => {
           if (node.id === folderToRename.id) {
-            return { ...node, name: newFolderName.trim() }
+            return { ...node, name: newFolderName.trim() };
           }
-          return { ...node, children: node.children.map(updateTree) }
-        }
-        if (folderTree) setFolderTree(updateTree(folderTree))
-        setNewFolderName("")
-        setRenameFolderOpen(false)
-        setFolderToRename(null)
+          return { ...node, children: node.children.map(updateTree) };
+        };
+        if (folderTree) setFolderTree(updateTree(folderTree));
+        setNewFolderName("");
+        setRenameFolderOpen(false);
+        setFolderToRename(null);
       })
       .finally(() => {
-        setLoading(false)
-      })
-  }, [newFolderName, folderToRename, folderTree])
+        setLoading(false);
+      });
+  }, [newFolderName, folderToRename, folderTree]);
 
   const handleDeleteFolder = useCallback(
     async (folder: FolderNode) => {
-      setWorkingFolder((prev) => [...prev, folder.id])
+      setWorkingFolder((prev) => [...prev, folder.id]);
       try {
-        await axios.delete(`/${userID}/cloud/folder/${folder.id}`)
+        await axios.delete(`/${userID}/cloud/folder/${folder.id}`);
         const removeFromTree = (node: FolderNode): FolderNode => {
           return {
             ...node,
             children: node.children
               .filter((child) => child.id !== folder.id)
               .map(removeFromTree),
-          }
-        }
-        if (folderTree) setFolderTree(removeFromTree(folderTree))
+          };
+        };
+        if (folderTree) setFolderTree(removeFromTree(folderTree));
         if (selectedFolderId === folder.id) {
-          setSelectedFolderId(folder.parentId || "root")
+          setSelectedFolderId(folder.parentId || "root");
         }
       } finally {
-        setWorkingFolder((prev) => prev.filter((item) => item !== folder.id))
+        setWorkingFolder((prev) => prev.filter((item) => item !== folder.id));
       }
     },
-    [folderTree, selectedFolderId]
-  )
+    [folderTree, selectedFolderId],
+  );
 
   const openRenameDialog = useCallback((folder: FolderNode) => {
-    setFolderToRename(folder)
-    setNewFolderName(folder.name)
-    setRenameFolderOpen(true)
-  }, [])
+    setFolderToRename(folder);
+    setNewFolderName(folder.name);
+    setRenameFolderOpen(true);
+  }, []);
 
   const openCreateSubfolderDialog = useCallback((parentFolder: FolderNode) => {
-    setParentFolderForCreate(parentFolder)
-    setNewFolderName("")
-    setCreateFolderOpen(true)
-  }, [])
+    setParentFolderForCreate(parentFolder);
+    setNewFolderName("");
+    setCreateFolderOpen(true);
+  }, []);
 
   const handleRename = useCallback(async (file: FileNode) => {
-    setSelectedFileForRename(file)
-    const nameWithoutExtension = file?.name?.replace(/\.[^/.]+$/, "")
-    setNewFileName(nameWithoutExtension)
-  }, [])
+    setSelectedFileForRename(file);
+    const nameWithoutExtension = file?.name?.replace(/\.[^/.]+$/, "");
+    setNewFileName(nameWithoutExtension);
+  }, []);
 
   function getExtension(filename?: string) {
-    return filename?.includes(".") ? filename.split(".").pop() : ""
+    return filename?.includes(".") ? filename.split(".").pop() : "";
   }
 
   const handleRenameFile = useCallback(async () => {
-    if (!selectedFileForRename) return
-    if (!newFileName.trim()) return
+    if (!selectedFileForRename) return;
+    if (!newFileName.trim()) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const oldPath = selectedFileForRename.path
+      const oldPath = selectedFileForRename.path;
 
-      const ext = getExtension(oldPath)
-      const cleanNewFileName = newFileName.trim()
+      const ext = getExtension(oldPath);
+      const cleanNewFileName = newFileName.trim();
 
-      const finalName = ext ? `${cleanNewFileName}.${ext}` : cleanNewFileName
+      const finalName = ext ? `${cleanNewFileName}.${ext}` : cleanNewFileName;
 
-      const folderPath = oldPath.split("/").slice(0, -1).join("/")
-      const newPath = folderPath ? `${folderPath}/${finalName}` : finalName
+      const folderPath = oldPath.split("/").slice(0, -1).join("/");
+      const newPath = folderPath ? `${folderPath}/${finalName}` : finalName;
 
       const { error: moveError } = await supabase.storage
         .from("superadmin.documents")
-        .move(oldPath, newPath)
+        .move(oldPath, newPath);
 
       if (moveError) {
-        throw moveError
+        throw moveError;
       }
 
       await axios.put(`/${userID}/cloud/document/${selectedFileForRename.id}`, {
         path: newPath,
-      })
+      });
 
-      await fetchData()
+      await fetchData();
 
-      setSelectedFileForRename(null)
-      setNewFileName("")
+      setSelectedFileForRename(null);
+      setNewFileName("");
     } catch (error: any) {
-      toast.error(error?.message || "Error renaming file")
+      toast.error(error?.message || "Error renaming file");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [newFileName, folderTree, selectedFileForRename])
+  }, [newFileName, folderTree, selectedFileForRename]);
 
   const handlePreview = useCallback(async (file: FileNode) => {
-    setPreviewLoading(true)
-    setPreviewOpen(true)
+    setPreviewLoading(true);
+    setPreviewOpen(true);
 
     try {
       const { data } = supabase.storage
         .from("superadmin.documents")
-        .getPublicUrl(file.path)
+        .getPublicUrl(file.path);
       if (data?.publicUrl) {
-        setPreviewFile({ ...file, url: data.publicUrl })
+        setPreviewFile({ ...file, url: data.publicUrl });
       }
     } catch (error) {
-      console.error("Error downloading file", error)
+      console.error("Error downloading file", error);
     } finally {
-      setPreviewLoading(false)
+      setPreviewLoading(false);
     }
-  }, [])
+  }, []);
 
   const handleDownload = useCallback(async (file: FileNode) => {
-    setWorkingFile((prev) => [...prev, file.id])
+    setWorkingFile((prev) => [...prev, file.id]);
     const { data, error } = await supabase.storage
       .from("superadmin.documents")
-      .download(file.path)
+      .download(file.path);
     if (error) {
-      console.error("Error downloading file", error)
-      return
+      console.error("Error downloading file", error);
+      return;
     }
-    const url = URL.createObjectURL(data)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = file.path
-    link.click()
-    URL.revokeObjectURL(url)
-    setWorkingFile((prev) => prev.filter((item) => item !== file.id))
-  }, [])
+    const url = URL.createObjectURL(data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.path;
+    link.click();
+    URL.revokeObjectURL(url);
+    setWorkingFile((prev) => prev.filter((item) => item !== file.id));
+  }, []);
 
   const handleDeleteFile = useCallback(
     async (file: FileNode) => {
-      const id = file.id
-      setWorkingFile((prev) => [...prev, id])
+      const id = file.id;
+      setWorkingFile((prev) => [...prev, id]);
 
       try {
-        await axios.delete(`/${userID}/cloud/document/${id}`)
-        const paths = [file.path]
-        if (file.thumbnail) paths.push(file.thumbnail)
-        await supabase.storage.from("superadmin.documents").remove(paths)
+        await axios.delete(`/${userID}/cloud/document/${id}`);
+        const paths = [file.path];
+        if (file.thumbnail) paths.push(file.thumbnail);
+        await supabase.storage.from("superadmin.documents").remove(paths);
 
         const updateTree = (node: FolderNode): FolderNode => {
           if (node.id === file.folderId) {
             return {
               ...node,
               files: node.files.filter((f) => f.id !== file.id),
-            }
+            };
           }
-          return { ...node, children: node.children.map(updateTree) }
-        }
-        if (folderTree) setFolderTree(updateTree(folderTree))
+          return { ...node, children: node.children.map(updateTree) };
+        };
+        if (folderTree) setFolderTree(updateTree(folderTree));
       } finally {
-        setWorkingFile((prev) => prev.filter((item) => item !== id))
+        setWorkingFile((prev) => prev.filter((item) => item !== id));
       }
     },
-    [folderTree]
-  )
+    [folderTree],
+  );
 
   const handleFileUpload = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files
-      if (!files?.length || !selectedFolder) return
+      const files = e.target.files;
+      if (!files?.length || !selectedFolder) return;
 
-      const file = files[0]
-      setUploadProgress({ file: file.name, progress: 0 })
-      const type = getFileType(file.name)
+      const file = files[0];
+      setUploadProgress({ file: file.name, progress: 0 });
+      const type = getFileType(file.name);
 
-      let thumbnail: string | undefined = undefined
+      let thumbnail: string | undefined = undefined;
 
       if (type === "video") {
         try {
-          const blob = await getVideoThumbnailFromFile(file)
+          const blob = await getVideoThumbnailFromFile(file);
           if (blob) {
-            const thumbnailPath = `thumbnails/${file.name}`
+            const thumbnailPath = `thumbnails/${file.name}`;
             const { error } = await supabase.storage
               .from("superadmin.documents")
               .upload(thumbnailPath, blob, {
                 contentType: "image/jpeg",
-              })
+              });
             if (!error) {
-              thumbnail = thumbnailPath
+              thumbnail = thumbnailPath;
             } else {
-              console.log("Thumbnail upload failed", error)
+              console.log("Thumbnail upload failed", error);
             }
           }
         } catch (error) {
-          console.log("Thumbnail generation failed", error)
+          console.log("Thumbnail generation failed", error);
         }
       }
 
-      let res: { path?: string } = {}
+      let res: { path?: string } = {};
       try {
         res = await uploadWithProgress(file, (p) =>
-          setUploadProgress({ file: file.name, progress: p })
-        )
+          setUploadProgress({ file: file.name, progress: p }),
+        );
       } catch (err) {
         if (thumbnail) {
           await supabase.storage
             .from("superadmin.documents")
-            .remove([thumbnail])
+            .remove([thumbnail]);
         }
-        setUploadProgress(null)
-        return
+        setUploadProgress(null);
+        return;
       }
 
       if (res.path) {
@@ -406,12 +413,12 @@ export default function SuperadminDocumentManagement() {
             type,
             size: file.size,
             thumbnail_path: thumbnail,
-          })
+          });
 
-          const returningId = response.data?.id
+          const returningId = response.data?.id;
 
           if (!returningId) {
-            await fetchData()
+            await fetchData();
           } else {
             const newFile: FileNode = {
               id: returningId,
@@ -423,35 +430,35 @@ export default function SuperadminDocumentManagement() {
               createdAt: new Date().toISOString().split("T")[0],
               addedBy: name,
               thumbnail,
-            }
+            };
 
             const updateTree = (node: FolderNode): FolderNode => {
               if (node.id === selectedFolder.id) {
-                return { ...node, files: [...node.files, newFile] }
+                return { ...node, files: [...node.files, newFile] };
               }
-              return { ...node, children: node.children.map(updateTree) }
-            }
-            if (folderTree) setFolderTree(updateTree(folderTree))
+              return { ...node, children: node.children.map(updateTree) };
+            };
+            if (folderTree) setFolderTree(updateTree(folderTree));
           }
         } catch (error) {
-          console.log(error)
+          console.log(error);
           await supabase.storage
             .from("superadmin.documents")
-            .remove([res.path, ...(thumbnail ? [thumbnail] : [])])
+            .remove([res.path, ...(thumbnail ? [thumbnail] : [])]);
         } finally {
-          setUploadProgress(null)
-          if (fileInputRef.current) fileInputRef.current.value = ""
+          setUploadProgress(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
         }
       }
     },
-    [selectedFolder, folderTree]
-  )
+    [selectedFolder, folderTree],
+  );
 
   const officeFile = previewFile
     ? previewFile?.path
         ?.toLowerCase()
         ?.match(/\.(xlsx|xls|csv|doc|docx|ppt|pptx)$/)
-    : false
+    : false;
 
   return (
     <div className="flex h-screen w-full flex-col bg-background">
@@ -536,7 +543,7 @@ export default function SuperadminDocumentManagement() {
               <button
                 className={cn(
                   "rounded p-1.5 transition-colors",
-                  viewMode === "grid" ? "bg-muted" : "hover:bg-muted/50"
+                  viewMode === "grid" ? "bg-muted" : "hover:bg-muted/50",
                 )}
                 onClick={() => setViewMode("grid")}
               >
@@ -545,7 +552,7 @@ export default function SuperadminDocumentManagement() {
               <button
                 className={cn(
                   "rounded p-1.5 transition-colors",
-                  viewMode === "list" ? "bg-muted" : "hover:bg-muted/50"
+                  viewMode === "list" ? "bg-muted" : "hover:bg-muted/50",
                 )}
                 onClick={() => setViewMode("list")}
               >
@@ -775,7 +782,7 @@ export default function SuperadminDocumentManagement() {
               ) : (
                 <iframe
                   src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-                    previewFile.url || ""
+                    previewFile.url || "",
                   )}`}
                   style={{
                     border: "none",
@@ -824,7 +831,7 @@ export default function SuperadminDocumentManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 const FolderTreeItem = memo(
@@ -840,24 +847,24 @@ const FolderTreeItem = memo(
     onCreateSubfolder,
     workingFolder,
   }: {
-    folder: FolderNode
-    level?: number
-    expandedFolders: Set<string>
-    selectedFolderId: string | null
-    onToggle: (id: string) => void
-    onSelect: (folder: FolderNode) => void
-    onRename: (folder: FolderNode) => void
-    onDelete: (folder: FolderNode) => void
-    onCreateSubfolder: (parentFolder: FolderNode) => void
-    workingFolder: string[]
+    folder: FolderNode;
+    level?: number;
+    expandedFolders: Set<string>;
+    selectedFolderId: string | null;
+    onToggle: (id: string) => void;
+    onSelect: (folder: FolderNode) => void;
+    onRename: (folder: FolderNode) => void;
+    onDelete: (folder: FolderNode) => void;
+    onCreateSubfolder: (parentFolder: FolderNode) => void;
+    workingFolder: string[];
   }) => {
-    const isExpanded = expandedFolders.has(folder.id)
-    const isSelected = selectedFolderId === folder.id
-    const hasChildren = folder.children.length > 0
-    const { isAdmin } = useUserDetail()
+    const isExpanded = expandedFolders.has(folder.id);
+    const isSelected = selectedFolderId === folder.id;
+    const hasChildren = folder.children.length > 0;
+    const { isAdmin } = useUserDetail();
     const isWorking =
       workingFolder.includes(folder.id) ||
-      workingFolder.includes(folder.parentId as string)
+      workingFolder.includes(folder.parentId as string);
 
     return (
       <div>
@@ -866,7 +873,7 @@ const FolderTreeItem = memo(
             <div
               className={cn(
                 "group flex cursor-pointer items-center gap-1 rounded-md px-2 py-1.5 transition-colors",
-                isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted"
+                isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted",
               )}
               style={{ paddingLeft: `${level * 16 + 8}px` }}
               onClick={() => !isWorking && onSelect(folder)}
@@ -874,12 +881,12 @@ const FolderTreeItem = memo(
               <button
                 className={cn(
                   "rounded p-0.5 transition-colors hover:bg-accent",
-                  !hasChildren && "invisible"
+                  !hasChildren && "invisible",
                 )}
                 disabled={isWorking}
                 onClick={(e) => {
-                  e.stopPropagation()
-                  onToggle(folder.id)
+                  e.stopPropagation();
+                  onToggle(folder.id);
                 }}
               >
                 {isExpanded ? (
@@ -963,10 +970,10 @@ const FolderTreeItem = memo(
           </div>
         )}
       </div>
-    )
-  }
-)
-FolderTreeItem.displayName = "FolderTreeItem"
+    );
+  },
+);
+FolderTreeItem.displayName = "FolderTreeItem";
 
 const FileGridItem = memo(
   ({
@@ -977,15 +984,15 @@ const FileGridItem = memo(
     workingFile,
     onRename,
   }: {
-    file: FileNode
-    onPreview: (file: FileNode) => void
-    onDownload: (file: FileNode) => void
-    onDelete: (file: FileNode) => void
-    workingFile: string[]
-    onRename: (file: FileNode) => void
+    file: FileNode;
+    onPreview: (file: FileNode) => void;
+    onDownload: (file: FileNode) => void;
+    onDelete: (file: FileNode) => void;
+    workingFile: string[];
+    onRename: (file: FileNode) => void;
   }) => {
-    const { isAdmin } = useUserDetail()
-    const isWorking = workingFile.includes(file.id)
+    const { isAdmin } = useUserDetail();
+    const isWorking = workingFile.includes(file.id);
     return (
       <ContextMenu modal={false}>
         <ContextMenuTrigger asChild>
@@ -1033,62 +1040,62 @@ const FileGridItem = memo(
           )}
         </ContextMenuContent>
       </ContextMenu>
-    )
-  }
-)
+    );
+  },
+);
 
-FileGridItem.displayName = "FileGridItem"
+FileGridItem.displayName = "FileGridItem";
 
 const RenderFileIcon = ({
   file,
   size = "h-5 w-5",
 }: {
-  file: FileNode
-  size?: string
+  file: FileNode;
+  size?: string;
 }) => {
-  const [imageLoading, setImageLoading] = useState(false)
-  const path = file.path
-  const [url, setUrl] = useState<string>("/file-icon.png")
+  const [imageLoading, setImageLoading] = useState(false);
+  const path = file.path;
+  const [url, setUrl] = useState<string>("/file-icon.png");
 
   function generateImage(p?: string) {
-    if (!p) return
+    if (!p) return;
     try {
       const { data } = supabase.storage
         .from("superadmin.documents")
-        .getPublicUrl(p)
+        .getPublicUrl(p);
       if (data.publicUrl) {
-        setUrl(data.publicUrl)
-        setImageLoading(false)
+        setUrl(data.publicUrl);
+        setImageLoading(false);
       }
     } catch (err) {
-      console.error("Error generating video thumbnail", err)
-      setImageLoading(false)
+      console.error("Error generating video thumbnail", err);
+      setImageLoading(false);
     }
   }
 
   useEffect(() => {
     if (file) {
       if (file.type === "image") {
-        generateImage(file.path)
+        generateImage(file.path);
       } else if (file?.type === "video") {
-        generateImage(file?.thumbnail)
+        generateImage(file?.thumbnail);
       } else if (file?.type === "pdf") {
-        setUrl("/pdf-icon.png")
-      } else if (file?.type?.includes("doc")) setUrl("/docx-icon.png")
-      else if (file?.type?.includes("excel")) setUrl("/xlsx-icon.png")
-      else if (file?.type?.includes("ppt")) setUrl("/ppt-icon.png")
+        setUrl("/pdf-icon.png");
+      } else if (file?.type?.includes("doc")) setUrl("/docx-icon.png");
+      else if (file?.type?.includes("excel")) setUrl("/xlsx-icon.png");
+      else if (file?.type?.includes("ppt")) setUrl("/ppt-icon.png");
       else {
-        setUrl("/file-icon.png")
+        setUrl("/file-icon.png");
       }
     }
-  }, [file])
+  }, [file]);
 
   return imageLoading ? (
     <Spinner />
   ) : (
     <img src={url} alt={`${path}-file`} className={`${size} object-contain`} />
-  )
-}
+  );
+};
 const FileListItem = memo(
   ({
     file,
@@ -1098,15 +1105,15 @@ const FileListItem = memo(
     workingFile,
     onRename,
   }: {
-    file: FileNode
-    onPreview: (file: FileNode) => void
-    onDownload: (file: FileNode) => void
-    onDelete: (file: FileNode) => void
-    workingFile: string[]
-    onRename: (file: FileNode) => void
+    file: FileNode;
+    onPreview: (file: FileNode) => void;
+    onDownload: (file: FileNode) => void;
+    onDelete: (file: FileNode) => void;
+    workingFile: string[];
+    onRename: (file: FileNode) => void;
   }) => {
-    const { isAdmin } = useUserDetail()
-    const isWorking = workingFile.includes(file.id)
+    const { isAdmin } = useUserDetail();
+    const isWorking = workingFile.includes(file.id);
     return (
       <ContextMenu modal={false}>
         <ContextMenuTrigger asChild>
@@ -1158,10 +1165,10 @@ const FileListItem = memo(
           )}
         </ContextMenuContent>
       </ContextMenu>
-    )
-  }
-)
-FileListItem.displayName = "FileListItem"
+    );
+  },
+);
+FileListItem.displayName = "FileListItem";
 
 const SubfolderItem = memo(
   ({
@@ -1172,17 +1179,17 @@ const SubfolderItem = memo(
     onDelete,
     workingFolder,
   }: {
-    folder: FolderNode
-    viewMode: "grid" | "list"
-    onOpen: (folder: FolderNode) => void
-    onRename: (folder: FolderNode) => void
-    onDelete: (folder: FolderNode) => void
-    workingFolder: string[]
+    folder: FolderNode;
+    viewMode: "grid" | "list";
+    onOpen: (folder: FolderNode) => void;
+    onRename: (folder: FolderNode) => void;
+    onDelete: (folder: FolderNode) => void;
+    workingFolder: string[];
   }) => {
-    const { isAdmin } = useUserDetail()
+    const { isAdmin } = useUserDetail();
     const isWorking =
       workingFolder.includes(folder.id) ||
-      workingFolder.includes(folder.parentId as string)
+      workingFolder.includes(folder.parentId as string);
     if (viewMode === "grid") {
       return (
         <ContextMenu modal={false}>
@@ -1231,7 +1238,7 @@ const SubfolderItem = memo(
             )}
           </ContextMenuContent>
         </ContextMenu>
-      )
+      );
     }
 
     return (
@@ -1283,133 +1290,133 @@ const SubfolderItem = memo(
           )}
         </ContextMenuContent>
       </ContextMenu>
-    )
-  }
-)
-SubfolderItem.displayName = "SubfolderItem"
+    );
+  },
+);
+SubfolderItem.displayName = "SubfolderItem";
 
 const getFileType = (path: string) => {
-  const fileExt = path?.toLowerCase()
-  const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/)
-  const isVideo = fileExt?.match(/\.(mp4|mov|webm|mkv)$/)
+  const fileExt = path?.toLowerCase();
+  const isImage = fileExt?.match(/\.(jpg|jpeg|png|gif|webp)$/);
+  const isVideo = fileExt?.match(/\.(mp4|mov|webm|mkv)$/);
 
-  let type = "file"
+  let type = "file";
 
-  if (fileExt.includes("pdf")) type = "pdf"
-  else if (fileExt.includes("doc")) type = "doc"
-  else if (fileExt.includes("xls")) type = "excel"
-  else if (fileExt.includes("ppt")) type = "ppt"
-  else if (isImage) type = "image"
-  else if (isVideo) type = "video"
+  if (fileExt.includes("pdf")) type = "pdf";
+  else if (fileExt.includes("doc")) type = "doc";
+  else if (fileExt.includes("xls")) type = "excel";
+  else if (fileExt.includes("ppt")) type = "ppt";
+  else if (isImage) type = "image";
+  else if (isVideo) type = "video";
 
-  return type
-}
+  return type;
+};
 
 async function uploadWithProgress(
   file: File,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ): Promise<{ path: string }> {
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
+    const xhr = new XMLHttpRequest();
 
-    const filePath = file.name
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/superadmin.documents/${filePath}`
+    const filePath = file.name;
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/superadmin.documents/${filePath}`;
 
-    xhr.open("POST", url, true)
+    xhr.open("POST", url, true);
     xhr.setRequestHeader(
       "Authorization",
-      `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
-    )
-    xhr.setRequestHeader("Content-Type", file.type)
+      `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+    );
+    xhr.setRequestHeader("Content-Type", file.type);
 
-    let lastProgress = 0
+    let lastProgress = 0;
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
-        const percent = Math.round((event.loaded / event.total) * 100)
+        const percent = Math.round((event.loaded / event.total) * 100);
         if (percent !== lastProgress) {
-          lastProgress = percent
-          onProgress?.(percent)
+          lastProgress = percent;
+          onProgress?.(percent);
         }
       }
-    }
+    };
 
     xhr.onload = async () => {
       if (xhr.status === 200) {
-        resolve({ path: filePath })
+        resolve({ path: filePath });
       } else {
-        reject(xhr.response)
+        reject(xhr.response);
       }
-    }
+    };
 
-    xhr.onerror = () => reject("Upload failed")
+    xhr.onerror = () => reject("Upload failed");
 
-    xhr.send(file)
-  })
+    xhr.send(file);
+  });
 }
 
 async function getVideoThumbnailFromFile(file: File): Promise<Blob | null> {
-  const videoUrl = URL.createObjectURL(file)
+  const videoUrl = URL.createObjectURL(file);
 
-  const video = document.createElement("video")
-  video.src = videoUrl
-  video.muted = true
-
-  await new Promise<void>((resolve) => {
-    video.onloadeddata = () => resolve()
-  })
-
-  video.currentTime = Math.min(1, video.duration || 1)
+  const video = document.createElement("video");
+  video.src = videoUrl;
+  video.muted = true;
 
   await new Promise<void>((resolve) => {
-    video.onseeked = () => resolve()
-  })
+    video.onloadeddata = () => resolve();
+  });
 
-  const canvas = document.createElement("canvas")
-  canvas.width = 200
-  canvas.height = 200
+  video.currentTime = Math.min(1, video.duration || 1);
 
-  const ctx = canvas.getContext("2d")
-  if (!ctx) return null
+  await new Promise<void>((resolve) => {
+    video.onseeked = () => resolve();
+  });
 
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+  const canvas = document.createElement("canvas");
+  canvas.width = 200;
+  canvas.height = 200;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   const blob: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/jpeg", 0.7)
-  )
+    canvas.toBlob(resolve, "image/jpeg", 0.7),
+  );
 
   // ✅ cleanup (important)
-  URL.revokeObjectURL(videoUrl)
-  video.remove()
-  canvas.remove()
+  URL.revokeObjectURL(videoUrl);
+  video.remove();
+  canvas.remove();
 
-  return blob
+  return blob;
 }
 
 function findFolderById(node: FolderNode, id: string): FolderNode | null {
-  if (node.id === id) return node
+  if (node.id === id) return node;
   for (const child of node.children) {
-    const found = findFolderById(child, id)
-    if (found) return found
+    const found = findFolderById(child, id);
+    if (found) return found;
   }
-  return null
+  return null;
 }
 
 function getFolderPath(
   node: FolderNode,
   targetId: string,
-  path: FolderNode[] = []
+  path: FolderNode[] = [],
 ): FolderNode[] | null {
-  if (node.id === targetId) return [...path, node]
+  if (node.id === targetId) return [...path, node];
   for (const child of node.children) {
-    const found = getFolderPath(child, targetId, [...path, node])
-    if (found) return found
+    const found = getFolderPath(child, targetId, [...path, node]);
+    if (found) return found;
   }
-  return null
+  return null;
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B"
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }

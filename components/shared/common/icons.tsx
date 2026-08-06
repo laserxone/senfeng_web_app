@@ -54,7 +54,7 @@ import {
   ScrollText,
   ShieldCheck,
   Zap,
-} from "lucide-react"
+} from "lucide-react";
 
 export const Icons = {
   dashboard: LayoutDashboardIcon,
@@ -132,4 +132,4 @@ export const Icons = {
     </svg>
   ),
   check: Check,
-}
+};

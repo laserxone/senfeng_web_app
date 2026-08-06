@@ -1,101 +1,101 @@
-import { Button } from "@/components/ui/button"
-import { useMessages } from "@/hooks/use-messages"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import exportToExcel from "@/lib/exportToExcel"
-import { TriggerFirebase } from "@/lib/triggerFirebase"
-import { Messages, UserConversation } from "@/lib/types"
-import { Clock, Send } from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
-import { toast } from "sonner"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button";
+import { useMessages } from "@/hooks/use-messages";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import exportToExcel from "@/lib/exportToExcel";
+import { TriggerFirebase } from "@/lib/triggerFirebase";
+import { Messages, UserConversation } from "@/lib/types";
+import { Clock, Send } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
 
 type ChatComponentType = {
-  id: number | undefined
-  user: UserConversation | null | undefined
-  onSetLoading: (val: boolean) => void
-  stateLoading: boolean
-}
+  id: number | undefined;
+  user: UserConversation | null | undefined;
+  onSetLoading: (val: boolean) => void;
+  stateLoading: boolean;
+};
 const Chatcomponent = ({
   id,
   user = null,
   onSetLoading,
   stateLoading,
 }: ChatComponentType) => {
-  const { userID } = useUserDetail()
-  const { messages: realMessages, loading } = useMessages(id)
-  const [input, setInput] = useState("")
-  const [tempMessages, setTempMessages] = useState<Messages[]>([])
-  const bottomRef = useRef<HTMLDivElement | null>(null)
-  const [selectedContent, setSelectedContent] = useState<any | null>(null)
-  const [visibleCount, setVisibleCount] = useState(20)
+  const { userID } = useUserDetail();
+  const { messages: realMessages, loading } = useMessages(id);
+  const [input, setInput] = useState("");
+  const [tempMessages, setTempMessages] = useState<Messages[]>([]);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [selectedContent, setSelectedContent] = useState<any | null>(null);
+  const [visibleCount, setVisibleCount] = useState(20);
 
   useEffect(() => {
-    if (!id) return
-    onSetLoading(loading)
+    if (!id) return;
+    onSetLoading(loading);
     setTempMessages((prev) =>
       prev.filter((tempMsg) => {
         const existsInReal = realMessages.some((realMsg) => {
-          const realTime = new Date(realMsg.created_at).toISOString()
-          const tempTime = new Date(tempMsg.created_at).toISOString()
+          const realTime = new Date(realMsg.created_at).toISOString();
+          const tempTime = new Date(tempMsg.created_at).toISOString();
 
           return (
             realMsg.sender_id === tempMsg.sender_id &&
             realMsg.message === tempMsg.message &&
             realTime === tempTime
-          )
-        })
+          );
+        });
 
-        return !existsInReal
-      })
-    )
-  }, [realMessages])
+        return !existsInReal;
+      }),
+    );
+  }, [realMessages]);
 
   useEffect(() => {
     if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({ behavior: "smooth" })
+      bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [realMessages, tempMessages])
+  }, [realMessages, tempMessages]);
 
   useEffect(() => {
-    if (!userID || !realMessages.length) return
+    if (!userID || !realMessages.length) return;
     const unreadExists = realMessages.some(
-      (msg) => Number(msg.sender_id) !== Number(userID) && !msg.is_read
-    )
+      (msg) => Number(msg.sender_id) !== Number(userID) && !msg.is_read,
+    );
 
     if (unreadExists) {
-      markAsRead()
+      markAsRead();
     }
-  }, [realMessages])
+  }, [realMessages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return
+    if (!input.trim()) return;
 
-    const created = new Date()
+    const created = new Date();
 
-    const tempId = `temp-${Date.now()}`
+    const tempId = `temp-${Date.now()}`;
     const tempMessage = {
       id: tempId,
       message: input,
       created_at: created,
       sender_id: userID,
       pending: true,
-    }
+    };
 
-    setTempMessages((prev) => [...prev, tempMessage])
-    setInput("")
+    setTempMessages((prev) => [...prev, tempMessage]);
+    setInput("");
 
     axios
       .post(`/${userID}/conversations/${id}`, {
@@ -105,37 +105,37 @@ const Chatcomponent = ({
       })
       .then(() => {
         if (id && user?.id) {
-          TriggerFirebase(id.toString(), user?.id?.toString())
-          TriggerFirebase("", userID.toString())
+          TriggerFirebase(id.toString(), user?.id?.toString());
+          TriggerFirebase("", userID.toString());
         }
       })
       .catch(() => {
-        setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId))
-      })
-  }
+        setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+      });
+  };
 
   const markAsRead = async () => {
     try {
       await axios.put(`/${userID}/conversations/${id}/read`, {
         userId: user?.id,
-      })
+      });
     } catch (err) {
-      console.error("Failed to mark as read", err)
+      console.error("Failed to mark as read", err);
     }
 
     // TriggerFirebase(id.toString(), user?.id?.toString());
     // TriggerFirebase(id.toString(), userID?.toString());
-  }
+  };
 
   const visibleRealMessages = useMemo(() => {
-    return realMessages.slice(-visibleCount)
-  }, [realMessages, visibleCount])
+    return realMessages.slice(-visibleCount);
+  }, [realMessages, visibleCount]);
 
-  const combinedMessages = [...visibleRealMessages, ...tempMessages]
+  const combinedMessages = [...visibleRealMessages, ...tempMessages];
 
   const handleLoadMore = () => {
-    setVisibleCount((prev) => Math.min(prev + 20, realMessages.length))
-  }
+    setVisibleCount((prev) => Math.min(prev + 20, realMessages.length));
+  };
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-muted/30">
@@ -153,7 +153,7 @@ const Chatcomponent = ({
             </div>
           )}
           {combinedMessages.map((item, index) => {
-            const isMe = item.sender_id === userID
+            const isMe = item.sender_id === userID;
             return (
               <div
                 key={index}
@@ -172,7 +172,7 @@ const Chatcomponent = ({
                   {item.data && item.data.trim() && (
                     <Button
                       onClick={() => {
-                        setSelectedContent(JSON.parse(item.data))
+                        setSelectedContent(JSON.parse(item.data));
                       }}
                       variant="secondary"
                       size="sm"
@@ -193,7 +193,7 @@ const Chatcomponent = ({
                   )}
                 </span>
               </div>
-            )
+            );
           })}
 
           <div ref={bottomRef} />
@@ -207,8 +207,8 @@ const Chatcomponent = ({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleSend()
+                e.preventDefault();
+                handleSend();
               }
             }}
             placeholder="Type your message..."
@@ -227,8 +227,8 @@ const Chatcomponent = ({
         type={selectedContent ? selectedContent?.type : ""}
       />
     </div>
-  )
-}
+  );
+};
 
 const RenderSelectedContent = ({
   visible,
@@ -236,16 +236,16 @@ const RenderSelectedContent = ({
   data,
   type,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  data: any | null
-  type: string
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  data: any | null;
+  type: string;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { base_route, userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { base_route, userID } = useUserDetail();
 
   async function handleCreateExcel() {
-    setLoading(true)
+    setLoading(true);
 
     const headers = [
       "Name",
@@ -253,12 +253,12 @@ const RenderSelectedContent = ({
       "New Order",
       "Buying Price",
       "Image",
-    ]
+    ];
 
     try {
       if (data.length === 0) {
-        toast.info("Please select items first.")
-        return
+        toast.info("Please select items first.");
+        return;
       }
       await exportToExcel(
         headers,
@@ -273,12 +273,12 @@ const RenderSelectedContent = ({
         true,
         "",
         true,
-        userID
-      )
+        userID,
+      );
     } catch (error) {
-      toast.error("Error creating excel")
+      toast.error("Error creating excel");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -363,7 +363,7 @@ const RenderSelectedContent = ({
           </SheetHeader>
         </SheetContent>
       </Sheet>
-    )
+    );
   if (type === "neworder")
     return (
       <Sheet open={visible} onOpenChange={onClose}>
@@ -397,8 +397,8 @@ const RenderSelectedContent = ({
           </SheetHeader>
         </SheetContent>
       </Sheet>
-    )
-}
+    );
+};
 
 const RenderOtherStockItems = ({ item }: { item: any }) => {
   return (
@@ -414,7 +414,7 @@ const RenderOtherStockItems = ({ item }: { item: any }) => {
         <p className="w-1/3">Buying ¥: {item.buying}</p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Chatcomponent
+export default Chatcomponent;

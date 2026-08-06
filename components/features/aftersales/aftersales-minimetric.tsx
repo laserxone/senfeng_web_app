@@ -1,5 +1,5 @@
-import { ReactElement, ReactNode } from "react"
-import { MetricTone } from "./aftersales-types"
+import { ReactElement, ReactNode } from "react";
+import { MetricTone } from "./aftersales-types";
 const toneClasses: Record<MetricTone, string> = {
   blue: "bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-900/60",
   green:
@@ -10,7 +10,7 @@ const toneClasses: Record<MetricTone, string> = {
   slate: "bg-muted text-muted-foreground ring-border",
   violet:
     "bg-violet-50 text-violet-700 ring-violet-100 dark:bg-violet-950/40 dark:text-violet-300 dark:ring-violet-900/60",
-}
+};
 
 export default function MiniMetric({
   label,
@@ -18,10 +18,10 @@ export default function MiniMetric({
   icon,
   tone,
 }: {
-  label: string
-  value: ReactNode
-  icon: ReactElement
-  tone: MetricTone
+  label: string;
+  value: ReactNode;
+  icon: ReactElement;
+  tone: MetricTone;
 }) {
   return (
     <div className="min-w-0 rounded-xl px-2 py-1.5">
@@ -41,5 +41,5 @@ export default function MiniMetric({
         </div>
       </div>
     </div>
-  )
+  );
 }

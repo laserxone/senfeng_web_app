@@ -1,13 +1,13 @@
-"use client"
-import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react"
+"use client";
+import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
-import { Label } from "@/components/ui/label"
-import { z } from "zod"
+import { Label } from "@/components/ui/label";
+import { z } from "zod";
 
-import PageTable from "@/components/shared/tables/app-table"
+import PageTable from "@/components/shared/tables/app-table";
 import {
   Sheet,
   SheetContent,
@@ -15,40 +15,40 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 
-import axios from "@/lib/axios"
-import moment from "moment"
-import Spinner from "@/components/ui/spinner"
-import { toast } from "sonner"
-import { ColumnDef } from "@tanstack/react-table"
-import { CustomerTaskProps } from "@/lib/types"
+import axios from "@/lib/axios";
+import moment from "moment";
+import Spinner from "@/components/ui/spinner";
+import { toast } from "sonner";
+import { ColumnDef } from "@tanstack/react-table";
+import { CustomerTaskProps } from "@/lib/types";
 
 type CustomerTask = {
-  id: any
-  base?: any
-  customer_id?: any
-  height?: string
-  onFetchData: any
-  data: any
-}
+  id: any;
+  base?: any;
+  customer_id?: any;
+  height?: string;
+  onFetchData: any;
+  data: any;
+};
 type TaskDetailProps = {
-  detail: any
-  visible: boolean
-  onClose: any
-  onDelete: () => void | Promise<void>
-  onMark: () => void | Promise<void>
-  user_id: any
-  base?: any
-}
+  detail: any;
+  visible: boolean;
+  onClose: any;
+  onDelete: () => void | Promise<void>;
+  onMark: () => void | Promise<void>;
+  user_id: any;
+  base?: any;
+};
 export default function CustomerTask({
   id,
   height = "min-h-[calc(100dvh-300px)]",
   onFetchData,
   data,
 }: CustomerTask) {
-  const [visible, setVisible] = useState(false)
-  const [selectedTask, setSelectedTask] = useState({})
+  const [visible, setVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState({});
   const columns: ColumnDef<CustomerTaskProps>[] = [
     {
       accessorKey: "status",
@@ -62,7 +62,7 @@ export default function CustomerTask({
             Status
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2 flex items-center gap-1">
@@ -89,7 +89,7 @@ export default function CustomerTask({
             Task Name
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("task_name")}</div>,
     },
@@ -106,7 +106,7 @@ export default function CustomerTask({
             Assigned To
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
     },
@@ -123,7 +123,7 @@ export default function CustomerTask({
             Assign Time
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -147,7 +147,7 @@ export default function CustomerTask({
             Assign Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -155,7 +155,7 @@ export default function CustomerTask({
         </div>
       ),
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -165,8 +165,8 @@ export default function CustomerTask({
           columns={columns}
           data={data}
           onRowClick={(val, e) => {
-            setSelectedTask(val)
-            setVisible(true)
+            setSelectedTask(val);
+            setVisible(true);
           }}
         />
       </div>
@@ -179,7 +179,7 @@ export default function CustomerTask({
         onMark={async () => await onFetchData()}
       />
     </div>
-  )
+  );
 }
 
 const TaskDetail = ({
@@ -191,28 +191,28 @@ const TaskDetail = ({
   user_id,
   base,
 }: TaskDetailProps) => {
-  const [loading, setLoading] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   async function handleUpdateStatus(values: {
-    id: number | string
-    status: string
+    id: number | string;
+    status: string;
   }) {
-    setLoading(true)
+    setLoading(true);
     axios
       .put(`/${user_id}/task/${detail.id}`, {
         id: values.id,
         status: values.status,
       })
       .then(() => {
-        toast.success("Status updated")
-        onClose(false)
+        toast.success("Status updated");
+        onClose(false);
       })
 
       .finally(() => {
-        setLoading(false)
-        onMark()
-      })
+        setLoading(false);
+        onMark();
+      });
   }
 
   return (
@@ -286,7 +286,7 @@ const TaskDetail = ({
                 handleUpdateStatus({
                   ...detail,
                   status: "Completed",
-                })
+                });
               }}
             >
               {loading && <Spinner />}
@@ -296,5 +296,5 @@ const TaskDetail = ({
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};

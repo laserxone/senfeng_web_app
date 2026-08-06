@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useKBar } from "kbar"
-import { Navigation } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useKBar } from "kbar";
+import { Navigation } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function SearchInput() {
-  const { query } = useKBar()
+  const { query } = useKBar();
 
   return (
     <Button
@@ -22,5 +22,5 @@ export default function SearchInput() {
         ⌘ K
       </kbd>
     </Button>
-  )
+  );
 }

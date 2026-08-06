@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Label, Pie, PieChart } from "recharts"
+import * as React from "react";
+import { Label, Pie, PieChart } from "recharts";
 
 import {
   Card,
@@ -9,12 +9,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
 export function Stats({ industryData }) {
   const chartConfig = React.useMemo(() => {
@@ -22,7 +22,7 @@ export function Stats({ industryData }) {
       customer_count: {
         label: "Customers",
       },
-    }
+    };
 
     const colors = [
       "var(--chart-1)",
@@ -33,37 +33,37 @@ export function Stats({ industryData }) {
       "var(--chart-6)",
       "var(--chart-7)",
       "var(--chart-8)",
-    ]
-    let i = 0
+    ];
+    let i = 0;
     industryData
       .sort((a, b) => Number(b.customer_count) - Number(a.customer_count))
       .forEach((industry, index) => {
-        const key = industry.industry.toLowerCase().replace(/\s+/g, "")
+        const key = industry.industry.toLowerCase().replace(/\s+/g, "");
 
         config[key] = {
           label: industry.industry,
           color: colors[i],
-        }
-        i++
+        };
+        i++;
         if (i === 9) {
-          i = 0
+          i = 0;
         }
-      })
+      });
 
-    return config
-  }, [industryData])
+    return config;
+  }, [industryData]);
 
   const processedData = React.useMemo(() => {
     return industryData.map((industry) => ({
       industry: industry.industry.toLowerCase().replace(/\s+/g, ""), // Normalized key
       customer_count: Number(industry.customer_count),
       fill: `var(--color-${industry.industry.toLowerCase().replace(/\s+/g, "")})`,
-    }))
-  }, [industryData])
+    }));
+  }, [industryData]);
 
   const totalCustomers = React.useMemo(() => {
-    return processedData.reduce((acc, curr) => acc + curr.customer_count, 0)
-  }, [processedData])
+    return processedData.reduce((acc, curr) => acc + curr.customer_count, 0);
+  }, [processedData]);
   return (
     <Card className="flex flex-col">
       <CardHeader className="pb-0">
@@ -111,7 +111,7 @@ export function Stats({ industryData }) {
                           Customers
                         </tspan>
                       </text>
-                    )
+                    );
                   }
                 }}
               />
@@ -128,5 +128,5 @@ export function Stats({ industryData }) {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

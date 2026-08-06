@@ -1,94 +1,94 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { CardContent } from "@/components/ui/card"
-import { FieldLegend, FieldSet } from "@/components/ui/field"
-import Heading from "@/components/ui/heading"
-import { Input } from "@/components/ui/input"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { X } from "lucide-react"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button";
+import { CardContent } from "@/components/ui/card";
+import { FieldLegend, FieldSet } from "@/components/ui/field";
+import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const [industries, setIndustries] = useState<
     { value: string; label: string }[]
-  >([])
-  const [newIndustry, setNewIndustry] = useState("")
-  const [newModel, setNewModel] = useState("")
-  const [lateFine, setLateFine] = useState("")
-  const [ttRate, setTtRate] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [settings, setSetting] = useState<{ id: number } | null>(null)
-  const { userID } = useUserDetail()
+  >([]);
+  const [newIndustry, setNewIndustry] = useState("");
+  const [newModel, setNewModel] = useState("");
+  const [lateFine, setLateFine] = useState("");
+  const [ttRate, setTtRate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [settings, setSetting] = useState<{ id: number } | null>(null);
+  const { userID } = useUserDetail();
   const [machineModels, setMachineModels] = useState<
     { value: string; label: string }[]
-  >([])
+  >([]);
 
   useEffect(() => {
     if (userID) {
       axios.get(`/${userID}/settings`).then((response) => {
-        setSetting(response.data)
+        setSetting(response.data);
         const list = response.data.industry_list.map((item: string) => ({
           value: item,
           label: item,
-        }))
-        setIndustries(list)
-        setLateFine(response.data.late_fine || "")
-        setTtRate(response.data.usd_rate || "")
+        }));
+        setIndustries(list);
+        setLateFine(response.data.late_fine || "");
+        setTtRate(response.data.usd_rate || "");
         const modelList = response.data?.machine_models?.map(
           (item: string) => ({
             value: item,
             label: item,
-          })
-        )
-        setMachineModels(modelList)
-      })
+          }),
+        );
+        setMachineModels(modelList);
+      });
     }
-  }, [userID])
+  }, [userID]);
 
   const handleRemove = (value: string) => {
-    setIndustries((prev) => prev.filter((i) => i.value !== value))
-  }
+    setIndustries((prev) => prev.filter((i) => i.value !== value));
+  };
 
   const handleAdd = () => {
-    if (!newIndustry.trim()) return
+    if (!newIndustry.trim()) return;
     if (
       industries.some(
-        (i) => i.value.toLowerCase() === newIndustry.toLowerCase()
+        (i) => i.value.toLowerCase() === newIndustry.toLowerCase(),
       )
     ) {
-      toast.info("Industry already exists.")
-      return
+      toast.info("Industry already exists.");
+      return;
     }
     setIndustries((prev) => [
       ...prev,
       { value: newIndustry, label: newIndustry },
-    ])
-    setNewIndustry("")
-  }
+    ]);
+    setNewIndustry("");
+  };
 
   const handleRemoveModel = (value: string) => {
-    setMachineModels((prev) => prev.filter((i) => i.value !== value))
-  }
+    setMachineModels((prev) => prev.filter((i) => i.value !== value));
+  };
 
   const handleAddModel = () => {
-    if (!newModel.trim()) return
+    if (!newModel.trim()) return;
     if (
       machineModels.some(
-        (i) => i.value.toLowerCase() === newModel.toLowerCase()
+        (i) => i.value.toLowerCase() === newModel.toLowerCase(),
       )
     ) {
-      toast.info("Machine model already exists.")
-      return
+      toast.info("Machine model already exists.");
+      return;
     }
-    setMachineModels((prev) => [...prev, { value: newModel, label: newModel }])
-    setNewModel("")
-  }
+    setMachineModels((prev) => [...prev, { value: newModel, label: newModel }]);
+    setNewModel("");
+  };
 
   const handleSave = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       await axios.put(`/${userID}/settings`, {
         id: settings?.id,
@@ -96,13 +96,13 @@ export default function SettingsPage() {
         machine_models: machineModels.map((i) => i.value),
         late_fine: lateFine,
         usd_rate: ttRate,
-      })
+      });
 
-      toast.success("Settings saved successfully!")
+      toast.success("Settings saved successfully!");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -126,8 +126,8 @@ export default function SettingsPage() {
                   key={item.value}
                   item={item}
                   onClick={(e) => {
-                    e.stopPropagation()
-                    handleRemove(item.value)
+                    e.stopPropagation();
+                    handleRemove(item.value);
                   }}
                 />
               ))}
@@ -145,7 +145,7 @@ export default function SettingsPage() {
                 value={newIndustry}
                 onChange={(e) => setNewIndustry(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAdd()
+                  if (e.key === "Enter") handleAdd();
                 }}
               />
 
@@ -166,8 +166,8 @@ export default function SettingsPage() {
                   key={item.value}
                   item={item}
                   onClick={(e) => {
-                    e.stopPropagation()
-                    handleRemoveModel(item.value)
+                    e.stopPropagation();
+                    handleRemoveModel(item.value);
                   }}
                 />
               ))}
@@ -185,7 +185,7 @@ export default function SettingsPage() {
                 value={newModel}
                 onChange={(e) => setNewModel(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddModel()
+                  if (e.key === "Enter") handleAddModel();
                 }}
               />
 
@@ -227,15 +227,15 @@ export default function SettingsPage() {
         </Button>
       </CardContent>
     </div>
-  )
+  );
 }
 
 const RenderEachItem = ({
   item,
   onClick,
 }: {
-  item: { value: string; label: string }
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
+  item: { value: string; label: string };
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) => {
   return (
     <div className="inline-flex items-center gap-2 rounded-md border bg-muted/40 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted">
@@ -249,5 +249,5 @@ const RenderEachItem = ({
         <X className="h-3 w-3" />
       </button>
     </div>
-  )
-}
+  );
+};

@@ -1,103 +1,104 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { ConversationType, UserConversation } from "@/lib/types"
-import { Maximize2, MessagesSquare, Send, X } from "lucide-react"
-import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
-import { ProfilePicture } from "../users/profile-picture"
-import Chatcomponent from "./chat-component"
-import UserChatIcon from "./chatIcon"
+import { Button } from "@/components/ui/button";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ConversationType, UserConversation } from "@/lib/types";
+import { Maximize2, MessagesSquare, Send, X } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { ProfilePicture } from "../users/profile-picture";
+import Chatcomponent from "./chat-component";
+import UserChatIcon from "./chatIcon";
 
 type MessagePageProps = {
-  embedded?: boolean
-  onClose?: () => void
-}
+  embedded?: boolean;
+  onClose?: () => void;
+};
 
 export default function MessagePage({
   embedded = false,
   onClose,
 }: MessagePageProps) {
-  const { userID, base_route } = useUserDetail()
+  const { userID, base_route } = useUserDetail();
   const [selectedConversation, setSelectedConversation] =
-    useState<ConversationType | null>(null)
-  const [loading, setLoading] = useState(false)
+    useState<ConversationType | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const getConversation = useCallback(
     async (otherUserId: string | number) => {
-      if (!userID) return
+      if (!userID) return;
 
-      setLoading(true)
+      setLoading(true);
       try {
         const response = await axios.post(`/${userID}/conversations`, {
           user1: userID,
           user2: otherUserId,
-        })
+        });
 
         if (response.data.id) {
           setSelectedConversation({
             id: response.data.id,
             user: response.data?.otherUser,
-          })
+          });
         } else {
-          setSelectedConversation(null)
+          setSelectedConversation(null);
         }
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [userID]
-  )
+    [userID],
+  );
 
   useEffect(() => {
-    if (embedded || !userID) return
+    if (embedded || !userID) return;
 
     const syncConversationFromUrl = () => {
-      const chatId = new URLSearchParams(window.location.search).get("chat")
+      const chatId = new URLSearchParams(window.location.search).get("chat");
       if (chatId) {
-        void getConversation(chatId)
+        void getConversation(chatId);
       } else {
-        setSelectedConversation(null)
+        setSelectedConversation(null);
       }
-    }
+    };
 
-    syncConversationFromUrl()
-    window.addEventListener("popstate", syncConversationFromUrl)
+    syncConversationFromUrl();
+    window.addEventListener("popstate", syncConversationFromUrl);
 
-    return () => window.removeEventListener("popstate", syncConversationFromUrl)
-  }, [embedded, getConversation, userID])
+    return () =>
+      window.removeEventListener("popstate", syncConversationFromUrl);
+  }, [embedded, getConversation, userID]);
 
   const selectUser = async (item: UserConversation) => {
-    if (item.id === selectedConversation?.user?.id) return
+    if (item.id === selectedConversation?.user?.id) return;
 
     if (!embedded) {
-      const url = new URL(window.location.href)
-      url.searchParams.set("chat", String(item.id))
-      window.history.pushState({}, "", url)
+      const url = new URL(window.location.href);
+      url.searchParams.set("chat", String(item.id));
+      window.history.pushState({}, "", url);
     }
 
     setSelectedConversation((prevState) => {
-      if (!prevState) return prevState
-      const newState = { ...prevState }
-      newState.user.name = item.name
-      newState.user.dp = item.dp
-      return newState
-    })
+      if (!prevState) return prevState;
+      const newState = { ...prevState };
+      newState.user.name = item.name;
+      newState.user.dp = item.dp;
+      return newState;
+    });
 
-    await getConversation(item.id)
-  }
+    await getConversation(item.id);
+  };
 
   const clearSelection = () => {
-    setSelectedConversation(null)
+    setSelectedConversation(null);
 
     if (!embedded) {
-      const url = new URL(window.location.href)
-      url.searchParams.delete("chat")
-      window.history.replaceState({}, "", url)
+      const url = new URL(window.location.href);
+      url.searchParams.delete("chat");
+      window.history.replaceState({}, "", url);
     }
-  }
+  };
 
   return (
     <div
@@ -209,15 +210,15 @@ export default function MessagePage({
         )}
       </main>
     </div>
-  )
+  );
 }
 
 function EmptyChat({
   embedded,
   onClose,
 }: {
-  embedded: boolean
-  onClose?: () => void
+  embedded: boolean;
+  onClose?: () => void;
 }) {
   return (
     <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-8 text-center">
@@ -244,5 +245,5 @@ function EmptyChat({
         </p>
       </div>
     </div>
-  )
+  );
 }

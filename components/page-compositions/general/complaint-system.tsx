@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Button } from "@/components/ui/button"
-import Heading from "@/components/ui/heading"
-import { Input } from "@/components/ui/input"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { ComplaintPaymentDetail, ComplaintProps } from "@/lib/types"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
+import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ComplaintPaymentDetail, ComplaintProps } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUpCircle,
   CircleDollarSign,
@@ -30,31 +30,31 @@ import {
   Truck,
   Wrench,
   type LucideIcon,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useContext, useEffect, useMemo, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import { CustomerSearch } from "@/components/features/customers/components/customer-search"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { Checkbox } from "@/components/ui/checkbox"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import { CustomerSearch } from "@/components/features/customers/components/customer-search";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Field,
   FieldError,
@@ -62,26 +62,26 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
 
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { Badge } from "@/components/ui/badge"
-import FilterSheet from "@/components/features/users/filter-sheet"
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { Badge } from "@/components/ui/badge";
+import FilterSheet from "@/components/features/users/filter-sheet";
 
 const formSchema = z
   .object({
@@ -101,33 +101,33 @@ const formSchema = z
           code: z.ZodIssueCode.custom,
           path: ["charges"],
           message: "Amount is required",
-        })
+        });
       }
     }
-  })
+  });
 
 const formSchemaEngineer = z.object({
   engineer_id: z.number({ message: "Engineer is required" }),
-})
+});
 
 const formSchemaClosing = z.object({
   status: z.string().min(1, "Required"),
-})
+});
 
 const formSchemaPayment = z.object({
   method: z.string().min(1, "Required"),
   purpose: z.string().min(1, "Required"),
   amount: z.coerce.number<number>().min(1, "Amount is required"),
   slip: z.string().min(1, "Required"),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
-type FormValuesPayment = z.infer<typeof formSchemaPayment>
+type FormValues = z.infer<typeof formSchema>;
+type FormValuesPayment = z.infer<typeof formSchemaPayment>;
 
 const taskCategories: Array<{
-  label: string
-  value: string
-  icon: LucideIcon
+  label: string;
+  value: string;
+  icon: LucideIcon;
 }> = [
   { label: "Installation", value: "Installation", icon: ShieldCheck },
   { label: "Complaint", value: "Complaint", icon: Wrench },
@@ -141,82 +141,82 @@ const taskCategories: Array<{
     icon: ArrowUpCircle,
   },
   { label: "Online Support", value: "Online Support", icon: Headphones },
-]
+];
 
 export default function ComplaintSystem() {
-  const [loading, setLoading] = useState(false)
-  const { userID, isAdmin, complaint_assigned } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID, isAdmin, complaint_assigned } = useUserDetail();
 
-  const [visible, setVisible] = useState(false)
-  const [data, setData] = useState<ComplaintProps[]>([])
+  const [visible, setVisible] = useState(false);
+  const [data, setData] = useState<ComplaintProps[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<number | null>(
-    null
-  )
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
-  const [selected, setSelected] = useState("all")
-  const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
+    null,
+  );
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [selected, setSelected] = useState("all");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [linkedComplaintId, setLinkedComplaintId] = useState<number | null>(
-    null
-  )
-  const pageSize = 10
+    null,
+  );
+  const pageSize = 10;
 
   const [dates, setDates] = useState({
     start: moment().startOf("month").toDate(),
     end: moment().endOf("month").toDate(),
-  })
+  });
 
   const [selectedComplaintForClose, setSelectedComplaintForClose] = useState<
     number | null
-  >(null)
+  >(null);
 
   const [selectedComplaintForEdit, setSelectedComplaintForEdit] =
-    useState<ComplaintProps | null>(null)
+    useState<ComplaintProps | null>(null);
 
   const [selectedComplaintForPayment, setSelectedComplaintForPayment] =
-    useState<number | null>(null)
+    useState<number | null>(null);
 
-  const [openItems, setOpenItems] = useState<Record<number, boolean>>({})
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [openItems, setOpenItems] = useState<Record<number, boolean>>({});
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedComplaintForDelete, setSelectedComplaintForDelete] =
-    useState<ComplaintProps | null>(null)
+    useState<ComplaintProps | null>(null);
 
   useEffect(() => {
     if (userID) {
-      const complaintId = new URLSearchParams(window.location.search).get("c")
-      const start = new URLSearchParams(window.location.search).get("start")
-      const end = new URLSearchParams(window.location.search).get("end")
+      const complaintId = new URLSearchParams(window.location.search).get("c");
+      const start = new URLSearchParams(window.location.search).get("start");
+      const end = new URLSearchParams(window.location.search).get("end");
       if (complaintId) {
-        fetchData(start ?? undefined, end ?? undefined)
+        fetchData(start ?? undefined, end ?? undefined);
       } else {
-        fetchData(dates.start.toISOString(), dates.end.toISOString())
+        fetchData(dates.start.toISOString(), dates.end.toISOString());
       }
     }
-  }, [userID])
+  }, [userID]);
 
   useEffect(() => {
     const syncComplaintFromUrl = () => {
-      const complaintId = new URLSearchParams(window.location.search).get("c")
-      if (!complaintId) return
+      const complaintId = new URLSearchParams(window.location.search).get("c");
+      if (!complaintId) return;
 
       const complaint = data.find(
-        (item) => String(item.complaint_id) === complaintId
-      )
-      if (!complaint) return
+        (item) => String(item.complaint_id) === complaintId,
+      );
+      if (!complaint) return;
 
-      setSelected("all")
-      setSearch("")
-      setPage(1)
-      setLinkedComplaintId(complaint.complaint_id)
+      setSelected("all");
+      setSearch("");
+      setPage(1);
+      setLinkedComplaintId(complaint.complaint_id);
       setOpenItems((prev) => ({
         ...prev,
         [complaint.complaint_id]: true,
-      }))
+      }));
 
-      const hash = `complaint-${complaint.complaint_id}`
+      const hash = `complaint-${complaint.complaint_id}`;
       if (window.location.hash !== `#${hash}`) {
-        window.location.hash = hash
+        window.location.hash = hash;
       }
 
       requestAnimationFrame(() => {
@@ -224,75 +224,75 @@ export default function ComplaintSystem() {
           document.getElementById(hash)?.scrollIntoView({
             behavior: "smooth",
             block: "center",
-          })
-        })
-      })
-    }
+          });
+        });
+      });
+    };
 
-    syncComplaintFromUrl()
-    window.addEventListener("popstate", syncComplaintFromUrl)
+    syncComplaintFromUrl();
+    window.addEventListener("popstate", syncComplaintFromUrl);
 
     return () => {
-      window.removeEventListener("popstate", syncComplaintFromUrl)
-    }
-  }, [data])
+      window.removeEventListener("popstate", syncComplaintFromUrl);
+    };
+  }, [data]);
 
   async function fetchData(startDate?: string, endDate?: string) {
-    setLoading(true)
+    setLoading(true);
 
     const query =
       startDate && endDate
         ? `?start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}`
-        : ""
+        : "";
 
     axios
       .get(`/${userID}/complaint${query}`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   const getTotalPaid = (payments: ComplaintPaymentDetail[]) => {
-    return payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-  }
+    return payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  };
 
   const calculateTotals = (complaints: ComplaintProps[]) => {
     return complaints.reduce(
       (acc, c) => {
-        if (!c.complaint_paid) return acc
+        if (!c.complaint_paid) return acc;
 
-        const paid = getTotalPaid(c.payment_details)
-        const total = Number(c.complaint_charges || 0)
-        const pending = Math.max(total - paid, 0)
+        const paid = getTotalPaid(c.payment_details);
+        const total = Number(c.complaint_charges || 0);
+        const pending = Math.max(total - paid, 0);
 
-        acc.totalPaid += paid
-        acc.totalPending += pending
-        acc.totalCharges += total
+        acc.totalPaid += paid;
+        acc.totalPending += pending;
+        acc.totalCharges += total;
 
-        return acc
+        return acc;
       },
       {
         totalPaid: 0,
         totalPending: 0,
         totalCharges: 0,
-      }
-    )
-  }
+      },
+    );
+  };
 
-  const totals = useMemo(() => calculateTotals(data), [data])
+  const totals = useMemo(() => calculateTotals(data), [data]);
 
   const filteredData = useMemo(
     () =>
       data.filter((item) => {
-        if (selected === "paid" && !item.complaint_paid) return false
-        if (selected === "unpaid" && item.complaint_paid) return false
+        if (selected === "paid" && !item.complaint_paid) return false;
+        if (selected === "unpaid" && item.complaint_paid) return false;
 
-        if (!search) return true
+        if (!search) return true;
 
-        const searchLower = search.toLowerCase()
+        const searchLower = search.toLowerCase();
 
         return (
           (item?.complaint_title || "").toLowerCase().includes(searchLower) ||
@@ -301,85 +301,85 @@ export default function ComplaintSystem() {
           (item?.customer_ownership_name || "")
             .toLowerCase()
             .includes(searchLower)
-        )
+        );
       }),
-    [data, search, selected]
-  )
+    [data, search, selected],
+  );
 
   const orderedData = useMemo(() => {
-    if (!linkedComplaintId) return filteredData
+    if (!linkedComplaintId) return filteredData;
 
     const linkedComplaint = data.find(
-      (item) => item.complaint_id === linkedComplaintId
-    )
-    if (!linkedComplaint) return filteredData
+      (item) => item.complaint_id === linkedComplaintId,
+    );
+    if (!linkedComplaint) return filteredData;
 
     return [
       linkedComplaint,
       ...filteredData.filter((item) => item.complaint_id !== linkedComplaintId),
-    ]
-  }, [data, filteredData, linkedComplaintId])
+    ];
+  }, [data, filteredData, linkedComplaintId]);
 
-  const totalPages = Math.max(1, Math.ceil(orderedData.length / pageSize))
+  const totalPages = Math.max(1, Math.ceil(orderedData.length / pageSize));
   const paginatedData = orderedData.slice(
     (page - 1) * pageSize,
-    page * pageSize
-  )
-  const pageStart = orderedData.length ? (page - 1) * pageSize + 1 : 0
-  const pageEnd = Math.min(page * pageSize, orderedData.length)
+    page * pageSize,
+  );
+  const pageStart = orderedData.length ? (page - 1) * pageSize + 1 : 0;
+  const pageEnd = Math.min(page * pageSize, orderedData.length);
 
   useEffect(() => {
-    setPage((current) => Math.min(current, totalPages))
-  }, [totalPages])
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   const handleAssignEngineer = (complaintId: number) => {
-    setSelectedComplaint(complaintId)
-  }
+    setSelectedComplaint(complaintId);
+  };
 
   async function handleDelete(item: ComplaintProps | null) {
-    if (!item?.complaint_id) return
+    if (!item?.complaint_id) return;
 
-    setDeleteLoading(true)
+    setDeleteLoading(true);
 
     try {
-      await axios.delete(`/${userID}/complaint/${item.complaint_id}`)
-      await fetchData(dates.start.toISOString(), dates.end.toISOString())
-      setSelectedComplaintForDelete(null)
-      setSelectedComplaintForEdit(null)
+      await axios.delete(`/${userID}/complaint/${item.complaint_id}`);
+      await fetchData(dates.start.toISOString(), dates.end.toISOString());
+      setSelectedComplaintForDelete(null);
+      setSelectedComplaintForEdit(null);
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
   function clearUrl() {
-    const url = new URL(window.location.href)
-    url.searchParams.delete("c")
-    url.searchParams.delete("start")
-    url.searchParams.delete("end")
-    url.hash = ""
-    window.history.replaceState({}, "", url)
+    const url = new URL(window.location.href);
+    url.searchParams.delete("c");
+    url.searchParams.delete("start");
+    url.searchParams.delete("end");
+    url.hash = "";
+    window.history.replaceState({}, "", url);
   }
 
   async function handleReset() {
-    setResetLoading(true)
+    setResetLoading(true);
 
-    clearUrl()
+    clearUrl();
 
-    const startDate = moment().startOf("month").toISOString()
-    const endDate = moment().endOf("month").toISOString()
+    const startDate = moment().startOf("month").toISOString();
+    const endDate = moment().endOf("month").toISOString();
 
     setDates({
       start: moment().startOf("month").toDate(),
       end: moment().endOf("month").toDate(),
-    })
+    });
 
-    setSearch("")
-    setSelected("all")
-    setPage(1)
-    setLinkedComplaintId(null)
+    setSearch("");
+    setSelected("all");
+    setPage(1);
+    setLinkedComplaintId(null);
 
-    await fetchData(startDate, endDate)
-    setResetLoading(false)
+    await fetchData(startDate, endDate);
+    setResetLoading(false);
   }
 
   return (
@@ -408,8 +408,8 @@ export default function ComplaintSystem() {
             value={search}
             placeholder="Search by title, customer, owner or manager..."
             onChange={(event) => {
-              setSearch(event.target.value)
-              setPage(1)
+              setSearch(event.target.value);
+              setPage(1);
             }}
             className="pl-9"
           />
@@ -419,8 +419,8 @@ export default function ComplaintSystem() {
           <Select
             value={selected}
             onValueChange={(v) => {
-              setSelected(v)
-              setPage(1)
+              setSelected(v);
+              setPage(1);
             }}
           >
             <SelectTrigger className="w-[150px]">
@@ -521,13 +521,13 @@ export default function ComplaintSystem() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          clearUrl()
-          await fetchData(val.start, val.end)
-          setPage(1)
+          clearUrl();
+          await fetchData(val.start, val.end);
+          setPage(1);
           setDates({
             start: moment(val.start).toDate(),
             end: moment(val.end).toDate(),
-          })
+          });
         }}
       />
 
@@ -585,11 +585,11 @@ export default function ComplaintSystem() {
         onPressCancel={() => setSelectedComplaintForDelete(null)}
       />
     </div>
-  )
+  );
 }
 
 function SummaryBox({ label, value }: { label: string; value: number }) {
-  const Icon = label === "Paid" ? CircleDollarSign : Clock3
+  const Icon = label === "Paid" ? CircleDollarSign : Clock3;
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
       <Icon
@@ -602,7 +602,7 @@ function SummaryBox({ label, value }: { label: string; value: number }) {
         <span className="text-sm font-bold">{value.toLocaleString()}</span>
       </div>
     </div>
-  )
+  );
 }
 
 function StatusBadge({ status }: { status?: string }) {
@@ -612,7 +612,7 @@ function StatusBadge({ status }: { status?: string }) {
     resolved: "bg-green-100 text-green-800",
     completed: "bg-gray-200 text-gray-800",
     ongoing: "bg-orange-100 text-orange-800",
-  }
+  };
 
   return (
     <span
@@ -625,7 +625,7 @@ function StatusBadge({ status }: { status?: string }) {
         ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
         : "N/A"}
     </span>
-  )
+  );
 }
 
 function InfoItem({
@@ -633,9 +633,9 @@ function InfoItem({
   value,
   className,
 }: {
-  label: string
-  value?: React.ReactNode
-  className?: string
+  label: string;
+  value?: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div className={className}>
@@ -646,15 +646,15 @@ function InfoItem({
         {value || "N/A"}
       </div>
     </div>
-  )
+  );
 }
 
 function SectionCard({
   title,
   children,
 }: {
-  title: string
-  children: React.ReactNode
+  title: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="rounded-xl border bg-background/70 p-3 shadow-sm">
@@ -663,7 +663,7 @@ function SectionCard({
       </p>
       {children}
     </div>
-  )
+  );
 }
 
 function ComplaintCard({
@@ -676,14 +676,14 @@ function ComplaintCard({
   onAddPayment,
   onRefresh,
 }: {
-  complaint: ComplaintProps
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
-  onAssignEngineer: (id: number) => void
-  onCloseComplaint: (id: number) => void
-  onEditComplaint: (item: ComplaintProps) => void
-  onAddPayment: (id: number) => void
-  onRefresh: () => Promise<void>
+  complaint: ComplaintProps;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAssignEngineer: (id: number) => void;
+  onCloseComplaint: (id: number) => void;
+  onEditComplaint: (item: ComplaintProps) => void;
+  onAddPayment: (id: number) => void;
+  onRefresh: () => Promise<void>;
 }) {
   return (
     <Collapsible
@@ -869,8 +869,8 @@ function ComplaintCard({
                         {item.location && item.location.length > 0 ? (
                           <MapPin
                             onClick={() => {
-                              const mapUrl = `https://www.google.com/maps?q=${item.location[0]},${item.location[1]}`
-                              window.open(mapUrl, "_blank")
+                              const mapUrl = `https://www.google.com/maps?q=${item.location[0]},${item.location[1]}`;
+                              window.open(mapUrl, "_blank");
                             }}
                             className="h-4 w-4 cursor-pointer text-red-500 hover:opacity-70"
                           />
@@ -892,7 +892,7 @@ function ComplaintCard({
         </div>
       </CollapsibleContent>
     </Collapsible>
-  )
+  );
 }
 
 const AddNewComplaint = ({
@@ -900,13 +900,13 @@ const AddNewComplaint = ({
   onClose,
   onRefresh,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
-  const { state: OfficeState } = useContext(OfficeContext)!
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
+  const { state: OfficeState } = useContext(OfficeContext)!;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -920,27 +920,27 @@ const AddNewComplaint = ({
       paid: false,
       charges: 0,
     },
-  })
+  });
 
   const onSubmit = async (values: FormValues) => {
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.post(`/${userID}/complaint`, {
         ...values,
         managing_office: OfficeState.value.data || "lahore",
         status: "pending",
-      })
+      });
 
-      await onRefresh()
-      handleClose(false)
+      await onRefresh();
+      handleClose(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    onClose(val)
+    onClose(val);
     form.reset({
       title: "",
       customer_id: undefined,
@@ -949,7 +949,7 @@ const AddNewComplaint = ({
       category: "Complaint",
       installation: false,
       paid: false,
-    })
+    });
   }
 
   return (
@@ -981,22 +981,22 @@ const AddNewComplaint = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 function ComplaintFormContent({
   form,
   loading,
   onSubmit,
 }: {
-  form: any
-  loading: boolean
-  onSubmit: (values: FormValues) => Promise<void>
+  form: any;
+  loading: boolean;
+  onSubmit: (values: FormValues) => Promise<void>;
 }) {
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit, (errors: any) => {
-        console.log("Validation Errors:", errors)
+        console.log("Validation Errors:", errors);
       })}
       className="space-y-4"
     >
@@ -1021,11 +1021,11 @@ function ComplaintFormContent({
                   <Select
                     value={field.value}
                     onValueChange={(e) => {
-                      field.onChange(e)
+                      field.onChange(e);
                       if (e === "Installation") {
-                        form.setValue("installation", true)
+                        form.setValue("installation", true);
                       } else {
-                        form.setValue("installation", false)
+                        form.setValue("installation", false);
                       }
                     }}
                   >
@@ -1039,7 +1039,7 @@ function ComplaintFormContent({
                     </SelectTrigger>
                     <SelectContent className="min-w-[260px]">
                       {taskCategories.map((category) => {
-                        const Icon = category.icon
+                        const Icon = category.icon;
 
                         return (
                           <SelectItem
@@ -1051,7 +1051,7 @@ function ComplaintFormContent({
                               {category.label}
                             </span>
                           </SelectItem>
-                        )
+                        );
                       })}
                     </SelectContent>
                   </Select>
@@ -1059,7 +1059,7 @@ function ComplaintFormContent({
                     <FieldError errors={[fieldState.error]} />
                   )}
                 </Field>
-              )
+              );
             }}
           />
 
@@ -1214,7 +1214,7 @@ function ComplaintFormContent({
         Save
       </Button>
     </form>
-  )
+  );
 }
 
 const AssignEngineerModal = ({
@@ -1223,41 +1223,41 @@ const AssignEngineerModal = ({
   onRefresh,
   complaint_id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  complaint_id: number | null
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  complaint_id: number | null;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const form = useForm({
     resolver: zodResolver(formSchemaEngineer),
     defaultValues: {
       engineer_id: undefined,
     },
-  })
+  });
 
   const onSubmit = async (values: { engineer_id: number }) => {
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.post(`/${userID}/complaint-assignments`, {
         ...values,
         complaint_id,
         assigned_by: userID,
-      })
+      });
 
-      await onRefresh()
-      handleClose(false)
+      await onRefresh();
+      handleClose(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    onClose(val)
-    form.reset()
+    onClose(val);
+    form.reset();
   }
 
   return (
@@ -1319,8 +1319,8 @@ const AssignEngineerModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const CloseComplaint = ({
   visible,
@@ -1328,48 +1328,48 @@ const CloseComplaint = ({
   onRefresh,
   complaint_id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  complaint_id: number | null
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  complaint_id: number | null;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const form = useForm({
     resolver: zodResolver(formSchemaClosing),
     defaultValues: {
       status: "",
     },
-  })
+  });
 
   const onSubmit = async (values: { status: string }) => {
-    if (!complaint_id) return
+    if (!complaint_id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.post(`/${userID}/complaint-logs`, {
         remark: values.status,
         engineer_id: userID,
         complaint_id,
-      })
+      });
 
       await axios.put(`/${userID}/complaint`, {
         status: "completed",
         id: complaint_id,
-      })
+      });
 
-      await onRefresh()
-      handleClose(false)
+      await onRefresh();
+      handleClose(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    onClose(val)
-    form.reset()
+    onClose(val);
+    form.reset();
   }
 
   return (
@@ -1428,8 +1428,8 @@ const CloseComplaint = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const AddPaymentForComplaint = ({
   visible,
@@ -1437,13 +1437,13 @@ const AddPaymentForComplaint = ({
   onRefresh,
   complaint_id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  complaint_id: number | null
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  complaint_id: number | null;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const form = useForm({
     resolver: zodResolver(formSchemaPayment),
@@ -1453,36 +1453,36 @@ const AddPaymentForComplaint = ({
       purpose: "",
       amount: 0,
     },
-  })
+  });
 
   const onSubmit = async (values: FormValuesPayment) => {
-    if (!complaint_id) return
+    if (!complaint_id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const name = `complaints/${complaint_id}/payments/${moment()
         .valueOf()
-        .toString()}.png`
+        .toString()}.png`;
 
-      await UploadImage(values.slip, name, "image/png")
+      await UploadImage(values.slip, name, "image/png");
 
       await axios.post(`/${userID}/complaint/${complaint_id}/payment`, {
         ...values,
         complaint_id,
         slip: name,
-      })
+      });
 
-      await onRefresh()
-      handleClose(false)
+      await onRefresh();
+      handleClose(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    onClose(val)
-    form.reset()
+    onClose(val);
+    form.reset();
   }
 
   return (
@@ -1630,47 +1630,47 @@ const AddPaymentForComplaint = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const RenderPaymentViewButton = ({
   payments,
   id,
   onRefresh,
 }: {
-  id: number
-  payments: ComplaintPaymentDetail[]
-  onRefresh: () => Promise<void>
+  id: number;
+  payments: ComplaintPaymentDetail[];
+  onRefresh: () => Promise<void>;
 }) => {
-  const [visible, setVisible] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [visible, setVisible] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   function handleClose() {
-    setVisible(false)
+    setVisible(false);
   }
 
   async function handleDelete() {
-    if (!payments?.length) return
+    if (!payments?.length) return;
 
-    setDeleteLoading(true)
+    setDeleteLoading(true);
 
     try {
       await Promise.all(
         payments.map((payment) =>
           axios.delete(
-            `/${userID}/complaint/${payment.complaint_id}/payment/${payment.id}`
-          )
-        )
-      )
+            `/${userID}/complaint/${payment.complaint_id}/payment/${payment.id}`,
+          ),
+        ),
+      );
 
-      await onRefresh()
-      handleClose()
-      toast.success("Payments Deleted")
+      await onRefresh();
+      handleClose();
+      toast.success("Payments Deleted");
     } catch (error) {
-      toast.error("Failed to delete some payments")
+      toast.error("Failed to delete some payments");
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
@@ -1709,8 +1709,8 @@ const RenderPaymentViewButton = ({
         </SheetContent>
       </Sheet>
     </>
-  )
-}
+  );
+};
 
 const EditComplaint = ({
   visible,
@@ -1719,14 +1719,14 @@ const EditComplaint = ({
   data,
   onDelete,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  data: ComplaintProps | null
-  onDelete: (item: ComplaintProps) => void
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  data: ComplaintProps | null;
+  onDelete: (item: ComplaintProps) => void;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -1740,7 +1740,7 @@ const EditComplaint = ({
       paid: false,
       charges: 0,
     },
-  })
+  });
 
   useEffect(() => {
     if (data) {
@@ -1753,30 +1753,30 @@ const EditComplaint = ({
         installation: data.complaint_installation,
         paid: data.complaint_paid,
         charges: data.complaint_charges || 0,
-      })
+      });
     }
-  }, [data])
+  }, [data]);
 
   const onSubmit = async (values: FormValues) => {
-    if (!data?.complaint_id) return
+    if (!data?.complaint_id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       await axios.put(`/${userID}/complaint`, {
         ...values,
         id: data.complaint_id,
-      })
+      });
 
-      await onRefresh()
-      handleClose(false)
+      await onRefresh();
+      handleClose(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    onClose(val)
+    onClose(val);
     form.reset({
       title: "",
       customer_id: undefined,
@@ -1785,7 +1785,7 @@ const EditComplaint = ({
       category: "Complaint",
       installation: false,
       paid: false,
-    })
+    });
   }
 
   return (
@@ -1830,5 +1830,5 @@ const EditComplaint = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};

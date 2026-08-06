@@ -1,11 +1,11 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Download } from "lucide-react"
-import Link from "next/link"
+"use client";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import Link from "next/link";
 
 export default function SenFengAppPage() {
   const href =
-    "https://github.com/laserxone/senfeng-app-apk/releases/download/lte/senfeng.apk"
+    "https://github.com/laserxone/senfeng-app-apk/releases/download/lte/senfeng.apk";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 px-4 text-white">
@@ -30,5 +30,5 @@ export default function SenFengAppPage() {
         </Button>
       </Link>
     </div>
-  )
+  );
 }

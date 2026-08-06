@@ -1,9 +1,9 @@
-"use client"
-import AddQuickAction from "@/components/features/customers/actions/add-quick-action"
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import PageTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
-import Heading from "@/components/ui/heading"
+"use client";
+import AddQuickAction from "@/components/features/customers/actions/add-quick-action";
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import PageTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
+import Heading from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
@@ -11,28 +11,28 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
-import AddCustomerDialog from "@/components/features/customers/components/add-customer"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MyCustomer } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Trash2 } from "lucide-react"
-import moment from "moment"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
+import AddCustomerDialog from "@/components/features/customers/components/add-customer";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MyCustomer } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Trash2 } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function CustomerMainPage({
   onReturn,
 }: {
-  onReturn: (val: number) => void
+  onReturn: (val: number) => void;
 }) {
-  const [additionalFilter, setAdditionalFilter] = useState("")
-  const [showConfirmation, setShowConfirmation] = useState(false)
-  const [data, setData] = useState<MyCustomer[]>([])
-  const [addCustomer, setAddCustomer] = useState(false)
+  const [additionalFilter, setAdditionalFilter] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [data, setData] = useState<MyCustomer[]>([]);
+  const [addCustomer, setAddCustomer] = useState(false);
   const {
     userID,
     isAdmin,
@@ -41,43 +41,43 @@ export default function CustomerMainPage({
     customer_delete_access,
     office,
     route_branch,
-  } = useUserDetail()
+  } = useUserDetail();
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(
-    null
-  )
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [quickAction, setQuickAction] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<number | null>(null)
-  const [numCount, setNumCount] = useState<any>({})
-  const [myLoading, setMyLoading] = useState(false)
+    null,
+  );
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [quickAction, setQuickAction] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<number | null>(null);
+  const [numCount, setNumCount] = useState<any>({});
+  const [myLoading, setMyLoading] = useState(false);
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
     return new Promise((resolve, reject) => {
       axios
         .get(`/${userID}/customer?member=false`)
         .then((response) => {
-          const apiData = response.data
+          const apiData = response.data;
           const temp = apiData.map((item: any) => {
             return {
               ...item,
               orignalNumber: item.number,
               number: item.number.join(", "),
               sorting: item.owner || item.name,
-            }
-          })
+            };
+          });
 
-          setData([...temp])
+          setData([...temp]);
         })
         .finally(() => {
-          resolve(true)
-        })
-    })
+          resolve(true);
+        });
+    });
   }
 
   const columns: ColumnDef<MyCustomer>[] = [
@@ -93,7 +93,7 @@ export default function CustomerMainPage({
             Owner
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
     },
@@ -110,7 +110,7 @@ export default function CustomerMainPage({
             Company
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("name")}</div>,
     },
@@ -126,7 +126,7 @@ export default function CustomerMainPage({
             Assigned To
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("ownership_name")}</div>,
     },
@@ -142,7 +142,7 @@ export default function CustomerMainPage({
             Number
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("number")}</div>,
     },
@@ -159,7 +159,7 @@ export default function CustomerMainPage({
             Industry
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("industry")}</div>,
     },
@@ -177,7 +177,7 @@ export default function CustomerMainPage({
             Location
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("location")}</div>,
     },
@@ -194,7 +194,7 @@ export default function CustomerMainPage({
             Group
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("customer_group")}</div>,
     },
@@ -210,7 +210,7 @@ export default function CustomerMainPage({
             Added
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -223,43 +223,43 @@ export default function CustomerMainPage({
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
-        const canDelete = isAdmin || customer_delete_access
+        const canDelete = isAdmin || customer_delete_access;
 
-        if (!canDelete) return null
+        if (!canDelete) return null;
         return (
           <Button
             variant="ghost"
             onClick={(e) => {
-              e.stopPropagation()
-              setSelectedCustomerId(currentItem?.id)
-              setShowConfirmation(true)
+              e.stopPropagation();
+              setSelectedCustomerId(currentItem?.id);
+              setShowConfirmation(true);
             }}
           >
             <Trash2 className="h-5 w-5 text-red-500" size={16} />
           </Button>
-        )
+        );
       },
     },
-  ]
+  ];
 
   function handleClear() {
-    setAdditionalFilter("")
-    setSelectedUser(null)
+    setAdditionalFilter("");
+    setSelectedUser(null);
   }
 
   async function handleDelete(id: number | null) {
-    if (!id) return
-    setDeleteLoading(true)
+    if (!id) return;
+    setDeleteLoading(true);
     try {
-      const response = await axios.delete(`/${userID}/customer/${id}`)
-      toast.success("Customer Deleted")
-      await fetchData()
+      const response = await axios.delete(`/${userID}/customer/${id}`);
+      toast.success("Customer Deleted");
+      await fetchData();
     } finally {
-      setDeleteLoading(false)
-      setShowConfirmation(false)
-      setSelectedCustomerId(null)
+      setDeleteLoading(false);
+      setShowConfirmation(false);
+      setSelectedCustomerId(null);
     }
   }
 
@@ -273,46 +273,46 @@ export default function CustomerMainPage({
             ? item.orignalNumber?.some((num) => numCount[num] > 1)
             : additionalFilter == "mycustomers"
               ? item.ownership === userID
-              : true
+              : true,
     )
-    .filter((item) => (selectedUser ? item?.ownership === selectedUser : true))
+    .filter((item) => (selectedUser ? item?.ownership === selectedUser : true));
 
   useEffect(() => {
     if (data.length > 0) {
-      const numberCount: any = {}
+      const numberCount: any = {};
 
       data.forEach((item) => {
         if (item.orignalNumber) {
           item?.orignalNumber.forEach((num) => {
-            numberCount[num] = (numberCount[num] || 0) + 1
-          })
+            numberCount[num] = (numberCount[num] || 0) + 1;
+          });
         }
-      })
-      setNumCount(numberCount)
+      });
+      setNumCount(numberCount);
     }
-  }, [data])
+  }, [data]);
 
   async function handleMyCustomers() {
-    setMyLoading(true)
+    setMyLoading(true);
 
     axios
       .get(`/${userID}/customer?member=false&mycustomer=true`)
       .then((response) => {
-        const apiData = response.data
+        const apiData = response.data;
         const temp = apiData.map((item: any) => {
           return {
             ...item,
             orignalNumber: item.number,
             number: item.number.join(", "),
             sorting: item.owner || item.name,
-          }
-        })
+          };
+        });
 
-        setData([...temp])
+        setData([...temp]);
       })
       .finally(() => {
-        setMyLoading(false)
-      })
+        setMyLoading(false);
+      });
   }
 
   const filterItems = isAdmin
@@ -326,7 +326,7 @@ export default function CustomerMainPage({
         { value: "unassigned", label: "Unassigned" },
         { value: "unsold", label: "Unsold Customers" },
         { value: "mycustomers", label: "My Customers" },
-      ]
+      ];
 
   return (
     <>
@@ -357,8 +357,8 @@ export default function CustomerMainPage({
             visible={addCustomer}
             onClose={setAddCustomer}
             onRefresh={async () => {
-              setData([])
-              await fetchData()
+              setData([]);
+              await fetchData();
             }}
           />
 
@@ -374,12 +374,12 @@ export default function CustomerMainPage({
                       ...item,
                       ownership: ownership ? ownership : undefined,
                       ownership_name: ownership ? ownership_name : "",
-                    }
+                    };
                   }
-                  return item
-                })
-                return updatedData
-              })
+                  return item;
+                });
+                return updatedData;
+              });
             }}
           />
         </div>
@@ -393,13 +393,13 @@ export default function CustomerMainPage({
               ? filteredData.sort((a, b) =>
                   (a?.sorting || "")
                     ?.toLowerCase()
-                    ?.localeCompare(b?.sorting?.toLowerCase() || "")
+                    ?.localeCompare(b?.sorting?.toLowerCase() || ""),
                 )
               : filteredData
           }
           onRowClick={(val) => {
             if (val.id) {
-              onReturn(val.id)
+              onReturn(val.id);
             }
           }}
         >
@@ -430,9 +430,9 @@ export default function CustomerMainPage({
                         value={framework.value}
                         onClick={() => {
                           if (framework.value === additionalFilter) {
-                            setAdditionalFilter("")
+                            setAdditionalFilter("");
                           } else {
-                            setAdditionalFilter(framework.value)
+                            setAdditionalFilter(framework.value);
                           }
                         }}
                       >
@@ -445,7 +445,7 @@ export default function CustomerMainPage({
 
               <Button
                 onClick={() => {
-                  handleClear()
+                  handleClear();
                 }}
               >
                 Clear
@@ -456,7 +456,7 @@ export default function CustomerMainPage({
                   disabled={myLoading}
                   variant="outline"
                   onClick={() => {
-                    handleMyCustomers()
+                    handleMyCustomers();
                   }}
                 >
                   {myLoading && <Spinner />} Show My Customers
@@ -476,5 +476,5 @@ export default function CustomerMainPage({
         onPressCancel={() => setShowConfirmation(false)}
       />
     </>
-  )
+  );
 }

@@ -1,40 +1,40 @@
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { debounce } from "@/lib/debounce"
-import { MachinePayment } from "@/lib/types"
-import { zodResolver } from "@hookform/resolvers/zod"
-import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { Button } from "@/components/ui/button"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { debounce } from "@/lib/debounce";
+import { MachinePayment } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import { WalletCards } from "lucide-react"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { WalletCards } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -59,18 +59,18 @@ const formSchema = z
         code: z.ZodIssueCode.custom,
         message: "Cheque ID is required when payment mode is Cheque.",
         path: ["cheque_id"],
-      })
+      });
     }
-  })
+  });
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 type ErrorType = {
-  part_id: number
-  errorMessage: string
-  machine_id: number
-  saleData: { customer_id: number }[]
-}
+  part_id: number;
+  errorMessage: string;
+  machine_id: number;
+  saleData: { customer_id: number }[];
+};
 
 const EditPayment = ({
   visible,
@@ -79,18 +79,18 @@ const EditPayment = ({
   machine_id,
   data,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  machine_id?: number | string
-  customer_id?: number
-  data: MachinePayment | null
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  machine_id?: number | string;
+  customer_id?: number;
+  data: MachinePayment | null;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [checking, setChecking] = useState(false)
-  const [error, setError] = useState<ErrorType | null>(null)
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState<ErrorType | null>(null);
 
-  const { userID, base_route } = useUserDetail()
+  const { userID, base_route } = useUserDetail();
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -103,7 +103,7 @@ const EditPayment = ({
       remarks: "",
       status: "",
     },
-  })
+  });
 
   useEffect(() => {
     if (data) {
@@ -119,72 +119,72 @@ const EditPayment = ({
           : undefined,
         remarks: data?.remarks || "",
         status: data?.status || "",
-      })
+      });
     }
-  }, [data])
+  }, [data]);
 
   async function onSubmit(values: FormValues) {
-    if (!data?.id) return
-    setLoading(true)
+    if (!data?.id) return;
+    setLoading(true);
     try {
       const response = await axios.put(`/${userID}/payment`, {
         ...values,
         machine_id: machine_id,
         id: data.id,
         status: "pending",
-      })
-      toast.success("Payment updated successfully")
-      onRefresh()
-      handleClose(false)
+      });
+      toast.success("Payment updated successfully");
+      onRefresh();
+      handleClose(false);
     } catch (e) {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    setLoading(false)
-    onClose(val)
+    form.reset();
+    setLoading(false);
+    onClose(val);
   }
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === "note") {
-        debouncedCheckNumber(value.note)
+        debouncedCheckNumber(value.note);
       }
-    })
+    });
 
-    return () => subscription.unsubscribe()
-  }, [form.watch])
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   const checkNumberInDatabase = async (number: string) => {
-    setChecking(true)
-    setError(null)
+    setChecking(true);
+    setError(null);
     try {
       const response = await axios.post(
         `/${userID}/check-note`,
         { number },
         {
           cancelKey: `check-note-${userID}`,
-        }
-      )
+        },
+      );
       if (Array.isArray(response.data) && response.data.length > 0) {
-        const apiData = response.data[0]
+        const apiData = response.data[0];
         if (apiData.note !== data?.note) {
-          setError(apiData)
+          setError(apiData);
         }
       }
     } catch (error) {
-      console.log("Error checking number:", error)
+      console.log("Error checking number:", error);
     } finally {
-      setChecking(false)
+      setChecking(false);
     }
-  }
+  };
 
   const debouncedCheckNumber = useCallback(
     debounce(checkNumberInDatabase, 1000),
-    []
-  )
+    [],
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -225,7 +225,7 @@ const EditPayment = ({
                           value={field.value || ""}
                           onChange={(e) => {
                             if (!isNaN(Number(e.target.value))) {
-                              field.onChange(Number(e.target.value))
+                              field.onChange(Number(e.target.value));
                             }
                           }}
                         />
@@ -368,11 +368,11 @@ const EditPayment = ({
                         <AppCalendar
                           date={field.value}
                           onChange={(date) => {
-                            field.onChange(date)
+                            field.onChange(date);
                             form.setValue(
                               "status",
-                              date ? "Cleared" : "Pending"
-                            )
+                              date ? "Cleared" : "Pending",
+                            );
                           }}
                         />
 
@@ -413,7 +413,7 @@ const EditPayment = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default EditPayment
+export default EditPayment;

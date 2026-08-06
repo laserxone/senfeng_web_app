@@ -1,7 +1,7 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+"use client";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowUpDown,
   CheckCircle,
@@ -10,155 +10,155 @@ import {
   Info,
   ShieldCheck,
   TriangleAlert,
-} from "lucide-react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
-import PageTable from "@/components/shared/tables/app-table"
-import AddPayment from "@/components/features/machines/add-payment"
-import EditMachine from "@/components/features/machines/edit-machine"
-import EditParts from "@/components/features/machines/edit-parts"
-import EditPayment from "@/components/features/machines/edit-payment"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
+import PageTable from "@/components/shared/tables/app-table";
+import AddPayment from "@/components/features/machines/add-payment";
+import EditMachine from "@/components/features/machines/edit-machine";
+import EditParts from "@/components/features/machines/edit-parts";
+import EditPayment from "@/components/features/machines/edit-payment";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { storage } from "@/config/firebase"
-import { Colors } from "@/constants/data"
+} from "@/components/ui/tooltip";
+import { storage } from "@/config/firebase";
+import { Colors } from "@/constants/data";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { DeleteFromStorage } from "@/lib/deleteFunction"
-import { InstallmentProps, MachinePayment, MachineResponse } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { getDownloadURL, ref } from "firebase/storage"
-import moment from "moment"
-import Image from "next/image"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import { toast } from "sonner"
-import AddCheque from "./add-cheque"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { DeleteFromStorage } from "@/lib/deleteFunction";
+import { InstallmentProps, MachinePayment, MachineResponse } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { getDownloadURL, ref } from "firebase/storage";
+import moment from "moment";
+import Image from "next/image";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import { toast } from "sonner";
+import AddCheque from "./add-cheque";
 
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import ChangeSalesPersonDialog from "./change-sales-person"
-import ClientCard from "./machine-client-card"
-import { ImageSheet, ViewImagesSheet } from "./machine-images"
-import RevokeDelivery from "./revoke-delivery"
-import SendForDeliveryDialog from "./send-for-delivery"
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import ChangeSalesPersonDialog from "./change-sales-person";
+import ClientCard from "./machine-client-card";
+import { ImageSheet, ViewImagesSheet } from "./machine-images";
+import RevokeDelivery from "./revoke-delivery";
+import SendForDeliveryDialog from "./send-for-delivery";
 
 export default function Machine({
   id,
   onLoading,
 }: {
-  id: string | number
-  onLoading?: (val: boolean) => void
+  id: string | number;
+  onLoading?: (val: boolean) => void;
 }) {
-  const [data, setData] = useState<MachineResponse>()
-  const [payments, setPayments] = useState<MachinePayment[]>([])
-  const [installments, setInstallments] = useState<InstallmentProps[]>([])
-  const [total, setTotal] = useState(0)
-  const [received, setReceived] = useState(0)
-  const [override, setOverride] = useState(false)
-  const [imageURL, setImageURL] = useState<MachinePayment | null>(null)
-  const [visible, setVisible] = useState(false)
-  const [imagesVisible, setImagesVisible] = useState(false)
-  const [editMachine, setEditMachine] = useState(false)
-  const [editParts, setEditParts] = useState(false)
-  const [addPayment, setAddPayment] = useState(false)
-  const [editPayment, setEditPayment] = useState(false)
+  const [data, setData] = useState<MachineResponse>();
+  const [payments, setPayments] = useState<MachinePayment[]>([]);
+  const [installments, setInstallments] = useState<InstallmentProps[]>([]);
+  const [total, setTotal] = useState(0);
+  const [received, setReceived] = useState(0);
+  const [override, setOverride] = useState(false);
+  const [imageURL, setImageURL] = useState<MachinePayment | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [imagesVisible, setImagesVisible] = useState(false);
+  const [editMachine, setEditMachine] = useState(false);
+  const [editParts, setEditParts] = useState(false);
+  const [addPayment, setAddPayment] = useState(false);
+  const [editPayment, setEditPayment] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<MachinePayment | null>(
-    null
-  )
-  const { userID, isAdmin } = useUserDetail()
+    null,
+  );
+  const { userID, isAdmin } = useUserDetail();
 
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [installmentVisible, setInstallmentVisible] = useState(false)
-  const [credit, setCredit] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [installmentVisible, setInstallmentVisible] = useState(false);
+  const [credit, setCredit] = useState(false);
   const [readyForDelivery, setReadyForDelivery] =
-    useState<MachineResponse | null>(null)
-  const [openDelete, setOpenDelete] = useState(false)
-  const [openChange, setOpenChange] = useState(false)
+    useState<MachineResponse | null>(null);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openChange, setOpenChange] = useState(false);
   const [revokeDelivery, setRevokeDelivery] = useState<MachineResponse | null>(
-    null
-  )
+    null,
+  );
 
   useEffect(() => {
     if (id && userID) {
-      fetchData(id)
+      fetchData(id);
     }
-  }, [id, userID])
+  }, [id, userID]);
 
   const updatePaymentQuery = useCallback((paymentId?: string | number) => {
-    const url = new URL(window.location.href)
+    const url = new URL(window.location.href);
 
     if (paymentId !== undefined) {
-      url.searchParams.set("mp", String(paymentId))
-      window.history.pushState({}, "", url)
+      url.searchParams.set("mp", String(paymentId));
+      window.history.pushState({}, "", url);
     } else {
-      url.searchParams.delete("mp")
-      window.history.replaceState({}, "", url)
+      url.searchParams.delete("mp");
+      window.history.replaceState({}, "", url);
     }
 
-    window.dispatchEvent(new PopStateEvent("popstate"))
-  }, [])
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
 
   useEffect(() => {
     const syncPaymentImageFromUrl = () => {
-      const paymentId = new URLSearchParams(window.location.search).get("mp")
+      const paymentId = new URLSearchParams(window.location.search).get("mp");
       const payment = paymentId
         ? payments.find((item) => String(item.id) === paymentId)
-        : undefined
+        : undefined;
 
-      setImageURL(payment || null)
-      setVisible(Boolean(payment))
-    }
+      setImageURL(payment || null);
+      setVisible(Boolean(payment));
+    };
 
-    syncPaymentImageFromUrl()
-    window.addEventListener("popstate", syncPaymentImageFromUrl)
+    syncPaymentImageFromUrl();
+    window.addEventListener("popstate", syncPaymentImageFromUrl);
 
     return () => {
-      window.removeEventListener("popstate", syncPaymentImageFromUrl)
-    }
-  }, [payments])
+      window.removeEventListener("popstate", syncPaymentImageFromUrl);
+    };
+  }, [payments]);
 
   async function fetchData(id: number | string) {
-    onLoading?.(true)
+    onLoading?.(true);
 
     try {
       const response: { data: MachineResponse } = await axios.get(
-        `/${userID}/machine/${id}`
-      )
+        `/${userID}/machine/${id}`,
+      );
 
-      const machine = response.data?.machine
+      const machine = response.data?.machine;
       if (response.data?.installments) {
-        setInstallments(response.data?.installments)
+        setInstallments(response.data?.installments);
       }
 
-      setData(response.data)
+      setData(response.data);
       if (machine) {
-        setTotal(Number(machine.price || 0))
+        setTotal(Number(machine.price || 0));
 
-        const payments = machine?.payments || []
-        setPayments(machine?.payments)
+        const payments = machine?.payments || [];
+        setPayments(machine?.payments);
         setReceived(
-          payments?.reduce((sum, p) => sum + Number(p.amount || 0), 0)
-        )
+          payments?.reduce((sum, p) => sum + Number(p.amount || 0), 0),
+        );
       }
 
-      return true
+      return true;
     } catch (e) {
-      return null
+      return null;
     } finally {
-      onLoading?.(false)
+      onLoading?.(false);
     }
   }
 
@@ -178,10 +178,10 @@ export default function Machine({
               Payment
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => {
-          const currentItem = row.original
+          const currentItem = row.original;
           return (
             <div className="ml-2 flex items-center">
               {currentItem?.status === "rejected" ? (
@@ -223,7 +223,7 @@ export default function Machine({
               )}
               <div>{row.getValue("track")}</div>
             </div>
-          )
+          );
         },
       },
 
@@ -241,13 +241,13 @@ export default function Machine({
               Transaction Date
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => (
           <div>
             {row.getValue("transaction_date")
               ? moment(new Date(row.getValue("transaction_date"))).format(
-                  "YYYY-MM-DD"
+                  "YYYY-MM-DD",
                 )
               : ""}
           </div>
@@ -268,7 +268,7 @@ export default function Machine({
               Clearance Date
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => (
           <div
@@ -276,7 +276,7 @@ export default function Machine({
           >
             {row.getValue("clearance_date")
               ? moment(new Date(row.getValue("clearance_date"))).format(
-                  "YYYY-MM-DD"
+                  "YYYY-MM-DD",
                 )
               : "Pending"}
           </div>
@@ -296,7 +296,7 @@ export default function Machine({
               Amount
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div className="ml-2">{row.getValue("amount")}</div>,
       },
@@ -314,7 +314,7 @@ export default function Machine({
               TID
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div>{row.getValue("note")}</div>,
       },
@@ -333,7 +333,7 @@ export default function Machine({
               Method
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div>{row.getValue("mode")}</div>,
       },
@@ -341,10 +341,10 @@ export default function Machine({
       {
         id: "actions",
         header: ({ column }) => {
-          return <Button variant="ghost">Actions</Button>
+          return <Button variant="ghost">Actions</Button>;
         },
         cell: ({ row }) => {
-          const currentItem = row.original
+          const currentItem = row.original;
           return (
             <div className="flex flex-row items-center gap-2">
               {currentItem.image && (
@@ -354,7 +354,7 @@ export default function Machine({
                   aria-label="View image"
                   onClick={() => {
                     if (currentItem.id) {
-                      updatePaymentQuery(currentItem.id)
+                      updatePaymentQuery(currentItem.id);
                     }
                   }}
                   className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all duration-200 ${
@@ -374,9 +374,9 @@ export default function Machine({
                     style={{ color: Colors.button }}
                     className="h-10 w-10 cursor-pointer sm:h-5 sm:w-5"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      setSelectedPayment(currentItem)
-                      setEditPayment(true)
+                      e.stopPropagation();
+                      setSelectedPayment(currentItem);
+                      setEditPayment(true);
                     }}
                   />
                 )}
@@ -385,33 +385,33 @@ export default function Machine({
                 <RenderVerifyButton
                   item={currentItem}
                   onRefresh={async () => {
-                    await fetchData(id)
+                    await fetchData(id);
                   }}
                 />
               )}
             </div>
-          )
+          );
         },
       },
     ],
-    [data, updatePaymentQuery]
-  )
+    [data, updatePaymentQuery],
+  );
 
   async function deleteMachine() {
-    if (!id) return
-    setDeleteLoading(true)
+    if (!id) return;
+    setDeleteLoading(true);
     axios.delete(`/${userID}/machine/${id}`).then(() => {
-      setOpenDelete(false)
-      setData(undefined)
-      setDeleteLoading(false)
-      toast.success("Machine Deleted")
-    })
+      setOpenDelete(false);
+      setData(undefined);
+      setDeleteLoading(false);
+      toast.success("Machine Deleted");
+    });
   }
 
   async function onRefresh() {
-    setCredit(false)
-    setData(undefined)
-    fetchData(id)
+    setCredit(false);
+    setData(undefined);
+    fetchData(id);
   }
 
   return (
@@ -450,7 +450,7 @@ export default function Machine({
         onClose={setEditMachine}
         machine_id={id}
         onRefresh={async () => {
-          await fetchData(id)
+          await fetchData(id);
         }}
         data={data?.machine}
       />
@@ -466,7 +466,7 @@ export default function Machine({
         onClose={setEditParts}
         machine_id={id}
         onRefresh={async () => {
-          await fetchData(id)
+          await fetchData(id);
         }}
         data={data?.machine}
       />
@@ -476,7 +476,7 @@ export default function Machine({
         editAllowed={data?.editAllowed || false}
         visible={visible}
         onClose={() => {
-          updatePaymentQuery()
+          updatePaymentQuery();
         }}
         img={imageURL?.image || null}
         note={imageURL?.note || null}
@@ -484,7 +484,7 @@ export default function Machine({
         remarks={imageURL?.remarks || null}
         id={imageURL?.id}
         onRefresh={async () => {
-          await fetchData(id)
+          await fetchData(id);
         }}
         override={override}
       />
@@ -495,7 +495,7 @@ export default function Machine({
         customer_id={data?.customer?.id}
         onClose={() => setImagesVisible(false)}
         onRefresh={async () => {
-          await fetchData(id)
+          await fetchData(id);
         }}
       />
 
@@ -505,14 +505,14 @@ export default function Machine({
         updateData={(id, val) => {
           setInstallments((prevState) =>
             prevState.map((item) =>
-              item.id === id ? { ...item, pending: val } : item
-            )
-          )
+              item.id === id ? { ...item, pending: val } : item,
+            ),
+          );
         }}
         onDeleteData={(id) => {
           setInstallments((prevState) =>
-            prevState.filter((item) => item.id !== id)
-          )
+            prevState.filter((item) => item.id !== id),
+          );
         }}
         onClose={() => setInstallmentVisible(false)}
       />
@@ -523,7 +523,7 @@ export default function Machine({
         onClose={setAddPayment}
         machine_id={id}
         onRefresh={async () => {
-          await fetchData(id)
+          await fetchData(id);
         }}
       />
       {selectedPayment && (
@@ -531,13 +531,13 @@ export default function Machine({
           customer_id={data?.customer?.id}
           visible={editPayment}
           onClose={(val: boolean) => {
-            setEditPayment(val)
-            setSelectedPayment(null)
+            setEditPayment(val);
+            setSelectedPayment(null);
           }}
           machine_id={id}
           data={selectedPayment}
           onRefresh={async () => {
-            await fetchData(id)
+            await fetchData(id);
           }}
         />
       )}
@@ -576,7 +576,7 @@ export default function Machine({
 
       {override && <OverrideStamp />}
     </div>
-  )
+  );
 }
 
 const OverrideStamp = () => {
@@ -586,8 +586,8 @@ const OverrideStamp = () => {
         Override Enabled
       </div>
     </div>
-  )
-}
+  );
+};
 
 const InstallmentSheet = ({
   visible,
@@ -596,53 +596,53 @@ const InstallmentSheet = ({
   updateData,
   onDeleteData,
 }: {
-  visible: boolean
-  onClose: () => void
-  data: InstallmentProps[]
-  updateData: (id: number, val: boolean) => void
-  onDeleteData: (id: number) => void
+  visible: boolean;
+  onClose: () => void;
+  data: InstallmentProps[];
+  updateData: (id: number, val: boolean) => void;
+  onDeleteData: (id: number) => void;
 }) => {
-  const [imageOpen, setImageOpen] = useState(false)
+  const [imageOpen, setImageOpen] = useState(false);
 
-  const { isAdmin, userID } = useUserDetail()
+  const { isAdmin, userID } = useUserDetail();
 
   const handleClose = useCallback(() => {
     if (!imageOpen) {
-      onClose()
+      onClose();
     }
-  }, [imageOpen, onClose])
+  }, [imageOpen, onClose]);
 
   const RenderEachRow = ({ item }: { item: InstallmentProps }) => {
-    const [loading, setLoading] = useState(false)
-    const [deleteLoading, setDeleteLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     async function handlePaid(id: number) {
-      if (!id || !userID) return
-      setLoading(true)
+      if (!id || !userID) return;
+      setLoading(true);
 
       try {
         await axios.put(`/${userID}/reminders/${id}`, {
           pending: false,
-        })
-        updateData(id, false)
+        });
+        updateData(id, false);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
     async function handleDelete(id: number) {
-      if (!id || !userID) return
-      setDeleteLoading(true)
+      if (!id || !userID) return;
+      setDeleteLoading(true);
 
       if (item.image) {
-        DeleteFromStorage(item.image)
+        DeleteFromStorage(item.image);
       }
 
       try {
-        await axios.delete(`/${userID}/reminders/${id}`)
-        onDeleteData(id)
+        await axios.delete(`/${userID}/reminders/${id}`);
+        onDeleteData(id);
       } finally {
-        setDeleteLoading(false)
+        setDeleteLoading(false);
       }
     }
 
@@ -707,8 +707,8 @@ const InstallmentSheet = ({
           </div>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
@@ -737,50 +737,50 @@ const InstallmentSheet = ({
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 export const MyImg = ({ img }: { img: string | null }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(false)
+  const [localImage, setLocalImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!img) {
-      setLocalImage(null)
-      setError(false)
-      setLoading(false)
-      return
+      setLocalImage(null);
+      setError(false);
+      setLoading(false);
+      return;
     }
 
-    setLoading(true)
-    setError(false)
+    setLoading(true);
+    setError(false);
 
     if (img.includes("http")) {
-      setLocalImage(img)
-      setLoading(false)
+      setLocalImage(img);
+      setLoading(false);
     } else {
       getDownloadURL(ref(storage, img))
         .then((url) => {
-          setLocalImage(url)
+          setLocalImage(url);
         })
         .catch(() => {
-          setError(true)
-          setLocalImage(null)
+          setError(true);
+          setLocalImage(null);
         })
         .finally(() => {
-          setLoading(false)
-        })
+          setLoading(false);
+        });
     }
-  }, [img])
+  }, [img]);
 
   if (loading)
     return (
       <div className="flex h-[50px] w-[50px] items-center justify-center">
         <Spinner />
       </div>
-    )
-  if (!img || error || !localImage) return <p>No image</p>
+    );
+  if (!img || error || !localImage) return <p>No image</p>;
 
   return (
     <div className="relative h-[50px] w-[50px]">
@@ -791,42 +791,42 @@ export const MyImg = ({ img }: { img: string | null }) => {
         className="object-contain"
       />
     </div>
-  )
-}
+  );
+};
 
 const RenderVerifyButton = ({
   item,
   onRefresh,
 }: {
-  item: MachinePayment
-  onRefresh: () => Promise<void>
+  item: MachinePayment;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
   async function handleVerify(item: MachinePayment) {
-    setLoading(true)
+    setLoading(true);
     await axios
       .put(`/${userID}/payment-verification/${item.id}`, {
         status: "approved",
         payment_lock: true,
       })
       .then(async () => {
-        await onRefresh()
+        await onRefresh();
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
   return (
     <Button
       variant={"outline"}
       disabled={loading}
       onClick={() => {
-        handleVerify(item)
+        handleVerify(item);
       }}
     >
       {loading ? <Spinner /> : <CheckCircle />}{" "}
       {loading ? "Verifying" : "Verify"}
     </Button>
-  )
-}
+  );
+};

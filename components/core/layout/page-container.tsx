@@ -1,14 +1,14 @@
-"use client"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useSidebar } from "@/components/ui/sidebar"
-import React from "react"
+"use client";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSidebar } from "@/components/ui/sidebar";
+import React from "react";
 type Props = {
-  children: React.ReactNode
-  scrollable?: boolean
-  className?: string
-}
+  children: React.ReactNode;
+  scrollable?: boolean;
+  className?: string;
+};
 export default function PageContainer({ children, className }: Props) {
-  const { isMobile, state } = useSidebar()
+  const { isMobile, state } = useSidebar();
   return (
     <ScrollArea className={`flex h-[calc(100dvh-62px)] flex-1`}>
       <div className="flex flex-1 justify-center">
@@ -19,5 +19,5 @@ export default function PageContainer({ children, className }: Props) {
         </div>
       </div>
     </ScrollArea>
-  )
+  );
 }

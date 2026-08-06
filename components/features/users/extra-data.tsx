@@ -1,5 +1,5 @@
-import { Calendar, Filter, Phone, TrendingUp, Users } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Calendar, Filter, Phone, TrendingUp, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export const CustomerExtraData = ({
   data,
@@ -7,10 +7,10 @@ export const CustomerExtraData = ({
   onSelect,
   showold = true,
 }: {
-  data: any
-  option: string
-  onSelect: (val: string) => void
-  showold?: boolean
+  data: any;
+  option: string;
+  onSelect: (val: string) => void;
+  showold?: boolean;
 }) => {
   const menuItems = [
     {
@@ -44,7 +44,7 @@ export const CustomerExtraData = ({
       dataKey: "nextMonth",
       icon: <Calendar className="h-4 w-4" />,
     },
-  ]
+  ];
 
   return (
     <div className="rounded-md border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -59,8 +59,8 @@ export const CustomerExtraData = ({
 
       <div className="flex w-full gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
         {menuItems.map(({ key, label, dataKey, icon }) => {
-          const count = data?.[dataKey as keyof typeof data]?.length ?? 0
-          const isActive = option === dataKey
+          const count = data?.[dataKey as keyof typeof data]?.length ?? 0;
+          const isActive = option === dataKey;
 
           return (
             <button
@@ -93,7 +93,7 @@ export const CustomerExtraData = ({
                 </Badge>
               )}
             </button>
-          )
+          );
         })}
 
         {showold && (
@@ -113,5 +113,5 @@ export const CustomerExtraData = ({
         )}
       </div>
     </div>
-  )
-}
+  );
+};

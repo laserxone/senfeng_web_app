@@ -1,14 +1,14 @@
-import { Bell, LucideProps } from "lucide-react"
-import { ForwardRefExoticComponent, ReactNode, RefAttributes } from "react"
+import { Bell, LucideProps } from "lucide-react";
+import { ForwardRefExoticComponent, ReactNode, RefAttributes } from "react";
 
 export default function NotificationBadge({
   count,
   max = 99,
 }: {
-  count: number
-  max?: number
+  count: number;
+  max?: number;
 }) {
-  const display = count > max ? `${max}+` : count
+  const display = count > max ? `${max}+` : count;
 
   return (
     <span
@@ -17,17 +17,17 @@ export default function NotificationBadge({
     >
       {display}
     </span>
-  )
+  );
 }
 
 export function BellNotification({
   count = 0,
   Icon = Bell,
 }: {
-  count: number
+  count: number;
   Icon?: ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
-  >
+  >;
 }) {
   return (
     <BadgeCount count={count} max={99} offset={{ right: -8, top: -6 }}>
@@ -35,7 +35,7 @@ export function BellNotification({
         <Icon />
       </div>
     </BadgeCount>
-  )
+  );
 }
 
 export function BadgeCount({
@@ -48,17 +48,17 @@ export function BadgeCount({
   badgeClassName = "",
   offset = { top: -4, right: -4 },
 }: {
-  children: ReactNode
-  count?: number
-  max?: number
-  showZero?: boolean
-  dot?: boolean
-  className?: string
-  badgeClassName?: string
-  offset?: { top: number; right: number }
+  children: ReactNode;
+  count?: number;
+  max?: number;
+  showZero?: boolean;
+  dot?: boolean;
+  className?: string;
+  badgeClassName?: string;
+  offset?: { top: number; right: number };
 }) {
-  const display = typeof count === "number" && count > max ? `${max}+` : count
-  const shouldShow = dot || !!count || (count === 0 && showZero)
+  const display = typeof count === "number" && count > max ? `${max}+` : count;
+  const shouldShow = dot || !!count || (count === 0 && showZero);
   return (
     <div className={`relative inline-flex ${className}`}>
       {children}
@@ -79,5 +79,5 @@ export function BadgeCount({
         </span>
       )}
     </div>
-  )
+  );
 }

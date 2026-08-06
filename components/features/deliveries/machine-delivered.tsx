@@ -1,46 +1,46 @@
-"use client"
+"use client";
 
-import PageTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
-import Heading from "@/components/ui/heading"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { DeliveryType } from "@/lib/types"
-import { pdf } from "@react-pdf/renderer"
-import { ColumnDef } from "@tanstack/react-table"
-import { AlertCircle, ArrowUpDown, Clock3, Edit } from "lucide-react"
-import moment from "moment"
-import { useEffect, useMemo, useState } from "react"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { DispatchOrderEditDialog } from "./dispatch-dialoges"
-import DOPDFGatepass from "./do-pdf-gatepass"
+import PageTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
+import Heading from "@/components/ui/heading";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { DeliveryType } from "@/lib/types";
+import { pdf } from "@react-pdf/renderer";
+import { ColumnDef } from "@tanstack/react-table";
+import { AlertCircle, ArrowUpDown, Clock3, Edit } from "lucide-react";
+import moment from "moment";
+import { useEffect, useMemo, useState } from "react";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { DispatchOrderEditDialog } from "./dispatch-dialoges";
+import DOPDFGatepass from "./do-pdf-gatepass";
 
 export default function MachineDelivered() {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<DeliveryType[]>([])
-  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<DeliveryType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedForEdit, setSelectedForEdit] = useState<DeliveryType | null>(
-    null
-  )
+    null,
+  );
 
   useEffect(() => {
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData() {
-    if (!userID) return
-    setLoading(true)
+    if (!userID) return;
+    setLoading(true);
     try {
-      const response = await axios.get(`/${userID}/delivery/delivered`)
+      const response = await axios.get(`/${userID}/delivery/delivered`);
       const finalData = response.data?.map((item: DeliveryType) => ({
         ...item,
         do: `DO-${item.id}`,
-      }))
-      setData(finalData)
+      }));
+      setData(finalData);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -60,7 +60,7 @@ export default function MachineDelivered() {
               DO
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div className="ml-2">{row.getValue("do")}</div>,
       },
@@ -78,7 +78,7 @@ export default function MachineDelivered() {
               Owner
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => (
           <div className="ml-2">{row.getValue("customer_owner")}</div>
@@ -99,7 +99,7 @@ export default function MachineDelivered() {
               Company
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
       },
@@ -117,7 +117,7 @@ export default function MachineDelivered() {
               Manager
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div>{row.getValue("ownership_name")}</div>,
       },
@@ -136,11 +136,11 @@ export default function MachineDelivered() {
               Order No
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => {
-          const value = row.getValue("order_no_arr") as string[]
-          return <div>{value?.join(" ")}</div>
+          const value = row.getValue("order_no_arr") as string[];
+          return <div>{value?.join(" ")}</div>;
         },
       },
 
@@ -158,7 +158,7 @@ export default function MachineDelivered() {
               Power
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div>{row.getValue("power")}</div>,
       },
@@ -177,7 +177,7 @@ export default function MachineDelivered() {
               Source
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => <div>{row.getValue("source")}</div>,
       },
@@ -196,10 +196,10 @@ export default function MachineDelivered() {
               Payment
               <ArrowUpDown />
             </Button>
-          )
+          );
         },
         cell: ({ row }) => {
-          const { no_request, payment_slip } = row.original
+          const { no_request, payment_slip } = row.original;
 
           if (no_request) {
             return (
@@ -209,7 +209,7 @@ export default function MachineDelivered() {
                   No Request
                 </span>
               </div>
-            )
+            );
           }
 
           if (!payment_slip) {
@@ -220,14 +220,14 @@ export default function MachineDelivered() {
                   Pending
                 </span>
               </div>
-            )
+            );
           }
 
           return (
             <div className="inline-flex rounded-lg border border-emerald-100 bg-emerald-50 p-1">
               <MyImgZooming img={payment_slip} compact />
             </div>
-          )
+          );
         },
       },
       {
@@ -239,8 +239,8 @@ export default function MachineDelivered() {
               <Button
                 size="sm"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  generatePDF(row.original)
+                  e.stopPropagation();
+                  generatePDF(row.original);
                 }}
               >
                 Open DO
@@ -248,19 +248,19 @@ export default function MachineDelivered() {
               <Button
                 size="icon"
                 onClick={(e) => {
-                  e.stopPropagation()
-                  setSelectedForEdit(row.original)
+                  e.stopPropagation();
+                  setSelectedForEdit(row.original);
                 }}
               >
                 <Edit />
               </Button>
             </div>
-          )
+          );
         },
       },
     ],
-    [data]
-  )
+    [data],
+  );
 
   const generatePDF = async (item: DeliveryType) => {
     const PDFData = {
@@ -277,7 +277,7 @@ export default function MachineDelivered() {
       delivery_issued_by:
         item?.dispatch_information?.other_information?.issuedBy,
       checklist: item?.dispatch_information?.checklist,
-    }
+    };
 
     try {
       const pdfRes = await axios.post(
@@ -290,20 +290,20 @@ export default function MachineDelivered() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
-      )
+        },
+      );
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      })
+      });
 
-      const url = URL.createObjectURL(blob)
-      window.open(url, "_blank")
-      setTimeout(() => URL.revokeObjectURL(url), 600000)
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -329,5 +329,5 @@ export default function MachineDelivered() {
         data={selectedForEdit}
       />
     </div>
-  )
+  );
 }

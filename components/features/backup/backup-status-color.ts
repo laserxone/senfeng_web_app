@@ -5,4 +5,4 @@ export const statusColors: Record<string, string> = {
   rejected: "bg-red-100 text-red-700",
   issued: "bg-violet-100 text-violet-700",
   returned: "bg-cyan-100 text-cyan-700",
-}
+};

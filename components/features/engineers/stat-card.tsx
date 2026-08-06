@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { Card } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { LucideIcon } from "lucide-react"
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
-  title: string
-  value?: string | number
-  icon: LucideIcon
+  title: string;
+  value?: string | number;
+  icon: LucideIcon;
   trend?: {
-    value: number
-    isPositive: boolean
-  }
-  variant?: "default" | "primary" | "success" | "warning"
+    value: number;
+    isPositive: boolean;
+  };
+  variant?: "default" | "primary" | "success" | "warning";
 }
 
 export function StatCard({
@@ -27,7 +27,7 @@ export function StatCard({
     primary: "text-primary",
     success: "text-success",
     warning: "text-warning",
-  }
+  };
 
   return (
     <Card className="border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md">
@@ -51,7 +51,7 @@ export function StatCard({
               "rounded-full px-2 py-1 text-xs font-medium",
               trend.isPositive
                 ? "bg-green-100 text-green-500"
-                : "bg-destructive/10 text-destructive"
+                : "bg-destructive/10 text-destructive",
             )}
           >
             {trend.isPositive ? "+" : ""}
@@ -60,5 +60,5 @@ export function StatCard({
         )}
       </div>
     </Card>
-  )
+  );
 }

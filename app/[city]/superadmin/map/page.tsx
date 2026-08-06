@@ -1,12 +1,12 @@
-"use client"
-import { MapComponent } from "@/components/page-compositions/general/map-component"
-import { Button } from "@/components/ui/button"
-import useUserDetail from "@/hooks/use-user-detail"
-import { MapProvider } from "@/providers/map-provider"
-import Link from "next/link"
+"use client";
+import { MapComponent } from "@/components/page-compositions/general/map-component";
+import { Button } from "@/components/ui/button";
+import useUserDetail from "@/hooks/use-user-detail";
+import { MapProvider } from "@/providers/map-provider";
+import Link from "next/link";
 
 export default function Page() {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
 
   return (
     <div className="relative flex h-[calc(100dvh-80px)] flex-1">
@@ -22,5 +22,5 @@ export default function Page() {
         )}
       </div>
     </div>
-  )
+  );
 }

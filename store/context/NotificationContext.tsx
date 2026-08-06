@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { db } from "@/config/firebase"
-import useUserDetail from "@/hooks/use-user-detail"
+import { db } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
 import {
   collection,
   limit,
@@ -9,7 +9,7 @@ import {
   orderBy,
   query,
   where,
-} from "firebase/firestore"
+} from "firebase/firestore";
 import {
   createContext,
   useCallback,
@@ -17,60 +17,60 @@ import {
   useEffect,
   useRef,
   useState,
-} from "react"
+} from "react";
 
 export type NotificationItem = {
-  id: string
-  page?: string
-  title?: string
-  category?: string
-  description?: string
-  read?: boolean
-  TimeStamp?: number
-}
+  id: string;
+  page?: string;
+  title?: string;
+  category?: string;
+  description?: string;
+  read?: boolean;
+  TimeStamp?: number;
+};
 
 type NotificationContextType = {
-  NotificationData: NotificationItem[]
-  UnreadNotificationData: NotificationItem[]
-  PopupNotifications: NotificationItem[]
-  dismissPopupNotification: (id: string) => void
-}
+  NotificationData: NotificationItem[];
+  UnreadNotificationData: NotificationItem[];
+  PopupNotifications: NotificationItem[];
+  dismissPopupNotification: (id: string) => void;
+};
 
 const NotificationContext = createContext<NotificationContextType>({
   NotificationData: [],
   UnreadNotificationData: [],
   PopupNotifications: [],
   dismissPopupNotification: () => {},
-})
+});
 
 export const NotificationProvider = ({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) => {
   const [NotificationData, setNotificationData] = useState<NotificationItem[]>(
-    []
-  )
+    [],
+  );
 
   const [UnreadNotificationData, setUnreadNotificationData] = useState<
     NotificationItem[]
-  >([])
+  >([]);
 
   const [PopupNotifications, setPopupNotifications] = useState<
     NotificationItem[]
-  >([])
+  >([]);
 
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
   // Only documents created after this listener starts are foreground popups.
   // This avoids cached and server initial snapshots replaying old unread items.
-  const unreadListenerStartedAt = useRef(0)
-  const popupNotificationIds = useRef(new Set<string>())
+  const unreadListenerStartedAt = useRef(0);
+  const popupNotificationIds = useRef(new Set<string>());
 
   useEffect(() => {
     if (!userID) {
-      setNotificationData([])
-      return
+      setNotificationData([]);
+      return;
     }
 
     const notificationQuery = query(
@@ -78,8 +78,8 @@ export const NotificationProvider = ({
       where("sendTo", "==", userID),
       where("read", "==", true),
       orderBy("TimeStamp", "desc"),
-      limit(50)
-    )
+      limit(50),
+    );
 
     const unsubscribe = onSnapshot(
       notificationQuery,
@@ -87,35 +87,35 @@ export const NotificationProvider = ({
         const list = querySnapshot.docs.map((document) => ({
           ...document.data(),
           id: document.id,
-        })) as NotificationItem[]
+        })) as NotificationItem[];
 
-        setNotificationData(list)
+        setNotificationData(list);
       },
       (error) => {
-        console.error("Read notification listener error:", error)
-      }
-    )
+        console.error("Read notification listener error:", error);
+      },
+    );
 
-    return unsubscribe
-  }, [userID])
+    return unsubscribe;
+  }, [userID]);
 
   useEffect(() => {
     if (!userID) {
-      setUnreadNotificationData([])
-      setPopupNotifications([])
-      popupNotificationIds.current.clear()
-      unreadListenerStartedAt.current = 0
-      return
+      setUnreadNotificationData([]);
+      setPopupNotifications([]);
+      popupNotificationIds.current.clear();
+      unreadListenerStartedAt.current = 0;
+      return;
     }
 
-    unreadListenerStartedAt.current = Date.now()
+    unreadListenerStartedAt.current = Date.now();
 
     const unreadQuery = query(
       collection(db, "Notification"),
       where("sendTo", "==", userID),
       where("read", "==", false),
-      orderBy("TimeStamp", "desc")
-    )
+      orderBy("TimeStamp", "desc"),
+    );
 
     const unsubscribe = onSnapshot(
       unreadQuery,
@@ -123,12 +123,12 @@ export const NotificationProvider = ({
         const unreadList = querySnapshot.docs.map((document) => ({
           ...document.data(),
           id: document.id,
-        })) as NotificationItem[]
+        })) as NotificationItem[];
 
         /*
          * Always update the header badge and notification page.
          */
-        setUnreadNotificationData(unreadList)
+        setUnreadNotificationData(unreadList);
 
         /*
          * Firestore can emit an initial cache snapshot followed by a server
@@ -141,14 +141,14 @@ export const NotificationProvider = ({
             (change) =>
               change.type === "added" &&
               Number(change.doc.data().TimeStamp) >=
-                unreadListenerStartedAt.current
+                unreadListenerStartedAt.current,
           )
           .map((change) => ({
             ...change.doc.data(),
             id: change.doc.id,
-          })) as NotificationItem[]
+          })) as NotificationItem[];
 
-        if (addedNotifications.length === 0) return
+        if (addedNotifications.length === 0) return;
 
         /*
          * Do not show a popup when:
@@ -156,32 +156,35 @@ export const NotificationProvider = ({
          * - the browser is minimized
          * - the screen is locked
          */
-        if (document.visibilityState !== "visible") return
+        if (document.visibilityState !== "visible") return;
 
         const notificationsToShow = addedNotifications.filter(
-          (notification) => !popupNotificationIds.current.has(notification.id)
-        )
+          (notification) => !popupNotificationIds.current.has(notification.id),
+        );
 
-        if (notificationsToShow.length === 0) return
+        if (notificationsToShow.length === 0) return;
 
         notificationsToShow.forEach((notification) =>
-          popupNotificationIds.current.add(notification.id)
-        )
-        setPopupNotifications((current) => [...current, ...notificationsToShow])
+          popupNotificationIds.current.add(notification.id),
+        );
+        setPopupNotifications((current) => [
+          ...current,
+          ...notificationsToShow,
+        ]);
       },
       (error) => {
-        console.error("Unread notification listener error:", error)
-      }
-    )
+        console.error("Unread notification listener error:", error);
+      },
+    );
 
-    return unsubscribe
-  }, [userID])
+    return unsubscribe;
+  }, [userID]);
 
   const dismissPopupNotification = useCallback((id: string) => {
     setPopupNotifications((current) =>
-      current.filter((notification) => notification.id !== id)
-    )
-  }, [])
+      current.filter((notification) => notification.id !== id),
+    );
+  }, []);
 
   return (
     <NotificationContext.Provider
@@ -194,7 +197,7 @@ export const NotificationProvider = ({
     >
       {children}
     </NotificationContext.Provider>
-  )
-}
+  );
+};
 
-export const useNotification = () => useContext(NotificationContext)
+export const useNotification = () => useContext(NotificationContext);

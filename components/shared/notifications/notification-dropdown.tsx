@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetClose,
@@ -9,11 +9,11 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import { db } from "@/config/firebase"
-import useUserDetail from "@/hooks/use-user-detail"
-import { useNotification } from "@/store/context/NotificationContext"
-import { deleteDoc, doc, updateDoc } from "firebase/firestore"
+} from "@/components/ui/sheet";
+import { db } from "@/config/firebase";
+import useUserDetail from "@/hooks/use-user-detail";
+import { useNotification } from "@/store/context/NotificationContext";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
 import {
   Banknote,
   Bell,
@@ -35,13 +35,13 @@ import {
   X,
   CircleCheck,
   type LucideIcon,
-} from "lucide-react"
-import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
-import { BellNotification } from "@/components/shared/notifications/NotificationBadge"
-import { Button } from "@/components/ui/button"
-import { useRouter } from "nextjs-toploader/app"
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { BellNotification } from "@/components/shared/notifications/NotificationBadge";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "nextjs-toploader/app";
 
 const ADMIN_FILTERS = [
   "unread",
@@ -49,32 +49,32 @@ const ADMIN_FILTERS = [
   "sales",
   "engineering",
   "tasks",
-] as const
-const USER_FILTERS = ["unread", "all"] as const
-const MAX_SHEET_NOTIFICATIONS = 20
-type NotificationFilter = (typeof ADMIN_FILTERS)[number]
+] as const;
+const USER_FILTERS = ["unread", "all"] as const;
+const MAX_SHEET_NOTIFICATIONS = 20;
+type NotificationFilter = (typeof ADMIN_FILTERS)[number];
 
 function formatRelativeTime(timestamp?: number) {
-  if (!timestamp) return null
+  if (!timestamp) return null;
 
   const elapsedSeconds = Math.max(
     0,
-    Math.floor((Date.now() - timestamp) / 1000)
-  )
-  if (elapsedSeconds < 60) return "Just now"
+    Math.floor((Date.now() - timestamp) / 1000),
+  );
+  if (elapsedSeconds < 60) return "Just now";
 
-  const elapsedMinutes = Math.floor(elapsedSeconds / 60)
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
   if (elapsedMinutes < 60) {
-    return `${elapsedMinutes} ${elapsedMinutes === 1 ? "minute" : "minutes"} ago`
+    return `${elapsedMinutes} ${elapsedMinutes === 1 ? "minute" : "minutes"} ago`;
   }
 
-  const elapsedHours = Math.floor(elapsedMinutes / 60)
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
   if (elapsedHours < 24) {
-    return `${elapsedHours} ${elapsedHours === 1 ? "hr" : "hrs"} ago`
+    return `${elapsedHours} ${elapsedHours === 1 ? "hr" : "hrs"} ago`;
   }
 
-  const elapsedDays = Math.floor(elapsedHours / 24)
-  return `${elapsedDays} ${elapsedDays === 1 ? "day" : "days"} ago`
+  const elapsedDays = Math.floor(elapsedHours / 24);
+  return `${elapsedDays} ${elapsedDays === 1 ? "day" : "days"} ago`;
 }
 
 const notificationIconRules: Array<[string[], LucideIcon]> = [
@@ -88,19 +88,19 @@ const notificationIconRules: Array<[string[], LucideIcon]> = [
   [["repair", "engineering"], Wrench],
   [["part"], Cog],
   [["quotation"], FileText],
-]
+];
 
 function getNotificationIcon(title?: string) {
-  const normalizedTitle = title?.toLowerCase() ?? ""
+  const normalizedTitle = title?.toLowerCase() ?? "";
   return (
     notificationIconRules.find(([keywords]) =>
-      keywords.some((keyword) => normalizedTitle.includes(keyword))
+      keywords.some((keyword) => normalizedTitle.includes(keyword)),
     )?.[1] ?? Bell
-  )
+  );
 }
 
 function getViewLabel(title?: string) {
-  const normalizedTitle = title?.toLowerCase() ?? ""
+  const normalizedTitle = title?.toLowerCase() ?? "";
   const labels: Array<[string[], string]> = [
     [["loan"], "Loan application"],
     [["customer"], "Customer"],
@@ -115,53 +115,54 @@ function getViewLabel(title?: string) {
     [["part"], "Part"],
     [["feedback"], "Feedback"],
     [["quotation"], "Quotation"],
-  ]
+  ];
 
   return (
     labels.find(([keywords]) =>
-      keywords.some((keyword) => normalizedTitle.includes(keyword))
+      keywords.some((keyword) => normalizedTitle.includes(keyword)),
     )?.[1] ?? "Notification"
-  )
+  );
 }
 
 export default function NotificationSheet() {
-  const { base_route, isAdmin } = useUserDetail()
-  const { NotificationData, UnreadNotificationData } = useNotification()
-  const router = useRouter()
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [activeFilter, setActiveFilter] = useState<NotificationFilter>("unread")
-  const [isMarkingAll, setIsMarkingAll] = useState(false)
+  const { base_route, isAdmin } = useUserDetail();
+  const { NotificationData, UnreadNotificationData } = useNotification();
+  const router = useRouter();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeFilter, setActiveFilter] =
+    useState<NotificationFilter>("unread");
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
   const [openingNotification, setOpeningNotification] = useState<string | null>(
-    null
-  )
+    null,
+  );
   const [updatingNotification, setUpdatingNotification] = useState<
     string | null
-  >(null)
+  >(null);
   const [deletingNotification, setDeletingNotification] = useState<
     string | null
-  >(null)
-  const [, refreshRelativeTimes] = useState(0)
+  >(null);
+  const [, refreshRelativeTimes] = useState(0);
 
   useEffect(() => {
-    if (!sheetOpen) return
+    if (!sheetOpen) return;
 
     const interval = window.setInterval(
       () => refreshRelativeTimes((current) => current + 1),
-      60_000
-    )
+      60_000,
+    );
 
-    return () => window.clearInterval(interval)
-  }, [sheetOpen])
+    return () => window.clearInterval(interval);
+  }, [sheetOpen]);
 
   const filteredNotifications = useMemo(() => {
     if (activeFilter === "all") {
       return [...NotificationData, ...UnreadNotificationData].sort(
-        (a, b) => (b?.TimeStamp ?? 0) - (a.TimeStamp ?? 0)
-      )
+        (a, b) => (b?.TimeStamp ?? 0) - (a.TimeStamp ?? 0),
+      );
     }
 
     if (activeFilter === "unread") {
-      return UnreadNotificationData
+      return UnreadNotificationData;
     }
 
     return UnreadNotificationData.filter((notification) => {
@@ -169,90 +170,90 @@ export default function NotificationSheet() {
         return (
           notification.category?.toLowerCase() === "tasks" ||
           notification.title?.toLowerCase().includes("task")
-        )
+        );
       }
 
-      return notification.category?.toLowerCase() === activeFilter
-    })
-  }, [NotificationData, activeFilter, UnreadNotificationData])
+      return notification.category?.toLowerCase() === activeFilter;
+    });
+  }, [NotificationData, activeFilter, UnreadNotificationData]);
 
   const visibleNotifications = filteredNotifications.slice(
     0,
-    MAX_SHEET_NOTIFICATIONS
-  )
+    MAX_SHEET_NOTIFICATIONS,
+  );
   const hasMoreNotifications =
-    filteredNotifications.length > MAX_SHEET_NOTIFICATIONS
+    filteredNotifications.length > MAX_SHEET_NOTIFICATIONS;
 
   const markAllAsRead = async () => {
-    if (!UnreadNotificationData.length || isMarkingAll) return
+    if (!UnreadNotificationData.length || isMarkingAll) return;
 
-    setIsMarkingAll(true)
+    setIsMarkingAll(true);
     try {
       await Promise.all(
         UnreadNotificationData.map((notification) =>
-          updateDoc(doc(db, "Notification", notification.id), { read: true })
-        )
-      )
+          updateDoc(doc(db, "Notification", notification.id), { read: true }),
+        ),
+      );
     } finally {
-      setIsMarkingAll(false)
+      setIsMarkingAll(false);
     }
-  }
+  };
 
   const markAsRead = async (notificationId: string) => {
-    if (updatingNotification) return
+    if (updatingNotification) return;
 
-    setUpdatingNotification(notificationId)
+    setUpdatingNotification(notificationId);
     try {
-      await new Promise((resolve) => window.setTimeout(resolve, 850))
-      await updateDoc(doc(db, "Notification", notificationId), { read: true })
+      await new Promise((resolve) => window.setTimeout(resolve, 850));
+      await updateDoc(doc(db, "Notification", notificationId), { read: true });
     } catch (error) {
-      console.error("Failed to mark notification as read", error)
-      toast.error("Unable to mark notification as read")
+      console.error("Failed to mark notification as read", error);
+      toast.error("Unable to mark notification as read");
     } finally {
-      setUpdatingNotification(null)
+      setUpdatingNotification(null);
     }
-  }
+  };
 
   const deleteNotification = async (notificationId: string) => {
-    if (deletingNotification) return
+    if (deletingNotification) return;
 
-    setDeletingNotification(notificationId)
+    setDeletingNotification(notificationId);
     try {
       // Allow the row's delete animation to finish before removing the document.
-      await new Promise((resolve) => window.setTimeout(resolve, 850))
-      await deleteDoc(doc(db, "Notification", notificationId))
+      await new Promise((resolve) => window.setTimeout(resolve, 850));
+      await deleteDoc(doc(db, "Notification", notificationId));
     } catch (error) {
-      console.error("Failed to delete notification", error)
-      toast.error("Unable to delete notification")
+      console.error("Failed to delete notification", error);
+      toast.error("Unable to delete notification");
     } finally {
-      setDeletingNotification(null)
+      setDeletingNotification(null);
     }
-  }
+  };
 
   const openNotification = async (notificationId: string, page: string) => {
-    if (openingNotification) return
+    if (openingNotification) return;
 
-    setOpeningNotification(notificationId)
+    setOpeningNotification(notificationId);
     try {
-      await updateDoc(doc(db, "Notification", notificationId), { read: true })
-      setSheetOpen(false)
+      await updateDoc(doc(db, "Notification", notificationId), { read: true });
+      setSheetOpen(false);
 
-      const targetPath = `/${base_route}/${page}`
-      const targetUrl = new URL(targetPath, window.location.origin)
+      const targetPath = `/${base_route}/${page}`;
+      const targetUrl = new URL(targetPath, window.location.origin);
 
       if (window.location.pathname === targetUrl.pathname) {
-        window.history.pushState({}, "", targetUrl)
-        window.dispatchEvent(new PopStateEvent("popstate"))
+        window.history.pushState({}, "", targetUrl);
+        window.dispatchEvent(new PopStateEvent("popstate"));
       } else {
-        router.push(targetPath)
+        router.push(targetPath);
       }
     } catch (error) {
-      console.error("Failed to mark notification as read", error)
-      toast.error("Unable to open notification")
+      console.error("Failed to mark notification as read", error);
+      toast.error("Unable to open notification");
     } finally {
-      setOpeningNotification(null)
+      setOpeningNotification(null);
     }
-  }
+  };
 
   return (
     <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -330,12 +331,14 @@ export default function NotificationSheet() {
           <div className="divide-y px-4">
             {filteredNotifications.length > 0 ? (
               visibleNotifications.map((notification) => {
-                const NotificationIcon = getNotificationIcon(notification.title)
-                const viewLabel = getViewLabel(notification.title)
-                const relativeTime = formatRelativeTime(notification.TimeStamp)
+                const NotificationIcon = getNotificationIcon(
+                  notification.title,
+                );
+                const viewLabel = getViewLabel(notification.title);
+                const relativeTime = formatRelativeTime(notification.TimeStamp);
                 const isBeingMarkedRead =
-                  updatingNotification === notification.id
-                const isBeingDeleted = deletingNotification === notification.id
+                  updatingNotification === notification.id;
+                const isBeingDeleted = deletingNotification === notification.id;
 
                 return (
                   <div
@@ -407,11 +410,11 @@ export default function NotificationSheet() {
                             openingNotification === notification.id
                           }
                           onClick={(event) => {
-                            event.preventDefault()
+                            event.preventDefault();
                             void openNotification(
                               notification.id,
-                              notification.page!
-                            )
+                              notification.page!,
+                            );
                           }}
                         >
                           {openingNotification === notification.id
@@ -465,7 +468,7 @@ export default function NotificationSheet() {
                       </Button>
                     </div>
                   </div>
-                )
+                );
               })
             ) : (
               <div className="flex min-h-72 flex-col items-center justify-center px-6 text-center">
@@ -501,5 +504,5 @@ export default function NotificationSheet() {
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

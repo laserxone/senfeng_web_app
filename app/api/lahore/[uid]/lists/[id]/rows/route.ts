@@ -1,3 +1,3 @@
-import { rowRoutes } from "@/lib/custom-lists-routes"
+import { rowRoutes } from "@/lib/custom-lists-routes";
 
-export const { POST } = rowRoutes("lahore")
+export const { POST } = rowRoutes("lahore");

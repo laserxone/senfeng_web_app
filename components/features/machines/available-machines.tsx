@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Check, ChevronsUpDown } from "lucide-react"
-import * as React from "react"
+import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -12,20 +12,20 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { AvailableMachinesProps } from "@/lib/types"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/command";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { AvailableMachinesProps } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type LocalAvailableMachines = AvailableMachinesProps & {
-  baseLabel: string
-  value: number
-  label: string
-  colorFlag: string
-  bgColorClass: string
-  textColorClass: string
-}
+  baseLabel: string;
+  value: number;
+  label: string;
+  colorFlag: string;
+  bgColorClass: string;
+  textColorClass: string;
+};
 
 export function AvailableMachines({
   value,
@@ -34,34 +34,34 @@ export function AvailableMachines({
 
   onReturnItem = () => {},
 }: {
-  value: number | null
-  onReturn: React.Dispatch<React.SetStateAction<number | null>>
-  onReturnItem: (val: LocalAvailableMachines) => void
-  placeholder?: string
+  value: number | null;
+  onReturn: React.Dispatch<React.SetStateAction<number | null>>;
+  onReturnItem: (val: LocalAvailableMachines) => void;
+  placeholder?: string;
 }) {
-  const [open, setOpen] = React.useState(false)
-  const [data, setData] = React.useState<LocalAvailableMachines[]>([])
-  const { userID } = useUserDetail()
+  const [open, setOpen] = React.useState(false);
+  const [data, setData] = React.useState<LocalAvailableMachines[]>([]);
+  const { userID } = useUserDetail();
   React.useEffect(() => {
     async function fetchData() {
       axios
         .get(`/${userID}/available-machines`)
         .then((response: { data: AvailableMachinesProps[] }) => {
           if (response.data.length > 0) {
-            const apiData = response.data
+            const apiData = response.data;
 
             let finalData = apiData.map((item) => ({
               ...item,
               baseLabel: `${item.machine_model} ${item.machine_power} ${item.machine_source}`,
               value: item.id,
-            }))
+            }));
 
             finalData = finalData.sort((a, b) =>
-              a.baseLabel.localeCompare(b.baseLabel)
-            )
+              a.baseLabel.localeCompare(b.baseLabel),
+            );
 
-            const labelColorMap = new Map()
-            const labelCounter = new Map()
+            const labelColorMap = new Map();
+            const labelCounter = new Map();
 
             const colorClasses = [
               { bg: "bg-red-100", text: "text-red-800" },
@@ -74,25 +74,25 @@ export function AvailableMachines({
               { bg: "bg-teal-100", text: "text-teal-800" },
               { bg: "bg-orange-100", text: "text-orange-800" },
               { bg: "bg-gray-100", text: "text-gray-800" },
-            ]
+            ];
 
-            let colorIndex = 0
+            let colorIndex = 0;
 
             finalData = finalData.map((item) => {
-              const labelKey = item.baseLabel
+              const labelKey = item.baseLabel;
 
               if (!labelColorMap.has(labelKey)) {
                 labelColorMap.set(
                   labelKey,
-                  colorClasses[colorIndex % colorClasses.length]
-                )
-                colorIndex++
+                  colorClasses[colorIndex % colorClasses.length],
+                );
+                colorIndex++;
               }
 
-              const count = (labelCounter.get(labelKey) || 0) + 1
-              labelCounter.set(labelKey, count)
+              const count = (labelCounter.get(labelKey) || 0) + 1;
+              labelCounter.set(labelKey, count);
 
-              const color = labelColorMap.get(labelKey)
+              const color = labelColorMap.get(labelKey);
 
               return {
                 ...item,
@@ -100,17 +100,17 @@ export function AvailableMachines({
                 colorFlag: `${color.bg} ${color.text}`,
                 bgColorClass: color.bg,
                 textColorClass: color.text,
-              }
-            })
+              };
+            });
 
-            setData(finalData as LocalAvailableMachines[])
+            setData(finalData as LocalAvailableMachines[]);
           }
-        })
+        });
     }
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   return (
     <>
@@ -120,8 +120,8 @@ export function AvailableMachines({
         aria-expanded={open}
         className="w-full justify-between"
         onClick={(e) => {
-          e.preventDefault()
-          setOpen(!open)
+          e.preventDefault();
+          setOpen(!open);
         }}
       >
         {value ? data.find((item) => item.value === value)?.label : placeholder}
@@ -140,16 +140,16 @@ export function AvailableMachines({
                   key={item.value}
                   value={item.label}
                   onSelect={() => {
-                    onReturn(Number(item.value))
-                    onReturnItem(item)
-                    setOpen(false)
+                    onReturn(Number(item.value));
+                    onReturnItem(item);
+                    setOpen(false);
                   }}
                 >
                   {item.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === item.value ? "opacity-100" : "opacity-0"
+                      value === item.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>
@@ -159,5 +159,5 @@ export function AvailableMachines({
         </Command>
       </CommandDialog>
     </>
-  )
+  );
 }

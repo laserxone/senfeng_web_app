@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import useUserDetail from "@/hooks/use-user-detail"
+import useUserDetail from "@/hooks/use-user-detail";
 import {
   BadgeDollarSign,
   CalendarCheck,
@@ -10,9 +10,9 @@ import {
   GraduationCap,
   HandCoins,
   ShieldCheck,
-} from "lucide-react"
-import { useRouter } from "nextjs-toploader/app"
-import Heading from "@/components/ui/heading"
+} from "lucide-react";
+import { useRouter } from "nextjs-toploader/app";
+import Heading from "@/components/ui/heading";
 
 const applications = [
   {
@@ -71,11 +71,11 @@ const applications = [
     color: "bg-slate-50 text-slate-600",
     path: "/applications/security",
   },
-]
+];
 
 export default function ApplicationsPage() {
-  const router = useRouter()
-  const { base_route, designation } = useUserDetail()
+  const router = useRouter();
+  const { base_route, designation } = useUserDetail();
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -85,9 +85,9 @@ export default function ApplicationsPage() {
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {applications.map((item) => {
-          const Icon = item.icon
+          const Icon = item.icon;
           if (designation === "Engineer" && item.title === "Apply for Backup")
-            return null
+            return null;
           return (
             <button
               key={item.title}
@@ -103,9 +103,9 @@ export default function ApplicationsPage() {
               <h3 className="font-semibold text-slate-900">{item.title}</h3>
               <p className="mt-2 text-sm text-slate-500">{item.desc}</p>
             </button>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

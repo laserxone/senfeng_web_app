@@ -1,19 +1,19 @@
-import PageTable from "@/components/shared/tables/app-table"
-import AddCustomerDialog from "@/components/features/customers/components/add-customer"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import PageTable from "@/components/shared/tables/app-table";
+import AddCustomerDialog from "@/components/features/customers/components/add-customer";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MyCustomerResolved } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MyCustomerResolved } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
   Filter,
@@ -22,20 +22,20 @@ import {
   Smile,
   TrendingDown,
   TrendingUp,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useRouter } from "nextjs-toploader/app"
-import { useEffect, useState } from "react"
-import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import OldRecordSheet from "@/components/features/employee-finance/old-record-sheet"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useRouter } from "nextjs-toploader/app";
+import { useEffect, useState } from "react";
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import OldRecordSheet from "@/components/features/employee-finance/old-record-sheet";
 import {
   CustomerEmployeeAfterSalesProps,
   DashboardData,
   DataKeys,
   WithFeedbackProps,
-} from "./aftersales-types"
+} from "./aftersales-types";
 
 export default function FeedbackDialog({
   open,
@@ -45,44 +45,44 @@ export default function FeedbackDialog({
   data,
   onRefresh,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description: string
-  data: DashboardData
-  onRefresh: () => Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  data: DashboardData;
+  onRefresh: () => Promise<void>;
 }) {
-  const [filterData, setFilterData] = useState<DashboardData | null>(null)
-  const { userID } = useUserDetail()
+  const [filterData, setFilterData] = useState<DashboardData | null>(null);
+  const { userID } = useUserDetail();
   const [selectedOption, setSelectedOption] =
-    useState<string>("withoutFeedback")
+    useState<string>("withoutFeedback");
   const [filter, setFilter] = useState<{ start: any; end: any }>({
     start: null,
     end: null,
-  })
+  });
 
   useEffect(() => {
     if (filter.start) {
-      const temp: any = {}
-      const startDate = moment(new Date(filter.start))
-      const endDate = moment(new Date(filter.end))
+      const temp: any = {};
+      const startDate = moment(new Date(filter.start));
+      const endDate = moment(new Date(filter.end));
 
-      temp.withoutFeedback = [...(data?.withoutFeedback || [])]
+      temp.withoutFeedback = [...(data?.withoutFeedback || [])];
       temp.withFeedback = [...(data?.withFeedback || [])].filter(
         (item: WithFeedbackProps) => {
-          const feedbackDate = moment(new Date(item.feedback_date))
+          const feedbackDate = moment(new Date(item.feedback_date));
           return (
             feedbackDate.isSameOrAfter(startDate) &&
             feedbackDate.isSameOrBefore(endDate)
-          )
-        }
-      )
+          );
+        },
+      );
 
-      setFilterData(temp)
+      setFilterData(temp);
     } else {
-      setFilterData(data)
+      setFilterData(data);
     }
-  }, [filter, data])
+  }, [filter, data]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,7 +97,7 @@ export default function FeedbackDialog({
             user_id={userID}
             onRefresh={onRefresh}
             onFilterData={(start, end) => {
-              setFilter({ start: moment(start), end: moment(end) })
+              setFilter({ start: moment(start), end: moment(end) });
             }}
             handleClear={async () => setFilter({ start: null, end: null })}
             selectedOption={selectedOption}
@@ -106,7 +106,7 @@ export default function FeedbackDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 const CustomerEmployeeAfterSales = ({
@@ -119,23 +119,23 @@ const CustomerEmployeeAfterSales = ({
   setSelectedOption,
 }: CustomerEmployeeAfterSalesProps) => {
   const { base_route, customer_add_access, designation, route_branch } =
-    useUserDetail()
-  const [addCustomer, setAddCustomer] = useState(false)
-  const router = useRouter()
-  const [showFeedback, setShowFeedback] = useState(false)
-  const [feedback, setFeedback] = useState("")
+    useUserDetail();
+  const [addCustomer, setAddCustomer] = useState(false);
+  const router = useRouter();
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const [selectedDetail, setSelectedDetail] = useState<
     WithFeedbackProps | MyCustomerResolved | null
-  >(null)
+  >(null);
   const [selectedCustomer, setSelectedCustomer] = useState<
     WithFeedbackProps | MyCustomerResolved | null
-  >(null)
-  const [next, setNext] = useState<Date | undefined>(undefined)
-  const [top, setTop] = useState(false)
-  const [satisfactory, setSatisfactory] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [oldRecordVisible, setOldRecordVisible] = useState(false)
+  >(null);
+  const [next, setNext] = useState<Date | undefined>(undefined);
+  const [top, setTop] = useState(false);
+  const [satisfactory, setSatisfactory] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [oldRecordVisible, setOldRecordVisible] = useState(false);
 
   const columns: ColumnDef<WithFeedbackProps | MyCustomerResolved>[] = [
     {
@@ -150,12 +150,12 @@ const CustomerEmployeeAfterSales = ({
             Owner
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <Link
           onClick={(e) => {
-            e.stopPropagation()
+            e.stopPropagation();
           }}
           className="hover:underline"
           target="_blank"
@@ -177,12 +177,12 @@ const CustomerEmployeeAfterSales = ({
             Company
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <Link
           onClick={(e) => {
-            e.stopPropagation()
+            e.stopPropagation();
           }}
           className="hover:underline"
           target="_blank"
@@ -205,7 +205,7 @@ const CustomerEmployeeAfterSales = ({
             Number
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("number")}</div>,
     },
@@ -222,7 +222,7 @@ const CustomerEmployeeAfterSales = ({
             Location
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("location")}</div>,
     },
@@ -239,13 +239,13 @@ const CustomerEmployeeAfterSales = ({
             Feedback
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
           {row.getValue("feedback_date")
             ? moment(new Date(row.getValue("feedback_date"))).format(
-                "YYYY-MM-DD"
+                "YYYY-MM-DD",
               )
             : "Not taken"}
         </div>
@@ -264,7 +264,7 @@ const CustomerEmployeeAfterSales = ({
             Taken By
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("user_name") || "-"}</div>,
     },
@@ -272,27 +272,27 @@ const CustomerEmployeeAfterSales = ({
     {
       id: "actions",
       cell: ({ row }) => {
-        const currentItem = row.original
+        const currentItem = row.original;
 
         return (
           <Button
             size={"sm"}
             variant={"outline"}
             onClick={(e) => {
-              e.stopPropagation()
-              setSelectedCustomer(currentItem)
-              setShowFeedback(true)
+              e.stopPropagation();
+              setSelectedCustomer(currentItem);
+              setShowFeedback(true);
             }}
           >
             <PhoneCall /> Feedback
           </Button>
-        )
+        );
       },
     },
-  ]
+  ];
 
   async function handleSaveFeedback() {
-    setLoading(true)
+    setLoading(true);
     axios
       .post(`/${user_id}/feedback`, {
         feedback: feedback,
@@ -304,12 +304,12 @@ const CustomerEmployeeAfterSales = ({
         top_follow: top,
       })
       .then(async () => {
-        await onRefresh()
+        await onRefresh();
       })
       .finally(() => {
-        setLoading(false)
-        setShowFeedback(false)
-      })
+        setLoading(false);
+        setShowFeedback(false);
+      });
   }
 
   return (
@@ -322,7 +322,7 @@ const CustomerEmployeeAfterSales = ({
           }}
           option={selectedOption}
           onSelect={(val) => {
-            setSelectedOption(val)
+            setSelectedOption(val);
           }}
         />
       </div>
@@ -331,7 +331,7 @@ const CustomerEmployeeAfterSales = ({
           columns={columns}
           data={data?.[selectedOption as DataKeys] || []}
           onRowClick={(val) => {
-            setSelectedDetail(val)
+            setSelectedDetail(val);
           }}
           filter
           onFilterPress={() => setFilterVisible(true)}
@@ -361,7 +361,7 @@ const CustomerEmployeeAfterSales = ({
         visible={addCustomer}
         onClose={setAddCustomer}
         onRefresh={async () => {
-          await onRefresh()
+          await onRefresh();
         }}
       />
 
@@ -369,7 +369,7 @@ const CustomerEmployeeAfterSales = ({
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          onFilterData(val.start, val.end)
+          onFilterData(val.start, val.end);
         }}
       />
 
@@ -382,8 +382,8 @@ const CustomerEmployeeAfterSales = ({
       <AddFeedbackDialog
         customer_id={selectedCustomer?.id}
         onClose={() => {
-          setSelectedCustomer(null)
-          setShowFeedback(false)
+          setSelectedCustomer(null);
+          setShowFeedback(false);
         }}
         onRefresh={onRefresh}
         open={showFeedback}
@@ -394,12 +394,12 @@ const CustomerEmployeeAfterSales = ({
         item={selectedDetail}
         open={!!selectedDetail}
         onOpenChange={(nextOpen) => {
-          if (!nextOpen) setSelectedDetail(null)
+          if (!nextOpen) setSelectedDetail(null);
         }}
       />
     </div>
-  )
-}
+  );
+};
 
 const CustomerExtraData = ({
   data,
@@ -407,11 +407,11 @@ const CustomerExtraData = ({
   onSelect,
 }: {
   data: {
-    withFeedback: WithFeedbackProps[]
-    withoutFeedback: MyCustomerResolved[]
-  }
-  option: string
-  onSelect: (a: string) => void
+    withFeedback: WithFeedbackProps[];
+    withoutFeedback: MyCustomerResolved[];
+  };
+  option: string;
+  onSelect: (a: string) => void;
 }) => {
   const menuItems = [
     {
@@ -426,7 +426,7 @@ const CustomerExtraData = ({
       dataKey: "withFeedback",
       icon: <TrendingUp className="h-4 w-4" />,
     },
-  ]
+  ];
 
   return (
     <div className="rounded-md border border-border bg-card p-2 text-card-foreground shadow-sm">
@@ -441,8 +441,8 @@ const CustomerExtraData = ({
 
       <div className="flex w-full gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0">
         {menuItems.map(({ key, label, dataKey, icon }) => {
-          const count = data?.[dataKey as keyof typeof data]?.length ?? 0
-          const isActive = option === dataKey
+          const count = data?.[dataKey as keyof typeof data]?.length ?? 0;
+          const isActive = option === dataKey;
 
           return (
             <button
@@ -475,27 +475,27 @@ const CustomerExtraData = ({
                 </Badge>
               )}
             </button>
-          )
+          );
         })}
       </div>
     </div>
-  )
-}
+  );
+};
 
 function FeedbackDetailDialog({
   item,
   open,
   onOpenChange,
 }: {
-  item: WithFeedbackProps | MyCustomerResolved | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  item: WithFeedbackProps | MyCustomerResolved | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const feedbackStatus =
-    item && "feedback_status" in item ? item.feedback_status : undefined
-  const isSatisfactory = feedbackStatus === "Satisfactory"
-  const statusLabel = feedbackStatus || "No feedback"
-  const detailRows = item ? Object.entries(item) : []
+    item && "feedback_status" in item ? item.feedback_status : undefined;
+  const isSatisfactory = feedbackStatus === "Satisfactory";
+  const statusLabel = feedbackStatus || "No feedback";
+  const detailRows = item ? Object.entries(item) : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -555,7 +555,7 @@ function FeedbackDetailDialog({
                           {formatDetailValue(value, key)}
                         </p>
                       </div>
-                    )
+                    ),
                 )}
               </div>
             </div>
@@ -565,7 +565,7 @@ function FeedbackDetailDialog({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function EmptyState({ label }: { label: string }) {
@@ -573,20 +573,20 @@ function EmptyState({ label }: { label: string }) {
     <div className="px-4 py-8 text-center text-sm text-muted-foreground">
       {label}
     </div>
-  )
+  );
 }
 
 function formatDetailValue(value: unknown, key: string) {
   if (key === "created_at" || key === "feedback_date")
-    return value ? moment(value).format("YYYY-MM-DD") : "-"
-  if (value === null || value === undefined || value === "") return "-"
-  if (Array.isArray(value)) return value.join(", ")
-  if (typeof value === "boolean") return value ? "Yes" : "No"
-  return String(value)
+    return value ? moment(value).format("YYYY-MM-DD") : "-";
+  if (value === null || value === undefined || value === "") return "-";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
 }
 
 function formatDetailLabel(value: string) {
   return value
     .replace(/_/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

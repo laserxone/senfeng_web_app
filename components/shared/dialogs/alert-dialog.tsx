@@ -7,19 +7,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import Spinner from "@/components/ui/spinner"
-import { ReactNode } from "react"
+} from "@/components/ui/alert-dialog";
+import Spinner from "@/components/ui/spinner";
+import { ReactNode } from "react";
 type ConfirmationDialogProps = {
-  title: string
-  description: string
-  onPressYes: () => void
-  onPressCancel: () => void
-  open: boolean
-  loading?: boolean
-  children?: ReactNode | null
-  valid?: boolean
-}
+  title: string;
+  description: string;
+  onPressYes: () => void;
+  onPressCancel: () => void;
+  open: boolean;
+  loading?: boolean;
+  children?: ReactNode | null;
+  valid?: boolean;
+};
 const ConfirmationDialog = ({
   title,
   description,
@@ -49,7 +49,7 @@ const ConfirmationDialog = ({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
-}
+  );
+};
 
-export default ConfirmationDialog
+export default ConfirmationDialog;

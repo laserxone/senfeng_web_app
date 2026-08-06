@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -6,9 +6,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import axios from "@/lib/axios"
-import { TaskProps } from "@/lib/types"
+} from "@/components/ui/sheet";
+import axios from "@/lib/axios";
+import { TaskProps } from "@/lib/types";
 import {
   CalendarClock,
   CheckCircle2,
@@ -21,20 +21,20 @@ import {
   UserRound,
   UsersRound,
   type LucideIcon,
-} from "lucide-react"
-import moment from "moment"
-import { useState } from "react"
-import { toast } from "sonner"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
+} from "lucide-react";
+import moment from "moment";
+import { useState } from "react";
+import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
 
 type TaskDetailProps = {
-  detail: TaskProps | null
-  visible: boolean
-  onClose: (value: boolean) => void
-  onMark: () => Promise<void>
-  user_id: number | string
-}
+  detail: TaskProps | null;
+  visible: boolean;
+  onClose: (value: boolean) => void;
+  onMark: () => Promise<void>;
+  user_id: number | string;
+};
 
 const TaskDetail = ({
   detail,
@@ -43,31 +43,31 @@ const TaskDetail = ({
   onMark,
   user_id,
 }: TaskDetailProps) => {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-  if (!detail?.id) return null
+  if (!detail?.id) return null;
 
-  const isCompleted = detail.status?.toLowerCase() === "completed"
+  const isCompleted = detail.status?.toLowerCase() === "completed";
   const customerNumber = Array.isArray(detail.customer_number)
     ? detail.customer_number.filter(Boolean).join(", ")
-    : String(detail.customer_number || "")
+    : String(detail.customer_number || "");
 
   async function handleUpdateStatus() {
-    if (!detail?.id) return
-    setLoading(true)
+    if (!detail?.id) return;
+    setLoading(true);
     try {
       await axios.put(`/${user_id}/task/${detail?.id}`, {
         id: detail.id,
         status: "Completed",
-      })
-      toast.success("Status updated")
-      onClose(false)
-      await onMark()
+      });
+      toast.success("Status updated");
+      onClose(false);
+      await onMark();
     } catch (error) {
-      console.error("Failed to update task status", error)
-      toast.error("Unable to update task status")
+      console.error("Failed to update task status", error);
+      toast.error("Unable to update task status");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -223,15 +223,15 @@ const TaskDetail = ({
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 function StatusBadge({
   completed,
   status,
 }: {
-  completed: boolean
-  status?: string
+  completed: boolean;
+  status?: string;
 }) {
   return (
     <span
@@ -243,7 +243,7 @@ function StatusBadge({
     >
       {status || "Pending"}
     </span>
-  )
+  );
 }
 
 function DetailItem({
@@ -251,9 +251,9 @@ function DetailItem({
   label,
   value,
 }: {
-  icon: LucideIcon
-  label: string
-  value?: string | null
+  icon: LucideIcon;
+  label: string;
+  value?: string | null;
 }) {
   return (
     <div className="flex min-w-0 items-start gap-2.5 rounded-xl border bg-muted/10 p-2.5">
@@ -269,22 +269,22 @@ function DetailItem({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 function SectionHeading({
   icon: Icon,
   title,
 }: {
-  icon: LucideIcon
-  title: string
+  icon: LucideIcon;
+  title: string;
 }) {
   return (
     <div className="mb-3 flex items-center gap-2">
       <Icon className="size-4 text-primary" />
       <h3 className="text-sm font-semibold">{title}</h3>
     </div>
-  )
+  );
 }
 
 function TextDetail({
@@ -292,9 +292,9 @@ function TextDetail({
   value,
   className = "",
 }: {
-  label: string
-  value?: string | null
-  className?: string
+  label: string;
+  value?: string | null;
+  className?: string;
 }) {
   return (
     <div className={`min-w-0 ${className}`}>
@@ -305,7 +305,7 @@ function TextDetail({
         {value || "N/A"}
       </p>
     </div>
-  )
+  );
 }
 
 function NarrativeCard({
@@ -313,9 +313,9 @@ function NarrativeCard({
   title,
   value,
 }: {
-  icon: LucideIcon
-  title: string
-  value: string
+  icon: LucideIcon;
+  title: string;
+  value: string;
 }) {
   return (
     <section className="min-w-0 rounded-xl border bg-background p-3 shadow-sm">
@@ -324,7 +324,7 @@ function NarrativeCard({
         {value}
       </p>
     </section>
-  )
+  );
 }
 
-export default TaskDetail
+export default TaskDetail;

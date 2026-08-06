@@ -1,11 +1,11 @@
-"use client"
-import axios from "@/lib/axios"
-import { ChangeEvent, useEffect, useState } from "react"
-import { FaMinusCircle, FaPlus } from "react-icons/fa"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+"use client";
+import axios from "@/lib/axios";
+import { ChangeEvent, useEffect, useState } from "react";
+import { FaMinusCircle, FaPlus } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -13,29 +13,29 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
-import "./Button.css"
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import "pdfjs-dist/build/pdf.worker.mjs"
-import "pdfjs-dist/legacy/web/pdf_viewer.css"
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data"
-import { Checkbox } from "@/components/ui/checkbox"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
-import NotificationBadge from "@/components/shared/notifications/NotificationBadge"
-import AddItemDialog from "./add-item-dialog"
-import AddPOSPayment from "./add-pos-payment"
-import DeleteInvoice from "./delete-invoice"
-import EngineerModal from "./engineer-modal"
-import InwardModal from "./inward-modal"
-import OrderStockDialog from "./order-stock-dialog"
-import POSModal from "./pos-modal"
-import SearchResultModal from "./search-result-modal"
-import ViewableInvoice from "./viewable-invoice"
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import "pdfjs-dist/build/pdf.worker.mjs";
+import "pdfjs-dist/legacy/web/pdf_viewer.css";
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
+import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
+import AddItemDialog from "./add-item-dialog";
+import AddPOSPayment from "./add-pos-payment";
+import DeleteInvoice from "./delete-invoice";
+import EngineerModal from "./engineer-modal";
+import InwardModal from "./inward-modal";
+import OrderStockDialog from "./order-stock-dialog";
+import POSModal from "./pos-modal";
+import SearchResultModal from "./search-result-modal";
+import ViewableInvoice from "./viewable-invoice";
 
 import {
   InvoiceItem,
@@ -43,11 +43,11 @@ import {
   POSInvoiceReminder,
   SearchItem,
   StockProps,
-} from "@/lib/types"
-import Link from "next/link"
-import { toast } from "sonner"
-import OutwardModal from "./outward-modal"
-import LowStock from "./low-stock"
+} from "@/lib/types";
+import Link from "next/link";
+import { toast } from "sonner";
+import OutwardModal from "./outward-modal";
+import LowStock from "./low-stock";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -61,70 +61,70 @@ import LowStock from "./low-stock"
 // }
 
 export type SelectedUser = {
-  id: null | number
-  label: null | string
-}
+  id: null | number;
+  label: null | string;
+};
 
 export default function POS() {
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
-    null
-  )
-  const [loading, setLoading] = useState(true)
-  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([])
-  const [stock, setStock] = useState<StockProps[]>([])
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [createdAt, setCreatedAt] = useState<Date | string>(new Date())
-  const [name, setName] = useState("")
-  const [companyName, setCompanyName] = useState("")
-  const [address, setAddress] = useState("")
-  const [qty, setQty] = useState<string | number>("")
-  const [price, setPrice] = useState<string | number>("")
-  const [totalAmount, setTotalAmount] = useState(0)
+    null,
+  );
+  const [loading, setLoading] = useState(true);
+  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
+  const [stock, setStock] = useState<StockProps[]>([]);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [createdAt, setCreatedAt] = useState<Date | string>(new Date());
+  const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [address, setAddress] = useState("");
+  const [qty, setQty] = useState<string | number>("");
+  const [price, setPrice] = useState<string | number>("");
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  const [other, setOther] = useState("")
-  const [showOther, setShowOther] = useState(false)
-  const [manager, setManager] = useState("")
-  const [nextInvoice, setNextInvoice] = useState(`xxxxxxxx-xxx`)
-  const [addProductVisible, setAddProductVisible] = useState(false)
-  const [searchInvocie, setSearchInvoice] = useState(false)
-  const [itemSearch, setItemSearch] = useState("")
-  const [searchLoading, setSearchLoading] = useState(false)
-  const [pendingLoading, setPendingLoading] = useState(false)
-  const [searchModal, setSearchModal] = useState(false)
-  const [searchItemsResult, setSearchItemsResult] = useState<SearchItem[]>([])
+  const [other, setOther] = useState("");
+  const [showOther, setShowOther] = useState(false);
+  const [manager, setManager] = useState("");
+  const [nextInvoice, setNextInvoice] = useState(`xxxxxxxx-xxx`);
+  const [addProductVisible, setAddProductVisible] = useState(false);
+  const [searchInvocie, setSearchInvoice] = useState(false);
+  const [itemSearch, setItemSearch] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [searchModal, setSearchModal] = useState(false);
+  const [searchItemsResult, setSearchItemsResult] = useState<SearchItem[]>([]);
   const [selectedSearchItem, setSelectedSearchItem] =
-    useState<SearchItem | null>(null)
-  const [checked, setChecked] = useState(false)
-  const [modal, setModal] = useState(false)
-  const [reminder, setReminder] = useState<POSInvoiceReminder[]>([])
-  const [warranty, setWarranty] = useState(false)
-  const [warrantyYear, setWarrantyYear] = useState(1)
-  const { userID, designation, base_route } = useUserDetail()
-  const [selectedRadio, setSelectedRadio] = useState("customer")
+    useState<SearchItem | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [modal, setModal] = useState(false);
+  const [reminder, setReminder] = useState<POSInvoiceReminder[]>([]);
+  const [warranty, setWarranty] = useState(false);
+  const [warrantyYear, setWarrantyYear] = useState(1);
+  const { userID, designation, base_route } = useUserDetail();
+  const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedUser, setSelectedUser] = useState<SelectedUser>({
     id: null,
     label: null,
-  })
-  const [engineerLoading, setEngineerLoading] = useState(false)
-  const [allEngineersData, setAllEngineersData] = useState([])
-  const [engineersModal, setEngineersModal] = useState(false)
-  const [dialogVisible, setDialogVisible] = useState(false)
-  const [orderStockVisible, setOrderStockVisible] = useState(false)
-  const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null)
-  const debouncedUserId = useDebounce(userID, 1000)
-  const [discount, setDiscount] = useState<number | string>("")
-  const [inwardModal, setInwardModal] = useState(false)
-  const [outwardModal, setOutwardModal] = useState(false)
-  const [total, setTotal] = useState(0)
+  });
+  const [engineerLoading, setEngineerLoading] = useState(false);
+  const [allEngineersData, setAllEngineersData] = useState([]);
+  const [engineersModal, setEngineersModal] = useState(false);
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [orderStockVisible, setOrderStockVisible] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<number | null>(null);
+  const debouncedUserId = useDebounce(userID, 1000);
+  const [discount, setDiscount] = useState<number | string>("");
+  const [inwardModal, setInwardModal] = useState(false);
+  const [outwardModal, setOutwardModal] = useState(false);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     if (debouncedUserId) {
-      fetchData()
+      fetchData();
     }
-  }, [debouncedUserId])
+  }, [debouncedUserId]);
 
   const handleUpdateInvoice = async () => {
-    await handleInvoiceBackendData()
+    await handleInvoiceBackendData();
     const PDFData = {
       companyName: companyName,
       name: name,
@@ -138,7 +138,7 @@ export default function POS() {
       warrantyYear: warrantyYear,
       discount: `${discount}`,
       createdAt: createdAt,
-    }
+    };
     const pdfRes = await axios.post(
       `/${userID}/pos/pdf`,
       {
@@ -149,17 +149,17 @@ export default function POS() {
         headers: {
           "Content-Type": "application/json",
         },
-      }
-    )
+      },
+    );
 
     const blob = new Blob([pdfRes.data], {
       type: "application/pdf",
-    })
+    });
 
-    const url = URL.createObjectURL(blob)
-    window.open(url, "_blank")
-    setTimeout(() => URL.revokeObjectURL(url), 600000)
-  }
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 600000);
+  };
 
   const handleInvoiceBackendData = async () => {
     try {
@@ -176,17 +176,17 @@ export default function POS() {
           payment: selectedSearchItem?.payment || false,
           discount: discount || 0,
         },
-      })
+      });
     } finally {
-      await fetchData()
-      setSelectedSearchItem(null)
-      setSearchItemsResult([])
+      await fetchData();
+      setSelectedSearchItem(null);
+      setSearchItemsResult([]);
     }
-  }
+  };
 
   const generatePDF = async () => {
     try {
-      const invNumber = await handleUpdateStock()
+      const invNumber = await handleUpdateStock();
       const PDFData = {
         companyName: companyName,
         name: name,
@@ -200,7 +200,7 @@ export default function POS() {
         warranty: warranty,
         warrantyYear: warrantyYear,
         discount: `${discount}`,
-      }
+      };
       const pdfRes = await axios.post(
         `/${userID}/pos/pdf`,
         {
@@ -211,32 +211,32 @@ export default function POS() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
-      )
+        },
+      );
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      })
+      });
 
-      const url = URL.createObjectURL(blob)
-      window.open(url, "_blank")
-      setTimeout(() => URL.revokeObjectURL(url), 600000)
-      await fetchData()
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
+      await fetchData();
       if (checked) {
-        setSelectedInvoice(invNumber?.returning_id)
+        setSelectedInvoice(invNumber?.returning_id);
       } else {
-        setSelectedCustomer(null)
-        setChecked(false)
+        setSelectedCustomer(null);
+        setChecked(false);
       }
-      setTimeout(() => URL.revokeObjectURL(url), 600000)
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
     } catch (error) {
-      console.log(error)
-      setLoading(false)
+      console.log(error);
+      setLoading(false);
     }
-  }
+  };
 
   async function handleUpdateStock() {
-    const modified = stock.filter((item) => item?.modified)
+    const modified = stock.filter((item) => item?.modified);
 
     try {
       const response = await axios.put(`/${userID}/pos`, {
@@ -251,42 +251,42 @@ export default function POS() {
         customer_id: selectedCustomer ? selectedCustomer?.id : null,
         discount: discount || 0,
         payment: selectedCustomer?.id ? checked : false,
-      })
+      });
 
-      return response.data
+      return response.data;
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
   const fetchData = async () => {
-    clearAll()
+    clearAll();
     try {
-      const response = await axios.get(`/${userID}/pos`)
+      const response = await axios.get(`/${userID}/pos`);
       if (response.data.stock.length > 0) {
-        setStock([...response.data.stock])
+        setStock([...response.data.stock]);
       }
       if (response.data?.reminders) {
-        setReminder(response.data.reminders)
+        setReminder(response.data.reminders);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (invoiceItems.length > 0) {
-      let total = 0
-      let dis: Number = Number(discount) || 0
+      let total = 0;
+      let dis: Number = Number(discount) || 0;
       invoiceItems.forEach((item) => {
-        total = total + Number(item?.total)
-      })
+        total = total + Number(item?.total);
+      });
 
-      setTotalAmount(total - Number(dis))
+      setTotalAmount(total - Number(dis));
     } else {
-      setTotalAmount(0)
+      setTotalAmount(0);
     }
-  }, [invoiceItems, discount])
+  }, [invoiceItems, discount]);
 
   const handleAddToInvoice = () => {
     if (showOther) {
@@ -299,20 +299,20 @@ export default function POS() {
           description: other || "",
           type: "other",
         },
-      ])
-      setOther("")
-      setShowOther(false)
+      ]);
+      setOther("");
+      setShowOther(false);
     }
-    setShowOther(false)
-    setQty("")
-    setPrice("")
-  }
+    setShowOther(false);
+    setQty("");
+    setPrice("");
+  };
 
   function handleChange(
     e: ChangeEvent<HTMLInputElement, HTMLInputElement>,
-    i: number
+    i: number,
   ) {
-    const { value, name } = e.target
+    const { value, name } = e.target;
     setInvoiceItems((prevItems) =>
       prevItems.map((item, index) =>
         index === i
@@ -324,25 +324,27 @@ export default function POS() {
                   ? Number(value) * Number(item.qty)
                   : item.total,
             }
-          : item
-      )
-    )
+          : item,
+      ),
+    );
   }
 
   function handleIncrease(item: StockProps) {
     if (!item.qty || item?.qty < 1)
-      return toast.info("Select a valid item and quantity.")
+      return toast.info("Select a valid item and quantity.");
 
     setStock((prevStock) =>
       prevStock.map((eachItem) =>
         eachItem.id === item.id
           ? { ...eachItem, qty: (eachItem?.qty || 0) - 1, modified: true }
-          : eachItem
-      )
-    )
+          : eachItem,
+      ),
+    );
 
     setInvoiceItems((prevItems) => {
-      const existingItem = prevItems.find((eachItem) => eachItem.id === item.id)
+      const existingItem = prevItems.find(
+        (eachItem) => eachItem.id === item.id,
+      );
       if (existingItem) {
         return prevItems.map((eachItem) =>
           eachItem.id === item.id
@@ -352,8 +354,8 @@ export default function POS() {
                 total:
                   Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
               }
-            : eachItem
-        )
+            : eachItem,
+        );
       } else {
         return [
           ...prevItems,
@@ -363,14 +365,14 @@ export default function POS() {
             total: Number(item?.price || 0),
             description: item.name,
           },
-        ]
+        ];
       }
-    })
+    });
   }
 
   function handleDecrease(item: StockProps) {
-    const existing = invoiceItems.find((eachItem) => eachItem.id === item.id)
-    if (!existing) return
+    const existing = invoiceItems.find((eachItem) => eachItem.id === item.id);
+    if (!existing) return;
     setInvoiceItems((prevItems) =>
       prevItems
         .map((eachItem) =>
@@ -381,39 +383,39 @@ export default function POS() {
                 total:
                   Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
               }
-            : eachItem
+            : eachItem,
         )
-        .filter((eachItem) => Number(eachItem?.qty || 0) > 0)
-    )
+        .filter((eachItem) => Number(eachItem?.qty || 0) > 0),
+    );
 
     setStock((prevStock) =>
       prevStock.map((eachItem) =>
         eachItem.id === item.id
           ? { ...eachItem, qty: Number(eachItem.qty || 0) + 1, modified: true }
-          : eachItem
-      )
-    )
+          : eachItem,
+      ),
+    );
   }
 
   function handleRemove(i: number) {
-    setInvoiceItems((prevItems) => prevItems.filter((_, ind) => ind !== i))
+    setInvoiceItems((prevItems) => prevItems.filter((_, ind) => ind !== i));
   }
 
   function clearAll() {
-    setInvoiceItems([])
-    setPhoneNumber("")
-    setName("")
-    setCompanyName("")
-    setAddress("")
-    setQty("")
-    setPrice("")
-    setTotalAmount(0)
-    setDiscount("")
-    setOther("")
-    setShowOther(false)
-    setManager("")
-    setNextInvoice("xxxxxxxx-xxx")
-    setSelectedRadio("customer")
+    setInvoiceItems([]);
+    setPhoneNumber("");
+    setName("");
+    setCompanyName("");
+    setAddress("");
+    setQty("");
+    setPrice("");
+    setTotalAmount(0);
+    setDiscount("");
+    setOther("");
+    setShowOther(false);
+    setManager("");
+    setNextInvoice("xxxxxxxx-xxx");
+    setSelectedRadio("customer");
   }
 
   async function handleItemSearch() {
@@ -423,31 +425,31 @@ export default function POS() {
         if (response.data.length > 0) {
           const resultWithTotal = response.data.map(
             (item: POSInvoiceReminder) => {
-              const discount = Number(item.discount || 0).toFixed(0)
+              const discount = Number(item.discount || 0).toFixed(0);
               return {
                 ...item,
                 discount,
-              }
-            }
-          )
-          setSearchModal(true)
-          setSearchItemsResult(resultWithTotal)
+              };
+            },
+          );
+          setSearchModal(true);
+          setSearchItemsResult(resultWithTotal);
           setTotal(
             resultWithTotal.reduce(
               (sum: any, item: any) => sum + Number(item.total || 0),
-              0
-            )
-          )
+              0,
+            ),
+          );
         } else {
-          toast.info("No invoice found")
+          toast.info("No invoice found");
         }
       })
       .catch((e) => {
-        console.log(e)
+        console.log(e);
       })
       .finally(() => {
-        setSearchLoading(false)
-      })
+        setSearchLoading(false);
+      });
   }
 
   async function handleItemSearchAll() {
@@ -457,38 +459,38 @@ export default function POS() {
         if (response.data.length > 0) {
           const resultWithTotal = response.data.map(
             (item: POSInvoiceReminder) => {
-              const discount = Number(item.discount || 0).toFixed(0)
+              const discount = Number(item.discount || 0).toFixed(0);
 
               return {
                 ...item,
                 discount,
-              }
-            }
-          )
-          setSearchModal(true)
-          setSearchItemsResult(resultWithTotal)
+              };
+            },
+          );
+          setSearchModal(true);
+          setSearchItemsResult(resultWithTotal);
           setTotal(
             resultWithTotal.reduce(
               (sum: any, item: any) => sum + Number(item.total || 0),
-              0
-            )
-          )
+              0,
+            ),
+          );
         }
       })
       .catch((e) => {
-        console.log(e)
+        console.log(e);
       })
       .finally(() => {
-        setSearchLoading(false)
-      })
+        setSearchLoading(false);
+      });
   }
 
   async function handleReset() {
-    setLoading(true)
-    setSearchItemsResult([])
-    setSelectedSearchItem(null)
-    setItemSearch("")
-    await fetchData()
+    setLoading(true);
+    setSearchItemsResult([]);
+    setSelectedSearchItem(null);
+    setItemSearch("");
+    await fetchData();
   }
 
   async function handlePendingPayments() {
@@ -501,57 +503,57 @@ export default function POS() {
               (item: POSInvoiceReminder) => {
                 return {
                   ...item,
-                }
-              }
-            )
-            setSearchModal(true)
-            setSearchItemsResult(resultWithTotal)
+                };
+              },
+            );
+            setSearchModal(true);
+            setSearchItemsResult(resultWithTotal);
             setTotal(
               resultWithTotal.reduce(
                 (sum: any, item: any) => sum + Number(item.final_amount || 0),
-                0
-              )
-            )
+                0,
+              ),
+            );
           }
         })
         .catch((e) => {
-          console.log(e)
+          console.log(e);
         })
         .finally(() => {
-          setPendingLoading(false)
-          resolve()
-        })
-    })
+          setPendingLoading(false);
+          resolve();
+        });
+    });
   }
 
   useEffect(() => {
-    setSelectedUser({ id: null, label: null })
-  }, [selectedRadio])
+    setSelectedUser({ id: null, label: null });
+  }, [selectedRadio]);
 
   async function handleEngineerItems() {
     try {
-      setEngineerLoading(true)
-      const response = await axios.get(`/${userID}/pos/engineer`)
+      setEngineerLoading(true);
+      const response = await axios.get(`/${userID}/pos/engineer`);
 
-      setAllEngineersData(response.data)
-      setEngineersModal(true)
-      return true
+      setAllEngineersData(response.data);
+      setEngineersModal(true);
+      return true;
     } finally {
-      setEngineerLoading(false)
+      setEngineerLoading(false);
     }
   }
 
   function handleInward() {
-    setInwardModal(true)
+    setInwardModal(true);
   }
 
   function handleOutward() {
-    setOutwardModal(true)
+    setOutwardModal(true);
   }
 
   function handleOrderStock() {
-    setDialogVisible(false)
-    setOrderStockVisible(true)
+    setDialogVisible(false);
+    setOrderStockVisible(true);
   }
 
   return loading ? (
@@ -623,13 +625,13 @@ export default function POS() {
                         setSelectedUser((prevState) => ({
                           ...prevState,
                           id: val,
-                        }))
+                        }));
                       }}
                       onReturnName={(val) => {
                         setSelectedUser((prevState) => ({
                           ...prevState,
                           label: val,
-                        }))
+                        }));
                       }}
                       placeholder="Select user"
                     />
@@ -643,15 +645,15 @@ export default function POS() {
                   <CustomerSearchWithData
                     value={selectedCustomer}
                     onReturn={(val) => {
-                      setSelectedCustomer(val)
+                      setSelectedCustomer(val);
                       if (val?.number && Array.isArray(val.number))
                         setPhoneNumber(
-                          val.number.length > 0 ? val.number[0] : ""
-                        )
-                      setName(val?.owner || "")
-                      setCompanyName(val?.name || "")
-                      setManager(val?.ownership_name || "")
-                      setAddress(val?.address || "")
+                          val.number.length > 0 ? val.number[0] : "",
+                        );
+                      setName(val?.owner || "");
+                      setCompanyName(val?.name || "");
+                      setManager(val?.ownership_name || "");
+                      setAddress(val?.address || "");
                     }}
                   />
                 </div>
@@ -749,7 +751,7 @@ export default function POS() {
                         >
                           {header}
                         </TableHead>
-                      )
+                      ),
                     )}
                   </TableRow>
                 </TableHeader>
@@ -761,7 +763,7 @@ export default function POS() {
                           name="description"
                           value={item?.description}
                           onChange={(e) => {
-                            handleChange(e, i)
+                            handleChange(e, i);
                           }}
                         />
                       </TableCell>
@@ -775,7 +777,7 @@ export default function POS() {
                           value={item?.price ? Number(item?.price) : ""}
                           onChange={(e) => {
                             if (!isNaN(Number(e.target.value))) {
-                              handleChange(e, i)
+                              handleChange(e, i);
                             }
                           }}
                         />
@@ -804,11 +806,11 @@ export default function POS() {
                 (item) =>
                   item.threshold != null &&
                   item.threshold !== undefined &&
-                  (item?.qty || 0) <= item.threshold
+                  (item?.qty || 0) <= item.threshold,
               )}
               onRefresh={async () => {
-                setStock([])
-                await fetchData()
+                setStock([]);
+                await fetchData();
               }}
             />
           </Card>
@@ -821,8 +823,8 @@ export default function POS() {
               <Input
                 value={discount ? discount : ""}
                 onChange={(e) => {
-                  const value = e.target.value
-                  setDiscount(value ? Number(value) : "")
+                  const value = e.target.value;
+                  setDiscount(value ? Number(value) : "");
                 }}
                 type="number"
                 placeholder="Enter discount"
@@ -844,8 +846,8 @@ export default function POS() {
             <div
               className="flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-background px-3 py-2 transition hover:bg-muted/40"
               onClick={() => {
-                setPendingLoading(true)
-                handlePendingPayments()
+                setPendingLoading(true);
+                handlePendingPayments();
               }}
             >
               <div>
@@ -901,8 +903,8 @@ export default function POS() {
               {selectedSearchItem ? (
                 <Button
                   onClick={() => {
-                    setLoading(true)
-                    handleUpdateInvoice()
+                    setLoading(true);
+                    handleUpdateInvoice();
                   }}
                   disabled={invoiceItems.length === 0}
                   className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
@@ -913,10 +915,10 @@ export default function POS() {
                 <Button
                   onClick={() => {
                     if (selectedUser?.id) {
-                      setLoading(true)
-                      generatePDF()
+                      setLoading(true);
+                      generatePDF();
                     } else {
-                      setModal(true)
+                      setModal(true);
                     }
                   }}
                   disabled={invoiceItems.length === 0 || !selectedCustomer?.id}
@@ -928,7 +930,7 @@ export default function POS() {
 
               <Button
                 onClick={() => {
-                  setSearchInvoice(!searchInvocie)
+                  setSearchInvoice(!searchInvocie);
                 }}
                 className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
               >
@@ -995,10 +997,10 @@ export default function POS() {
                     size="sm"
                     className="h-9 rounded-md"
                     onClick={() => {
-                      setSearchLoading(true)
-                      setSearchItemsResult([])
-                      setSelectedSearchItem(null)
-                      handleItemSearch()
+                      setSearchLoading(true);
+                      setSearchItemsResult([]);
+                      setSelectedSearchItem(null);
+                      handleItemSearch();
                     }}
                   >
                     Search
@@ -1007,10 +1009,10 @@ export default function POS() {
                     size="sm"
                     className="h-9 rounded-md"
                     onClick={() => {
-                      setSearchLoading(true)
-                      setSearchItemsResult([])
-                      setSelectedSearchItem(null)
-                      handleItemSearchAll()
+                      setSearchLoading(true);
+                      setSearchItemsResult([]);
+                      setSelectedSearchItem(null);
+                      handleItemSearchAll();
                     }}
                   >
                     Open All
@@ -1054,17 +1056,17 @@ export default function POS() {
           onClose={setSearchModal}
           data={searchItemsResult}
           onselect={(val) => {
-            setSearchModal(false)
-            setSelectedSearchItem(val)
-            setPhoneNumber(val.phone)
-            setName(val.name)
-            setManager(val.manager)
-            setCompanyName(val.company)
-            setAddress(val.address)
-            setInvoiceItems(val.fields)
-            setNextInvoice(val.invoicenumber)
-            setDiscount(val.discount)
-            setCreatedAt(val.created_at)
+            setSearchModal(false);
+            setSelectedSearchItem(val);
+            setPhoneNumber(val.phone);
+            setName(val.name);
+            setManager(val.manager);
+            setCompanyName(val.company);
+            setAddress(val.address);
+            setInvoiceItems(val.fields);
+            setNextInvoice(val.invoicenumber);
+            setDiscount(val.discount);
+            setCreatedAt(val.created_at);
           }}
         />
       </div>
@@ -1075,9 +1077,9 @@ export default function POS() {
         setChecked={setChecked}
         setModal={setModal}
         onClick={() => {
-          setModal(false)
-          setLoading(true)
-          generatePDF()
+          setModal(false);
+          setLoading(true);
+          generatePDF();
         }}
         customer_id={selectedCustomer ? selectedCustomer?.id : null}
       />
@@ -1088,10 +1090,10 @@ export default function POS() {
         part_id={selectedInvoice}
         customer_id={selectedCustomer?.id}
         onRefresh={async () => {
-          setLoading(true)
-          await fetchData()
-          setSelectedCustomer(null)
-          setChecked(false)
+          setLoading(true);
+          await fetchData();
+          setSelectedCustomer(null);
+          setChecked(false);
         }}
       />
 
@@ -1100,8 +1102,8 @@ export default function POS() {
         engineersModal={engineersModal}
         setEngineersModal={setEngineersModal}
         onRefresh={async () => {
-          await handleEngineerItems()
-          await fetchData()
+          await handleEngineerItems();
+          await fetchData();
         }}
       />
 
@@ -1124,8 +1126,8 @@ export default function POS() {
         visible={addProductVisible}
         onClose={(val) => setAddProductVisible(val)}
         onRefresh={async () => {
-          setAddProductVisible(false)
-          await fetchData()
+          setAddProductVisible(false);
+          await fetchData();
         }}
         handleOrderStock={handleOrderStock}
         designation={designation}
@@ -1136,12 +1138,12 @@ export default function POS() {
         onClose={setInwardModal}
         data={stock}
         onRefresh={async () => {
-          setLoading(true)
-          await fetchData()
+          setLoading(true);
+          await fetchData();
         }}
       />
 
       <OutwardModal visible={outwardModal} onClose={setOutwardModal} />
     </>
-  )
+  );
 }

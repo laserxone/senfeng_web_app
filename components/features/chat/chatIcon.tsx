@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { db } from "@/config/firebase"
-import axios from "@/lib/axios"
-import { UserConversation } from "@/lib/types"
-import { doc, onSnapshot } from "firebase/firestore"
-import { MessageCircle, Search } from "lucide-react"
-import moment from "moment"
-import { useCallback, useEffect, useState } from "react"
-import { ProfilePicture } from "../users/profile-picture"
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { db } from "@/config/firebase";
+import axios from "@/lib/axios";
+import { UserConversation } from "@/lib/types";
+import { doc, onSnapshot } from "firebase/firestore";
+import { MessageCircle, Search } from "lucide-react";
+import moment from "moment";
+import { useCallback, useEffect, useState } from "react";
+import { ProfilePicture } from "../users/profile-picture";
 
 export default function UserChatIcon({
   myId,
@@ -17,45 +17,45 @@ export default function UserChatIcon({
   className,
   active = null,
 }: {
-  myId: number | string
-  onChatSelected: (val: UserConversation) => void
-  className?: string
-  active?: number | null
+  myId: number | string;
+  onChatSelected: (val: UserConversation) => void;
+  className?: string;
+  active?: number | null;
 }) {
-  const [conversations, setConversations] = useState<UserConversation[]>([])
-  const [search, setSearch] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [conversations, setConversations] = useState<UserConversation[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const fetchConversations = useCallback(async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await axios.get(`/${myId}/chat`)
-      const convs = response.data
+      const response = await axios.get(`/${myId}/chat`);
+      const convs = response.data;
 
-      setConversations(convs)
+      setConversations(convs);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [myId])
+  }, [myId]);
 
   useEffect(() => {
-    if (!myId) return
+    if (!myId) return;
 
-    queueMicrotask(() => void fetchConversations())
+    queueMicrotask(() => void fetchConversations());
 
     const unsub = onSnapshot(
       doc(db, "conversations_meta", myId.toString()),
       () => {
-        fetchConversations()
-      }
-    )
+        fetchConversations();
+      },
+    );
 
-    return () => unsub()
-  }, [fetchConversations, myId])
+    return () => unsub();
+  }, [fetchConversations, myId]);
 
   const filtered = conversations.filter((item) =>
-    item?.name?.toLowerCase().includes(search.toLowerCase())
-  )
+    item?.name?.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -103,7 +103,7 @@ export default function UserChatIcon({
                     <p className="shrink-0 text-[10px] text-muted-foreground">
                       {item?.conversation?.last_updated
                         ? moment(
-                            new Date(item.conversation.last_updated)
+                            new Date(item.conversation.last_updated),
                           ).format("MMM D, h:mm A")
                         : ""}
                     </p>
@@ -141,7 +141,7 @@ export default function UserChatIcon({
         </ScrollArea>
       </div>
     </div>
-  )
+  );
 }
 
 const RenderReadCount = ({ unread }: { unread: number }) => {
@@ -150,5 +150,5 @@ const RenderReadCount = ({ unread }: { unread: number }) => {
       <div className="grid min-w-5 place-items-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] leading-none font-semibold text-primary-foreground">
         {unread > 99 ? "99+" : unread}
       </div>
-    )
-}
+    );
+};

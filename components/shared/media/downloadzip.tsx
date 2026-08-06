@@ -6,12 +6,12 @@ import {
   View,
   StyleSheet,
   Font,
-} from "@react-pdf/renderer"
-import JSZip from "jszip"
-import { saveAs } from "file-saver"
-import { getDownloadURL, getStorage, ref } from "firebase/storage"
-import moment from "moment"
-import { MachineResponse } from "@/lib/types"
+} from "@react-pdf/renderer";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+import { getDownloadURL, getStorage, ref } from "firebase/storage";
+import moment from "moment";
+import { MachineResponse } from "@/lib/types";
 
 const styles = StyleSheet.create({
   page: {
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
     borderRadius: 4,
   },
-})
+});
 
 const CustomerPDF = ({ data }: { data: MachineResponse }) => (
   <Document>
@@ -132,65 +132,65 @@ const CustomerPDF = ({ data }: { data: MachineResponse }) => (
       </View>
     </Page>
   </Document>
-)
+);
 
 export const downloadCustomerZip = async (data: MachineResponse) => {
-  const customerName = data.customer.name || data.customer.owner || "Customer"
-  const folderName = customerName.replace(/\s+/g, "_")
-  const zip = new JSZip()
-  const pdfBlob = await pdf(<CustomerPDF data={data} />).toBlob()
-  zip.file("info.pdf", pdfBlob)
+  const customerName = data.customer.name || data.customer.owner || "Customer";
+  const folderName = customerName.replace(/\s+/g, "_");
+  const zip = new JSZip();
+  const pdfBlob = await pdf(<CustomerPDF data={data} />).toBlob();
+  zip.file("info.pdf", pdfBlob);
 
-  const storage = getStorage()
-  const paymentsFolder = zip.folder("Payments")
+  const storage = getStorage();
+  const paymentsFolder = zip.folder("Payments");
 
   for (const payment of data.machine.payments) {
     try {
-      let imageUrl = payment.image
+      let imageUrl = payment.image;
 
       if (!imageUrl.startsWith("https://")) {
-        const imageRef = ref(storage, imageUrl)
-        imageUrl = await getDownloadURL(imageRef)
+        const imageRef = ref(storage, imageUrl);
+        imageUrl = await getDownloadURL(imageRef);
       }
 
-      const res = await fetch(imageUrl)
-      const blob = await res.blob()
+      const res = await fetch(imageUrl);
+      const blob = await res.blob();
 
-      const ext = imageUrl.split(".").pop()?.split("?")[0] || "png"
-      paymentsFolder?.file(`payment_${payment.track}.png`, blob)
+      const ext = imageUrl.split(".").pop()?.split("?")[0] || "png";
+      paymentsFolder?.file(`payment_${payment.track}.png`, blob);
     } catch (error) {
-      console.warn(`Could not fetch image for track ${payment.track}`, error)
+      console.warn(`Could not fetch image for track ${payment.track}`, error);
     }
   }
 
-  const contractImages = data.machine.contract_images_png || []
+  const contractImages = data.machine.contract_images_png || [];
 
   if (contractImages.length) {
-    const contractFolder = zip.folder("Contract")
+    const contractFolder = zip.folder("Contract");
 
     for (let i = 0; i < contractImages.length; i++) {
       try {
-        let imageUrl = contractImages[i]
+        let imageUrl = contractImages[i];
 
         // If not a full URL, resolve via Firebase
         if (!imageUrl.startsWith("https://")) {
-          const imageRef = ref(storage, imageUrl)
-          imageUrl = await getDownloadURL(imageRef)
+          const imageRef = ref(storage, imageUrl);
+          imageUrl = await getDownloadURL(imageRef);
         }
 
-        const res = await fetch(imageUrl)
-        const blob = await res.blob()
+        const res = await fetch(imageUrl);
+        const blob = await res.blob();
 
         // Preserve extension if possible
-        const ext = imageUrl.split(".").pop()?.split("?")[0] || "png"
-        contractFolder?.file(`contract_${i + 1}.png`, blob)
+        const ext = imageUrl.split(".").pop()?.split("?")[0] || "png";
+        contractFolder?.file(`contract_${i + 1}.png`, blob);
       } catch (error) {
-        console.warn(`Could not fetch contract image ${i + 1}`, error)
+        console.warn(`Could not fetch contract image ${i + 1}`, error);
       }
     }
   }
 
-  const zipBlob = await zip.generateAsync({ type: "blob" })
-  saveAs(zipBlob, `${folderName}.zip`)
-  return true
-}
+  const zipBlob = await zip.generateAsync({ type: "blob" });
+  saveAs(zipBlob, `${folderName}.zip`);
+  return true;
+};

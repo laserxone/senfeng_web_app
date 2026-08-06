@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Check, ChevronsUpDown } from "lucide-react"
-import * as React from "react"
+import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -12,22 +12,22 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { PricesProps, PricesSearchProps } from "@/lib/types"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/command";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { PricesProps, PricesSearchProps } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function PricesSearch({
   value,
   onReturn,
 }: {
-  value: PricesSearchProps | null
-  onReturn: (val: PricesSearchProps) => void
+  value: PricesSearchProps | null;
+  onReturn: (val: PricesSearchProps) => void;
 }) {
-  const [open, setOpen] = React.useState(false)
-  const [data, setData] = React.useState<PricesSearchProps[]>([])
-  const { userID } = useUserDetail()
+  const [open, setOpen] = React.useState(false);
+  const [data, setData] = React.useState<PricesSearchProps[]>([]);
+  const { userID } = useUserDetail();
 
   React.useEffect(() => {
     async function fetchData() {
@@ -38,14 +38,14 @@ export function PricesSearch({
               value: item.id,
               label: [item?.model, item.power].join(" "),
               data: item,
-            }
-          })
-          setData(finalData)
+            };
+          });
+          setData(finalData);
         }
-      })
+      });
     }
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   return (
     <>
@@ -55,8 +55,8 @@ export function PricesSearch({
         aria-expanded={open}
         className="w-full justify-between"
         onClick={(e) => {
-          e.preventDefault()
-          setOpen(!open)
+          e.preventDefault();
+          setOpen(!open);
         }}
       >
         {value
@@ -76,15 +76,15 @@ export function PricesSearch({
                   key={item.value}
                   value={item.label}
                   onSelect={() => {
-                    onReturn?.(item)
-                    setOpen(false)
+                    onReturn?.(item);
+                    setOpen(false);
                   }}
                 >
                   {item.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value?.value === item.value ? "opacity-100" : "opacity-0"
+                      value?.value === item.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>
@@ -94,5 +94,5 @@ export function PricesSearch({
         </Command>
       </CommandDialog>
     </>
-  )
+  );
 }

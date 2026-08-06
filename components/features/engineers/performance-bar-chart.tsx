@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
   Bar,
@@ -9,22 +9,22 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts"
+} from "recharts";
 
 interface PerformanceBarChartProps {
   data: {
-    month: string
-    total_assigned: number
-    total_completed: number
-    completion_rate: number
-  }[]
+    month: string;
+    total_assigned: number;
+    total_completed: number;
+    completion_rate: number;
+  }[];
 }
 
 export function PerformanceBarChart({ data }: PerformanceBarChartProps) {
   const chartData = data.map((item) => ({
     name: item.month,
     rate: item.completion_rate,
-  }))
+  }));
 
   return (
     <Card className="border border-border bg-card shadow-sm">
@@ -94,5 +94,5 @@ export function PerformanceBarChart({ data }: PerformanceBarChartProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

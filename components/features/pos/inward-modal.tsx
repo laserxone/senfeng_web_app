@@ -1,30 +1,30 @@
-import { InventorySearch } from "@/components/shared/search/inventory-select"
-import { Button } from "@/components/ui/button"
+import { InventorySearch } from "@/components/shared/search/inventory-select";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Switch } from "@/components/ui/switch"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { StockProps } from "@/lib/types"
-import { FileText, PackageCheck, Plus, Trash2, Truck } from "lucide-react"
-import { useEffect, useState } from "react"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { StockProps } from "@/lib/types";
+import { FileText, PackageCheck, Plus, Trash2, Truck } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type EmptyType = {
-  name: string
-  qty: string
-  unit?: string
-  isExisting: boolean
-  inventory_id: null | number
-  remarks: string
-}
+  name: string;
+  qty: string;
+  unit?: string;
+  isExisting: boolean;
+  inventory_id: null | number;
+  remarks: string;
+};
 const emptyItem: EmptyType = {
   name: "",
   qty: "",
@@ -32,7 +32,7 @@ const emptyItem: EmptyType = {
   remarks: "",
   isExisting: true,
   inventory_id: null,
-}
+};
 
 const InwardModal = ({
   visible,
@@ -40,21 +40,21 @@ const InwardModal = ({
   data = [],
   onRefresh,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  data: StockProps[]
-  onRefresh: () => Promise<void>
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  data: StockProps[];
+  onRefresh: () => Promise<void>;
 }) => {
-  const [items, setItems] = useState([emptyItem])
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [items, setItems] = useState([emptyItem]);
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
-  const stock = data
+  const stock = data;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
-    const formData = new FormData(e.currentTarget)
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
     const data = {
       from: formData.get("from") as string,
       vehicle_no: formData.get("vehicle_no") as string,
@@ -62,10 +62,10 @@ const InwardModal = ({
       manager: formData.get("manager") as string,
       received_by: formData.get("received_by") as string,
       items: items,
-    }
+    };
 
     try {
-      const response = await axios.post(`/${userID}/pos/inward`, data)
+      const response = await axios.post(`/${userID}/pos/inward`, data);
       const PDFData = {
         from: data.from,
         vehicle_no: data.vehicle_no,
@@ -75,7 +75,7 @@ const InwardModal = ({
         gatepass: response.data.id,
         gatepassType: "Inward Gate Pass",
         items: items,
-      }
+      };
       const pdfRes = await axios.post(
         `/${userID}/pos/inward/pdf`,
         {
@@ -86,41 +86,41 @@ const InwardModal = ({
           headers: {
             "Content-Type": "application/json",
           },
-        }
-      )
+        },
+      );
 
       const blob = new Blob([pdfRes.data], {
         type: "application/pdf",
-      })
+      });
 
-      const url = URL.createObjectURL(blob)
-      window.open(url, "_blank")
-      setTimeout(() => URL.revokeObjectURL(url), 600000)
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
 
-    setLoading(false)
-    onRefresh()
-    onClose(false)
-  }
+    setLoading(false);
+    onRefresh();
+    onClose(false);
+  };
 
   useEffect(() => {
-    resetData()
-  }, [visible])
+    resetData();
+  }, [visible]);
 
   function resetData() {
-    setItems([emptyItem])
-    setLoading(false)
+    setItems([emptyItem]);
+    setLoading(false);
   }
 
   const handleItemChange = (
     index: number,
     field: string,
-    value: string | boolean | number
+    value: string | boolean | number,
   ) => {
     if (field === "isExisting") {
-      const copy = [...items]
+      const copy = [...items];
       copy[index] = {
         ...copy[index],
         [field as string]: value,
@@ -129,18 +129,18 @@ const InwardModal = ({
         remarks: "",
         unit: "",
         inventory_id: null,
-      }
-      setItems(copy)
+      };
+      setItems(copy);
     } else {
-      const copy = [...items]
-      copy[index] = { ...copy[index], [field]: value }
-      setItems(copy)
+      const copy = [...items];
+      copy[index] = { ...copy[index], [field]: value };
+      setItems(copy);
     }
-  }
+  };
 
-  const addItem = () => setItems([...items, emptyItem])
+  const addItem = () => setItems([...items, emptyItem]);
   const removeItem = (index: number) =>
-    items.length > 1 ? setItems(items.filter((_, i) => i !== index)) : null
+    items.length > 1 ? setItems(items.filter((_, i) => i !== index)) : null;
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
@@ -307,7 +307,7 @@ const InwardModal = ({
                       <Switch
                         checked={item.isExisting}
                         onCheckedChange={(val) => {
-                          handleItemChange(index, "isExisting", val)
+                          handleItemChange(index, "isExisting", val);
                         }}
                       />
                     </div>
@@ -322,14 +322,14 @@ const InwardModal = ({
                             value={item.inventory_id}
                             data={stock}
                             onReturn={(val) => {
-                              const copy = [...items]
+                              const copy = [...items];
                               copy[index] = {
                                 ...copy[index],
                                 inventory_id: Number(val.id),
                                 name: val.name ?? "",
                                 unit: val.unit,
-                              }
-                              setItems(copy)
+                              };
+                              setItems(copy);
                             }}
                           />
                         </div>
@@ -361,8 +361,8 @@ const InwardModal = ({
                               handleItemChange(
                                 index,
                                 "qty",
-                                Number(e.target.value)
-                              )
+                                Number(e.target.value),
+                              );
                           }}
                         />
                       </div>
@@ -407,7 +407,7 @@ const InwardModal = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default InwardModal
+export default InwardModal;

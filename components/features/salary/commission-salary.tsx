@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import moment from "moment"
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import moment from "moment";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Heading from "@/components/ui/heading"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Heading from "@/components/ui/heading";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { CircleDollarSign } from "lucide-react"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { CircleDollarSign } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -33,78 +33,78 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { CommissionOwnerProps } from "@/lib/types"
+} from "@/components/ui/tooltip";
+import { CommissionOwnerProps } from "@/lib/types";
 
 const CommissionRecord = ({
   data,
   fetchData,
 }: {
-  data: CommissionOwnerProps[]
-  fetchData: () => Promise<void>
+  data: CommissionOwnerProps[];
+  fetchData: () => Promise<void>;
 }) => {
-  const [visibleDisapprove, setVisibleDisapprove] = useState(false)
+  const [visibleDisapprove, setVisibleDisapprove] = useState(false);
   const [selectedItem, setSelectedItem] = useState<CommissionOwnerProps | null>(
-    null
-  )
-  const [disapproveMsg, setDisapproveMsg] = useState("")
-  const [disapproveLoading, setDisapproveLoading] = useState(false)
-  const [total, setTotal] = useState(0)
-  const { userID, base_route } = useUserDetail()
+    null,
+  );
+  const [disapproveMsg, setDisapproveMsg] = useState("");
+  const [disapproveLoading, setDisapproveLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const { userID, base_route } = useUserDetail();
 
   useEffect(() => {
     const totalCommission = data.reduce(
       (sum, item) => sum + Number(item.commission_amount),
-      0
-    )
-    setTotal(totalCommission)
-  }, [data])
+      0,
+    );
+    setTotal(totalCommission);
+  }, [data]);
 
   const RenderEachRow = ({
     item,
     onRefresh,
     onDisapprove,
   }: {
-    item: CommissionOwnerProps
-    onRefresh: () => Promise<void>
-    onDisapprove: () => void
+    item: CommissionOwnerProps;
+    onRefresh: () => Promise<void>;
+    onDisapprove: () => void;
   }) => {
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
 
     const [selectedPercentage, setSelectedPercentage] = useState<string | null>(
-      null
-    )
-    const [showManual, setShowManual] = useState(false)
-    const [manualNumber, setManualNumber] = useState<string | number>("")
+      null,
+    );
+    const [showManual, setShowManual] = useState(false);
+    const [manualNumber, setManualNumber] = useState<string | number>("");
 
     async function handleUpdate(
       id: number,
       is_approved: boolean | null,
       approval_date: Date | null,
-      commission_amount: number | string | null
+      commission_amount: number | string | null,
     ) {
-      if (!id) return
-      setLoading(true)
+      if (!id) return;
+      setLoading(true);
       try {
         await axios.put(`/${userID}/commission/${id}`, {
           is_approved: is_approved,
           approval_date: approval_date,
           commission_amount: commission_amount,
-        })
-        await onRefresh()
-        setShowManual(false)
-        setManualNumber("")
-        setSelectedPercentage(null)
+        });
+        await onRefresh();
+        setShowManual(false);
+        setManualNumber("");
+        setSelectedPercentage(null);
       } catch (error) {
-        console.error("Update failed:", error)
+        console.error("Update failed:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
@@ -144,9 +144,9 @@ const CommissionRecord = ({
               <Select
                 onValueChange={(val) => {
                   if (val === "manual") {
-                    setShowManual(true)
+                    setShowManual(true);
                   } else {
-                    setSelectedPercentage(val)
+                    setSelectedPercentage(val);
                   }
                 }}
                 value={selectedPercentage || ""}
@@ -156,12 +156,12 @@ const CommissionRecord = ({
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 9 }, (_, i) => {
-                    const val = (i + 1).toString()
+                    const val = (i + 1).toString();
                     return (
                       <SelectItem key={val} value={val}>
                         {val}%
                       </SelectItem>
-                    )
+                    );
                   })}
                   <SelectItem value={"manual"}>Manual</SelectItem>
                 </SelectContent>
@@ -171,12 +171,12 @@ const CommissionRecord = ({
               <Input
                 value={manualNumber}
                 onChange={(e) => {
-                  const value = e.target.value
-                  const regex = /^\d*\.?\d*$/
+                  const value = e.target.value;
+                  const regex = /^\d*\.?\d*$/;
 
                   if (regex.test(value)) {
-                    const numericValue = Number(value)
-                    setManualNumber(numericValue)
+                    const numericValue = Number(value);
+                    setManualNumber(numericValue);
                   }
                 }}
               />
@@ -202,7 +202,7 @@ const CommissionRecord = ({
                     showManual
                       ? manualNumber
                       : (item.total_amount * Number(selectedPercentage || 0)) /
-                          100
+                          100,
                   )
                 }
               >
@@ -234,12 +234,12 @@ const CommissionRecord = ({
           )}
         </TableCell>
       </TableRow>
-    )
-  }
+    );
+  };
 
   async function handleDisapprove() {
-    if (!selectedItem?.id) return
-    setDisapproveLoading(true)
+    if (!selectedItem?.id) return;
+    setDisapproveLoading(true);
     try {
       await axios
         .put(`/${userID}/commission/${selectedItem?.id}`, {
@@ -249,13 +249,13 @@ const CommissionRecord = ({
         .then(async () => {
           await axios.put(`/${userID}/machine/${selectedItem.sale_id}`, {
             payment_lock: false,
-          })
-        })
-      await fetchData()
-      setVisibleDisapprove(false)
-      setDisapproveMsg("")
+          });
+        });
+      await fetchData();
+      setVisibleDisapprove(false);
+      setDisapproveMsg("");
     } finally {
-      setDisapproveLoading(false)
+      setDisapproveLoading(false);
     }
   }
 
@@ -291,8 +291,8 @@ const CommissionRecord = ({
                     item={item}
                     onRefresh={fetchData}
                     onDisapprove={() => {
-                      setSelectedItem(item)
-                      setVisibleDisapprove(true)
+                      setSelectedItem(item);
+                      setVisibleDisapprove(true);
                     }}
                   />
                 ))}
@@ -311,7 +311,7 @@ const CommissionRecord = ({
       <Dialog
         open={visibleDisapprove}
         onOpenChange={(val) => {
-          setVisibleDisapprove(val)
+          setVisibleDisapprove(val);
         }}
       >
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
@@ -352,7 +352,7 @@ const CommissionRecord = ({
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
+  );
+};
 
-export default CommissionRecord
+export default CommissionRecord;

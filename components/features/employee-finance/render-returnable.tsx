@@ -1,23 +1,23 @@
-import PageTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import useIssuedItem from "@/hooks/use-issued-items"
-import { UserReturnableField, UserReturnableType } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
-import moment from "moment"
-import { useEffect } from "react"
+import PageTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import useIssuedItem from "@/hooks/use-issued-items";
+import { UserReturnableField, UserReturnableType } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import moment from "moment";
+import { useEffect } from "react";
 
 const RenderReturnable = ({
   height,
   onUpdateTotal,
   userID,
 }: {
-  height?: string
-  onUpdateTotal?: (val: number) => void
-  userID: number | string
+  height?: string;
+  onUpdateTotal?: (val: number) => void;
+  userID: number | string;
 }) => {
-  const { issuedItems } = useIssuedItem(userID)
+  const { issuedItems } = useIssuedItem(userID);
 
   const columns: ColumnDef<UserReturnableType>[] = [
     {
@@ -32,7 +32,7 @@ const RenderReturnable = ({
             Issue Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">
@@ -55,7 +55,7 @@ const RenderReturnable = ({
             Company
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("company")}</div>,
     },
@@ -71,10 +71,10 @@ const RenderReturnable = ({
             Items
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const items: UserReturnableField[] = row.original.fields || []
+        const items: UserReturnableField[] = row.original.fields || [];
         return (
           <div className="ml-2">
             <ul className="list-inside list-disc space-y-1 text-sm">
@@ -85,14 +85,14 @@ const RenderReturnable = ({
               ))}
             </ul>
           </div>
-        )
+        );
       },
     },
-  ]
+  ];
 
   useEffect(() => {
-    onUpdateTotal?.(issuedItems.length)
-  }, [issuedItems])
+    onUpdateTotal?.(issuedItems.length);
+  }, [issuedItems]);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -105,7 +105,7 @@ const RenderReturnable = ({
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default RenderReturnable
+export default RenderReturnable;

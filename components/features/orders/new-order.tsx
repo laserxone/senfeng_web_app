@@ -1,34 +1,34 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ShoppingCart } from "lucide-react"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { ShoppingCart } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Switch } from "@/components/ui/switch"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { InventoryItem, StockProps } from "@/lib/types"
-import { InventorySearch } from "@/components/shared/search/inventory-select"
-import MachineModels from "@/components/features/machines/machine-models"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { InventoryItem, StockProps } from "@/lib/types";
+import { InventorySearch } from "@/components/shared/search/inventory-select";
+import MachineModels from "@/components/features/machines/machine-models";
 
-type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[]
+type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
 
 const CreateOrderDialog = ({
   visible,
@@ -36,10 +36,10 @@ const CreateOrderDialog = ({
   user_id,
   onRefresh,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  user_id: number | string
-  onRefresh: () => Promise<void>
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  user_id: number | string;
+  onRefresh: () => Promise<void>;
 }) => {
   const [items, setItems] = useState<InventoryItem[]>([
     {
@@ -60,58 +60,58 @@ const CreateOrderDialog = ({
       show: true,
       location: "Lahore",
     },
-  ])
-  const [errors, setErrors] = useState<InventoryErrors>([])
-  const [loading, setLoading] = useState(false)
-  const [existingInventory, setExistingInventory] = useState<StockProps[]>([])
-  const [title, setTitle] = useState("")
-  const { userID } = useUserDetail()
-  const [manual, setManual] = useState(false)
+  ]);
+  const [errors, setErrors] = useState<InventoryErrors>([]);
+  const [loading, setLoading] = useState(false);
+  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
+  const [title, setTitle] = useState("");
+  const { userID } = useUserDetail();
+  const [manual, setManual] = useState(false);
 
   useEffect(() => {
     if (visible && userID) {
-      fetchPOSInventory()
+      fetchPOSInventory();
     }
-  }, [visible, userID])
+  }, [visible, userID]);
 
   async function fetchPOSInventory() {
     axios.get(`/${userID}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
-        let resultedData = [...response.data.stock]
-        setExistingInventory([...resultedData])
+        let resultedData = [...response.data.stock];
+        setExistingInventory([...resultedData]);
       }
-    })
+    });
   }
 
   const handleItemChange = <K extends keyof InventoryItem>(
     index: number,
     field: K,
-    value: InventoryItem[K]
+    value: InventoryItem[K],
   ) => {
     setItems((prevItems) => {
-      const newItems = [...prevItems]
+      const newItems = [...prevItems];
 
       newItems[index] = {
         ...newItems[index],
         [field]: value,
-      }
+      };
 
-      return newItems
-    })
+      return newItems;
+    });
 
     setErrors((prevErrors) => {
-      const newErrors = [...prevErrors]
+      const newErrors = [...prevErrors];
 
       if (newErrors[index]) {
         newErrors[index] = {
           ...newErrors[index],
           [field]: "",
-        }
+        };
       }
 
-      return newErrors
-    })
-  }
+      return newErrors;
+    });
+  };
 
   const addItem = () => {
     setItems([
@@ -134,74 +134,74 @@ const CreateOrderDialog = ({
         show: true,
         location: "Lahore",
       },
-    ])
-  }
+    ]);
+  };
 
   const removeItem = (index: number) => {
-    const newItems = [...items]
-    newItems.splice(index, 1)
-    setItems(newItems)
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
 
-    const newErrors = [...errors]
-    newErrors.splice(index, 1)
-    setErrors(newErrors)
-  }
+    const newErrors = [...errors];
+    newErrors.splice(index, 1);
+    setErrors(newErrors);
+  };
 
   const validateItems = () => {
-    const newErrors: any[] = []
+    const newErrors: any[] = [];
 
     items.forEach((item) => {
-      const itemErrors: any = {}
+      const itemErrors: any = {};
 
       // qty required and positive
       if (!item.qty || item.qty <= 0) {
-        itemErrors.qty = "Quantity is required and must be greater than 0"
+        itemErrors.qty = "Quantity is required and must be greater than 0";
       }
 
       if (item.isExisting) {
         // inventory_id required for existing items
         if (!item.inventory_id) {
-          itemErrors.inventory_id = "Please select an existing inventory item"
+          itemErrors.inventory_id = "Please select an existing inventory item";
         }
       } else {
         if (!item.is_machine)
           if (!item.name || item.name.trim() === "") {
-            itemErrors.name = "Name is required for new items"
+            itemErrors.name = "Name is required for new items";
           }
       }
 
       // if machine, all machine fields required
       if (item.is_machine) {
         if (!item.machine_serial || item.machine_serial.trim() === "") {
-          itemErrors.machine_serial = "Machine serial is required"
+          itemErrors.machine_serial = "Machine serial is required";
         }
         if (!item.machine_model) {
-          itemErrors.machine_model = "Machine model is required"
+          itemErrors.machine_model = "Machine model is required";
         }
         if (!item.machine_source) {
-          itemErrors.machine_source = "Machine source is required"
+          itemErrors.machine_source = "Machine source is required";
         }
         if (!item.machine_power) {
-          itemErrors.machine_power = "Machine power is required"
+          itemErrors.machine_power = "Machine power is required";
         }
       }
 
-      newErrors.push(itemErrors)
-    })
+      newErrors.push(itemErrors);
+    });
 
-    setErrors(newErrors)
+    setErrors(newErrors);
 
     // Return true if no errors
-    return newErrors.every((err) => Object.keys(err).length === 0)
-  }
+    return newErrors.every((err) => Object.keys(err).length === 0);
+  };
 
   const handleSubmit = async () => {
     if (validateItems()) {
-      let processedItems: any[] = []
+      let processedItems: any[] = [];
 
       items.forEach((item) => {
         if (item.is_machine && item.qty > 1) {
-          const baseSerial = parseInt(item.machine_serial, 10)
+          const baseSerial = parseInt(item.machine_serial, 10);
 
           if (!isNaN(baseSerial)) {
             for (let i = 0; i < item.qty; i++) {
@@ -210,40 +210,40 @@ const CreateOrderDialog = ({
                 qty: 1,
                 machine_serial: (baseSerial + i).toString(),
                 name: (baseSerial + i).toString(),
-              })
+              });
             }
           } else {
-            processedItems.push(item)
+            processedItems.push(item);
           }
         } else {
-          processedItems.push(item)
+          processedItems.push(item);
         }
-      })
+      });
 
       processedItems.sort((a, b) => {
-        if (a.is_machine === b.is_machine) return 0
-        return a.is_machine ? 1 : -1
-      })
+        if (a.is_machine === b.is_machine) return 0;
+        return a.is_machine ? 1 : -1;
+      });
 
       const payload = {
         user_id: user_id,
         status: "Order Placed",
         items: processedItems,
         title: title,
-      }
-      setLoading(true)
+      };
+      setLoading(true);
       try {
-        const response = await axios.post(`/${userID}/neworder`, payload)
-        await onRefresh()
-        handleClose(false)
+        const response = await axios.post(`/${userID}/neworder`, payload);
+        await onRefresh();
+        handleClose(false);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    onClose(val)
+    onClose(val);
     setItems([
       {
         name: "",
@@ -263,9 +263,9 @@ const CreateOrderDialog = ({
         location: "Lahore",
         show: true,
       },
-    ])
+    ]);
 
-    setErrors([])
+    setErrors([]);
   }
 
   return (
@@ -380,29 +380,29 @@ const CreateOrderDialog = ({
                           handleItemChange(
                             index,
                             "inventory_id",
-                            val?.id ?? null
-                          )
-                          handleItemChange(index, "name", val?.name ?? "")
+                            val?.id ?? null,
+                          );
+                          handleItemChange(index, "name", val?.name ?? "");
                           handleItemChange(
                             index,
                             "price",
-                            parseFloat(val?.price || "0")
-                          )
+                            parseFloat(val?.price || "0"),
+                          );
                           handleItemChange(
                             index,
                             "buying_price",
-                            parseFloat(val?.buying || "0")
-                          )
+                            parseFloat(val?.buying || "0"),
+                          );
                           handleItemChange(
                             index,
                             "threshold",
-                            parseInt(String(val?.threshold) || "0")
-                          )
+                            parseInt(String(val?.threshold) || "0"),
+                          );
                           handleItemChange(
                             index,
                             "new_order",
-                            parseInt(String(val?.new_order) || "0")
-                          )
+                            parseInt(String(val?.new_order) || "0"),
+                          );
                         }}
                       />
                       {errors[index]?.inventory_id && (
@@ -421,8 +421,8 @@ const CreateOrderDialog = ({
                             handleItemChange(
                               index,
                               "qty",
-                              parseInt(e.target.value)
-                            )
+                              parseInt(e.target.value),
+                            );
                           }
                         }}
                       />
@@ -462,8 +462,8 @@ const CreateOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "qty",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -483,8 +483,8 @@ const CreateOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "price",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -499,8 +499,8 @@ const CreateOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "buying_price",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -515,8 +515,8 @@ const CreateOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "threshold",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -531,8 +531,8 @@ const CreateOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "new_order",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -563,8 +563,8 @@ const CreateOrderDialog = ({
                               handleItemChange(
                                 index,
                                 "machine_serial",
-                                e.target.value
-                              )
+                                e.target.value,
+                              );
                               // handleItemChange(index, "name", e.target.value);
                             }}
                           />
@@ -586,8 +586,8 @@ const CreateOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "machine_model",
-                                  e.target.value
-                                )
+                                  e.target.value,
+                                );
                               }}
                             />
                           ) : (
@@ -616,8 +616,8 @@ const CreateOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "machine_source",
-                                  e.target.value?.toString()?.toUpperCase()
-                                )
+                                  e.target.value?.toString()?.toUpperCase(),
+                                );
                               }}
                             />
                           ) : (
@@ -656,8 +656,8 @@ const CreateOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "machine_power",
-                                  e.target.value
-                                )
+                                  e.target.value,
+                                );
                               }}
                             />
                           ) : (
@@ -693,8 +693,8 @@ const CreateOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "qty",
-                                  parseInt(e.target.value)
-                                )
+                                  parseInt(e.target.value),
+                                );
                               }
                             }}
                           />
@@ -726,7 +726,7 @@ const CreateOrderDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default CreateOrderDialog
+export default CreateOrderDialog;

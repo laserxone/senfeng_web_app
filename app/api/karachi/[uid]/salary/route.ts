@@ -1,34 +1,34 @@
-import pool from "@/config/db"
-import { checkSuperadmin } from "@/lib/checkSuperadmin"
-import admin from "@/lib/firebaseAdmin"
-import moment from "moment"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import admin from "@/lib/firebaseAdmin";
+import moment from "moment";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; uid: string }> }
+  { params }: { params: Promise<{ id: string; uid: string }> },
 ) {
-  const searchParams = req.nextUrl.searchParams
-  const start_date = searchParams.get("start")
-  const end_date = searchParams.get("end")
-  const user = searchParams.get("user")
-  const month = searchParams.get("month")
-  const year = searchParams.get("year")
+  const searchParams = req.nextUrl.searchParams;
+  const start_date = searchParams.get("start");
+  const end_date = searchParams.get("end");
+  const user = searchParams.get("user");
+  const month = searchParams.get("month");
+  const year = searchParams.get("year");
 
   try {
-    const { uid } = await params
-    const isAdmin = checkSuperadmin(uid)
+    const { uid } = await params;
+    const isAdmin = checkSuperadmin(uid);
     if (!isAdmin) {
       return NextResponse.json(
         { message: "Not allowed to perform this action" },
-        { status: 500 }
-      )
+        { status: 500 },
+      );
     }
     const salaryQuery = `
         SELECT * FROM salaries WHERE user_id = $1 AND month = $2 AND year = $3
-    `
+    `;
 
-    const salaryResult = await pool.query(salaryQuery, [user, month, year])
+    const salaryResult = await pool.query(salaryQuery, [user, month, year]);
 
     let query = `
     SELECT 
@@ -40,9 +40,9 @@ export async function GET(
     INNER JOIN users u ON t.user_id = u.id
     WHERE t.time_in BETWEEN $1 AND $2
     AND t.user_id = $3
-`
+`;
 
-    const result = await pool.query(query, [start_date, end_date, user])
+    const result = await pool.query(query, [start_date, end_date, user]);
 
     const reimbursement = await pool.query(
       `
@@ -54,34 +54,34 @@ export async function GET(
         INNER JOIN users u ON r.submitted_by = u.id
         WHERE r.date BETWEEN $1 AND $2 AND submitted_by = $3 ORDER BY r.date ASC;
       `,
-      [start_date, end_date, user]
-    )
+      [start_date, end_date, user],
+    );
 
-    const db = admin.firestore()
+    const db = admin.firestore();
 
-    const processedStartDate = moment(start_date).startOf("day")
-    const processedEndDate = moment(end_date).endOf("day")
+    const processedStartDate = moment(start_date).startOf("day");
+    const processedEndDate = moment(end_date).endOf("day");
 
-    let snapshot
+    let snapshot;
 
     const userResult = await pool.query(
       `SELECT email FROM users WHERE id = $1`,
-      [user]
-    )
+      [user],
+    );
     if (userResult.rows.length > 0) {
-      const userEmail = userResult.rows[0].email
+      const userEmail = userResult.rows[0].email;
       snapshot = await db
         .collection("EmployeeAttendance")
         .where("timeIn", ">=", processedStartDate.valueOf())
         .where("timeIn", "<=", processedEndDate.valueOf())
         .where("attendanceBy", "==", userEmail)
-        .get()
+        .get();
     }
 
     const attendanceRecords = snapshot?.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }))
+    }));
     const preparedData = attendanceRecords?.map((item: any) => {
       return {
         time_in: item?.timeIn
@@ -97,40 +97,40 @@ export async function GET(
         location_time_out: item?.locationTimeOut || [],
         image_time_out: item?.imageTimeOut || null,
         user_email: item?.attendanceBy || null,
-      }
-    })
+      };
+    });
 
     const userQuery = await pool.query(
       `SELECT id, name, email, basic_salary, fuel, total_salary, monthly_target, designation FROM users WHERE id = $1`,
-      [user]
-    )
+      [user],
+    );
 
-    const userMap: any = {}
+    const userMap: any = {};
     userQuery.rows.forEach((user) => {
-      userMap[user.email] = user.name
-    })
+      userMap[user.email] = user.name;
+    });
 
     const enrichedData: any = preparedData?.map((item) => ({
       ...item,
       user_name: userMap[item.user_email] || "Unknown",
-    }))
+    }));
 
-    const finalData = [...result.rows, ...enrichedData]
+    const finalData = [...result.rows, ...enrichedData];
 
     finalData.sort(
-      (a, b) => new Date(a.time_in).getTime() - new Date(b.time_in).getTime()
-    )
+      (a, b) => new Date(a.time_in).getTime() - new Date(b.time_in).getTime(),
+    );
 
-    const uniqueData: any[] = []
-    const seenDates = new Set()
+    const uniqueData: any[] = [];
+    const seenDates = new Set();
 
     finalData.forEach((item) => {
-      const formattedDate = moment(item.time_in).format("YYYY-MM-DD")
+      const formattedDate = moment(item.time_in).format("YYYY-MM-DD");
       if (!seenDates.has(formattedDate)) {
-        seenDates.add(formattedDate)
-        uniqueData.push(item)
+        seenDates.add(formattedDate);
+        uniqueData.push(item);
       }
-    })
+    });
 
     const commissionQuery = `
         SELECT
@@ -152,8 +152,8 @@ export async function GET(
         commissions.user_id = $1 
         AND commissions.is_approved = TRUE 
         AND commissions.commission_issued = FALSE
-        `
-    const commissionResult = await pool.query(commissionQuery, [user])
+        `;
+    const commissionResult = await pool.query(commissionQuery, [user]);
 
     const machineQuery = `
         SELECT 
@@ -165,12 +165,12 @@ export async function GET(
         customer ON sale.customer_id = customer.id
         WHERE 
         sale.sell_by = $1 
-        AND sale.contract_date BETWEEN $2 AND $3;`
+        AND sale.contract_date BETWEEN $2 AND $3;`;
     const machineResult = await pool.query(machineQuery, [
       user,
       start_date,
       end_date,
-    ])
+    ]);
 
     const customersWithSaleQuery = await pool.query(
       `
@@ -178,12 +178,12 @@ export async function GET(
         FROM customer 
         INNER JOIN sale ON sale.customer_id = customer.id 
         WHERE customer.ownership = $1`,
-      [user]
-    )
+      [user],
+    );
 
-    const customersWithSale = customersWithSaleQuery.rows
-    const totalCustomersWithSale = customersWithSale.length
-    const saleCustomerIds = customersWithSale.map((c) => c.id)
+    const customersWithSale = customersWithSaleQuery.rows;
+    const totalCustomersWithSale = customersWithSale.length;
+    const saleCustomerIds = customersWithSale.map((c) => c.id);
 
     const feedbackQueryResult =
       saleCustomerIds.length > 0
@@ -194,14 +194,14 @@ export async function GET(
         WHERE created_at BETWEEN $1 AND $2 
         AND user_id = $3 
         AND customer_id = ANY($4)`,
-            [start_date, end_date, user, saleCustomerIds]
+            [start_date, end_date, user, saleCustomerIds],
           )
-        : { rows: [{ feedbacks_taken: 0 }] }
+        : { rows: [{ feedbacks_taken: 0 }] };
 
     const feedbacksTakenThisMonth =
-      parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0
+      parseInt(feedbackQueryResult.rows[0].feedbacks_taken, 10) || 0;
 
-    const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth
+    const remainingFeedbacks = totalCustomersWithSale - feedbacksTakenThisMonth;
 
     const visitQueryResult = await pool.query(
       `
@@ -209,10 +209,11 @@ export async function GET(
         FROM visit 
         WHERE created_at BETWEEN $1 AND $2 
         AND user_id = $3`,
-      [start_date, end_date, user]
-    )
+      [start_date, end_date, user],
+    );
 
-    const totalVisits = parseInt(visitQueryResult.rows[0].total_visits, 10) || 0
+    const totalVisits =
+      parseInt(visitQueryResult.rows[0].total_visits, 10) || 0;
 
     const fineQuery = await pool.query(
       `
@@ -228,10 +229,10 @@ export async function GET(
     INNER JOIN customer c ON f.customer_id = c.id
     WHERE f.user_id = $1 AND f.created_at BETWEEN $2 AND $3
             `,
-      [user, start_date, end_date]
-    )
+      [user, start_date, end_date],
+    );
 
-    const fineResult = fineQuery.rows
+    const fineResult = fineQuery.rows;
 
     const oldSalariesQuery = await pool.query(
       `
@@ -247,8 +248,8 @@ export async function GET(
     ORDER BY s.year DESC, s.month DESC
     LIMIT 6
   `,
-      [user]
-    )
+      [user],
+    );
 
     const loanResult = await pool.query(
       `
@@ -258,13 +259,13 @@ export async function GET(
       WHERE l.user_id = $1 AND l.status = 'active'
       ORDER BY l.issued_date DESC
     `,
-      [user]
-    )
+      [user],
+    );
 
-    let allCommissions = []
+    let allCommissions = [];
 
     if (salaryResult.rows.length > 0) {
-      const savedCommission = salaryResult.rows[0]?.issued_commissions || []
+      const savedCommission = salaryResult.rows[0]?.issued_commissions || [];
 
       if (savedCommission.length > 0) {
         const savedSalaryCommission = `
@@ -283,17 +284,17 @@ export async function GET(
       LEFT JOIN sale ON commissions.sale_id = sale.id
       LEFT JOIN customer ON sale.customer_id = customer.id
       WHERE commissions.id = $1
-    `
+    `;
 
         allCommissions = await Promise.all(
           savedCommission.map(async (item: any) => {
             const commissionResultQry = await pool.query(
               savedSalaryCommission,
-              [item]
-            )
-            return commissionResultQry.rows[0]
-          })
-        )
+              [item],
+            );
+            return commissionResultQry.rows[0];
+          }),
+        );
       }
     }
 
@@ -313,88 +314,88 @@ export async function GET(
         old_record: oldSalariesQuery.rows,
         loan: loanResult.rows,
       },
-      { status: 200 }
-    )
+      { status: 200 },
+    );
   } catch (error: any) {
-    console.error("Error inserting data: ", error)
+    console.error("Error inserting data: ", error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const data = await req.json()
+    const data = await req.json();
 
     if (!data || Object.keys(data).length === 0) {
       return NextResponse.json(
         { message: "No data provided for insertion" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    const { user_id, month, year, ...otherFields } = data
+    const { user_id, month, year, ...otherFields } = data;
     if (user_id == null || month == null || year == null) {
       return NextResponse.json(
         { message: "Missing user_id, month, or year" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     // Check if record exists
-    const checkQuery = `SELECT id FROM salaries WHERE user_id = $1 AND month = $2 AND year = $3`
-    const checkResult = await pool.query(checkQuery, [user_id, month, year])
+    const checkQuery = `SELECT id FROM salaries WHERE user_id = $1 AND month = $2 AND year = $3`;
+    const checkResult = await pool.query(checkQuery, [user_id, month, year]);
 
     if (checkResult.rows.length > 0) {
       // Record exists, update it
       const setClause = Object.keys(otherFields)
         .map((key, index) => `${key} = $${index + 4}`)
-        .join(", ")
+        .join(", ");
 
       const updateQuery = `
                 UPDATE salaries 
                 SET ${setClause}
                 WHERE user_id = $1 AND month = $2 AND year = $3
-            `
+            `;
 
       await pool.query(updateQuery, [
         user_id,
         month,
         year,
         ...Object.values(otherFields),
-      ])
+      ]);
 
       return NextResponse.json(
         { message: "Salary record updated successfully" },
-        { status: 200 }
-      )
+        { status: 200 },
+      );
     } else {
       // Insert new record
-      const fields = Object.keys(data)
-      const values = Object.values(data)
-      const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
+      const fields = Object.keys(data);
+      const values = Object.values(data);
+      const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
       const insertQuery = `
                 INSERT INTO salaries (${fields.join(", ")})
                 VALUES (${placeholders})
-            `
+            `;
 
-      await pool.query(insertQuery, values)
+      await pool.query(insertQuery, values);
 
       return NextResponse.json(
         { message: "Salary record inserted successfully" },
-        { status: 201 }
-      )
+        { status: 201 },
+      );
     }
   } catch (error) {
-    console.error("Error inserting/updating data: ", error)
+    console.error("Error inserting/updating data: ", error);
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

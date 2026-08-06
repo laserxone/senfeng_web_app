@@ -1,22 +1,22 @@
-import { storage } from "@/config/firebase"
-import { ref, uploadString } from "firebase/storage"
+import { storage } from "@/config/firebase";
+import { ref, uploadString } from "firebase/storage";
 
 export default async function UploadImageForMobile(
   image: string,
-  fileName: string
+  fileName: string,
 ) {
-  const base64 = image.replace(/^data:image\/(png|jpg|jpeg);base64,/, "")
+  const base64 = image.replace(/^data:image\/(png|jpg|jpeg);base64,/, "");
   return new Promise(async (resolve, reject) => {
     try {
-      const storageRef = ref(storage, fileName)
+      const storageRef = ref(storage, fileName);
 
       await uploadString(storageRef, base64, "base64", {
         contentType: "image/png",
-      })
-      resolve(true)
+      });
+      resolve(true);
     } catch (error) {
-      console.log(error)
-      reject(null)
+      console.log(error);
+      reject(null);
     }
-  })
+  });
 }

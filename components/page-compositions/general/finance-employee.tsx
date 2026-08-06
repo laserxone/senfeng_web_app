@@ -1,72 +1,72 @@
-"use client"
+"use client";
 
-import FilterSheet from "@/components/features/users/filter-sheet"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import PageTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import Heading from "@/components/ui/heading"
-import { Skeleton } from "@/components/ui/skeleton"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { FinanceProps } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Banknote, CircleDollarSign, Clock3 } from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useEffect, useState } from "react"
+import FilterSheet from "@/components/features/users/filter-sheet";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import PageTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import Heading from "@/components/ui/heading";
+import { Skeleton } from "@/components/ui/skeleton";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { FinanceProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, Banknote, CircleDollarSign, Clock3 } from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function FinanceEmployee() {
-  const [filterVisible, setFilterVisible] = useState(false)
-  const { userID, base_route } = useUserDetail()
-  const [tableData, setTableData] = useState<FinanceProps[]>([])
-  const [loading, setLoading] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false);
+  const { userID, base_route } = useUserDetail();
+  const [tableData, setTableData] = useState<FinanceProps[]>([]);
+  const [loading, setLoading] = useState(false);
   const [commulative, setCommulative] = useState({
     total: 0,
     pending: 0,
     received: 0,
-  })
-  const [commloading, setCommloading] = useState(false)
+  });
+  const [commloading, setCommloading] = useState(false);
   const [filterDate, setFilterDate] = useState<{
-    start: string | null
-    end: string | null
-  }>({ start: null, end: null })
+    start: string | null;
+    end: string | null;
+  }>({ start: null, end: null });
 
   useEffect(() => {
-    if (userID) fetchCommulative()
-  }, [userID])
+    if (userID) fetchCommulative();
+  }, [userID]);
 
   async function fetchCommulative() {
-    setCommloading(true)
+    setCommloading(true);
     axios
       .get(`/${userID}/finance/all?user=${userID}`)
       .then((response) => {
-        setCommulative(response.data.summary)
-        setTableData(response.data.items)
+        setCommulative(response.data.summary);
+        setTableData(response.data.items);
       })
       .finally(() => {
-        setCommloading(false)
-      })
+        setCommloading(false);
+      });
   }
 
   const data = tableData.reduce(
     (acc, item) => {
-      const total = Number(item.total_generated || item.machine_price || 0)
-      const received = Number(item.amount || item.total_payment_received || 0)
-      const pending = total - received
+      const total = Number(item.total_generated || item.machine_price || 0);
+      const received = Number(item.amount || item.total_payment_received || 0);
+      const pending = total - received;
 
-      acc.total += total
-      acc.received += received
-      acc.pending += pending
+      acc.total += total;
+      acc.received += received;
+      acc.pending += pending;
 
-      return acc
+      return acc;
     },
     {
       total: 0,
       received: 0,
       pending: 0,
-    }
-  )
+    },
+  );
 
   const columns: ColumnDef<FinanceProps>[] = [
     {
@@ -81,7 +81,7 @@ export default function FinanceEmployee() {
             Owner
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("customer_owner")}</div>,
     },
@@ -98,7 +98,7 @@ export default function FinanceEmployee() {
             Company
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <Link
@@ -122,7 +122,7 @@ export default function FinanceEmployee() {
             Machine
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <Link
@@ -147,7 +147,7 @@ export default function FinanceEmployee() {
             Sale Person
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("sell_by_name")}</div>,
     },
@@ -164,7 +164,7 @@ export default function FinanceEmployee() {
             Price
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("total_generated")}</div>,
     },
@@ -181,7 +181,7 @@ export default function FinanceEmployee() {
             Received
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("total_payment_received")}</div>,
     },
@@ -198,35 +198,35 @@ export default function FinanceEmployee() {
             Balance
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("total_balance")}</div>,
     },
-  ]
+  ];
 
   async function fetchData(
     startDate: string,
     endDate: string,
-    user: undefined | null | number | string = null
+    user: undefined | null | number | string = null,
   ) {
     return new Promise<void>((resolve, reject) => {
       axios
         .get(
-          `/${userID}/finance?start_date=${startDate}&end_date=${endDate}&user=${user || ""}`
+          `/${userID}/finance?start_date=${startDate}&end_date=${endDate}&user=${user || ""}`,
         )
         .then((response) => {
-          setTableData(response.data)
+          setTableData(response.data);
         })
         .finally(() => {
-          setLoading(false)
-          resolve()
-        })
+          setLoading(false);
+          resolve();
+        });
 
       setFilterDate({
         start: startDate,
         end: endDate,
-      })
-    })
+      });
+    });
   }
 
   return (
@@ -365,10 +365,10 @@ export default function FinanceEmployee() {
         visible={filterVisible}
         onClose={setFilterVisible}
         onReturn={async (val) => {
-          setLoading(true)
-          await fetchData(val.start, val.end, userID)
+          setLoading(true);
+          await fetchData(val.start, val.end, userID);
         }}
       />
     </div>
-  )
+  );
 }

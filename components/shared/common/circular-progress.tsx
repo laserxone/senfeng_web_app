@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
-import * as React from "react"
+import { cn } from "@/lib/utils";
+import * as React from "react";
 
 interface CircularProgressProps {
-  value: number
-  renderLabel?: (progress: number) => number | string
-  size?: number
-  strokeWidth?: number
-  circleStrokeWidth?: number
-  progressStrokeWidth?: number
-  shape?: "square" | "round"
-  className?: string
-  progressClassName?: string
-  labelClassName?: string
-  showLabel?: boolean
-  customText?: string
+  value: number;
+  renderLabel?: (progress: number) => number | string;
+  size?: number;
+  strokeWidth?: number;
+  circleStrokeWidth?: number;
+  progressStrokeWidth?: number;
+  shape?: "square" | "round";
+  className?: string;
+  progressClassName?: string;
+  labelClassName?: string;
+  showLabel?: boolean;
+  customText?: string;
 }
 
 const CircularProgress = ({
@@ -32,13 +32,13 @@ const CircularProgress = ({
   progressStrokeWidth = 10,
   customText = "",
 }: CircularProgressProps) => {
-  const radius = size / 2 - 10
-  const circumference = Math.ceil(3.14 * radius * 2)
-  const percentage = Math.ceil(circumference * ((100 - value) / 100))
+  const radius = size / 2 - 10;
+  const circumference = Math.ceil(3.14 * radius * 2);
+  const percentage = Math.ceil(circumference * ((100 - value) / 100));
 
   const viewBox = `-${size * 0.125} -${size * 0.125} ${size * 1.25} ${
     size * 1.25
-  }`
+  }`;
 
   return (
     <div className="relative">
@@ -80,7 +80,7 @@ const CircularProgress = ({
         <div
           className={cn(
             "text-md absolute inset-0 flex items-center justify-center",
-            labelClassName
+            labelClassName,
           )}
         >
           <div className="flex flex-col items-center">
@@ -94,11 +94,11 @@ const CircularProgress = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 function CircularProgressColorDemo() {
-  const [progress, setProgress] = React.useState([13])
+  const [progress, setProgress] = React.useState([13]);
 
   return (
     <div className="mx-auto flex w-full max-w-xs flex-col items-center">
@@ -115,7 +115,7 @@ function CircularProgressColorDemo() {
         />
       </div>
     </div>
-  )
+  );
 }
 
-export default CircularProgress
+export default CircularProgress;

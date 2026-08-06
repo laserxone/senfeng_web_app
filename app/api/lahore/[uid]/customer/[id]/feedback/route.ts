@@ -1,11 +1,11 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await params
+  const { id } = await params;
 
   try {
     const feedback = await pool.query(
@@ -14,16 +14,16 @@ export async function GET(
              FROM feedback f 
              LEFT JOIN users u ON f.user_id = u.id 
              WHERE f.customer_id = $1`,
-      [id]
-    )
+      [id],
+    );
 
-    return NextResponse.json(feedback.rows, { status: 200 })
+    return NextResponse.json(feedback.rows, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: error?.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

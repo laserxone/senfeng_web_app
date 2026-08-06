@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function NotAuthorized() {
   return (
@@ -20,5 +20,5 @@ export default function NotAuthorized() {
         </div>
       </div>
     </div>
-  )
+  );
 }

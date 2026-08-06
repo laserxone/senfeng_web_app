@@ -1,46 +1,46 @@
-import moment from "moment"
-import admin from "./firebaseAdmin"
-import pool from "@/config/db"
+import moment from "moment";
+import admin from "./firebaseAdmin";
+import pool from "@/config/db";
 
 export async function GetAttendanceFromFirebase(
   start_date: string | null,
   end_date: string | null,
   user: string | number,
-  cond = true
+  cond = true,
 ) {
-  if (!cond) return []
+  if (!cond) return [];
 
-  const db = admin.firestore()
+  const db = admin.firestore();
 
-  const processedStartDate = moment(start_date).startOf("day")
-  const processedEndDate = moment(end_date).endOf("day")
-  let snapshot
+  const processedStartDate = moment(start_date).startOf("day");
+  const processedEndDate = moment(end_date).endOf("day");
+  let snapshot;
   if (!user) {
     snapshot = await db
       .collection("EmployeeAttendance")
       .where("timeIn", ">=", processedStartDate.valueOf())
       .where("timeIn", "<=", processedEndDate.valueOf())
-      .get()
+      .get();
   } else {
     const userResult = await pool.query(
       `SELECT email FROM users WHERE id = $1`,
-      [user]
-    )
+      [user],
+    );
     if (userResult.rows.length > 0) {
-      const userEmail = userResult.rows[0].email
+      const userEmail = userResult.rows[0].email;
       snapshot = await db
         .collection("EmployeeAttendance")
         .where("timeIn", ">=", processedStartDate.valueOf())
         .where("timeIn", "<=", processedEndDate.valueOf())
         .where("attendanceBy", "==", userEmail)
-        .get()
+        .get();
     }
   }
 
   const attendanceRecords = snapshot?.docs?.map((doc) => ({
     id: doc.id,
     ...doc.data(),
-  }))
+  }));
   const preparedData = attendanceRecords?.map((item: any) => {
     return {
       time_in: item?.timeIn
@@ -56,20 +56,20 @@ export async function GetAttendanceFromFirebase(
       location_time_out: item?.locationTimeOut || [],
       image_time_out: item?.imageTimeOut || null,
       user_email: item?.attendanceBy || null,
-    }
-  })
+    };
+  });
 
-  const userQuery = await pool.query(`SELECT name, email FROM users`)
+  const userQuery = await pool.query(`SELECT name, email FROM users`);
 
-  const userMap: any = {}
+  const userMap: any = {};
   userQuery.rows.forEach((user: any) => {
-    userMap[user.email] = user.name
-  })
+    userMap[user.email] = user.name;
+  });
 
   const data = preparedData?.map((item) => ({
     ...item,
     user_name: userMap[item.user_email] || "Unknown",
-  }))
+  }));
 
-  return data ?? []
+  return data ?? [];
 }

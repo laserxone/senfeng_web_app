@@ -1,10 +1,10 @@
-import DetailComponent from "@/components/features/salary/user-detatils"
+import DetailComponent from "@/components/features/salary/user-detatils";
 
 export default async function Page({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = await params
-  return <DetailComponent id={id} />
+  const { id } = await params;
+  return <DetailComponent id={id} />;
 }

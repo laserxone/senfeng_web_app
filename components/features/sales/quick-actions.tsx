@@ -1,5 +1,5 @@
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog"
-import AddCustomerDialog from "@/components/features/customers/components/add-customer"
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import AddCustomerDialog from "@/components/features/customers/components/add-customer";
 import {
   ClipboardList,
   FileText,
@@ -7,15 +7,15 @@ import {
   MessageSquareText,
   Receipt,
   UserPlus,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card"
-import useUserDetail from "@/hooks/use-user-detail"
-import { useState } from "react"
-import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback"
-import AddVisit from "@/components/features/customer-relations/add-visit"
-import { QuotationForm } from "@/components/features/quotations/quotation-form"
-import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement"
+import { Card, CardContent } from "@/components/ui/card";
+import useUserDetail from "@/hooks/use-user-detail";
+import { useState } from "react";
+import AddFeedbackDialog from "@/components/features/customer-relations/add-feedback";
+import AddVisit from "@/components/features/customer-relations/add-visit";
+import { QuotationForm } from "@/components/features/quotations/quotation-form";
+import AddReimbursementDialog from "@/components/features/reimbursements/add-reimbursement";
 
 const items = [
   {
@@ -59,16 +59,16 @@ const items = [
     trigger: "feedback",
     accent: "from-cyan-50 to-teal-50 text-cyan-700 border-cyan-100",
   },
-]
+];
 
 type Props = {
-  onRefreshCustomer: () => Promise<void>
-  onRefreshFeedback: () => Promise<void>
-  onRefreshQuotation: () => Promise<void>
-  onRefreshReimbursement: () => Promise<void>
-  onRefreshTask: () => Promise<void>
-  onRefreshVisit: () => Promise<void>
-}
+  onRefreshCustomer: () => Promise<void>;
+  onRefreshFeedback: () => Promise<void>;
+  onRefreshQuotation: () => Promise<void>;
+  onRefreshReimbursement: () => Promise<void>;
+  onRefreshTask: () => Promise<void>;
+  onRefreshVisit: () => Promise<void>;
+};
 
 export default function SalesQuickActions({
   onRefreshCustomer,
@@ -78,10 +78,10 @@ export default function SalesQuickActions({
   onRefreshTask,
   onRefreshVisit,
 }: Props) {
-  const [open, setOpen] = useState("")
-  const { route_branch, userID, designation, isAdmin } = useUserDetail()
+  const [open, setOpen] = useState("");
+  const { route_branch, userID, designation, isAdmin } = useUserDetail();
   function handleClose() {
-    setOpen("")
+    setOpen("");
   }
   return (
     <>
@@ -96,14 +96,14 @@ export default function SalesQuickActions({
 
           <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-3">
             {items.map((item) => {
-              const Icon = item.icon
+              const Icon = item.icon;
               const tile = (
                 <button
                   key={item.name}
                   type="button"
                   onClick={() => {
                     if (item.trigger !== "task") {
-                      setOpen(item.trigger)
+                      setOpen(item.trigger);
                     }
                   }}
                   className={`group flex min-h-0 flex-col items-center justify-center gap-2 rounded-lg border bg-gradient-to-br p-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none ${item.accent} hover:cursor-pointer`}
@@ -116,7 +116,7 @@ export default function SalesQuickActions({
                     </span>
                   </span>
                 </button>
-              )
+              );
 
               if (item.trigger === "task") {
                 return (
@@ -127,10 +127,10 @@ export default function SalesQuickActions({
                   >
                     {tile}
                   </AddTaskDialog>
-                )
+                );
               }
 
-              return tile
+              return tile;
             })}
           </div>
         </CardContent>
@@ -177,5 +177,5 @@ export default function SalesQuickActions({
         onRefresh={onRefreshQuotation}
       />
     </>
-  )
+  );
 }

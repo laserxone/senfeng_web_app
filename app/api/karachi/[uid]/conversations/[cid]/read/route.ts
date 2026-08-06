@@ -1,13 +1,13 @@
-import pool from "@/config/db"
-import admin from "@/lib/firebaseAdmin"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import admin from "@/lib/firebaseAdmin";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string; cid: string }> }
+  { params }: { params: Promise<{ uid: string; cid: string }> },
 ) {
-  const { cid: conversationId, uid } = await params
-  const { userId } = await req.json()
+  const { cid: conversationId, uid } = await params;
+  const { userId } = await req.json();
 
   try {
     await pool.query(
@@ -18,18 +18,18 @@ export async function PUT(
         AND sender_id = $2
         AND is_read = false
       `,
-      [conversationId, Number(userId)]
-    )
+      [conversationId, Number(userId)],
+    );
 
-    const db = admin.firestore()
+    const db = admin.firestore();
     await db.collection("conversations_meta").doc(userId.toString()).set({
       last_updated: Date.now(),
-    })
+    });
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

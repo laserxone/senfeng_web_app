@@ -1,90 +1,90 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Input } from "@/components/ui/input"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import Spinner from "@/components/ui/spinner";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import { UserContext } from "@/store/context/UserContext"
+import useUserDetail from "@/hooks/use-user-detail";
+import { UserContext } from "@/store/context/UserContext";
 import {
   EmailAuthProvider,
   getAuth,
   reauthenticateWithCredential,
   updatePassword,
-} from "firebase/auth"
-import { useContext, useEffect, useState } from "react"
-import { toast } from "sonner"
+} from "firebase/auth";
+import { useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
-  const { state: UserState } = useContext(UserContext)
-  const [name, setName] = useState("")
-  const [image, setImage] = useState("")
-  const [passwordLoading, setPasswordLoading] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
+  const { state: UserState } = useContext(UserContext);
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     if (userID) {
-      setName(UserState.value.data?.name ?? "")
-      setImage(UserState.value.data?.dp ?? "")
+      setName(UserState.value.data?.name ?? "");
+      setImage(UserState.value.data?.dp ?? "");
     }
-  }, [userID])
+  }, [userID]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e?.target?.files?.[0]
+    const file = e?.target?.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+        setImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   function checkStatus() {
     return (
       name !== UserState.value.data?.name || image !== UserState.value.data?.dp
-    )
+    );
   }
 
   const handleChangePassword = async () => {
-    setPasswordLoading(true)
-    const auth = getAuth()
-    const user = auth.currentUser
-    if (!user?.email) return
+    setPasswordLoading(true);
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user?.email) return;
     const credential = EmailAuthProvider.credential(
       user?.email,
-      currentPassword
-    )
+      currentPassword,
+    );
 
     try {
-      await reauthenticateWithCredential(user, credential)
-      await updatePassword(user, newPassword)
-      toast.success("Password changed successfully")
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      toast.success("Password changed successfully");
     } catch (error: any) {
-      console.log(error.message)
-      toast.error(error?.message || "Error updating password")
+      console.log(error.message);
+      toast.error(error?.message || "Error updating password");
     }
-    setPasswordLoading(false)
-  }
+    setPasswordLoading(false);
+  };
 
   return (
     <div className="flex min-h-svh w-full flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
@@ -156,5 +156,5 @@ export default function Page() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

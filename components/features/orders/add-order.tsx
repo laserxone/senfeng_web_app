@@ -1,33 +1,33 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ListPlus } from "lucide-react"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { ListPlus } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Switch } from "@/components/ui/switch"
-import axios from "@/lib/axios"
-import { InventoryItem, StockProps } from "@/lib/types"
-import { InventorySearch } from "@/components/shared/search/inventory-select"
-import MachineModels from "@/components/features/machines/machine-models"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import axios from "@/lib/axios";
+import { InventoryItem, StockProps } from "@/lib/types";
+import { InventorySearch } from "@/components/shared/search/inventory-select";
+import MachineModels from "@/components/features/machines/machine-models";
 
-type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[]
+type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
 
 const AddOrderDialog = ({
   visible,
@@ -36,11 +36,11 @@ const AddOrderDialog = ({
   onRefresh,
   id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  user_id: number | string
-  id?: number | null
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  user_id: number | string;
+  id?: number | null;
 }) => {
   const [items, setItems] = useState<InventoryItem[]>([
     {
@@ -60,57 +60,57 @@ const AddOrderDialog = ({
       inventory_id: null,
       show: true,
     },
-  ])
-  const [errors, setErrors] = useState<InventoryErrors>([])
-  const [loading, setLoading] = useState(false)
-  const [existingInventory, setExistingInventory] = useState<StockProps[]>([])
+  ]);
+  const [errors, setErrors] = useState<InventoryErrors>([]);
+  const [loading, setLoading] = useState(false);
+  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
 
-  const [manual, setManual] = useState(false)
+  const [manual, setManual] = useState(false);
 
   useEffect(() => {
     if (visible && user_id) {
-      fetchPOSInventory()
+      fetchPOSInventory();
     }
-  }, [visible, user_id])
+  }, [visible, user_id]);
 
   async function fetchPOSInventory() {
     axios.get(`/${user_id}/pos`).then((response) => {
       if (response.data.stock.length > 0) {
-        let resultedData = [...response.data.stock]
-        setExistingInventory([...resultedData])
+        let resultedData = [...response.data.stock];
+        setExistingInventory([...resultedData]);
       }
-    })
+    });
   }
 
   const handleItemChange = <K extends keyof InventoryItem>(
     index: number,
     field: K,
-    value: InventoryItem[K]
+    value: InventoryItem[K],
   ) => {
     setItems((prevItems) => {
-      const newItems = [...prevItems]
+      const newItems = [...prevItems];
 
       newItems[index] = {
         ...newItems[index],
         [field]: value,
-      }
+      };
 
-      return newItems
-    })
+      return newItems;
+    });
 
     setErrors((prevErrors) => {
-      const newErrors = [...prevErrors]
+      const newErrors = [...prevErrors];
 
       if (newErrors[index]) {
         newErrors[index] = {
           ...newErrors[index],
           [field]: "",
-        }
+        };
       }
 
-      return newErrors
-    })
-  }
+      return newErrors;
+    });
+  };
 
   const addItem = () => {
     setItems([
@@ -132,88 +132,88 @@ const AddOrderDialog = ({
         inventory_id: null,
         show: true,
       },
-    ])
-  }
+    ]);
+  };
 
   const removeItem = (index: number) => {
-    const newItems = [...items]
-    newItems.splice(index, 1)
-    setItems(newItems)
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
 
-    const newErrors = [...errors]
-    newErrors.splice(index, 1)
-    setErrors(newErrors)
-  }
+    const newErrors = [...errors];
+    newErrors.splice(index, 1);
+    setErrors(newErrors);
+  };
 
   const validateItems = () => {
-    const newErrors: any[] = []
+    const newErrors: any[] = [];
 
     items.forEach((item) => {
-      const itemErrors: any = {}
+      const itemErrors: any = {};
 
       // qty required and positive
       if (!item.qty || item.qty <= 0) {
-        itemErrors.qty = "Quantity is required and must be greater than 0"
+        itemErrors.qty = "Quantity is required and must be greater than 0";
       }
 
       if (item.isExisting) {
         // inventory_id required for existing items
         if (!item.inventory_id) {
-          itemErrors.inventory_id = "Please select an existing inventory item"
+          itemErrors.inventory_id = "Please select an existing inventory item";
         }
       } else {
         if (!item.is_machine)
           if (!item.name || item.name.trim() === "") {
-            itemErrors.name = "Name is required for new items"
+            itemErrors.name = "Name is required for new items";
           }
       }
 
       // if machine, all machine fields required
       if (item.is_machine) {
         if (!item.machine_serial || item.machine_serial.trim() === "") {
-          itemErrors.machine_serial = "Machine serial is required"
+          itemErrors.machine_serial = "Machine serial is required";
         }
         if (!item.machine_model) {
-          itemErrors.machine_model = "Machine model is required"
+          itemErrors.machine_model = "Machine model is required";
         }
         if (!item.machine_source) {
-          itemErrors.machine_source = "Machine source is required"
+          itemErrors.machine_source = "Machine source is required";
         }
         if (!item.machine_power) {
-          itemErrors.machine_power = "Machine power is required"
+          itemErrors.machine_power = "Machine power is required";
         }
       }
 
-      newErrors.push(itemErrors)
-    })
+      newErrors.push(itemErrors);
+    });
 
-    setErrors(newErrors)
+    setErrors(newErrors);
 
     // Return true if no errors
-    return newErrors.every((err) => Object.keys(err).length === 0)
-  }
+    return newErrors.every((err) => Object.keys(err).length === 0);
+  };
 
   const handleSubmit = async () => {
     if (validateItems()) {
-      let processedItems: any[] = []
+      let processedItems: any[] = [];
 
       items.forEach((item) => {
         if (item.is_machine && item.qty > 1) {
-          let prefix = ""
-          let baseSerial = NaN
+          let prefix = "";
+          let baseSerial = NaN;
 
           if (/^\d+$/.test(item.machine_serial)) {
             // Case 1: Entirely numeric
-            baseSerial = parseInt(item.machine_serial, 10)
+            baseSerial = parseInt(item.machine_serial, 10);
           } else {
             // Case 2: Alphanumeric, extract last number after dash
-            const parts = item.machine_serial.split("-")
-            const last = parts[parts.length - 1]
-            const parsed = parseInt(last, 10)
+            const parts = item.machine_serial.split("-");
+            const last = parts[parts.length - 1];
+            const parsed = parseInt(last, 10);
 
             if (!isNaN(parsed)) {
-              baseSerial = parsed
-              prefix = parts.slice(0, parts.length - 1).join("-")
+              baseSerial = parsed;
+              prefix = parts.slice(0, parts.length - 1).join("-");
             }
           }
 
@@ -221,46 +221,49 @@ const AddOrderDialog = ({
             for (let i = 0; i < item.qty; i++) {
               const newSerial = prefix
                 ? `${prefix}-${baseSerial + i}`
-                : (baseSerial + i).toString()
+                : (baseSerial + i).toString();
 
               processedItems.push({
                 ...item,
                 qty: 1,
                 machine_serial: newSerial,
                 name: newSerial,
-              })
+              });
             }
           } else {
-            processedItems.push(item) // Invalid base serial
+            processedItems.push(item); // Invalid base serial
           }
         } else {
-          processedItems.push(item) // Not a machine or qty === 1
+          processedItems.push(item); // Not a machine or qty === 1
         }
-      })
+      });
 
       processedItems.sort((a, b) => {
-        if (a.is_machine === b.is_machine) return 0
-        return a.is_machine ? 1 : -1
-      })
+        if (a.is_machine === b.is_machine) return 0;
+        return a.is_machine ? 1 : -1;
+      });
 
       const payload = {
         user_id: user_id,
         status: "Order Placed",
         items: processedItems,
-      }
-      setLoading(true)
+      };
+      setLoading(true);
       try {
-        const response = await axios.post(`/${user_id}/neworder/${id}`, payload)
-        await onRefresh()
-        handleClose(false)
+        const response = await axios.post(
+          `/${user_id}/neworder/${id}`,
+          payload,
+        );
+        await onRefresh();
+        handleClose(false);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }
+  };
 
   function handleClose(val: boolean) {
-    onClose(val)
+    onClose(val);
     setItems([
       {
         name: "",
@@ -279,9 +282,9 @@ const AddOrderDialog = ({
         inventory_id: null,
         show: true,
       },
-    ])
+    ]);
 
-    setErrors([])
+    setErrors([]);
   }
 
   return (
@@ -367,29 +370,29 @@ const AddOrderDialog = ({
                           handleItemChange(
                             index,
                             "inventory_id",
-                            val?.id ?? null
-                          )
-                          handleItemChange(index, "name", val?.name ?? "")
+                            val?.id ?? null,
+                          );
+                          handleItemChange(index, "name", val?.name ?? "");
                           handleItemChange(
                             index,
                             "price",
-                            parseFloat(val?.price || "0")
-                          )
+                            parseFloat(val?.price || "0"),
+                          );
                           handleItemChange(
                             index,
                             "buying_price",
-                            parseFloat(val?.buying || "0")
-                          )
+                            parseFloat(val?.buying || "0"),
+                          );
                           handleItemChange(
                             index,
                             "threshold",
-                            parseInt(String(val?.threshold) || "0")
-                          )
+                            parseInt(String(val?.threshold) || "0"),
+                          );
                           handleItemChange(
                             index,
                             "new_order",
-                            parseInt(String(val?.new_order) || "0")
-                          )
+                            parseInt(String(val?.new_order) || "0"),
+                          );
                         }}
                       />
                       {errors[index]?.inventory_id && (
@@ -408,8 +411,8 @@ const AddOrderDialog = ({
                             handleItemChange(
                               index,
                               "qty",
-                              parseInt(e.target.value)
-                            )
+                              parseInt(e.target.value),
+                            );
                           }
                         }}
                       />
@@ -449,8 +452,8 @@ const AddOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "qty",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -470,8 +473,8 @@ const AddOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "price",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -486,8 +489,8 @@ const AddOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "buying_price",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -502,8 +505,8 @@ const AddOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "threshold",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -518,8 +521,8 @@ const AddOrderDialog = ({
                                   handleItemChange(
                                     index,
                                     "new_order",
-                                    parseInt(e.target.value)
-                                  )
+                                    parseInt(e.target.value),
+                                  );
                                 }
                               }}
                             />
@@ -550,8 +553,8 @@ const AddOrderDialog = ({
                               handleItemChange(
                                 index,
                                 "machine_serial",
-                                e.target.value
-                              )
+                                e.target.value,
+                              );
                             }}
                           />
                           {errors[index]?.machine_serial && (
@@ -572,8 +575,8 @@ const AddOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "machine_model",
-                                  e.target.value
-                                )
+                                  e.target.value,
+                                );
                               }}
                             />
                           ) : (
@@ -602,8 +605,8 @@ const AddOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "machine_source",
-                                  e.target.value?.toString()?.toUpperCase()
-                                )
+                                  e.target.value?.toString()?.toUpperCase(),
+                                );
                               }}
                             />
                           ) : (
@@ -642,8 +645,8 @@ const AddOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "machine_power",
-                                  e.target.value
-                                )
+                                  e.target.value,
+                                );
                               }}
                             />
                           ) : (
@@ -679,8 +682,8 @@ const AddOrderDialog = ({
                                 handleItemChange(
                                   index,
                                   "qty",
-                                  parseInt(e.target.value)
-                                )
+                                  parseInt(e.target.value),
+                                );
                               }
                             }}
                           />
@@ -712,7 +715,7 @@ const AddOrderDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default AddOrderDialog
+export default AddOrderDialog;

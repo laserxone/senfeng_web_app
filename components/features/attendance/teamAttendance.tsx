@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   CalendarDays,
   Clock3,
@@ -7,47 +7,47 @@ import {
   LogOut,
   MapPin,
   UsersRound,
-} from "lucide-react"
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { ElementType, useEffect, useMemo, useState } from "react"
+import { Button } from "@/components/ui/button";
+import { ElementType, useEffect, useMemo, useState } from "react";
 
-import LeaveApproval from "@/components/features/employee-finance/leave-approval"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import PageTable from "@/components/shared/tables/app-table"
-import { Badge } from "@/components/ui/badge"
+import LeaveApproval from "@/components/features/employee-finance/leave-approval";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import PageTable from "@/components/shared/tables/app-table";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { TIMEZONE } from "@/constants/data"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { GetProfileImage } from "@/lib/getProfileImage"
-import { UserAttendanceRecord } from "@/lib/types"
-import { MapProvider } from "@/providers/map-provider"
-import { GoogleMap, Marker } from "@react-google-maps/api"
-import moment from "moment"
-import momentT from "moment-timezone"
-import { useTheme } from "next-themes"
-import { columns } from "./AttendanceColumns"
-import RenderMarkAttendance from "./attendance-marking"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { GetProfileImage } from "@/lib/getProfileImage";
+import { UserAttendanceRecord } from "@/lib/types";
+import { MapProvider } from "@/providers/map-provider";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import moment from "moment";
+import momentT from "moment-timezone";
+import { useTheme } from "next-themes";
+import { columns } from "./AttendanceColumns";
+import RenderMarkAttendance from "./attendance-marking";
 
 export default function TeamAttendance() {
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [data, setData] = useState<UserAttendanceRecord[]>([])
-  const [visible, setVisible] = useState(false)
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [data, setData] = useState<UserAttendanceRecord[]>([]);
+  const [visible, setVisible] = useState(false);
   const [selectedAttendance, setSelectedAttendance] =
-    useState<UserAttendanceRecord | null>(null)
-  const [resetLoading, setResetLoading] = useState(false)
-  const { userID, team_attendance_marking } = useUserDetail()
+    useState<UserAttendanceRecord | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+  const { userID, team_attendance_marking } = useUserDetail();
   const [approveLeave, setApproveLeave] = useState<UserAttendanceRecord | null>(
-    null
-  )
-  const [open, setOpen] = useState(false)
+    null,
+  );
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (userID) {
@@ -56,43 +56,43 @@ export default function TeamAttendance() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const end_date = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      fetchData(start_date, end_date)
+        .toISOString();
+      fetchData(start_date, end_date);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(
     start: string,
     end: string,
-    user: string | undefined | null | number = null
+    user: string | undefined | null | number = null,
   ) {
     return new Promise((res) => {
       axios
         .get(
-          `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}&user=${user || ""}`
+          `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}&user=${user || ""}`,
         )
         .then((response) => {
           if (response.data.length > 0) {
             const apiData = response.data.map((item: any) => {
               let status = item?.leave_status
                 ? `Leave ${item?.leave_status}`
-                : "Absent"
+                : "Absent";
 
               if (item?.time_in) {
-                const checkInTime = new Date(item.time_in)
-                const threshold = new Date(item.time_in)
-                threshold.setHours(10, 10, 0, 0)
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
 
                 if (checkInTime > threshold) {
-                  status = "Late"
+                  status = "Late";
                 } else {
-                  status = "Present"
+                  status = "Present";
                 }
               }
 
@@ -100,58 +100,58 @@ export default function TeamAttendance() {
                 ...item,
                 date: item?.time_in || item?.leave_date,
                 status,
-              }
-            })
-            const convertedData = generateAttendanceData(apiData, start, end)
-            setData(convertedData)
+              };
+            });
+            const convertedData = generateAttendanceData(apiData, start, end);
+            setData(convertedData);
           } else {
-            setData([])
+            setData([]);
           }
         })
         .catch((e) => {
-          console.log(e)
+          console.log(e);
         })
         .finally(() => {
-          res(true)
-        })
-    })
+          res(true);
+        });
+    });
   }
 
   function generateAttendanceData(
     rawData: UserAttendanceRecord[],
     start: string,
-    end: string
+    end: string,
   ) {
-    const start_date = moment(start)
-    const end_date = moment(end)
+    const start_date = moment(start);
+    const end_date = moment(end);
 
     const uniqueUsers = Array.from(
-      new Set(rawData.map((item) => item.user_email))
-    )
+      new Set(rawData.map((item) => item.user_email)),
+    );
 
-    const datesInMonth: string[] = []
-    let current = moment(start_date)
+    const datesInMonth: string[] = [];
+    let current = moment(start_date);
     while (current.isSameOrBefore(end_date)) {
-      datesInMonth.push(current.format("YYYY-MM-DD"))
-      current.add(1, "day")
+      datesInMonth.push(current.format("YYYY-MM-DD"));
+      current.add(1, "day");
     }
 
-    const finalData: any = []
+    const finalData: any = [];
 
-    const userMap: any = {}
+    const userMap: any = {};
     rawData.forEach((item) => {
       if (!userMap[item.user_email]) {
-        userMap[item.user_email] = item.user_name
+        userMap[item.user_email] = item.user_name;
       }
-    })
+    });
 
     uniqueUsers.forEach((user) => {
       datesInMonth.forEach((date) => {
         const match = rawData.find(
           (item) =>
             item.user_email === user &&
-            moment(item.date).format("YYYY-MM-DD") === date
-        )
+            moment(item.date).format("YYYY-MM-DD") === date,
+        );
 
         finalData.push({
           ...match,
@@ -167,19 +167,19 @@ export default function TeamAttendance() {
           image_time_out: match?.image_time_out || null,
           location_time_in: match?.location_time_in || null,
           location_time_out: match?.location_time_out || null,
-        })
-      })
-    })
+        });
+      });
+    });
 
     finalData.sort(
       (a: any, b: any) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-    )
-    const today = moment().format("YYYY-MM-DD")
+        new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+    const today = moment().format("YYYY-MM-DD");
 
-    const filteredData = finalData.filter((item: any) => item.date <= today)
+    const filteredData = finalData.filter((item: any) => item.date <= today);
 
-    return filteredData
+    return filteredData;
   }
 
   return (
@@ -238,32 +238,32 @@ export default function TeamAttendance() {
         data={data}
         onRowClick={(val, event) => {
           if (val?.time_in) {
-            setSelectedAttendance(val)
-            setVisible(true)
+            setSelectedAttendance(val);
+            setVisible(true);
           }
           if (val?.leave_id) {
-            setApproveLeave(val)
+            setApproveLeave(val);
           }
         }}
         onFilterPress={() => setFilterVisible(true)}
         reset
         resetLoading={resetLoading}
         onResetPress={async () => {
-          setResetLoading(true)
+          setResetLoading(true);
           const startDate = momentT
             .tz(TIMEZONE)
             .startOf("month")
             .startOf("day")
             .utc()
-            .toISOString()
+            .toISOString();
           const endDate = momentT
             .tz(TIMEZONE)
             .endOf("month")
             .endOf("day")
             .utc()
-            .toISOString()
-          await fetchData(startDate, endDate)
-          setResetLoading(false)
+            .toISOString();
+          await fetchData(startDate, endDate);
+          setResetLoading(false);
         }}
       />
       <FilterSheet
@@ -271,7 +271,7 @@ export default function TeamAttendance() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end, val.user)
+          await fetchData(val.start, val.end, val.user);
         }}
       />
 
@@ -294,9 +294,9 @@ export default function TeamAttendance() {
                     leave_status: `Leave ${newStatus}`,
                     status: `Leave ${newStatus}`,
                   }
-                : p
-            )
-          )
+                : p,
+            ),
+          );
         }}
       />
 
@@ -309,18 +309,18 @@ export default function TeamAttendance() {
             .startOf("month")
             .startOf("day")
             .utc()
-            .toISOString()
+            .toISOString();
           const endDate = momentT
             .tz(TIMEZONE)
             .endOf("month")
             .endOf("day")
             .utc()
-            .toISOString()
-          await fetchData(startDate, endDate)
+            .toISOString();
+          await fetchData(startDate, endDate);
         }}
       />
     </div>
-  )
+  );
 }
 
 function AttendanceMetric({
@@ -328,9 +328,9 @@ function AttendanceMetric({
   label,
   value,
 }: {
-  icon: React.ReactNode
-  label: string
-  value: number
+  icon: React.ReactNode;
+  label: string;
+  value: number;
 }) {
   return (
     <div className="flex items-center gap-3 border-t px-4 py-3 first:border-t-0 sm:border-t-0 sm:px-5">
@@ -342,7 +342,7 @@ function AttendanceMetric({
         <span className="text-sm font-bold">{value}</span>
       </div>
     </div>
-  )
+  );
 }
 
 export const AttendanceDetail = ({
@@ -350,9 +350,9 @@ export const AttendanceDetail = ({
   visible,
   onClose,
 }: {
-  detail: UserAttendanceRecord | null
-  visible: boolean
-  onClose: (val: boolean) => void
+  detail: UserAttendanceRecord | null;
+  visible: boolean;
+  onClose: (val: boolean) => void;
 }) => {
   const entries = [
     {
@@ -377,7 +377,7 @@ export const AttendanceDetail = ({
       accentClassName:
         "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900",
     },
-  ].filter((item) => item.time)
+  ].filter((item) => item.time);
 
   return (
     <Dialog open={visible} onOpenChange={onClose}>
@@ -421,7 +421,7 @@ export const AttendanceDetail = ({
               className={`grid gap-3 ${entries.length > 1 ? "xl:grid-cols-2" : "grid-cols-1"}`}
             >
               {entries.map((entry) => {
-                const Icon = entry.icon
+                const Icon = entry.icon;
 
                 return (
                   <section
@@ -444,7 +444,7 @@ export const AttendanceDetail = ({
                             <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
                               {entry.time
                                 ? moment(entry.time).format(
-                                    "YYYY-MM-DD hh:mm A"
+                                    "YYYY-MM-DD hh:mm A",
                                   )
                                 : "No time recorded"}
                             </p>
@@ -497,7 +497,7 @@ export const AttendanceDetail = ({
                       </div>
                     </div>
                   </section>
-                )
+                );
               })}
 
               {entries.length === 0 && (
@@ -510,17 +510,17 @@ export const AttendanceDetail = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const ProofBlock = ({
   title,
   icon: Icon,
   children,
 }: {
-  title: string
-  icon: ElementType
-  children: React.ReactNode
+  title: string;
+  icon: ElementType;
+  children: React.ReactNode;
 }) => (
   <div className="min-w-0">
     <div className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -532,7 +532,7 @@ const ProofBlock = ({
       {children}
     </div>
   </div>
-)
+);
 
 const InfoTile = ({ label, value }: { label: string; value: string }) => (
   <div className="min-w-0 rounded-xl border bg-white px-3 py-2 dark:bg-slate-950">
@@ -543,36 +543,36 @@ const InfoTile = ({ label, value }: { label: string; value: string }) => (
       {value}
     </p>
   </div>
-)
+);
 
 const EmptyProof = ({ label }: { label: string }) => (
   <div className="grid min-h-[180px] place-items-center px-3 text-center text-xs font-medium text-muted-foreground">
     {label}
   </div>
-)
+);
 
 const RenderImage = ({ img }: { img: string | null }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
+  const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img)
+        setLocalImage(img);
       } else {
-        const imgResult = await GetProfileImage(img)
-        setLocalImage(imgResult)
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
       }
     }
 
-    if (img) fetchImage()
-  }, [img])
+    if (img) fetchImage();
+  }, [img]);
 
   if (!localImage) {
     return (
       <div className="grid min-h-[180px] place-items-center text-xs text-muted-foreground">
         Loading image...
       </div>
-    )
+    );
   }
 
   return (
@@ -581,11 +581,11 @@ const RenderImage = ({ img }: { img: string | null }) => {
       alt="attendance-proof"
       className="h-[clamp(180px,32vh,280px)] w-full object-contain"
     />
-  )
-}
+  );
+};
 
 const LocationMap = ({ position }: { position: number[] | null }) => {
-  const { theme } = useTheme()
+  const { theme } = useTheme();
 
   const defaultMapOptions = useMemo(
     () => ({
@@ -595,15 +595,15 @@ const LocationMap = ({ position }: { position: number[] | null }) => {
       mapTypeId: "roadmap",
       colorScheme: theme === "dark" ? "DARK" : "LIGHT",
     }),
-    [theme]
-  )
+    [theme],
+  );
 
-  if (!position) return null
+  if (!position) return null;
 
   const defaultMapCenter: google.maps.LatLngLiteral = {
     lat: position[0],
     lng: position[1],
-  }
+  };
 
   return (
     <div className="h-[clamp(180px,32vh,280px)] w-full overflow-hidden">
@@ -624,5 +624,5 @@ const LocationMap = ({ position }: { position: number[] | null }) => {
         />
       </GoogleMap>
     </div>
-  )
-}
+  );
+};

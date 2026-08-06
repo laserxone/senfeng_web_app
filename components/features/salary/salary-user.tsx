@@ -1,48 +1,48 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowUpDown } from "lucide-react"
+"use client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowUpDown } from "lucide-react";
 import {
   Dispatch,
   SetStateAction,
   useCallback,
   useEffect,
   useState,
-} from "react"
+} from "react";
 
-import PageTable from "@/components/shared/tables/app-table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import Heading from "@/components/ui/heading"
+import PageTable from "@/components/shared/tables/app-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import Heading from "@/components/ui/heading";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
-import Spinner from "@/components/ui/spinner"
-import { UserSearch } from "@/components/shared/search/user-search"
+} from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
+import { UserSearch } from "@/components/shared/search/user-search";
 
-import axios from "@/lib/axios"
-import { format, setMonth } from "date-fns"
-import moment from "moment"
+import axios from "@/lib/axios";
+import { format, setMonth } from "date-fns";
+import moment from "moment";
 
-import AccountsPdf from "@/components/features/salary/accountsPdf"
-import CommissionRecord from "@/components/features/salary/commission-salary"
+import AccountsPdf from "@/components/features/salary/accountsPdf";
+import CommissionRecord from "@/components/features/salary/commission-salary";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
+} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogClose,
@@ -50,8 +50,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -59,8 +59,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import useUserDetail from "@/hooks/use-user-detail"
+} from "@/components/ui/table";
+import useUserDetail from "@/hooks/use-user-detail";
 import {
   CommissionOwnerProps,
   GenerateOldRecord,
@@ -71,49 +71,49 @@ import {
   UserAttendanceRecord,
   UserFine,
   UserReimbursementType,
-} from "@/lib/types"
-import { pdf } from "@react-pdf/renderer"
-import { ColumnDef } from "@tanstack/react-table"
-import { toast } from "sonner"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/lib/types";
+import { pdf } from "@react-pdf/renderer";
+import { ColumnDef } from "@tanstack/react-table";
+import { toast } from "sonner";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Form = {
-  target_achieved: number
-  absents: number
-  late: number
-  late_fine_per_day: number
-  reimbursement: number
-  commission: number
-  miscellaneous: number
-  additional_fine: number
-  old_target_achieved?: number
-}
+  target_achieved: number;
+  absents: number;
+  late: number;
+  late_fine_per_day: number;
+  reimbursement: number;
+  commission: number;
+  miscellaneous: number;
+  additional_fine: number;
+  old_target_achieved?: number;
+};
 
 type LocalUserAttendance = {
-  date: string
-  day: string
-  status: string
-  time_in: null | string
-  time_out: null | string
-}
+  date: string;
+  day: string;
+  status: string;
+  time_in: null | string;
+  time_out: null | string;
+};
 const SalaryComponent = ({
   onSelectedId,
 }: {
-  onSelectedId: Dispatch<SetStateAction<number | null>>
+  onSelectedId: Dispatch<SetStateAction<number | null>>;
 }) => {
-  const currentDate = new Date()
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth())
+  const currentDate = new Date();
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [startDate, setStartDate] = useState(
-    moment().startOf("month").toISOString()
-  )
-  const { userID } = useUserDetail()
-  const [endDate, setEndDate] = useState(moment().endOf("month").toISOString())
-  const [user, setUser] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<GenerateSalaryDashboard | null>(null)
-  const [checked, setChecked] = useState(false)
+    moment().startOf("month").toISOString(),
+  );
+  const { userID } = useUserDetail();
+  const [endDate, setEndDate] = useState(moment().endOf("month").toISOString());
+  const [user, setUser] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<GenerateSalaryDashboard | null>(null);
+  const [checked, setChecked] = useState(false);
   const [form, setForm] = useState<Form>({
     target_achieved: 0,
     absents: 0,
@@ -124,58 +124,58 @@ const SalaryComponent = ({
     miscellaneous: 0,
     additional_fine: 0,
     old_target_achieved: 0,
-  })
-  const [cancelled, setCancelled] = useState<number | string>(0)
-  const [saveLoading, setSaveLoading] = useState(false)
-  const [kpi, setKpi] = useState(0)
-  const [lateComingFine, setLateComingFine] = useState(0)
-  const [absentsFine, setAbsentsFine] = useState(0)
-  const [payable, setPayable] = useState(0)
+  });
+  const [cancelled, setCancelled] = useState<number | string>(0);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [kpi, setKpi] = useState(0);
+  const [lateComingFine, setLateComingFine] = useState(0);
+  const [absentsFine, setAbsentsFine] = useState(0);
+  const [payable, setPayable] = useState(0);
   const [attendanceData, setAttendanceData] = useState<LocalUserAttendance[]>(
-    []
-  )
-  const [accountsLoading, setAccountsLoading] = useState(false)
-  const [excludeAbsent, setExcludeAbsent] = useState(false)
-  const [excludeLate, setExcludeLate] = useState(false)
-  const [excludeAbsentFine, setExcludeAbsentFine] = useState(false)
-  const [excludeLateFine, setExcludeLateFine] = useState(false)
-  const [modal, setModal] = useState(false)
-  const [ttRate, setTTRate] = useState(1)
+    [],
+  );
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  const [excludeAbsent, setExcludeAbsent] = useState(false);
+  const [excludeLate, setExcludeLate] = useState(false);
+  const [excludeAbsentFine, setExcludeAbsentFine] = useState(false);
+  const [excludeLateFine, setExcludeLateFine] = useState(false);
+  const [modal, setModal] = useState(false);
+  const [ttRate, setTTRate] = useState(1);
 
-  const [toAccounts, setToAccounts] = useState<ToAccounts[]>([])
-  const [refresh, setRefresh] = useState(false)
-  const [remainingLoan, setRemainingLoan] = useState(0)
-  const [repayment, setRepayment] = useState<string | number>(0)
+  const [toAccounts, setToAccounts] = useState<ToAccounts[]>([]);
+  const [refresh, setRefresh] = useState(false);
+  const [remainingLoan, setRemainingLoan] = useState(0);
+  const [repayment, setRepayment] = useState<string | number>(0);
   const years = Array.from(
     { length: 20 },
-    (_, i) => new Date().getFullYear() - 10 + i
-  )
+    (_, i) => new Date().getFullYear() - 10 + i,
+  );
   const months = Array.from({ length: 12 }, (_, i) =>
-    format(setMonth(new Date(), i), "MMMM")
-  )
+    format(setMonth(new Date(), i), "MMMM"),
+  );
 
   useEffect(() => {
     if (userID) {
       axios.get(`/${userID}/settings`).then((response) => {
-        setTTRate(response.data.usd_rate || "")
-      })
+        setTTRate(response.data.usd_rate || "");
+      });
     }
-  }, [userID])
+  }, [userID]);
 
   const updateDate = (month: number, year: number) => {
     const start = moment()
       .year(year)
       .month(month)
       .startOf("month")
-      .toISOString()
-    const end = moment().year(year).month(month).endOf("month").toISOString()
+      .toISOString();
+    const end = moment().year(year).month(month).endOf("month").toISOString();
 
-    setStartDate(start)
-    setEndDate(end)
-  }
+    setStartDate(start);
+    setEndDate(end);
+  };
 
   async function clearForm() {
-    setData(null)
+    setData(null);
     setForm({
       target_achieved: 0,
       absents: 0,
@@ -186,102 +186,102 @@ const SalaryComponent = ({
       miscellaneous: 0,
       additional_fine: 0,
       old_target_achieved: 0,
-    })
-    setPayable(0)
-    setLateComingFine(0)
-    setAbsentsFine(0)
-    setKpi(0)
+    });
+    setPayable(0);
+    setLateComingFine(0);
+    setAbsentsFine(0);
+    setKpi(0);
   }
 
   async function handleGenerate() {
-    setLoading(true)
-    const response = await axios.get(`/${userID}/settings`)
-    setForm({ ...form, late_fine_per_day: response.data.late_fine * -1 })
+    setLoading(true);
+    const response = await axios.get(`/${userID}/settings`);
+    setForm({ ...form, late_fine_per_day: response.data.late_fine * -1 });
     axios
       .get(
-        `/${userID}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`
+        `/${userID}/salary?user=${user}&start=${startDate}&end=${endDate}&month=${selectedMonth}&year=${selectedYear}`,
       )
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
         if (refresh) {
-          setChecked(false)
+          setChecked(false);
           processAttendance(
             Number(moment(startDate).format("YYYY")),
             Number(moment(startDate).format("MM")),
             response.data.attendance,
-            true
-          )
+            true,
+          );
 
           if (response.data?.loan) {
             const totalAmount = response.data.loan.reduce(
               (sum: number, item: Loan) => sum + Number(item.loan_amount),
-              0
-            )
-            setRemainingLoan(totalAmount)
+              0,
+            );
+            setRemainingLoan(totalAmount);
           }
 
           if (response.data?.reimbursement) {
             const totalAmount = response.data.reimbursement.reduce(
               (sum: number, item: UserReimbursementType) =>
                 sum + Number(item.amount),
-              0
-            )
+              0,
+            );
             setForm((prevState) => ({
               ...prevState,
               reimbursement: totalAmount,
-            }))
+            }));
           }
           if (response.data?.fines) {
             const totalAmount = response.data.fines.reduce(
               (sum: number, item: UserFine) => sum + Number(item.amount),
-              0
-            )
+              0,
+            );
             setForm((prevState) => ({
               ...prevState,
               additional_fine: totalAmount * -1,
-            }))
+            }));
           }
 
           if (response.data?.commission?.length) {
             const totalCommission = response.data.commission.reduce(
               (sum: number, item: CommissionOwnerProps) =>
                 sum + Number(item.commission_amount),
-              0
-            )
+              0,
+            );
             setForm((prevState) => ({
               ...prevState,
               commission: totalCommission,
-            }))
+            }));
           }
 
           if (excludeAbsent) {
-            setForm((prev) => ({ ...prev, absents: 0 }))
+            setForm((prev) => ({ ...prev, absents: 0 }));
           }
           if (excludeLate) {
-            setForm((prev) => ({ ...prev, late: 0 }))
+            setForm((prev) => ({ ...prev, late: 0 }));
           }
           if (excludeAbsentFine) {
-            setAbsentsFine(0)
+            setAbsentsFine(0);
           }
           if (excludeLateFine) {
-            setLateComingFine(0)
+            setLateComingFine(0);
           }
           if (Number(ttRate) > 0 && Array.isArray(response.data?.machines)) {
             const total = response.data?.machines.reduce(
               (sum: number, item: MachineProps) =>
                 sum + Number(item.price || 0),
-              0
-            )
-            const finalTotal = total / Number(ttRate)
+              0,
+            );
+            const finalTotal = total / Number(ttRate);
             setForm((prev) => ({
               ...prev,
               target_achieved: Number(finalTotal.toFixed(0)),
               old_target_achieved: Number(finalTotal.toFixed(0)),
-            }))
+            }));
           }
         } else {
           if (response.data?.salary) {
-            const existing = response.data.salary
+            const existing = response.data.salary;
             setForm({
               absents: Number(existing.absents),
               additional_fine: Number(existing.additional_fine),
@@ -291,138 +291,138 @@ const SalaryComponent = ({
               miscellaneous: Number(existing.miscellaneous),
               reimbursement: Number(existing.reimbursement),
               target_achieved: Number(existing.target_achieved),
-            })
-            setRemainingLoan(existing?.loan)
-            setChecked(existing.issued)
+            });
+            setRemainingLoan(existing?.loan);
+            setChecked(existing.issued);
             processAttendance(
               Number(moment(startDate).format("YYYY")),
               Number(moment(startDate).format("MM")),
               response.data.attendance,
-              false
-            )
+              false,
+            );
           } else {
-            setChecked(false)
+            setChecked(false);
             processAttendance(
               Number(moment(startDate).format("YYYY")),
               Number(moment(startDate).format("MM")),
               response.data.attendance,
-              true
-            )
+              true,
+            );
             if (response.data?.loan) {
               const totalAmount = response.data.loan.reduce(
                 (sum: number, item: Loan) => sum + Number(item.loan_amount),
-                0
-              )
-              setRemainingLoan(totalAmount)
+                0,
+              );
+              setRemainingLoan(totalAmount);
             }
             if (response.data?.reimbursement) {
               const totalAmount = response.data.reimbursement.reduce(
                 (sum: number, item: UserReimbursementType) =>
                   sum + Number(item.amount),
-                0
-              )
+                0,
+              );
               setForm((prevState) => ({
                 ...prevState,
                 reimbursement: totalAmount,
-              }))
+              }));
             }
             if (response.data?.fines) {
               const totalAmount = response.data.fines.reduce(
                 (sum: number, item: UserFine) => sum + Number(item.amount),
-                0
-              )
+                0,
+              );
               setForm((prevState) => ({
                 ...prevState,
                 additional_fine: totalAmount * -1,
-              }))
+              }));
             }
             if (response.data?.commission) {
               const totalCommission = response.data?.commission.reduce(
                 (sum: number, item: CommissionOwnerProps) =>
                   sum + Number(item.commission_amount),
-                0
-              )
+                0,
+              );
               setForm((prevState) => ({
                 ...prevState,
                 commission: totalCommission,
-              }))
+              }));
             }
             if (excludeAbsent) {
-              setForm((prev) => ({ ...prev, absents: 0 }))
+              setForm((prev) => ({ ...prev, absents: 0 }));
             }
             if (excludeLate) {
-              setForm((prev) => ({ ...prev, late: 0 }))
+              setForm((prev) => ({ ...prev, late: 0 }));
             }
             if (excludeAbsentFine) {
-              setAbsentsFine(0)
+              setAbsentsFine(0);
             }
             if (excludeLateFine) {
-              setLateComingFine(0)
+              setLateComingFine(0);
             }
             if (Number(ttRate) > 0 && Array.isArray(response.data?.machines)) {
               const total = response.data?.machines.reduce(
                 (sum: number, item: MachineProps) =>
                   sum + Number(item.price || 0),
-                0
-              )
-              const finalTotal = total / Number(ttRate)
+                0,
+              );
+              const finalTotal = total / Number(ttRate);
               setForm((prev) => ({
                 ...prev,
                 target_achieved: Number(finalTotal.toFixed(0)),
                 old_target_achieved: Number(finalTotal.toFixed(0)),
-              }))
+              }));
             }
           }
         }
       })
       .finally(() => {
-        setLoading(false)
-        setRefresh(false)
-      })
+        setLoading(false);
+        setRefresh(false);
+      });
   }
 
   useEffect(() => {
     if (data && data?.user) {
       if (data?.user?.designation === "Sales") {
-        const totalSalary = Number(data?.user?.total_salary) || 0
-        const basicSalary = Number(data?.user?.basic_salary) || 0
-        const performanceSalary = totalSalary - basicSalary
+        const totalSalary = Number(data?.user?.total_salary) || 0;
+        const basicSalary = Number(data?.user?.basic_salary) || 0;
+        const performanceSalary = totalSalary - basicSalary;
 
-        const targetAchieved = Number(form.target_achieved) || 0
-        const monthlyTarget = Number(data?.user?.monthly_target) || 1
+        const targetAchieved = Number(form.target_achieved) || 0;
+        const monthlyTarget = Number(data?.user?.monthly_target) || 1;
 
-        const feedbacksTaken = Number(data?.feedbacksTakenThisMonth) || 0
-        const maxFeedbacks = Number(data?.totalCustomersWithSale) || 1
+        const feedbacksTaken = Number(data?.feedbacksTakenThisMonth) || 0;
+        const maxFeedbacks = Number(data?.totalCustomersWithSale) || 1;
 
-        const visitsTaken = Number(data?.totalVisits) || 0
-        const maxVisits = 15
+        const visitsTaken = Number(data?.totalVisits) || 0;
+        const maxVisits = 15;
 
-        const targetPercentage = targetAchieved / monthlyTarget
-        const feedbackPercentage = Math.min(feedbacksTaken / maxFeedbacks, 1)
-        const visitPercentage = Math.min(visitsTaken / maxVisits, 1)
+        const targetPercentage = targetAchieved / monthlyTarget;
+        const feedbackPercentage = Math.min(feedbacksTaken / maxFeedbacks, 1);
+        const visitPercentage = Math.min(visitsTaken / maxVisits, 1);
 
-        const weightedTarget = targetPercentage * 0.6
-        const weightedFeedback = feedbackPercentage * 0.2
-        const weightedVisit = visitPercentage * 0.2
+        const weightedTarget = targetPercentage * 0.6;
+        const weightedFeedback = feedbackPercentage * 0.2;
+        const weightedVisit = visitPercentage * 0.2;
 
         const kpiAmount =
           performanceSalary *
-          (weightedTarget + weightedFeedback + weightedVisit)
+          (weightedTarget + weightedFeedback + weightedVisit);
 
-        setKpi(kpiAmount)
+        setKpi(kpiAmount);
       } else {
         setKpi(
           ((Number(form.target_achieved) || 0) /
             (Number(data?.user?.monthly_target) || 1)) *
             ((Number(data?.user?.total_salary) || 0) -
-              (Number(data?.user?.basic_salary) || 0))
-        )
+              (Number(data?.user?.basic_salary) || 0)),
+        );
       }
 
       if (!excludeLateFine) {
         setLateComingFine(
-          data?.user ? (form.late_fine_per_day || 0) * (form.late || 0) : 0
-        )
+          data?.user ? (form.late_fine_per_day || 0) * (form.late || 0) : 0,
+        );
       }
 
       if (!excludeAbsentFine) {
@@ -433,13 +433,13 @@ const SalaryComponent = ({
                   (Number(data.user.total_salary) / 30) *
                   (form.absents || 0) *
                   -1
-                ).toFixed(0)
+                ).toFixed(0),
               )
-            : 0
-        )
+            : 0,
+        );
       }
     }
-  }, [data, form])
+  }, [data, form]);
 
   useEffect(() => {
     if (data?.user) {
@@ -455,60 +455,60 @@ const SalaryComponent = ({
             Number(form.miscellaneous || 0) +
             Number(form.additional_fine || 0) +
             Number(repayment || 0)
-          ).toFixed(2)
-        )
-      )
+          ).toFixed(2),
+        ),
+      );
     }
-  }, [data, form, kpi, lateComingFine, absentsFine, repayment])
+  }, [data, form, kpi, lateComingFine, absentsFine, repayment]);
 
   useEffect(() => {
     if (cancelled && form.target_achieved) {
-      const oldTarget = form.target_achieved * Number(ttRate)
-      const newAmount = Number(oldTarget) - Number(cancelled)
-      const finalNewTarget = newAmount / Number(ttRate)
+      const oldTarget = form.target_achieved * Number(ttRate);
+      const newAmount = Number(oldTarget) - Number(cancelled);
+      const finalNewTarget = newAmount / Number(ttRate);
       setForm((prevState) => ({
         ...prevState,
         target_achieved: Number(finalNewTarget.toFixed(0)),
-      }))
+      }));
     } else {
       setForm((prevState) => ({
         ...prevState,
         target_achieved: prevState?.old_target_achieved || 0,
-      }))
+      }));
     }
-  }, [cancelled])
+  }, [cancelled]);
 
   const handleInputChange = (field: string, value: string) => {
     setForm((prev) => ({
       ...prev,
       [field]: value ? (value == "-" ? value : Number(value)) : "",
       // [field]: value,
-    }))
-  }
+    }));
+  };
 
   const processAttendance = (
     year: number,
     month: number,
     records: UserAttendanceRecord[],
-    condition: boolean
+    condition: boolean,
   ) => {
-    let monthData = []
-    let totalWorkingDays = 0
-    let sundays = []
+    let monthData = [];
+    let totalWorkingDays = 0;
+    let sundays = [];
 
     // Generate all days in the selected month
-    let startDate = moment(`${year}-${month}-01`)
-    let endDate = moment(startDate).endOf("month")
+    let startDate = moment(`${year}-${month}-01`);
+    let endDate = moment(startDate).endOf("month");
 
     for (
       let date = startDate.clone();
       date.isSameOrBefore(endDate);
       date.add(1, "day")
     ) {
-      let isSunday = date.isoWeekday() === 7
+      let isSunday = date.isoWeekday() === 7;
 
-      if (!isSunday) totalWorkingDays++
-      else sundays.push(date.format("YYYY-MM-DD"))
+      if (!isSunday) totalWorkingDays++;
+      else sundays.push(date.format("YYYY-MM-DD"));
 
       monthData.push({
         date: date.format("YYYY-MM-DD"),
@@ -516,7 +516,7 @@ const SalaryComponent = ({
         status: "Absent",
         time_in: null,
         time_out: null,
-      })
+      });
     }
 
     let finalData = monthData.map((day) => {
@@ -524,35 +524,35 @@ const SalaryComponent = ({
         (r) =>
           r.time_in &&
           moment(new Date(r.time_in)).format("YYYY-MM-DD") ===
-            moment(day.date).format("YYYY-MM-DD")
-      )
+            moment(day.date).format("YYYY-MM-DD"),
+      );
 
       if (record && record.time_in) {
-        const checkIn = moment(new Date(record.time_in))
+        const checkIn = moment(new Date(record.time_in));
         const checkOut = record?.time_out
           ? moment(new Date(record.time_out))
-          : null
+          : null;
 
         let isLate = checkIn.isAfter(
-          moment(day.date + " 10:10", "YYYY-MM-DD HH:mm")
-        )
+          moment(day.date + " 10:10", "YYYY-MM-DD HH:mm"),
+        );
 
         return {
           ...day,
           time_in: checkIn.format("hh:mm A"),
           time_out: checkOut ? checkOut.format("h:mm A") : null,
           status: isLate ? "Late" : "Present",
-        }
+        };
       }
 
-      return day
-    })
+      return day;
+    });
 
     if (condition) {
       finalData = finalData.map((day, index, arr) => {
         if (day.day === "Sunday") {
-          const prevDay = arr[index - 1] // Saturday
-          const nextDay = arr[index + 1] // Monday
+          const prevDay = arr[index - 1]; // Saturday
+          const nextDay = arr[index + 1]; // Monday
 
           if (
             prevDay &&
@@ -564,31 +564,31 @@ const SalaryComponent = ({
               ...day,
               status: "Absent",
               sandwich: true,
-            }
+            };
           }
         }
-        return day
-      })
+        return day;
+      });
 
       const totalPresent = finalData.filter(
-        (item) => item.status === "Present" || item.status === "Late"
-      )
+        (item) => item.status === "Present" || item.status === "Late",
+      );
       const lateCount = finalData.filter(
-        (item) => item.status === "Late"
-      ).length
+        (item) => item.status === "Late",
+      ).length;
 
       setForm((prevState) => ({
         ...prevState,
         absents: totalWorkingDays - totalPresent.length,
         late: lateCount,
-      }))
+      }));
     }
 
-    setAttendanceData([...finalData])
-  }
+    setAttendanceData([...finalData]);
+  };
 
   async function handleSave() {
-    setSaveLoading(true)
+    setSaveLoading(true);
 
     try {
       await axios.post(`/${userID}/salary`, {
@@ -610,22 +610,22 @@ const SalaryComponent = ({
         fuel: data?.user?.fuel || 0,
         loan: repayment,
         basic_salary: data?.user?.basic_salary || 0,
-      })
+      });
 
-      toast.success("Salary saved! Updating other entries in background")
+      toast.success("Salary saved! Updating other entries in background");
 
       if (checked) {
         if (repayment && !isNaN(Number(repayment)) && employeeLoan) {
           const response = await axios.post(`/${userID}/loans/repayment`, {
             loan_id: employeeLoan.id,
             amount: Number(repayment),
-          })
+          });
           await axios.post(`/${userID}/salary`, {
             user_id: user,
             year: selectedYear,
             month: selectedMonth,
             loan_repayment: response.data?.id || null,
-          })
+          });
         }
         if (data?.commission) {
           await Promise.all(
@@ -633,56 +633,56 @@ const SalaryComponent = ({
               await axios.put(`/${userID}/commission/${item.id}`, {
                 commission_issued: true,
                 issue_date: new Date(),
-              })
-            })
-          )
+              });
+            }),
+          );
 
-          const commissionIds = data.commission.map((item) => item.id)
+          const commissionIds = data.commission.map((item) => item.id);
 
           await axios.post(`/${userID}/salary`, {
             user_id: user,
             year: selectedYear,
             month: selectedMonth,
             issued_commissions: JSON.stringify(commissionIds),
-          })
+          });
         }
       }
-      toast.success("Salary saved successfully.")
-      clearForm()
+      toast.success("Salary saved successfully.");
+      clearForm();
     } finally {
-      setSaveLoading(false)
+      setSaveLoading(false);
     }
   }
 
   async function handleAccounts() {
-    setAccountsLoading(true)
+    setAccountsLoading(true);
     axios
       .get(`/${userID}/accounts?month=${selectedMonth}&year=${selectedYear}`)
       .then(async (response) => {
-        setToAccounts(response.data)
+        setToAccounts(response.data);
       })
       .finally(() => {
-        setAccountsLoading(false)
-      })
+        setAccountsLoading(false);
+      });
   }
 
   const RenderTTRate = ({ machines }: { machines: MachineProps[] }) => {
     const total = machines.reduce(
       (sum, item) => sum + Number(item.price || 0),
-      0
-    )
+      0,
+    );
     return (
       <div>
         <p>Total PKR: {total}</p>
         <p>USD rate: {ttRate}</p>
       </div>
-    )
-  }
+    );
+  };
 
   const employeeLoan =
     data?.loan && Array.isArray(data.loan) && data.loan.length > 0
       ? data.loan[0]
-      : null
+      : null;
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -718,8 +718,8 @@ const SalaryComponent = ({
               <UserSearch
                 value={user}
                 onReturn={(val) => {
-                  setUser(val)
-                  onSelectedId(val)
+                  setUser(val);
+                  onSelectedId(val);
                 }}
               />
             </div>
@@ -729,8 +729,8 @@ const SalaryComponent = ({
               <Label>Select Year</Label>
               <Select
                 onValueChange={(year) => {
-                  setSelectedYear(Number(year))
-                  updateDate(selectedMonth, Number(year))
+                  setSelectedYear(Number(year));
+                  updateDate(selectedMonth, Number(year));
                 }}
                 value={selectedYear.toString()}
               >
@@ -752,8 +752,8 @@ const SalaryComponent = ({
               <Label>Select Month</Label>
               <Select
                 onValueChange={(month) => {
-                  setSelectedMonth(Number(month))
-                  updateDate(Number(month), selectedYear)
+                  setSelectedMonth(Number(month));
+                  updateDate(Number(month), selectedYear);
                 }}
                 value={selectedMonth.toString()}
               >
@@ -776,8 +776,8 @@ const SalaryComponent = ({
                 <Button
                   disabled={!user || !userID}
                   onClick={() => {
-                    clearForm()
-                    setModal(true)
+                    clearForm();
+                    setModal(true);
                   }}
                 >
                   {loading && <Spinner />} Generate
@@ -793,9 +793,9 @@ const SalaryComponent = ({
               <div className="mt-2 flex flex-wrap items-center gap-4">
                 <Button
                   onClick={() => {
-                    clearForm()
-                    setRefresh(true)
-                    setModal(true)
+                    clearForm();
+                    setRefresh(true);
+                    setModal(true);
                   }}
                 >
                   Refresh
@@ -812,7 +812,7 @@ const SalaryComponent = ({
                   <Checkbox
                     checked={checked}
                     onCheckedChange={(checked: boolean) => {
-                      setChecked(checked)
+                      setChecked(checked);
                     }}
                   />
                 </div>
@@ -848,7 +848,7 @@ const SalaryComponent = ({
                             />
                           )}
                         </div>
-                      )
+                      ),
                   )}
 
                   <div className="flex flex-col gap-1">
@@ -860,10 +860,10 @@ const SalaryComponent = ({
                         type="number"
                         value={cancelled}
                         onChange={(e) => {
-                          const value = e.target.value
+                          const value = e.target.value;
                           setCancelled(
-                            value ? (value == "-" ? value : Number(value)) : ""
-                          )
+                            value ? (value == "-" ? value : Number(value)) : "",
+                          );
                         }}
                       />
                     )}
@@ -879,14 +879,14 @@ const SalaryComponent = ({
                           type="number"
                           value={repayment}
                           onChange={(e) => {
-                            const value = e.target.value
+                            const value = e.target.value;
                             setRepayment(
                               value
                                 ? value == "-"
                                   ? value
                                   : Number(value)
-                                : ""
-                            )
+                                : "",
+                            );
                           }}
                         />
                       )}
@@ -1177,7 +1177,7 @@ const SalaryComponent = ({
               <Checkbox
                 checked={excludeAbsent}
                 onCheckedChange={(checked: boolean) => {
-                  setExcludeAbsent(checked)
+                  setExcludeAbsent(checked);
                 }}
               />
             </div>
@@ -1186,7 +1186,7 @@ const SalaryComponent = ({
               <Checkbox
                 checked={excludeAbsentFine}
                 onCheckedChange={(checked: boolean) => {
-                  setExcludeAbsentFine(checked)
+                  setExcludeAbsentFine(checked);
                 }}
               />
             </div>
@@ -1195,7 +1195,7 @@ const SalaryComponent = ({
               <Checkbox
                 checked={excludeLate}
                 onCheckedChange={(checked: boolean) => {
-                  setExcludeLate(checked)
+                  setExcludeLate(checked);
                 }}
               />
             </div>
@@ -1204,7 +1204,7 @@ const SalaryComponent = ({
               <Checkbox
                 checked={excludeLateFine}
                 onCheckedChange={(checked: boolean) => {
-                  setExcludeLateFine(checked)
+                  setExcludeLateFine(checked);
                 }}
               />
             </div>
@@ -1216,8 +1216,8 @@ const SalaryComponent = ({
             <Button
               disabled={!userID}
               onClick={() => {
-                setModal(false)
-                handleGenerate()
+                setModal(false);
+                handleGenerate();
               }}
             >
               Proceed
@@ -1232,18 +1232,18 @@ const SalaryComponent = ({
         data={toAccounts}
       />
     </div>
-  )
-}
+  );
+};
 
 function SalaryHistory({ data }: { data: GenerateOldRecord[] }) {
   if (!data || data.length === 0) {
-    return
+    return;
   }
 
   const totalPayments = data.reduce(
     (sum, payment) => sum + Number(payment.payable),
-    0
-  )
+    0,
+  );
 
   return (
     <ScrollArea className="max-h-[80vh] w-[220px] pr-2">
@@ -1282,7 +1282,7 @@ function SalaryHistory({ data }: { data: GenerateOldRecord[] }) {
         ))}
       </div>
     </ScrollArea>
-  )
+  );
 }
 
 const Accounts = ({
@@ -1290,68 +1290,68 @@ const Accounts = ({
   onClose,
   data,
 }: {
-  visible: boolean
-  onClose: () => void
-  data: ToAccounts[]
+  visible: boolean;
+  onClose: () => void;
+  data: ToAccounts[];
 }) => {
-  const [selected, setSelected] = useState<number[]>([])
-  const [finalData, setFinalData] = useState<ToAccounts[]>([])
-  const [search, setSearch] = useState("")
+  const [selected, setSelected] = useState<number[]>([]);
+  const [finalData, setFinalData] = useState<ToAccounts[]>([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const filtered = data.filter((item) => selected.includes(item.user_id))
-    setFinalData(filtered)
-  }, [selected, data])
+    const filtered = data.filter((item) => selected.includes(item.user_id));
+    setFinalData(filtered);
+  }, [selected, data]);
 
-  const allSelected = selected.length === data.length
-  const someSelected = selected.length > 0 && !allSelected
+  const allSelected = selected.length === data.length;
+  const someSelected = selected.length > 0 && !allSelected;
 
   const toggleAll = () => {
     if (allSelected) {
-      setSelected([])
+      setSelected([]);
     } else {
-      setSelected(data.map((item) => item.user_id))
+      setSelected(data.map((item) => item.user_id));
     }
-  }
+  };
 
   const toggleOne = (id: number) => {
     setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    )
-  }
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
 
   async function handleCreatePdf() {
     try {
-      const apiData = [...finalData]
+      const apiData = [...finalData];
       const totalPayments = apiData.reduce(
         (sum, payment) => sum + Number(payment.payable),
-        0
-      )
-      const findMonth = apiData.filter((item) => Number(item.payable) > 0)
+        0,
+      );
+      const findMonth = apiData.filter((item) => Number(item.payable) > 0);
       const blob = await pdf(
         <AccountsPdf
           data={apiData}
           total={totalPayments}
           headings={findMonth.length > 0 ? findMonth[0].month : null}
-        />
-      ).toBlob()
-      const url = URL.createObjectURL(blob)
-      window.open(url, "_blank")
-      setTimeout(() => URL.revokeObjectURL(url), 600000)
+        />,
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 600000);
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
   }
 
   function handleClose() {
-    setSelected([])
-    setFinalData([])
-    onClose()
+    setSelected([]);
+    setFinalData([]);
+    onClose();
   }
 
   const filteredData = data.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  )
+    item.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -1422,11 +1422,11 @@ const Accounts = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const Fines = ({ passingData }: { passingData: UserFine[] }) => {
-  const [data, setData] = useState<UserFine[]>([])
+  const [data, setData] = useState<UserFine[]>([]);
 
   const columns: ColumnDef<UserFine>[] = [
     {
@@ -1441,7 +1441,7 @@ const Fines = ({ passingData }: { passingData: UserFine[] }) => {
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -1464,7 +1464,7 @@ const Fines = ({ passingData }: { passingData: UserFine[] }) => {
             Employee
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
     },
@@ -1480,7 +1480,7 @@ const Fines = ({ passingData }: { passingData: UserFine[] }) => {
             Customer
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
     },
@@ -1497,7 +1497,7 @@ const Fines = ({ passingData }: { passingData: UserFine[] }) => {
             Amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -1514,15 +1514,15 @@ const Fines = ({ passingData }: { passingData: UserFine[] }) => {
             Reason
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("reason")}</div>,
     },
-  ]
+  ];
 
   useEffect(() => {
-    setData([...passingData])
-  }, [passingData])
+    setData([...passingData]);
+  }, [passingData]);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -1530,21 +1530,21 @@ const Fines = ({ passingData }: { passingData: UserFine[] }) => {
         <PageTable columns={columns} data={data} />
       </div>
     </div>
-  )
-}
+  );
+};
 
 const Reimbursement = ({
   passingData,
 }: {
-  passingData: UserReimbursementType[]
+  passingData: UserReimbursementType[];
 }) => {
-  const [data, setData] = useState<UserReimbursementType[]>([])
-  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null)
-  const [visible, setVisible] = useState(false)
+  const [data, setData] = useState<UserReimbursementType[]>([]);
+  const [imageURL, setImageURL] = useState<UserReimbursementType | null>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setData([...passingData])
-  }, [passingData])
+    setData([...passingData]);
+  }, [passingData]);
 
   const columns: ColumnDef<UserReimbursementType>[] = [
     {
@@ -1559,7 +1559,7 @@ const Reimbursement = ({
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">
@@ -1582,7 +1582,7 @@ const Reimbursement = ({
             Customer
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("title")}</div>,
     },
@@ -1598,7 +1598,7 @@ const Reimbursement = ({
             City
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("city")}</div>,
     },
@@ -1614,7 +1614,7 @@ const Reimbursement = ({
             Amount
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("amount")}</div>,
     },
@@ -1631,11 +1631,11 @@ const Reimbursement = ({
             Description
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("description")}</div>,
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -1645,8 +1645,8 @@ const Reimbursement = ({
           columns={columns}
           data={data}
           onRowClick={(val) => {
-            setImageURL(val)
-            setVisible(true)
+            setImageURL(val);
+            setVisible(true);
           }}
         ></PageTable>
       </div>
@@ -1659,8 +1659,8 @@ const Reimbursement = ({
         submittedBy={imageURL?.submitted_by_name || null}
       />
     </div>
-  )
-}
+  );
+};
 const ImageSheet = ({
   visible,
   onClose,
@@ -1668,17 +1668,17 @@ const ImageSheet = ({
   submittedBy,
   description,
 }: {
-  visible: boolean
-  onClose: () => void
-  img: string | null
-  description: string | null
-  submittedBy: string | null
+  visible: boolean;
+  onClose: () => void;
+  img: string | null;
+  description: string | null;
+  submittedBy: string | null;
 }) => {
   const handleClose = useCallback(() => {
     {
-      onClose()
+      onClose();
     }
-  }, [onClose])
+  }, [onClose]);
   return (
     <Sheet open={visible} onOpenChange={handleClose}>
       <SheetContent>
@@ -1695,13 +1695,13 @@ const ImageSheet = ({
         </SheetHeader>
       </SheetContent>
     </Sheet>
-  )
-}
+  );
+};
 
 const AttendanceRecord = ({
   passingData = [],
 }: {
-  passingData: LocalUserAttendance[]
+  passingData: LocalUserAttendance[];
 }) => {
   const columns: ColumnDef<LocalUserAttendance>[] = [
     {
@@ -1716,7 +1716,7 @@ const AttendanceRecord = ({
             Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("date")}</div>,
     },
@@ -1733,7 +1733,7 @@ const AttendanceRecord = ({
             Day
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("day")}</div>,
     },
@@ -1750,7 +1750,7 @@ const AttendanceRecord = ({
             Time In
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("time_in")}</div>,
     },
@@ -1767,7 +1767,7 @@ const AttendanceRecord = ({
             Time Out
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("time_out")}</div>,
     },
@@ -1784,7 +1784,7 @@ const AttendanceRecord = ({
             Status
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div
@@ -1796,7 +1796,7 @@ const AttendanceRecord = ({
         </div>
       ),
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -1809,15 +1809,15 @@ const AttendanceRecord = ({
         ></PageTable>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const TargetRecord = ({
   passingData = [],
 }: {
-  passingData: MachineProps[]
+  passingData: MachineProps[];
 }) => {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
   const columns: ColumnDef<MachineProps>[] = [
     {
       accessorKey: "contract_date",
@@ -1831,7 +1831,7 @@ const TargetRecord = ({
             Contract Date
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div className="ml-2">
@@ -1854,7 +1854,7 @@ const TargetRecord = ({
             Customer
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("customer_name")}</div>,
     },
@@ -1871,7 +1871,7 @@ const TargetRecord = ({
             Model No
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("serial_no")}</div>,
     },
@@ -1888,7 +1888,7 @@ const TargetRecord = ({
             Order No
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("order_no")}</div>,
     },
@@ -1905,7 +1905,7 @@ const TargetRecord = ({
             Source
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("source")}</div>,
     },
@@ -1922,7 +1922,7 @@ const TargetRecord = ({
             Power
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("power")}</div>,
     },
@@ -1939,11 +1939,11 @@ const TargetRecord = ({
             Price
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("price")}</div>,
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -1953,13 +1953,13 @@ const TargetRecord = ({
           columns={columns}
           data={passingData}
           onRowClick={(val, e) => {
-            const url = `/${base_route}/member/${val.customer_id}/${val.id}`
-            window.open(url, "_blank")
+            const url = `/${base_route}/member/${val.customer_id}/${val.id}`;
+            window.open(url, "_blank");
           }}
         ></PageTable>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SalaryComponent
+export default SalaryComponent;

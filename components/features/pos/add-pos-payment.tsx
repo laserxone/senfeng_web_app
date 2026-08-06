@@ -1,48 +1,48 @@
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { Button } from "@/components/ui/button"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { debounce } from "@/lib/debounce"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import moment from "moment"
-import Link from "next/link"
-import { useCallback, useContext, useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
-import { z } from "zod"
+} from "@/components/ui/field";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { debounce } from "@/lib/debounce";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
+import Link from "next/link";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 type ErrorType = {
-  part_id: number
-  errorMessage: string
-}
+  part_id: number;
+  errorMessage: string;
+};
 
 const formSchema = z.object({
   note: z.string().min(1, { message: "TID is required." }),
@@ -55,9 +55,9 @@ const formSchema = z.object({
   clearance_date: z.date().optional(),
   image: z.string().min(1, { message: "Image by is required." }),
   remarks: z.string().optional(),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 const AddPOSPayment = ({
   visible,
@@ -66,18 +66,18 @@ const AddPOSPayment = ({
   part_id,
   customer_id,
 }: {
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  part_id: number | null | undefined
-  customer_id?: number | undefined | null
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  part_id: number | null | undefined;
+  customer_id?: number | undefined | null;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const [checking, setChecking] = useState(false)
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const { userID, base_route } = useUserDetail()
-  const [lockTID, setLockTID] = useState(false)
-  const [error, setError] = useState<ErrorType | null>(null)
+  const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const { userID, base_route } = useUserDetail();
+  const [lockTID, setLockTID] = useState(false);
+  const [error, setError] = useState<ErrorType | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -91,74 +91,74 @@ const AddPOSPayment = ({
       image: "",
       remarks: "",
     },
-  })
+  });
   async function onSubmit(values: FormValues) {
-    setLoading(true)
+    setLoading(true);
     try {
       if (values.image) {
         const name = `${OfficeState.value.data}/customer/${customer_id}/parts/${part_id}/payment/${moment()
           .valueOf()
-          .toString()}.png`
-        const imgRef = await UploadImage(values.image, name)
+          .toString()}.png`;
+        const imgRef = await UploadImage(values.image, name);
         const response = await axios.post(`/${userID}/pos/payment-invoice`, {
           ...values,
           part_id,
           image: name,
-        })
-        toast.success("Payment addedd successfully")
-        onRefresh()
-        handleClose(false)
+        });
+        toast.success("Payment addedd successfully");
+        onRefresh();
+        handleClose(false);
       } else {
-        setLoading(false)
+        setLoading(false);
       }
     } catch (e) {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    setLoading(false)
-    onClose(val)
+    form.reset();
+    setLoading(false);
+    onClose(val);
   }
 
-  const imageFile = form.watch("image")
+  const imageFile = form.watch("image");
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === "note") {
-        debouncedCheckNumber(value.note)
+        debouncedCheckNumber(value.note);
       }
-    })
+    });
 
-    return () => subscription.unsubscribe()
-  }, [form.watch])
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   const checkNumberInDatabase = async (number: string) => {
-    setChecking(true)
-    setError(null)
+    setChecking(true);
+    setError(null);
     try {
       const response = await axios.post(
         `/${userID}/pos/payment-invoice/check-note`,
         { number },
         {
           cancelKey: `check-note-${userID}`,
-        }
-      )
+        },
+      );
       if (Array.isArray(response.data) && response.data.length > 0) {
-        setError(response.data[0])
+        setError(response.data[0]);
       }
     } catch (error) {
-      console.log("Error checking number:", error)
+      console.log("Error checking number:", error);
     } finally {
-      setChecking(false)
+      setChecking(false);
     }
-  }
+  };
 
   const debouncedCheckNumber = useCallback(
     debounce(checkNumberInDatabase, 1000),
-    []
-  )
+    [],
+  );
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -257,17 +257,19 @@ const AddPOSPayment = ({
 
                             <Select
                               onValueChange={(val) => {
-                                field.onChange(val)
+                                field.onChange(val);
 
                                 if (val === "Cash") {
                                   form.setValue(
                                     "note",
-                                    moment().format("YYYYMMDDHHmmss").toString()
-                                  )
-                                  setLockTID(true)
+                                    moment()
+                                      .format("YYYYMMDDHHmmss")
+                                      .toString(),
+                                  );
+                                  setLockTID(true);
                                 } else {
                                   if (form.getValues("note") && lockTID) {
-                                    setLockTID(false)
+                                    setLockTID(false);
                                   }
                                 }
                               }}
@@ -351,7 +353,7 @@ const AddPOSPayment = ({
                             <AppCalendar
                               date={field.value}
                               onChange={(date) => {
-                                field.onChange(date)
+                                field.onChange(date);
                               }}
                             />
 
@@ -435,7 +437,7 @@ const AddPOSPayment = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default AddPOSPayment
+export default AddPOSPayment;

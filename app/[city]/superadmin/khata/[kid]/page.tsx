@@ -1,217 +1,217 @@
-"use client"
+"use client";
 
-import { FieldLegend, FieldSet } from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react"
-import moment from "moment"
-import { useParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { FieldLegend, FieldSet } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import moment from "moment";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import Heading from "@/components/ui/heading"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import Heading from "@/components/ui/heading";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
 
 type Khata = {
-  id: number
-  name: string
-  start_date: string
-  end_date: string
-  note: string | null
-  created_at: string
-}
+  id: number;
+  name: string;
+  start_date: string;
+  end_date: string;
+  note: string | null;
+  created_at: string;
+};
 
 type Payment = {
-  id: number
-  khata_id: number
-  amount: string
-  date: Date | undefined
-  remarks: string | null
-  created_at: string
-  tid: string
-}
+  id: number;
+  khata_id: number;
+  amount: string;
+  date: Date | undefined;
+  remarks: string | null;
+  created_at: string;
+  tid: string;
+};
 
 const emptyPaymentForm: {
-  tid: string
-  amount: string
-  date: Date | undefined
-  remarks: string
+  tid: string;
+  amount: string;
+  date: Date | undefined;
+  remarks: string;
 } = {
   amount: "",
   date: new Date(),
   remarks: "",
   tid: "",
-}
+};
 
 export default function KhataDetailPage() {
-  const router = useRouter()
-  const params = useParams()
+  const router = useRouter();
+  const params = useParams();
 
-  const khataId = params.kid as string
-  const { userID, base_route } = useUserDetail()
+  const khataId = params.kid as string;
+  const { userID, base_route } = useUserDetail();
 
-  const [khata, setKhata] = useState<Khata | null>(null)
-  const [payments, setPayments] = useState<Payment[]>([])
+  const [khata, setKhata] = useState<Khata | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
-  const [paymentOpen, setPaymentOpen] = useState(false)
-  const [editingPayment, setEditingPayment] = useState<Payment | null>(null)
-  const [paymentForm, setPaymentForm] = useState(emptyPaymentForm)
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [paymentForm, setPaymentForm] = useState(emptyPaymentForm);
 
-  const [khataLoading, setKhataLoading] = useState(false)
-  const [paymentLoading, setPaymentLoading] = useState(false)
-  const [savingPayment, setSavingPayment] = useState(false)
+  const [khataLoading, setKhataLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
   const [deletingPaymentId, setDeletingPaymentId] = useState<number | null>(
-    null
-  )
+    null,
+  );
 
   const [paymentErrors, setPaymentErrors] = useState({
     amount: "",
     date: "",
-  })
+  });
 
   const fetchKhata = async () => {
-    if (!userID || !khataId) return
+    if (!userID || !khataId) return;
 
     try {
-      setKhataLoading(true)
-      const res = await axios.get(`/${userID}/khata/${khataId}`)
-      setKhata(res.data)
+      setKhataLoading(true);
+      const res = await axios.get(`/${userID}/khata/${khataId}`);
+      setKhata(res.data);
     } finally {
-      setKhataLoading(false)
+      setKhataLoading(false);
     }
-  }
+  };
 
   const fetchPayments = async () => {
-    if (!userID || !khataId) return
+    if (!userID || !khataId) return;
 
     try {
-      setPaymentLoading(true)
-      const res = await axios.get(`/${userID}/khata/${khataId}/payments`)
-      setPayments(res.data || [])
+      setPaymentLoading(true);
+      const res = await axios.get(`/${userID}/khata/${khataId}/payments`);
+      setPayments(res.data || []);
     } finally {
-      setPaymentLoading(false)
+      setPaymentLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (userID && khataId) {
-      fetchKhata()
-      fetchPayments()
+      fetchKhata();
+      fetchPayments();
     }
-  }, [userID, khataId])
+  }, [userID, khataId]);
 
   const savePayment = async () => {
-    if (!userID || !khataId) return
+    if (!userID || !khataId) return;
 
-    const isValid = validatePaymentForm()
-    if (!isValid) return
+    const isValid = validatePaymentForm();
+    if (!isValid) return;
 
     const payload = {
       tid: paymentForm.tid.trim(),
       amount: Number(paymentForm.amount),
       date: paymentForm.date,
       remarks: paymentForm.remarks.trim(),
-    }
+    };
 
     try {
-      setSavingPayment(true)
+      setSavingPayment(true);
 
       if (editingPayment) {
         await axios.put(
           `/${userID}/khata/${khataId}/payments/${editingPayment.id}`,
-          payload
-        )
+          payload,
+        );
       } else {
-        await axios.post(`/${userID}/khata/${khataId}/payments`, payload)
+        await axios.post(`/${userID}/khata/${khataId}/payments`, payload);
       }
 
-      setPaymentOpen(false)
-      setEditingPayment(null)
-      setPaymentForm(emptyPaymentForm)
-      resetPaymentErrors()
-      await fetchPayments()
+      setPaymentOpen(false);
+      setEditingPayment(null);
+      setPaymentForm(emptyPaymentForm);
+      resetPaymentErrors();
+      await fetchPayments();
     } finally {
-      setSavingPayment(false)
+      setSavingPayment(false);
     }
-  }
+  };
 
   const deletePayment = async (paymentId: number) => {
-    if (!userID || !khataId) return
-    if (!confirm("Delete this payment?")) return
+    if (!userID || !khataId) return;
+    if (!confirm("Delete this payment?")) return;
 
     try {
-      setDeletingPaymentId(paymentId)
-      await axios.delete(`/${userID}/khata/${khataId}/payments/${paymentId}`)
-      await fetchPayments()
+      setDeletingPaymentId(paymentId);
+      await axios.delete(`/${userID}/khata/${khataId}/payments/${paymentId}`);
+      await fetchPayments();
     } finally {
-      setDeletingPaymentId(null)
+      setDeletingPaymentId(null);
     }
-  }
+  };
 
   const totalAmount = payments.reduce(
     (sum, item) => sum + Number(item.amount || 0),
-    0
-  )
+    0,
+  );
 
   const validatePaymentForm = () => {
     const errors = {
       amount: "",
       date: "",
-    }
+    };
 
     if (!paymentForm.amount.trim()) {
-      errors.amount = "Amount is required"
+      errors.amount = "Amount is required";
     } else if (Number(paymentForm.amount) <= 0) {
-      errors.amount = "Amount must be greater than 0"
+      errors.amount = "Amount must be greater than 0";
     }
 
     if (!paymentForm.date) {
-      errors.date = "Date is required"
+      errors.date = "Date is required";
     }
 
-    setPaymentErrors(errors)
+    setPaymentErrors(errors);
 
-    return !Object.values(errors).some(Boolean)
-  }
+    return !Object.values(errors).some(Boolean);
+  };
 
   const resetPaymentErrors = () => {
     setPaymentErrors({
       amount: "",
       date: "",
-    })
-  }
+    });
+  };
 
   const openPaymentCreate = () => {
-    setEditingPayment(null)
-    setPaymentForm(emptyPaymentForm)
-    resetPaymentErrors()
-    setPaymentOpen(true)
-  }
+    setEditingPayment(null);
+    setPaymentForm(emptyPaymentForm);
+    resetPaymentErrors();
+    setPaymentOpen(true);
+  };
 
   const openPaymentEdit = (payment: Payment) => {
-    setEditingPayment(payment)
+    setEditingPayment(payment);
     setPaymentForm({
       tid: paymentForm.tid.trim(),
       amount: String(payment.amount),
       date: payment.date ? new Date(payment.date) : undefined,
       remarks: payment.remarks || "",
-    })
-    resetPaymentErrors()
-    setPaymentOpen(true)
-  }
+    });
+    resetPaymentErrors();
+    setPaymentOpen(true);
+  };
 
   return (
     <div className="flex flex-1 flex-col space-y-5">
@@ -338,7 +338,7 @@ export default function KhataDetailPage() {
 
               <div className="divide-y">
                 {payments.map((payment) => {
-                  const isDeleting = deletingPaymentId === payment.id
+                  const isDeleting = deletingPaymentId === payment.id;
 
                   return (
                     <div
@@ -405,7 +405,7 @@ export default function KhataDetailPage() {
                         </Button>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -438,7 +438,7 @@ export default function KhataDetailPage() {
                         setPaymentForm({
                           ...paymentForm,
                           tid: e.target.value,
-                        })
+                        });
                       }}
                     />
                   </div>
@@ -456,8 +456,8 @@ export default function KhataDetailPage() {
                         setPaymentForm({
                           ...paymentForm,
                           amount: e.target.value,
-                        })
-                        setPaymentErrors({ ...paymentErrors, amount: "" })
+                        });
+                        setPaymentErrors({ ...paymentErrors, amount: "" });
                       }}
                     />
 
@@ -476,8 +476,8 @@ export default function KhataDetailPage() {
                     <AppCalendar
                       date={paymentForm.date}
                       onChange={(date) => {
-                        setPaymentForm({ ...paymentForm, date })
-                        setPaymentErrors({ ...paymentErrors, date: "" })
+                        setPaymentForm({ ...paymentForm, date });
+                        setPaymentErrors({ ...paymentErrors, date: "" });
                       }}
                     />
 
@@ -499,7 +499,7 @@ export default function KhataDetailPage() {
                         setPaymentForm({
                           ...paymentForm,
                           remarks: e.target.value,
-                        })
+                        });
                       }}
                     />
                   </div>
@@ -527,5 +527,5 @@ export default function KhataDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

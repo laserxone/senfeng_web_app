@@ -1,18 +1,18 @@
-"use client"
-import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog"
-import FilterSheet from "@/components/features/users/filter-sheet"
-import PageTable from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
-import { TIMEZONE } from "@/constants/data"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { TaskProps } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react"
-import moment from "moment"
-import momentT from "moment-timezone"
-import { useEffect, useState } from "react"
-import TaskDetail from "./task-detail"
+"use client";
+import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
+import FilterSheet from "@/components/features/users/filter-sheet";
+import PageTable from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
+import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { TaskProps } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, BadgeCheck, CircleDashed } from "lucide-react";
+import moment from "moment";
+import momentT from "moment-timezone";
+import { useEffect, useState } from "react";
+import TaskDetail from "./task-detail";
 
 const columns: ColumnDef<TaskProps>[] = [
   {
@@ -27,7 +27,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Status
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div className="ml-2 flex items-center gap-1">
@@ -54,7 +54,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Task Name
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("task_name")}</div>,
   },
@@ -71,7 +71,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Assigned To
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("assigned_to_name")}</div>,
   },
@@ -88,7 +88,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Assigned By
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("assigned_by_name")}</div>,
   },
@@ -105,7 +105,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Assign Time
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div>
@@ -129,7 +129,7 @@ const columns: ColumnDef<TaskProps>[] = [
           Assign Date
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div>
@@ -137,22 +137,22 @@ const columns: ColumnDef<TaskProps>[] = [
       </div>
     ),
   },
-]
+];
 
 export default function TeamTask({
   height,
   onUpdateTotal,
 }: {
-  height?: string
-  onUpdateTotal?: (item: number) => void
+  height?: string;
+  onUpdateTotal?: (item: number) => void;
 }) {
-  const { userID } = useUserDetail()
-  const [data, setData] = useState<TaskProps[]>([])
-  const [visible, setVisible] = useState(false)
-  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null)
-  const [addTaskVisible, setAddTaskVisible] = useState(false)
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [dataLoading, setDataLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [data, setData] = useState<TaskProps[]>([]);
+  const [visible, setVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskProps | null>(null);
+  const [addTaskVisible, setAddTaskVisible] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
     if (userID) {
@@ -161,44 +161,44 @@ export default function TeamTask({
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const endDate = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      fetchData(startDate, endDate)
+        .toISOString();
+      fetchData(startDate, endDate);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(start_date: string, end_date: string) {
-    setDataLoading(true)
+    setDataLoading(true);
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/task?start_date=${start_date}&end_date=${end_date}&by=true`
+          `/${userID}/task?start_date=${start_date}&end_date=${end_date}&by=true`,
         )
         .then((response) => {
           const apiData = response.data.map((item: TaskProps) => {
-            return { ...item, created_at_time: item.created_at }
-          })
+            return { ...item, created_at_time: item.created_at };
+          });
 
-          setData(apiData)
+          setData(apiData);
         })
         .catch((e) => {
-          console.log(e)
+          console.log(e);
         })
         .finally(() => {
-          setDataLoading(false)
-          resolve(true)
-        })
-    })
+          setDataLoading(false);
+          resolve(true);
+        });
+    });
   }
 
   useEffect(() => {
-    onUpdateTotal?.(data.length)
-  }, [data])
+    onUpdateTotal?.(data.length);
+  }, [data]);
 
   async function handleUpdateMark() {
     const startDate = momentT
@@ -206,14 +206,14 @@ export default function TeamTask({
       .startOf("month")
       .startOf("day")
       .utc()
-      .toISOString()
+      .toISOString();
     const endDate = momentT
       .tz(TIMEZONE)
       .endOf("month")
       .endOf("day")
       .utc()
-      .toISOString()
-    fetchData(startDate, endDate)
+      .toISOString();
+    fetchData(startDate, endDate);
   }
 
   return (
@@ -225,8 +225,8 @@ export default function TeamTask({
           columns={columns}
           data={data}
           onRowClick={(val, e) => {
-            setSelectedTask(val)
-            setVisible(true)
+            setSelectedTask(val);
+            setVisible(true);
           }}
           filter
           onFilterPress={() => setFilterVisible(true)}
@@ -241,15 +241,15 @@ export default function TeamTask({
                   .startOf("month")
                   .startOf("day")
                   .utc()
-                  .toISOString()
+                  .toISOString();
                 const endDate = momentT
                   .tz(TIMEZONE)
                   .endOf("month")
                   .endOf("day")
                   .utc()
-                  .toISOString()
+                  .toISOString();
 
-                fetchData(startDate, endDate)
+                fetchData(startDate, endDate);
               }}
               user_id={userID}
             />
@@ -269,9 +269,9 @@ export default function TeamTask({
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          await fetchData(val.start, val.end)
+          await fetchData(val.start, val.end);
         }}
       />
     </div>
-  )
+  );
 }

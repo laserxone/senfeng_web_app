@@ -1,21 +1,21 @@
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MachineProps } from "@/lib/types"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Pencil, Plus, Trash } from "lucide-react"
-import { useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MachineProps } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Pencil, Plus, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
@@ -23,13 +23,13 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
+} from "@/components/ui/field";
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   machineModel: z.string().min(1, { message: "Machine model is required." }),
@@ -42,9 +42,9 @@ const formSchema = z.object({
   note: z.string().optional(),
   totalPrice: z.coerce.number<number>({ error: "Price is required" }),
   cnic: z.string().optional(),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 const EditMachine = ({
   machine_id,
@@ -53,17 +53,17 @@ const EditMachine = ({
   onRefresh,
   data,
 }: {
-  machine_id?: number | string
-  visible: boolean
-  onClose: (val: boolean) => void
-  onRefresh: () => Promise<void>
-  data?: MachineProps
+  machine_id?: number | string;
+  visible: boolean;
+  onClose: (val: boolean) => void;
+  onRefresh: () => Promise<void>;
+  data?: MachineProps;
 }) => {
-  const [isSpeedMoney, setIsSpeedMoney] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [orderNumbers, setOrderNumbers] = useState([""])
-  const [orderNumberError, setOrderNumberError] = useState("")
-  const { userID } = useUserDetail()
+  const [isSpeedMoney, setIsSpeedMoney] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [orderNumbers, setOrderNumbers] = useState([""]);
+  const [orderNumberError, setOrderNumberError] = useState("");
+  const { userID } = useUserDetail();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -79,7 +79,7 @@ const EditMachine = ({
       totalPrice: 0,
       cnic: "",
     },
-  })
+  });
 
   useEffect(() => {
     if (data) {
@@ -96,15 +96,15 @@ const EditMachine = ({
         note: data?.note || "",
         totalPrice: Number(data?.price || 0),
         cnic: data?.cnic || "",
-      })
+      });
       if (data?.speed_money) {
-        setIsSpeedMoney(true)
+        setIsSpeedMoney(true);
       }
       // if (data?.order_no_arr && data?.order_no_arr.length > 0) {
       //   setOrderNumbers([...data.order_no_arr]);
       // }
     }
-  }, [data, form, visible])
+  }, [data, form, visible]);
 
   function onSubmit(values: FormValues) {
     // const cleanedOrderNumbers = orderNumbers.filter(
@@ -123,7 +123,7 @@ const EditMachine = ({
     //   setOrderNumberError("");
     // }
 
-    setLoading(true)
+    setLoading(true);
     axios
       .put(`/${userID}/machine/${machine_id}`, {
         id: machine_id,
@@ -140,20 +140,20 @@ const EditMachine = ({
         cnic: values.cnic,
       })
       .then(async () => {
-        await onRefresh()
-        handleClose(false)
+        await onRefresh();
+        handleClose(false);
       })
       .catch((e) => {
-        console.log(e)
+        console.log(e);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    onClose(val)
+    form.reset();
+    onClose(val);
   }
 
   // const addNumberField = () => {
@@ -365,11 +365,11 @@ const EditMachine = ({
                         <Checkbox
                           checked={isSpeedMoney}
                           onCheckedChange={(checked: boolean) => {
-                            setIsSpeedMoney(checked)
-                            field.onChange(checked)
+                            setIsSpeedMoney(checked);
+                            field.onChange(checked);
                             if (!checked) {
-                              form.setValue("speedMoney", 0)
-                              form.setValue("speedMoneyNote", "")
+                              form.setValue("speedMoney", 0);
+                              form.setValue("speedMoneyNote", "");
                             }
                           }}
                         />
@@ -419,7 +419,7 @@ const EditMachine = ({
         </form>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default EditMachine
+export default EditMachine;

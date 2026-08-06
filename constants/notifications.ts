@@ -3,10 +3,10 @@ export const NOTIFICATION_CATEGORIES = {
   SALES: "sales",
   ENGINEERING: "engineering",
   TASKS: "tasks",
-} as const
+} as const;
 
 export type NotificationCategory =
-  (typeof NOTIFICATION_CATEGORIES)[keyof typeof NOTIFICATION_CATEGORIES]
+  (typeof NOTIFICATION_CATEGORIES)[keyof typeof NOTIFICATION_CATEGORIES];
 
 export const NOTIFICATION_TYPES = {
   task_assigned: {
@@ -111,4 +111,4 @@ export const NOTIFICATION_TYPES = {
     title: "Feedback Added",
     category: NOTIFICATION_CATEGORIES.ALL,
   },
-} as const
+} as const;

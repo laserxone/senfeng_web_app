@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { BellNotification } from "@/components/shared/notifications/NotificationBadge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { BellNotification } from "@/components/shared/notifications/NotificationBadge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetClose,
@@ -12,9 +12,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import { useChequeAlerts, type ChequeAlert } from "@/hooks/use-cheque-alerts"
-import useUserDetail from "@/hooks/use-user-detail"
+} from "@/components/ui/sheet";
+import { useChequeAlerts, type ChequeAlert } from "@/hooks/use-cheque-alerts";
+import useUserDetail from "@/hooks/use-user-detail";
 import {
   CalendarClock,
   ChevronRight,
@@ -23,32 +23,32 @@ import {
   ReceiptText,
   TriangleAlert,
   X,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useState } from "react"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useState } from "react";
 
-const REMINDER_FILTERS = ["today", "upcoming", "overdue"] as const
-type ReminderFilter = (typeof REMINDER_FILTERS)[number]
+const REMINDER_FILTERS = ["today", "upcoming", "overdue"] as const;
+type ReminderFilter = (typeof REMINDER_FILTERS)[number];
 
 export default function FloatingInformation() {
-  const [open, setOpen] = useState(false)
-  const [activeFilter, setActiveFilter] = useState<ReminderFilter>("today")
-  const { count, grouped } = useChequeAlerts()
-  const { base_route } = useUserDetail()
+  const [open, setOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<ReminderFilter>("today");
+  const { count, grouped } = useChequeAlerts();
+  const { base_route } = useUserDetail();
 
   const reminders =
     activeFilter === "today"
       ? grouped.today
       : activeFilter === "upcoming"
         ? grouped.upcoming
-        : grouped.passed
+        : grouped.passed;
 
   const counts: Record<ReminderFilter, number> = {
     today: grouped.today.length,
     upcoming: grouped.upcoming.length,
     overdue: grouped.passed.length,
-  }
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -156,7 +156,7 @@ export default function FloatingInformation() {
         </ScrollArea>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
 
 function ReminderCard({
@@ -165,20 +165,20 @@ function ReminderCard({
   filter,
   onOpen,
 }: {
-  reminder: ChequeAlert
-  baseRoute: string
-  filter: ReminderFilter
-  onOpen: () => void
+  reminder: ChequeAlert;
+  baseRoute: string;
+  filter: ReminderFilter;
+  onOpen: () => void;
 }) {
-  const href = `/${baseRoute}${reminder.link.startsWith("/") ? reminder.link : `/${reminder.link}`}`
-  const userName = reminder.seller_name || "Unknown user"
+  const href = `/${baseRoute}${reminder.link.startsWith("/") ? reminder.link : `/${reminder.link}`}`;
+  const userName = reminder.seller_name || "Unknown user";
   const initials = userName
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0])
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 
   return (
     <article className="flex gap-3 py-4">
@@ -248,7 +248,7 @@ function ReminderCard({
         </div>
       </div>
     </article>
-  )
+  );
 }
 
 function ReminderStatus({ filter }: { filter: ReminderFilter }) {
@@ -257,7 +257,7 @@ function ReminderStatus({ filter }: { filter: ReminderFilter }) {
       ? "bg-red-100 text-red-700"
       : filter === "today"
         ? "bg-amber-100 text-amber-700"
-        : "bg-blue-100 text-blue-700"
+        : "bg-blue-100 text-blue-700";
 
   return (
     <span
@@ -269,7 +269,7 @@ function ReminderStatus({ filter }: { filter: ReminderFilter }) {
           ? "Overdue"
           : "Upcoming"}
     </span>
-  )
+  );
 }
 
 function ReminderValue({
@@ -279,11 +279,11 @@ function ReminderValue({
   icon,
   className = "",
 }: {
-  label: string
-  value: string
-  emphasize?: boolean
-  icon?: React.ReactNode
-  className?: string
+  label: string;
+  value: string;
+  emphasize?: boolean;
+  icon?: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div className={className}>
@@ -297,18 +297,18 @@ function ReminderValue({
         {value}
       </p>
     </div>
-  )
+  );
 }
 
 function formatCurrency(value?: string | number | null) {
-  const amount = Number(value)
-  if (!Number.isFinite(amount)) return "N/A"
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "N/A";
 
   return new Intl.NumberFormat("en-PK", {
     style: "currency",
     currency: "PKR",
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(amount);
 }
 
 export function FloatingInfoButton({ pending }: { pending: number }) {
@@ -316,5 +316,5 @@ export function FloatingInfoButton({ pending }: { pending: number }) {
     <Button size="icon" variant="outline" aria-label="Open payment reminders">
       <BellNotification Icon={ReceiptText} count={pending} />
     </Button>
-  )
+  );
 }

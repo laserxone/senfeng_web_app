@@ -1,39 +1,39 @@
-"use client"
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Skeleton } from "@/components/ui/skeleton"
-import { storage } from "@/config/firebase"
-import { getDownloadURL, ref } from "firebase/storage"
-import { useEffect, useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { storage } from "@/config/firebase";
+import { getDownloadURL, ref } from "firebase/storage";
+import { useEffect, useState } from "react";
 
 const ProfilePictureTeam = ({
   img = "",
   name = "",
   loading,
 }: {
-  img?: string
-  name?: string
-  loading?: boolean
+  img?: string;
+  name?: string;
+  loading?: boolean;
 }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
+  const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (img) {
       if (img.includes("http")) {
-        setLocalImage(img)
+        setLocalImage(img);
       } else {
-        fetchImage(img)
+        fetchImage(img);
       }
     }
-  }, [img])
+  }, [img]);
 
   async function fetchImage(img: string) {
     try {
-      const storageRef = ref(storage, img)
-      const url = await getDownloadURL(storageRef)
-      setLocalImage(url)
+      const storageRef = ref(storage, img);
+      const url = await getDownloadURL(storageRef);
+      setLocalImage(url);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -50,7 +50,7 @@ const ProfilePictureTeam = ({
         )}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default ProfilePictureTeam
+export default ProfilePictureTeam;

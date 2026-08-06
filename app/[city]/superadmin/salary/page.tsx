@@ -1,15 +1,15 @@
-"use client"
-import { useState } from "react"
+"use client";
+import { useState } from "react";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import RecordComponent from "@/components/features/salary/salary-record"
-import SalaryComponent from "@/components/features/salary/salary-user"
-import DetailComponent from "@/components/features/salary/user-detatils"
+import RecordComponent from "@/components/features/salary/salary-record";
+import SalaryComponent from "@/components/features/salary/salary-user";
+import DetailComponent from "@/components/features/salary/user-detatils";
 
 export default function Page() {
-  const [userID, setUserID] = useState<number | null>(null)
-  const [value, setValue] = useState("salary")
+  const [userID, setUserID] = useState<number | null>(null);
+  const [value, setValue] = useState("salary");
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -34,5 +34,5 @@ export default function Page() {
         </div>
       </Tabs>
     </div>
-  )
+  );
 }

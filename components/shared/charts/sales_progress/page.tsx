@@ -1,4 +1,4 @@
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -6,19 +6,19 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useDebounce } from "@/hooks/use-debounce"
-import React, { useEffect, useState } from "react"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { AdminTeamProgress } from "@/lib/types"
+} from "@/components/ui/chart";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useDebounce } from "@/hooks/use-debounce";
+import React, { useEffect, useState } from "react";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { AdminTeamProgress } from "@/lib/types";
 
 const chartConfig = {
   completed_feedback: {
@@ -33,67 +33,67 @@ const chartConfig = {
     label: "Visit Completion %",
     color: "var(--chart-3)",
   },
-}
+};
 
 type LocalData = AdminTeamProgress & {
-  completed_feedback: string
-  completed_monthly_target: string
-  completed_visit: string
-}
+  completed_feedback: string;
+  completed_monthly_target: string;
+  completed_visit: string;
+};
 
 export default function SalesTeamProgressChart({
   passingData,
 }: {
-  passingData: AdminTeamProgress[]
+  passingData: AdminTeamProgress[];
 }) {
-  const [data, setData] = useState<LocalData[]>([])
-  const [usd, setUsd] = React.useState("0")
-  const debouncedUsd = useDebounce(usd, 1000)
-  const { userID } = useUserDetail()
+  const [data, setData] = useState<LocalData[]>([]);
+  const [usd, setUsd] = React.useState("0");
+  const debouncedUsd = useDebounce(usd, 1000);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
-    if (!userID) return
+    if (!userID) return;
     axios.get(`/${userID}/settings`).then((response) => {
-      setUsd(response.data.usd_rate || "0")
-    })
-  }, [userID])
+      setUsd(response.data.usd_rate || "0");
+    });
+  }, [userID]);
 
   useEffect(() => {
     if (debouncedUsd) {
       const updatedData = passingData.map((item) => {
-        const totalFeedbacks = Number(item.total_feedbacks) || 0
-        const totalMembers = Number(item.total_members) || 0
-        const totalSalePrice = Number(item.total_sale_price) || 0
-        const monthlyTarget = Number(item.monthly_target) || 0
-        const totalVisit = Number(item.total_visits) || 0
-        const visitTarget = 15
+        const totalFeedbacks = Number(item.total_feedbacks) || 0;
+        const totalMembers = Number(item.total_members) || 0;
+        const totalSalePrice = Number(item.total_sale_price) || 0;
+        const monthlyTarget = Number(item.monthly_target) || 0;
+        const totalVisit = Number(item.total_visits) || 0;
+        const visitTarget = 15;
 
         const completedFeedback =
           totalMembers > 0
             ? Math.min((totalFeedbacks / totalMembers) * 100, 100)
-            : 0
+            : 0;
 
         const completedMonthlyTarget =
           monthlyTarget > 0
             ? Math.min(
                 (totalSalePrice / monthlyTarget / Number(debouncedUsd)) * 100,
-                100
+                100,
               )
-            : 0
+            : 0;
 
         const completedVisit =
-          visitTarget > 0 ? Math.min((totalVisit / visitTarget) * 100, 100) : 0
+          visitTarget > 0 ? Math.min((totalVisit / visitTarget) * 100, 100) : 0;
 
         return {
           ...item,
           completed_feedback: completedFeedback.toFixed(2),
           completed_monthly_target: completedMonthlyTarget.toFixed(2),
           completed_visit: completedVisit.toFixed(2),
-        }
-      })
-      setData([...updatedData])
+        };
+      });
+      setData([...updatedData]);
     }
-  }, [debouncedUsd, passingData])
+  }, [debouncedUsd, passingData]);
 
   return (
     <Card>
@@ -120,7 +120,7 @@ export default function SalesTeamProgressChart({
         <RenderBarChart data={data} />
       </CardContent>
     </Card>
-  )
+  );
 }
 
 const RenderBarChart = ({ data }: { data: LocalData[] }) => {
@@ -161,5 +161,5 @@ const RenderBarChart = ({ data }: { data: LocalData[] }) => {
         />
       </BarChart>
     </ChartContainer>
-  )
-}
+  );
+};

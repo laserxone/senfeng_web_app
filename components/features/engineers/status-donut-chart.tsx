@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-import { ValueType } from "recharts/types/component/DefaultTooltipContent"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 interface StatusDonutChartProps {
   data: {
-    status: string
-    total: number
-  }[]
+    status: string;
+    total: number;
+  }[];
 }
 
-const COLORS = ["#22c55e", "#3b82f6", "#f59e0b"]
+const COLORS = ["#22c55e", "#3b82f6", "#f59e0b"];
 
 export function StatusDonutChart({ data }: StatusDonutChartProps) {
   const chartData = data.map((item) => ({
     name: item.status,
     value: item.total,
-  }))
+  }));
 
-  const total = chartData.reduce((sum, item) => sum + item.value, 0)
+  const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <Card className="border border-border bg-card shadow-sm">
@@ -81,5 +81,5 @@ export function StatusDonutChart({ data }: StatusDonutChartProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

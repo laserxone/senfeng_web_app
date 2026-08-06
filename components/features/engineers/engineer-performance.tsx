@@ -1,38 +1,38 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import Heading from "@/components/ui/heading"
-import { Skeleton } from "@/components/ui/skeleton"
-import { TIMEZONE } from "@/constants/data"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { EngineerPerformanceResponse } from "@/lib/types"
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import Heading from "@/components/ui/heading";
+import { Skeleton } from "@/components/ui/skeleton";
+import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { EngineerPerformanceResponse } from "@/lib/types";
 import {
   CheckCircle2,
   ClipboardList,
   Clock,
   Filter,
   TrendingUp,
-} from "lucide-react"
-import moment from "moment"
-import momentT from "moment-timezone"
-import { useEffect, useState } from "react"
-import { FilterSheetMonth } from "@/components/features/users/filter-sheet"
-import { CategoryDonutChart } from "./category-donut-chart"
-import { OverviewChart } from "./overview-chart"
-import { PerformanceBarChart } from "./performance-bar-chart"
-import { StatCard } from "./stat-card"
-import { StatusDonutChart } from "./status-donut-chart"
-import { TopPerformers } from "./top-performer"
+} from "lucide-react";
+import moment from "moment";
+import momentT from "moment-timezone";
+import { useEffect, useState } from "react";
+import { FilterSheetMonth } from "@/components/features/users/filter-sheet";
+import { CategoryDonutChart } from "./category-donut-chart";
+import { OverviewChart } from "./overview-chart";
+import { PerformanceBarChart } from "./performance-bar-chart";
+import { StatCard } from "./stat-card";
+import { StatusDonutChart } from "./status-donut-chart";
+import { TopPerformers } from "./top-performer";
 
 export default function EngineerPerformance() {
-  const [data, setData] = useState<EngineerPerformanceResponse>()
-  const [filterVisible, setFilterVisible] = useState(false)
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndData] = useState("")
-  const [loading, setLoading] = useState(true)
-  const { userID } = useUserDetail()
+  const [data, setData] = useState<EngineerPerformanceResponse>();
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndData] = useState("");
+  const [loading, setLoading] = useState(true);
+  const { userID } = useUserDetail();
 
   useEffect(() => {
     if (userID) {
@@ -41,29 +41,29 @@ export default function EngineerPerformance() {
         .startOf("month")
         .startOf("day")
         .utc()
-        .toISOString()
+        .toISOString();
       const end_date = momentT
         .tz(TIMEZONE)
         .endOf("month")
         .endOf("day")
         .utc()
-        .toISOString()
-      fetchData(start_date, end_date)
+        .toISOString();
+      fetchData(start_date, end_date);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchData(start = "", end = "") {
-    if (!userID) return
-    setLoading(true)
+    if (!userID) return;
+    setLoading(true);
     try {
       const res = await axios.get(
-        `/${userID}/performance?start_date=${start}&end_date=${end}`
-      )
-      setStartDate(start)
-      setEndData(end)
-      setData(res.data)
+        `/${userID}/performance?start_date=${start}&end_date=${end}`,
+      );
+      setStartDate(start);
+      setEndData(end);
+      setData(res.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -173,11 +173,11 @@ export default function EngineerPerformance() {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onReturn={async (val) => {
-          fetchData(val.start, val.end)
+          fetchData(val.start, val.end);
         }}
       />
     </div>
-  )
+  );
 }
 
 const LoadingSkeleton = () => {
@@ -219,5 +219,5 @@ const LoadingSkeleton = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

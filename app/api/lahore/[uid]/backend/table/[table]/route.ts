@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from "next/server"
-import pool from "@/config/db"
+import { NextRequest, NextResponse } from "next/server";
+import pool from "@/config/db";
 
 async function tableExists(table: string) {
   const q = `
     SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = $1
     LIMIT 1
-  `
-  const r = await pool.query(q, [table])
-  return r.rowCount ?? 0 > 0
+  `;
+  const r = await pool.query(q, [table]);
+  return r.rowCount ?? 0 > 0;
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ table: string }> }
+  { params }: { params: Promise<{ table: string }> },
 ) {
-  const { table } = await params
+  const { table } = await params;
 
   try {
     if (!table)
-      return NextResponse.json({ error: "missing table" }, { status: 400 })
+      return NextResponse.json({ error: "missing table" }, { status: 400 });
 
-    const exists = await tableExists(table)
+    const exists = await tableExists(table);
     if (!exists)
-      return NextResponse.json({ error: "table not found" }, { status: 404 })
+      return NextResponse.json({ error: "table not found" }, { status: 404 });
 
     // get columns + types
     const colQ = `
@@ -31,17 +31,17 @@ export async function GET(
       FROM information_schema.columns
       WHERE table_schema='public' AND table_name = $1
       ORDER BY ordinal_position
-    `
-    const colRes = await pool.query(colQ, [table])
+    `;
+    const colRes = await pool.query(colQ, [table]);
     const columns = colRes.rows.map((r) => ({
       name: r.column_name,
       type: r.data_type,
-    }))
+    }));
 
     // fetch rows (limit for safety; adjust as needed)
-    const rowsRes = await pool.query(`SELECT * FROM ${table} LIMIT 2000`) // table name validated above
-    return NextResponse.json({ columns, rows: rowsRes.rows })
+    const rowsRes = await pool.query(`SELECT * FROM ${table} LIMIT 2000`); // table name validated above
+    return NextResponse.json({ columns, rows: rowsRes.rows });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

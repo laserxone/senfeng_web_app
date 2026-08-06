@@ -1,20 +1,20 @@
-import { publicFile } from "@/lib/publicFile"
-import { Document, Image, Page, Text, View } from "@react-pdf/renderer"
+import { publicFile } from "@/lib/publicFile";
+import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 
 type DOPDFGatePassType = {
-  delivery_date?: string | Date | null
-  from: string
-  vehicle_no: string
-  driver_no: string
-  driver_name: string
-  manager: string
-  received_by?: string
-  gatepass: string | number
-  gatepassType: string
-  order_no: string
-  time: string
-  items: Record<string, any>
-}
+  delivery_date?: string | Date | null;
+  from: string;
+  vehicle_no: string;
+  driver_no: string;
+  driver_name: string;
+  manager: string;
+  received_by?: string;
+  gatepass: string | number;
+  gatepassType: string;
+  order_no: string;
+  time: string;
+  items: Record<string, any>;
+};
 const DOPDFGatepass = ({
   delivery_date,
   from,
@@ -29,13 +29,13 @@ const DOPDFGatepass = ({
   time,
   items = {},
 }: DOPDFGatePassType) => {
-  const now = delivery_date ? new Date(delivery_date) : new Date()
+  const now = delivery_date ? new Date(delivery_date) : new Date();
 
   const date = now.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  })
+  });
 
   const formattedItems = Object.entries(items || {}).map(([key, value]) => ({
     name: key
@@ -44,8 +44,8 @@ const DOPDFGatepass = ({
     qty: value,
     unit: "",
     remarks: "",
-  }))
-  const ObjectLength = Object.entries(items).length
+  }));
+  const ObjectLength = Object.entries(items).length;
 
   return (
     <Document>
@@ -141,7 +141,7 @@ const DOPDFGatepass = ({
                         {header}
                       </Text>
                     </View>
-                  )
+                  ),
                 )}
               </View>
 
@@ -153,7 +153,7 @@ const DOPDFGatepass = ({
                   qty: "",
                   unit: "",
                   remarks: "",
-                }
+                };
                 return (
                   <View
                     key={index}
@@ -170,7 +170,7 @@ const DOPDFGatepass = ({
                     <Cell width={100} value={item.unit} />
                     <Cell width={100} value={item.remarks} />
                   </View>
-                )
+                );
               })}
             </View>
           </View>
@@ -240,8 +240,8 @@ const DOPDFGatepass = ({
         <Footer />
       </Page>
     </Document>
-  )
-}
+  );
+};
 
 const Cell = ({ width, value }: { width: number; value: string | number }) => (
   <View
@@ -256,7 +256,7 @@ const Cell = ({ width, value }: { width: number; value: string | number }) => (
   >
     <Text style={{ fontSize: 9 }}>{value ?? ""}</Text>
   </View>
-)
+);
 
 const FormField = ({
   from,
@@ -268,14 +268,14 @@ const FormField = ({
   received_by,
   time,
 }: {
-  from: string
-  vehicle_no: string
-  driver_no: string
-  order_no: string
-  driver_name: string
-  manager: string
-  received_by?: string
-  time: string
+  from: string;
+  vehicle_no: string;
+  driver_no: string;
+  order_no: string;
+  driver_name: string;
+  manager: string;
+  received_by?: string;
+  time: string;
 }) => {
   const fields = [
     { label: "To", value: received_by },
@@ -286,7 +286,7 @@ const FormField = ({
     { label: "Manager", value: manager },
     { label: "Machine", value: order_no },
     { label: "Delivery Issued By", value: from },
-  ]
+  ];
 
   return (
     <View style={{ marginBottom: 10 }}>
@@ -327,8 +327,8 @@ const FormField = ({
         </View>
       ))}
     </View>
-  )
-}
+  );
+};
 
 const CompanyDetails = () => (
   <View style={{ alignItems: "flex-end", marginRight: 10 }}>
@@ -347,7 +347,7 @@ const CompanyDetails = () => (
       senfenglaserpakistan@gmail.com
     </Text>
   </View>
-)
+);
 
 const Header = ({ gatepassType }: { gatepassType: string }) => (
   <View
@@ -386,7 +386,7 @@ const Header = ({ gatepassType }: { gatepassType: string }) => (
       </Text>
     </View>
   </View>
-)
+);
 
 const Disclaimer = () => (
   <View style={{ marginTop: 10, alignItems: "center" }}>
@@ -395,7 +395,7 @@ const Disclaimer = () => (
       signature.
     </Text>
   </View>
-)
+);
 
 const Footer = () => (
   <View
@@ -410,6 +410,6 @@ const Footer = () => (
       www.senfenglaserpk.com
     </Text>
   </View>
-)
+);
 
-export default DOPDFGatepass
+export default DOPDFGatepass;

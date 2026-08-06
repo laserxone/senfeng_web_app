@@ -1,57 +1,57 @@
-"use client"
-import { Button } from "@/components/ui/button"
+"use client";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { auth, provider } from "@/config/firebase"
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { auth, provider } from "@/config/firebase";
 
-import { cn } from "@/lib/utils"
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
-import { Eye, EyeOff } from "lucide-react"
-import { useState } from "react"
-import { toast } from "sonner"
-import Spinner from "@/components/ui/spinner"
+import { cn } from "@/lib/utils";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import Spinner from "@/components/ui/spinner";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleGoogleLogin() {
-    setLoading(true)
+    setLoading(true);
     await signInWithPopup(auth, provider)
       .then(() => {
-        toast.success("Login successful")
+        toast.success("Login successful");
       })
       .catch((err) => {
-        toast.error(err?.message || "Error login")
+        toast.error(err?.message || "Error login");
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   async function handleEmailLogin(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setLoading(true)
+    event.preventDefault();
+    setLoading(true);
     await signInWithEmailAndPassword(auth, email, password)
       .then(() => {
-        toast.success("Login successful")
+        toast.success("Login successful");
       })
       .catch((err) => {
-        console.log(err.message)
-        toast.error(err?.message || "Error login")
+        console.log(err.message);
+        toast.error(err?.message || "Error login");
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   return (
@@ -139,5 +139,5 @@ export function LoginForm() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,135 +1,137 @@
-"use client"
+"use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { ArrowLeft, Package } from "lucide-react"
-import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
-import { toast } from "sonner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ArrowLeft, Package } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import Heading from "@/components/ui/heading"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import AddNewBackupApplication from "./add-new-backup-application"
-import BackupApplicationCard from "./backup-application-card"
-import BackupApplicationDetails from "./backup-application-detail"
-import RenderMyApprovals from "./backup-approvals"
-import EmptyState from "./backup-empty-state"
-import { BackupApplication } from "./backup-types"
+} from "@/components/ui/dialog";
+import Heading from "@/components/ui/heading";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import AddNewBackupApplication from "./add-new-backup-application";
+import BackupApplicationCard from "./backup-application-card";
+import BackupApplicationDetails from "./backup-application-detail";
+import RenderMyApprovals from "./backup-approvals";
+import EmptyState from "./backup-empty-state";
+import { BackupApplication } from "./backup-types";
 
 export default function BackupApplications() {
-  const { userID, base_route } = useUserDetail()
+  const { userID, base_route } = useUserDetail();
 
-  const [applications, setApplications] = useState<BackupApplication[]>([])
+  const [applications, setApplications] = useState<BackupApplication[]>([]);
 
   const [allApplications, setAllApplications] = useState<BackupApplication[]>(
-    []
-  )
+    [],
+  );
 
   const [detailApplication, setDetailApplication] =
-    useState<BackupApplication | null>(null)
+    useState<BackupApplication | null>(null);
 
   const [selectedForDelete, setSelectedForDelete] =
-    useState<BackupApplication | null>(null)
+    useState<BackupApplication | null>(null);
 
-  const [isDetailOpen, setIsDetailOpen] = useState(false)
-  const [deleteLoading, setDeleteLoading] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [tab, setTab] = useState("applications")
+  const [tab, setTab] = useState("applications");
 
   useEffect(() => {
-    if (!userID) return
+    if (!userID) return;
 
-    loadInitialData()
-  }, [userID])
+    loadInitialData();
+  }, [userID]);
 
   const updateBackupApplicationQuery = useCallback(
     (applicationId?: string | number) => {
-      const url = new URL(window.location.href)
+      const url = new URL(window.location.href);
 
       if (applicationId !== undefined) {
-        url.searchParams.set("b", String(applicationId))
-        window.history.pushState({}, "", url)
+        url.searchParams.set("b", String(applicationId));
+        window.history.pushState({}, "", url);
       } else {
-        url.searchParams.delete("b")
-        window.history.replaceState({}, "", url)
+        url.searchParams.delete("b");
+        window.history.replaceState({}, "", url);
       }
 
-      window.dispatchEvent(new PopStateEvent("popstate"))
+      window.dispatchEvent(new PopStateEvent("popstate"));
     },
-    []
-  )
+    [],
+  );
 
   useEffect(() => {
     const syncBackupApplicationFromUrl = () => {
-      const applicationId = new URLSearchParams(window.location.search).get("b")
+      const applicationId = new URLSearchParams(window.location.search).get(
+        "b",
+      );
       const application = applicationId
         ? allApplications.find((item) => String(item.id) === applicationId)
-        : undefined
+        : undefined;
 
-      setDetailApplication(application || null)
-      setIsDetailOpen(Boolean(application))
-    }
+      setDetailApplication(application || null);
+      setIsDetailOpen(Boolean(application));
+    };
 
-    syncBackupApplicationFromUrl()
-    window.addEventListener("popstate", syncBackupApplicationFromUrl)
+    syncBackupApplicationFromUrl();
+    window.addEventListener("popstate", syncBackupApplicationFromUrl);
 
     return () => {
-      window.removeEventListener("popstate", syncBackupApplicationFromUrl)
-    }
-  }, [allApplications])
+      window.removeEventListener("popstate", syncBackupApplicationFromUrl);
+    };
+  }, [allApplications]);
 
   async function loadInitialData() {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      await Promise.all([fetchData(), fetchDataAll()])
+      await Promise.all([fetchData(), fetchDataAll()]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   async function fetchData() {
     const res = await axios.get(
-      `/${userID}/backup-applications?user_id=${userID}`
-    )
+      `/${userID}/backup-applications?user_id=${userID}`,
+    );
 
-    setApplications(res.data)
+    setApplications(res.data);
   }
 
   async function fetchDataAll() {
-    const res = await axios.get(`/${userID}/backup-applications`)
+    const res = await axios.get(`/${userID}/backup-applications`);
 
-    setAllApplications(res.data)
+    setAllApplications(res.data);
   }
 
   async function handleDelete() {
-    if (!selectedForDelete?.id) return
+    if (!selectedForDelete?.id) return;
 
-    setDeleteLoading(true)
+    setDeleteLoading(true);
 
     try {
       await axios.delete(
-        `/${userID}/backup-applications/${selectedForDelete.id}`
-      )
+        `/${userID}/backup-applications/${selectedForDelete.id}`,
+      );
 
-      await Promise.all([fetchData(), fetchDataAll()])
+      await Promise.all([fetchData(), fetchDataAll()]);
 
-      setSelectedForDelete(null)
+      setSelectedForDelete(null);
 
-      toast.success("Backup application deleted")
+      toast.success("Backup application deleted");
     } finally {
-      setDeleteLoading(false)
+      setDeleteLoading(false);
     }
   }
 
@@ -186,8 +188,8 @@ export default function BackupApplications() {
                     key={application.id}
                     application={application}
                     onViewDetails={() => {
-                      setDetailApplication(application)
-                      setIsDetailOpen(true)
+                      setDetailApplication(application);
+                      setIsDetailOpen(true);
                     }}
                     currentUserId={userID}
                   />
@@ -247,8 +249,8 @@ export default function BackupApplications() {
       <Dialog
         open={isDetailOpen}
         onOpenChange={(nextOpen) => {
-          setIsDetailOpen(nextOpen)
-          if (!nextOpen) updateBackupApplicationQuery()
+          setIsDetailOpen(nextOpen);
+          if (!nextOpen) updateBackupApplicationQuery();
         }}
       >
         <DialogContent className="w-full sm:max-w-3xl">
@@ -282,5 +284,5 @@ export default function BackupApplications() {
         onPressCancel={() => setSelectedForDelete(null)}
       />
     </div>
-  )
+  );
 }

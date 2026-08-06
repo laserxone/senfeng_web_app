@@ -3,18 +3,18 @@ import {
   CreditCard,
   MessageSquareText,
   type LucideIcon,
-} from "lucide-react"
-import type { ReactNode } from "react"
+} from "lucide-react";
+import type { ReactNode } from "react";
 
 type MetricShellProps = {
-  title: string
-  value: number
-  icon: LucideIcon
-  accent: string
-  iconClassName: string
-  children?: ReactNode
-  onClick?: () => void
-}
+  title: string;
+  value: number;
+  icon: LucideIcon;
+  accent: string;
+  iconClassName: string;
+  children?: ReactNode;
+  onClick?: () => void;
+};
 
 function MetricShell({
   title,
@@ -57,7 +57,7 @@ function MetricShell({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export const MachinesSoldCard = ({
@@ -65,9 +65,9 @@ export const MachinesSoldCard = ({
   percentage,
   onClick,
 }: {
-  value: number
-  percentage: number
-  onClick: () => void
+  value: number;
+  percentage: number;
+  onClick: () => void;
 }) => {
   return (
     <MetricShell
@@ -87,17 +87,17 @@ export const MachinesSoldCard = ({
         {Math.abs(percentage)}% from last month
       </p>
     </MetricShell>
-  )
-}
+  );
+};
 
 export const FeedbackTakenCard = ({
   value,
   remaining,
   total,
 }: {
-  value: number
-  remaining: number
-  total: number
+  value: number;
+  remaining: number;
+  total: number;
 }) => {
   return (
     <MetricShell
@@ -120,17 +120,17 @@ export const FeedbackTakenCard = ({
         </span>
       </div>
     </MetricShell>
-  )
-}
+  );
+};
 
 export const VisitsDoneCard = ({
   value,
   remaining,
   total,
 }: {
-  value: number
-  remaining: number
-  total: number
+  value: number;
+  remaining: number;
+  total: number;
 }) => {
   return (
     <MetricShell
@@ -153,5 +153,5 @@ export const VisitsDoneCard = ({
         </span>
       </div>
     </MetricShell>
-  )
-}
+  );
+};

@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import Heading from "@/components/ui/heading"
-import Spinner from "@/components/ui/spinner"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import Heading from "@/components/ui/heading";
+import Spinner from "@/components/ui/spinner";
 import {
   Table,
   TableBody,
@@ -13,86 +13,86 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { UserSearch } from "@/components/shared/search/user-search"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MyCustomer } from "@/lib/types"
+} from "@/components/ui/table";
+import { UserSearch } from "@/components/shared/search/user-search";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MyCustomer } from "@/lib/types";
 import {
   ArrowRightLeft,
   CheckCircle2,
   MapPin,
   UserRound,
   UsersRound,
-} from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
-  const [fromUserId, setFromUserId] = useState<number | null>(null)
-  const [toUserId, setToUserId] = useState<number | null>(null)
-  const { userID } = useUserDetail()
-  const [customers, setCustomers] = useState<MyCustomer[]>([])
-  const [selectedCustomers, setSelectedCustomers] = useState<number[]>([])
-  const [transferLoading, setTransferLoading] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [fromUserId, setFromUserId] = useState<number | null>(null);
+  const [toUserId, setToUserId] = useState<number | null>(null);
+  const { userID } = useUserDetail();
+  const [customers, setCustomers] = useState<MyCustomer[]>([]);
+  const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!userID || !fromUserId) return
-    setCustomers([])
-    fetchCustomersByUser(fromUserId)
-  }, [fromUserId, userID])
+    if (!userID || !fromUserId) return;
+    setCustomers([]);
+    fetchCustomersByUser(fromUserId);
+  }, [fromUserId, userID]);
 
   const fetchCustomersByUser = async (userId: number) => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const response = await axios.get(`/${userID}/transfer?id=${userId}`)
-      setCustomers(response.data)
+      const response = await axios.get(`/${userID}/transfer?id=${userId}`);
+      setCustomers(response.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const allSelected = useMemo(
     () => customers.length > 0 && selectedCustomers.length === customers.length,
-    [customers, selectedCustomers]
-  )
+    [customers, selectedCustomers],
+  );
 
   const toggleSelectAll = () => {
     if (allSelected) {
-      setSelectedCustomers([])
+      setSelectedCustomers([]);
     } else {
-      setSelectedCustomers(customers.map((c) => c.id))
+      setSelectedCustomers(customers.map((c) => c.id));
     }
-  }
+  };
 
   const toggleCustomer = (id: number) => {
     setSelectedCustomers((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    )
-  }
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    );
+  };
 
   const handleTransfer = async () => {
-    if (!fromUserId || !toUserId || selectedCustomers.length === 0) return
+    if (!fromUserId || !toUserId || selectedCustomers.length === 0) return;
 
     const payload = {
       from_user_id: fromUserId,
       to_user_id: toUserId,
       ids: selectedCustomers,
-    }
+    };
 
-    setTransferLoading(true)
+    setTransferLoading(true);
 
     try {
-      await axios.post(`/${userID}/transfer`, payload)
-      await fetchCustomersByUser(fromUserId)
-      setSelectedCustomers([])
-      toast.success("Transferred successfully")
+      await axios.post(`/${userID}/transfer`, payload);
+      await fetchCustomersByUser(fromUserId);
+      setSelectedCustomers([]);
+      toast.success("Transferred successfully");
     } finally {
-      setTransferLoading(false)
+      setTransferLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-4 pb-4">
@@ -320,7 +320,7 @@ export default function Page() {
                 </div>
               ) : customers.length > 0 ? (
                 customers.map((customer) => {
-                  const selected = selectedCustomers.includes(customer.id)
+                  const selected = selectedCustomers.includes(customer.id);
 
                   return (
                     <div
@@ -330,8 +330,8 @@ export default function Page() {
                       onClick={() => toggleCustomer(customer.id)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault()
-                          toggleCustomer(customer.id)
+                          event.preventDefault();
+                          toggleCustomer(customer.id);
                         }
                       }}
                       className={`w-full rounded-2xl border p-3 text-left transition ${
@@ -362,7 +362,7 @@ export default function Page() {
                         </span>
                       </div>
                     </div>
-                  )
+                  );
                 })
               ) : (
                 <div className="rounded-2xl border border-dashed bg-muted/15 py-10 text-center text-sm text-muted-foreground">
@@ -374,5 +374,5 @@ export default function Page() {
         </Card>
       )}
     </div>
-  )
+  );
 }

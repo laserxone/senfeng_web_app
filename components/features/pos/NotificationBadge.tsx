@@ -1,7 +1,7 @@
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 
 const NotificationBadge = ({ count }: { count: number }) => {
-  if (count === 0) return null
+  if (count === 0) return null;
 
   return (
     <div className="animate-pulse-opacity relative">
@@ -14,7 +14,7 @@ const NotificationBadge = ({ count }: { count: number }) => {
         {/* </span> */}
       </Badge>
     </div>
-  )
-}
+  );
+};
 
-export default NotificationBadge
+export default NotificationBadge;

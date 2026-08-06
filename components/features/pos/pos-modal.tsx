@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -7,17 +7,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import "./Button.css"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import "./Button.css";
 type POSModalProps = {
-  modal: boolean
-  setModal: (value: boolean) => void
-  checked: boolean
-  setChecked: (value: any) => void
-  onClick: () => void
-  customer_id?: number | null
-}
+  modal: boolean;
+  setModal: (value: boolean) => void;
+  checked: boolean;
+  setChecked: (value: any) => void;
+  onClick: () => void;
+  customer_id?: number | null;
+};
 const POSModal = ({
   modal,
   setModal,
@@ -46,7 +46,7 @@ const POSModal = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default POSModal
+export default POSModal;

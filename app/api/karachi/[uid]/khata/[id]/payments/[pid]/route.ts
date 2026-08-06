@@ -1,14 +1,14 @@
-import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextResponse } from "next/server";
 
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ pid: string }> }
+  { params }: { params: Promise<{ pid: string }> },
 ) {
-  const { pid: paymentId } = await params
-  const body = await req.json()
+  const { pid: paymentId } = await params;
+  const body = await req.json();
 
-  const { amount, date, remarks, tid } = body
+  const { amount, date, remarks, tid } = body;
 
   const result = await pool.query(
     `
@@ -20,25 +20,25 @@ export async function PUT(
     WHERE id = $5
     RETURNING *
     `,
-    [amount, date, remarks, tid, paymentId]
-  )
+    [amount, date, remarks, tid, paymentId],
+  );
 
-  return NextResponse.json(result.rows[0])
+  return NextResponse.json(result.rows[0]);
 }
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: Promise<{ pid: string }> }
+  { params }: { params: Promise<{ pid: string }> },
 ) {
-  const { pid: paymentId } = await params
+  const { pid: paymentId } = await params;
 
   await pool.query(
     `
     DELETE FROM khata_payments
     WHERE id = $1
     `,
-    [paymentId]
-  )
+    [paymentId],
+  );
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true });
 }

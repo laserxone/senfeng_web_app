@@ -1,18 +1,18 @@
-"use client"
-import { LoginForm } from "@/components/features/auth/login-form"
-import Spinner from "@/components/ui/spinner"
-import { UserContext } from "@/store/context/UserContext"
-import { useContext } from "react"
+"use client";
+import { LoginForm } from "@/components/features/auth/login-form";
+import Spinner from "@/components/ui/spinner";
+import { UserContext } from "@/store/context/UserContext";
+import { useContext } from "react";
 
 export default function LoginPage() {
-  const { loading: AuthLoading } = useContext(UserContext)
+  const { loading: AuthLoading } = useContext(UserContext);
 
   if (AuthLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <Spinner />
       </div>
-    )
+    );
   }
 
   return (
@@ -21,5 +21,5 @@ export default function LoginPage() {
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }

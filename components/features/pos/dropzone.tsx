@@ -1,25 +1,25 @@
-"use client"
-import Image from "next/image"
+"use client";
+import Image from "next/image";
 import {
   ChangeEventHandler,
   useCallback,
   useEffect,
   useRef,
   useState,
-} from "react"
-import { Accept, useDropzone } from "react-dropzone"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+} from "react";
+import { Accept, useDropzone } from "react-dropzone";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 type DropzoneProps = {
-  onDrop: (val: File | null) => void
-  title: string
-  subheading: string
-  description: string
-  drag: string
-  borderColor?: string
-  value: string | null
-}
+  onDrop: (val: File | null) => void;
+  title: string;
+  subheading: string;
+  description: string;
+  drag: string;
+  borderColor?: string;
+  value: string | null;
+};
 const Dropzone = ({
   onDrop,
   title,
@@ -29,14 +29,14 @@ const Dropzone = ({
   borderColor,
   value,
 }: DropzoneProps) => {
-  const updateRef = useRef<HTMLInputElement | null>(null)
+  const updateRef = useRef<HTMLInputElement | null>(null);
 
   const onDropAccepted = useCallback(
     (acceptedFiles: File[]) => {
-      onDrop(acceptedFiles[0])
+      onDrop(acceptedFiles[0]);
     },
-    [onDrop]
-  )
+    [onDrop],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
@@ -44,45 +44,45 @@ const Dropzone = ({
       "image/*": [],
     },
     multiple: false,
-  })
+  });
 
   const handlePaste = useCallback(
     (event: ClipboardEvent) => {
-      const items = event?.clipboardData?.items
-      if (!items) return
+      const items = event?.clipboardData?.items;
+      if (!items) return;
       for (let item of items) {
         if (item.type.startsWith("image/")) {
-          const file = item.getAsFile()
-          onDrop(file)
-          break
+          const file = item.getAsFile();
+          onDrop(file);
+          break;
         }
       }
     },
-    [onDrop]
-  )
+    [onDrop],
+  );
 
   useEffect(() => {
-    document.addEventListener("paste", handlePaste)
-    return () => document.removeEventListener("paste", handlePaste)
-  }, [handlePaste])
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [handlePaste]);
 
   const handleUpdate = () => {
     if (updateRef.current) {
-      updateRef.current.click()
+      updateRef.current.click();
     }
-  }
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      const newFile = event.target.files[0]
+      const newFile = event.target.files[0];
 
-      onDrop(newFile)
+      onDrop(newFile);
     }
-  }
+  };
 
   const handleDelete = () => {
-    onDrop(null)
-  }
+    onDrop(null);
+  };
 
   return (
     <div
@@ -140,7 +140,7 @@ const Dropzone = ({
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dropzone
+export default Dropzone;

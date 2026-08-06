@@ -1,108 +1,110 @@
-import pool from "@/config/db"
-import admin from "@/lib/firebaseAdmin"
-import sendPasswordReset from "@/lib/password-reset"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import admin from "@/lib/firebaseAdmin";
+import sendPasswordReset from "@/lib/password-reset";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const data = await req.json()
+    const data = await req.json();
 
     if (!data || Object.keys(data).length === 0) {
       return NextResponse.json(
         { message: "No data provided for insertion" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    const { email } = data
+    const { email } = data;
 
     const checkEmail = await pool.query(
       `SELECT id FROM users WHERE email = $1`,
-      [email]
-    )
+      [email],
+    );
     if (checkEmail.rows.length != 0) {
       return NextResponse.json(
         { message: "Email already exists in the system" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    const password = "1234qwer!@#"
+    const password = "1234qwer!@#";
 
     try {
       await admin.auth().createUser({
         email,
         password,
-      })
+      });
     } catch (error: any) {
       if (error.code === "auth/email-already-exists") {
-        console.warn(`Email ${email} already exists in Firebase, continuing...`)
+        console.warn(
+          `Email ${email} already exists in Firebase, continuing...`,
+        );
       } else {
-        throw error
+        throw error;
       }
     }
 
-    const fields = Object.keys(data)
-    const values = Object.values(data)
-    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
+    const fields = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
     const query = `
       INSERT INTO users (${fields.join(", ")})
       VALUES (${placeholders})
       RETURNING *
-    `
+    `;
 
-    const { rows } = await pool.query(query, values)
-    const newUser = rows[0]
+    const { rows } = await pool.query(query, values);
+    const newUser = rows[0];
 
-    sendPasswordReset(email)
+    sendPasswordReset(email);
 
-    return NextResponse.json(newUser, { status: 200 })
+    return NextResponse.json(newUser, { status: 200 });
   } catch (error: any) {
-    console.error("Error inserting data: ", error)
+    console.error("Error inserting data: ", error);
     return NextResponse.json(
       { message: error?.message || "Error adding user" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams
-  const user = searchParams.get("user")
-  const withBranch = searchParams.get("withbranch")
+  const searchParams = req.nextUrl.searchParams;
+  const user = searchParams.get("user");
+  const withBranch = searchParams.get("withbranch");
 
   try {
-    let query = `SELECT id, name, designation, joining_date, leaving_date, email, active, office FROM users`
+    let query = `SELECT id, name, designation, joining_date, leaving_date, email, active, office FROM users`;
 
-    let queryParams = []
-    let conditions = []
+    let queryParams = [];
+    let conditions = [];
 
     if (user) {
-      query = "SELECT * FROM users"
-      conditions.push(`id = $${queryParams.length + 1}`)
-      queryParams.push(user)
+      query = "SELECT * FROM users";
+      conditions.push(`id = $${queryParams.length + 1}`);
+      queryParams.push(user);
     }
 
     if (withBranch) {
-      conditions.push(`office = 'lahore'`)
+      conditions.push(`office = 'lahore'`);
     }
 
     if (conditions.length > 0) {
-      query += ` WHERE ` + conditions.join(" AND ")
+      query += ` WHERE ` + conditions.join(" AND ");
     }
 
-    query += ` ORDER BY name ASC;`
+    query += ` ORDER BY name ASC;`;
 
-    const result = await pool.query(query, queryParams)
-    return NextResponse.json(result.rows, { status: 200 })
+    const result = await pool.query(query, queryParams);
+    return NextResponse.json(result.rows, { status: 200 });
   } catch (error: any) {
-    console.error("Error inserting data: ", error)
+    console.error("Error inserting data: ", error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

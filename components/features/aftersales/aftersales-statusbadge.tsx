@@ -1,13 +1,13 @@
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 
 export default function StatusBadge({
   active,
   trueLabel,
   falseLabel,
 }: {
-  active: boolean
-  trueLabel: string
-  falseLabel: string
+  active: boolean;
+  trueLabel: string;
+  falseLabel: string;
 }) {
   return (
     <Badge
@@ -20,5 +20,5 @@ export default function StatusBadge({
     >
       {active ? trueLabel : falseLabel}
     </Badge>
-  )
+  );
 }

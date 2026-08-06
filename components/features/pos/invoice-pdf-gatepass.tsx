@@ -1,5 +1,5 @@
-import { publicFile } from "@/lib/publicFile"
-import { Document, Image, Page, Text, View } from "@react-pdf/renderer"
+import { publicFile } from "@/lib/publicFile";
+import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 
 const InvoicePDFGatepass = ({
   from,
@@ -12,31 +12,31 @@ const InvoicePDFGatepass = ({
   items,
   created_at,
 }: {
-  from: string
-  vehicle_no: string
-  driver_name: string
-  manager: string
-  received_by: string
-  gatepass: string
-  gatepassType: string
-  items: any[]
-  created_at?: string
+  from: string;
+  vehicle_no: string;
+  driver_name: string;
+  manager: string;
+  received_by: string;
+  gatepass: string;
+  gatepassType: string;
+  items: any[];
+  created_at?: string;
 }) => {
-  let now = new Date()
+  let now = new Date();
   if (created_at) {
-    now = new Date(created_at)
+    now = new Date(created_at);
   }
 
   const date = now.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  })
+  });
 
   const time = now.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
   return (
     <Document>
       <Page style={{ padding: 20, width: "100%" }}>
@@ -129,7 +129,7 @@ const InvoicePDFGatepass = ({
                         {header}
                       </Text>
                     </View>
-                  )
+                  ),
                 )}
               </View>
 
@@ -139,7 +139,7 @@ const InvoicePDFGatepass = ({
                   qty: "",
                   unit: "",
                   remarks: "",
-                }
+                };
                 return (
                   <View
                     key={index}
@@ -156,7 +156,7 @@ const InvoicePDFGatepass = ({
                     <Cell width={100} value={item.unit} />
                     <Cell width={100} value={item.remarks} />
                   </View>
-                )
+                );
               })}
             </View>
           </View>
@@ -226,8 +226,8 @@ const InvoicePDFGatepass = ({
         <Footer />
       </Page>
     </Document>
-  )
-}
+  );
+};
 
 const Cell = ({ width, value }: { width: number; value: string | number }) => (
   <View
@@ -242,7 +242,7 @@ const Cell = ({ width, value }: { width: number; value: string | number }) => (
   >
     <Text style={{ fontSize: 10 }}>{value ?? ""}</Text>
   </View>
-)
+);
 
 const FormField = ({
   from,
@@ -252,12 +252,12 @@ const FormField = ({
   received_by,
   time,
 }: {
-  from: string
-  vehicle_no: string
-  driver_name: string
-  manager: string
-  received_by: string
-  time: string
+  from: string;
+  vehicle_no: string;
+  driver_name: string;
+  manager: string;
+  received_by: string;
+  time: string;
 }) => {
   const fields = [
     { label: "From", value: from },
@@ -266,7 +266,7 @@ const FormField = ({
     { label: "Manager", value: manager },
     { label: "Received By", value: received_by },
     { label: "Time", value: time },
-  ]
+  ];
 
   return (
     <View style={{ marginBottom: 10 }}>
@@ -307,8 +307,8 @@ const FormField = ({
         </View>
       ))}
     </View>
-  )
-}
+  );
+};
 
 const CompanyDetails = () => (
   <View style={{ alignItems: "flex-end", marginRight: 10 }}>
@@ -327,7 +327,7 @@ const CompanyDetails = () => (
       senfenglaserpakistan@gmail.com
     </Text>
   </View>
-)
+);
 
 const Header = ({ gatepassType }: { gatepassType: string }) => (
   <View
@@ -367,7 +367,7 @@ const Header = ({ gatepassType }: { gatepassType: string }) => (
       </Text>
     </View>
   </View>
-)
+);
 
 const Disclaimer = () => (
   <View style={{ marginTop: 10, alignItems: "center" }}>
@@ -376,7 +376,7 @@ const Disclaimer = () => (
       signature.
     </Text>
   </View>
-)
+);
 
 const Footer = () => (
   <View
@@ -391,6 +391,6 @@ const Footer = () => (
       www.senfenglaserpk.com
     </Text>
   </View>
-)
+);
 
-export default InvoicePDFGatepass
+export default InvoicePDFGatepass;

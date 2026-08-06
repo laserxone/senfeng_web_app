@@ -1,18 +1,18 @@
-"use client"
-import Image from "next/image"
-import { useCallback, useEffect, useRef } from "react"
-import { useDropzone } from "react-dropzone"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+"use client";
+import Image from "next/image";
+import { useCallback, useEffect, useRef } from "react";
+import { useDropzone } from "react-dropzone";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 type DropzoneMultiProps = {
-  onDrop: (files: string[]) => void
-  title: string
-  subheading: string
-  description: string
-  drag: string
-  borderColor?: string
-  value: string[]
-}
+  onDrop: (files: string[]) => void;
+  title: string;
+  subheading: string;
+  description: string;
+  drag: string;
+  borderColor?: string;
+  value: string[];
+};
 const DropzoneMulti = ({
   onDrop,
   title,
@@ -22,17 +22,17 @@ const DropzoneMulti = ({
   borderColor,
   value,
 }: DropzoneMultiProps) => {
-  const updateRefs = useRef<(HTMLInputElement | null)[]>([])
+  const updateRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const onDropAccepted = useCallback(
     (acceptedFiles: File[]) => {
       const newImageUrls = acceptedFiles.map((file) =>
-        URL.createObjectURL(file)
-      )
-      onDrop([...value, ...newImageUrls])
+        URL.createObjectURL(file),
+      );
+      onDrop([...value, ...newImageUrls]);
     },
-    [onDrop, value]
-  )
+    [onDrop, value],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDropAccepted,
@@ -40,49 +40,51 @@ const DropzoneMulti = ({
       "image/*": [],
     },
     multiple: true,
-  })
+  });
 
   const handlePaste = useCallback(
     (event: ClipboardEvent) => {
-      const items = event?.clipboardData?.items
-      if (!items) return
-      const pastedImages = []
+      const items = event?.clipboardData?.items;
+      if (!items) return;
+      const pastedImages = [];
 
       for (let item of items) {
         if (item.type.startsWith("image/")) {
-          const file = item.getAsFile()
-          const imageUrl = URL.createObjectURL(file as Blob)
-          pastedImages.push(imageUrl)
+          const file = item.getAsFile();
+          const imageUrl = URL.createObjectURL(file as Blob);
+          pastedImages.push(imageUrl);
         }
       }
 
       if (pastedImages.length > 0) {
-        onDrop([...value, ...pastedImages])
+        onDrop([...value, ...pastedImages]);
       }
     },
-    [onDrop, value]
-  )
+    [onDrop, value],
+  );
 
   useEffect(() => {
-    document.addEventListener("paste", handlePaste)
-    return () => document.removeEventListener("paste", handlePaste)
-  }, [handlePaste])
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [handlePaste]);
 
   const handleFileChange = (
     event: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     if (event.target.files && event.target.files[0]) {
-      const newFile = event.target.files[0]
-      const newImageUrl = URL.createObjectURL(newFile)
+      const newFile = event.target.files[0];
+      const newImageUrl = URL.createObjectURL(newFile);
 
-      onDrop(value.map((imgUrl, idx) => (idx === index ? newImageUrl : imgUrl)))
+      onDrop(
+        value.map((imgUrl, idx) => (idx === index ? newImageUrl : imgUrl)),
+      );
     }
-  }
+  };
 
   const handleDelete = (index: number) => {
-    onDrop(value.filter((_, idx) => idx !== index))
-  }
+    onDrop(value.filter((_, idx) => idx !== index));
+  };
 
   return (
     <div
@@ -148,7 +150,7 @@ const DropzoneMulti = ({
                     accept="image/*"
                     style={{ display: "none" }}
                     ref={(el) => {
-                      if (updateRefs.current) updateRefs.current[index] = el
+                      if (updateRefs.current) updateRefs.current[index] = el;
                     }}
                     onChange={(e) => handleFileChange(e, index)}
                   />
@@ -159,7 +161,7 @@ const DropzoneMulti = ({
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DropzoneMulti
+export default DropzoneMulti;

@@ -1,31 +1,31 @@
-"use client"
-import { useDebounce } from "@/hooks/use-debounce"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import axiosInstance from "@/lib/axios"
-import { useEffect, useState } from "react"
-import Marquee from "react-fast-marquee"
+"use client";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axiosInstance from "@/lib/axios";
+import { useEffect, useState } from "react";
+import Marquee from "react-fast-marquee";
 
 export default function NewsTicker() {
-  const { userID } = useUserDetail()
-  const isMobile = useIsMobile()
-  const [data, setData] = useState<{ news: string }[]>([])
+  const { userID } = useUserDetail();
+  const isMobile = useIsMobile();
+  const [data, setData] = useState<{ news: string }[]>([]);
 
-  const debouncedUserId = useDebounce(userID, 1000)
+  const debouncedUserId = useDebounce(userID, 1000);
 
   useEffect(() => {
     if (debouncedUserId) {
-      fetchData()
+      fetchData();
     }
-  }, [debouncedUserId])
+  }, [debouncedUserId]);
 
   async function fetchData() {
     axiosInstance
       .get(`/${debouncedUserId}/news?expiry=true`)
       .then((response) => {
-        const apiData = response.data
-        setData(apiData)
-      })
+        const apiData = response.data;
+        setData(apiData);
+      });
   }
   if (!isMobile)
     return (
@@ -42,5 +42,5 @@ export default function NewsTicker() {
           ))}
         </Marquee>
       )
-    )
+    );
 }

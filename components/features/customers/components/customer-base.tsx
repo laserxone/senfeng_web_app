@@ -1,37 +1,37 @@
-"use client"
-import CustomerMainPage from "@/components/features/customers/components/customer/main-page"
-import MemberDetail from "@/components/features/customers/components/detail/member-detail"
-import Machine from "@/components/features/machines/machine-component"
-import TabManager from "@/components/features/customers/components/tabManager"
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import { TabProps } from "@/lib/types"
+"use client";
+import CustomerMainPage from "@/components/features/customers/components/customer/main-page";
+import MemberDetail from "@/components/features/customers/components/detail/member-detail";
+import Machine from "@/components/features/machines/machine-component";
+import TabManager from "@/components/features/customers/components/tabManager";
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import { TabProps } from "@/lib/types";
 
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 export default function CustomerBaseComponent() {
-  const [tabs, setTabs] = useState<TabProps[]>([])
+  const [tabs, setTabs] = useState<TabProps[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | number | null>(
-    "dashboard"
-  )
-  const [loading, setLoading] = useState<(string | number)[]>([])
-  const isMobile = useIsMobile()
-  const { base_route } = useUserDetail()
-  const router = useRouter()
-  const searchParams = useSearchParams()
+    "dashboard",
+  );
+  const [loading, setLoading] = useState<(string | number)[]>([]);
+  const isMobile = useIsMobile();
+  const { base_route } = useUserDetail();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const tabsParam = searchParams.get("tabs")
-  const activeParam = searchParams.get("active")
+  const tabsParam = searchParams.get("tabs");
+  const activeParam = searchParams.get("active");
 
   const tabsFromUrl = useMemo(() => {
-    if (!tabsParam) return []
+    if (!tabsParam) return [];
 
     return tabsParam
       .split(",")
       .map((id) => {
         if (id.startsWith("customer-")) {
-          const cid = id.split("-")[1]
+          const cid = id.split("-")[1];
 
           return {
             id,
@@ -42,33 +42,33 @@ export default function CustomerBaseComponent() {
                 onLoading={(val) => {
                   if (val) {
                     setLoading((prevState) => {
-                      const newState = [...prevState]
-                      newState.push(id)
-                      return newState
-                    })
+                      const newState = [...prevState];
+                      newState.push(id);
+                      return newState;
+                    });
                   } else {
                     setLoading((prevState) => {
-                      const newState = prevState.filter((item) => item !== id)
-                      return newState
-                    })
+                      const newState = prevState.filter((item) => item !== id);
+                      return newState;
+                    });
                   }
                 }}
                 customerId={Number(cid)}
                 onReturn={(mid, type = "Machine") => {
                   if (isMobile) {
-                    router.push(`/${base_route}/member/${cid}/${mid}`)
+                    router.push(`/${base_route}/member/${cid}/${mid}`);
                   } else {
-                    const id = `machine-${mid}`
-                    openTab(id)
+                    const id = `machine-${mid}`;
+                    openTab(id);
                   }
                 }}
               />
             ),
-          }
+          };
         }
 
         if (id.startsWith("machine-")) {
-          const mid = id.split("-")[1]
+          const mid = id.split("-")[1];
 
           return {
             id,
@@ -80,55 +80,55 @@ export default function CustomerBaseComponent() {
                 onLoading={(val) => {
                   if (val) {
                     setLoading((prevState) => {
-                      const newState = [...prevState]
-                      newState.push(id)
-                      return newState
-                    })
+                      const newState = [...prevState];
+                      newState.push(id);
+                      return newState;
+                    });
                   } else {
                     setLoading((prevState) => {
-                      const newState = prevState.filter((item) => item !== id)
-                      return newState
-                    })
+                      const newState = prevState.filter((item) => item !== id);
+                      return newState;
+                    });
                   }
                 }}
               />
             ),
-          }
+          };
         }
 
-        return null
+        return null;
       })
-      .filter((tab) => tab !== null)
-  }, [tabsParam])
+      .filter((tab) => tab !== null);
+  }, [tabsParam]);
 
   const openTab = (id: string) => {
-    const currentTabs = tabsParam ? tabsParam.split(",") : []
+    const currentTabs = tabsParam ? tabsParam.split(",") : [];
 
     if (!currentTabs.includes(id)) {
-      currentTabs.push(id)
+      currentTabs.push(id);
     }
 
     window.history.pushState(
       {},
       "",
-      `?tabs=${currentTabs.join(",")}&active=${id}`
-    )
-  }
+      `?tabs=${currentTabs.join(",")}&active=${id}`,
+    );
+  };
 
   const dashboardComponent = useMemo(() => {
     return (
       <CustomerMainPage
         onReturn={(cid) => {
           if (isMobile) {
-            router.push(`/${base_route}/customer/${cid}`)
+            router.push(`/${base_route}/customer/${cid}`);
           } else {
-            const id = `customer-${cid}`
-            openTab(id)
+            const id = `customer-${cid}`;
+            openTab(id);
           }
         }}
       />
-    )
-  }, [openTab, isMobile])
+    );
+  }, [openTab, isMobile]);
 
   useEffect(() => {
     setTabs([
@@ -139,10 +139,10 @@ export default function CustomerBaseComponent() {
         component: dashboardComponent,
       },
       ...tabsFromUrl,
-    ])
+    ]);
 
-    setActiveTabId(activeParam || "dashboard")
-  }, [tabsFromUrl, activeParam, isMobile])
+    setActiveTabId(activeParam || "dashboard");
+  }, [tabsFromUrl, activeParam, isMobile]);
 
   return (
     <div className="flex w-full flex-1">
@@ -153,7 +153,7 @@ export default function CustomerBaseComponent() {
         setActiveTabId={setActiveTabId}
       />
     </div>
-  )
+  );
 }
 
 const MemoizedCustomerTab = ({
@@ -161,9 +161,9 @@ const MemoizedCustomerTab = ({
   onReturn,
   onLoading,
 }: {
-  customerId: number
-  onReturn: (id: number) => void
-  onLoading: (val: boolean) => void
+  customerId: number;
+  onReturn: (id: number) => void;
+  onLoading: (val: boolean) => void;
 }) => {
   return useMemo(() => {
     return (
@@ -177,18 +177,18 @@ const MemoizedCustomerTab = ({
           onLoading={onLoading}
         />
       </div>
-    )
-  }, [customerId])
-}
+    );
+  }, [customerId]);
+};
 
 const MemoizedMachineTab = ({
   machineId,
   onLoading,
 }: {
-  machineId: number
-  onLoading: (id: boolean) => void
+  machineId: number;
+  onLoading: (id: boolean) => void;
 }) => {
   return useMemo(() => {
-    return <Machine id={machineId} onLoading={onLoading} />
-  }, [machineId])
-}
+    return <Machine id={machineId} onLoading={onLoading} />;
+  }, [machineId]);
+};

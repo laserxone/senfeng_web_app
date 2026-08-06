@@ -1,10 +1,10 @@
-"use client"
-import { MoonIcon, SunIcon } from "lucide-react"
-import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
+"use client";
+import { MoonIcon, SunIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
 
 export default function ThemeToggle({}) {
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme } = useTheme();
   return (
     <Button
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -15,5 +15,5 @@ export default function ThemeToggle({}) {
       <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
       <span className="sr-only">Toggle theme</span>
     </Button>
-  )
+  );
 }

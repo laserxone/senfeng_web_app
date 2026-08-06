@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -6,19 +6,19 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { useBreadcrumbs } from "@/hooks/use-breadcrumbs"
-import Link from "next/link"
-import { Fragment } from "react"
+} from "@/components/ui/breadcrumb";
+import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
+import Link from "next/link";
+import { Fragment } from "react";
 
 type BreadcrumbItem = {
-  title: string
-  link: string
-}
+  title: string;
+  link: string;
+};
 
 export function Breadcrumbs() {
-  const items = useBreadcrumbs()
-  if (items.length === 0) return null
+  const items = useBreadcrumbs();
+  if (items.length === 0) return null;
   return (
     <Breadcrumb className="hidden md:block">
       <BreadcrumbList className="text-sm">
@@ -41,5 +41,5 @@ export function Breadcrumbs() {
         ))}
       </BreadcrumbList>
     </Breadcrumb>
-  )
+  );
 }

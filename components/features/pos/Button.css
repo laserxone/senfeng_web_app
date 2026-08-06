@@ -1,13 +1,12 @@
 .blinking-button {
-    animation: blink 0.5s infinite alternate;
+  animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.1;
   }
-  
-  @keyframes blink {
-    0% {
-      opacity: 0.1;
-    }
-    100% {
-      opacity: 1;
-    }
+  100% {
+    opacity: 1;
   }
-  
+}

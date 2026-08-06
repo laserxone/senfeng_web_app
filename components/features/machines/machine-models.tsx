@@ -1,38 +1,38 @@
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { useEffect, useState } from "react"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import Spinner from "@/components/ui/spinner"
+} from "@/components/ui/select";
+import Spinner from "@/components/ui/spinner";
 
 export default function MachineModels({
   value,
   onValueChange,
 }: {
-  value?: string
-  onValueChange: (val: string) => void
+  value?: string;
+  onValueChange: (val: string) => void;
 }) {
-  const { userID } = useUserDetail()
-  const [items, setItems] = useState([])
-  const [loading, setLoading] = useState(false)
+  const { userID } = useUserDetail();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const res = await axios.get(`/${userID}/settings`)
-      setItems(res.data?.machine_models || [])
+      const res = await axios.get(`/${userID}/settings`);
+      setItems(res.data?.machine_models || []);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -51,5 +51,5 @@ export default function MachineModels({
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }

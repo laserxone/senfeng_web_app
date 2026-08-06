@@ -1,108 +1,108 @@
-"use client"
-import Attendance from "@/components/features/attendance/attendance"
-import RenderFines from "@/components/features/employee-finance/render-fines"
-import SalaryRecord from "@/components/features/employee-finance/salary-record"
-import Reimbursement from "@/components/features/reimbursements/Reimbursement"
-import TeamTask from "@/components/features/tasks/team-task"
-import { ProfilePicture } from "@/components/features/users/profile-picture"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import axios from "@/lib/axios"
+"use client";
+import Attendance from "@/components/features/attendance/attendance";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
+import TeamTask from "@/components/features/tasks/team-task";
+import { ProfilePicture } from "@/components/features/users/profile-picture";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import axios from "@/lib/axios";
 import {
   UserAttendanceRecord,
   UserDashboard,
   UserReimbursementType,
-} from "@/lib/types"
-import moment from "moment"
-import { useCallback, useEffect, useState } from "react"
+} from "@/lib/types";
+import moment from "moment";
+import { useCallback, useEffect, useState } from "react";
 
 export default function ManagerDashboard({
   id: userID,
 }: {
-  id: string | number
+  id: string | number;
 }) {
-  const [data, setData] = useState<{ user: UserDashboard }>()
+  const [data, setData] = useState<{ user: UserDashboard }>();
   const [reimbursementData, setReimbursementData] = useState<
     UserReimbursementType[]
-  >([])
+  >([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>(
-    []
-  )
-  const [activeTab, setActiveTab] = useState("attendance")
+    [],
+  );
+  const [activeTab, setActiveTab] = useState("attendance");
 
   useEffect(() => {
     if (userID) {
-      const startDate = moment().startOf("month").toISOString()
-      const endDate = moment().endOf("month").toISOString()
-      fetchData()
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchData();
 
-      fetchReimbursementData(startDate, endDate)
-      fetchAttendanceData(startDate, endDate)
+      fetchReimbursementData(startDate, endDate);
+      fetchAttendanceData(startDate, endDate);
     }
-  }, [userID])
+  }, [userID]);
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
-          setReimbursementData(response.data)
-          resolve(true)
+          setReimbursementData(response.data);
+          resolve(true);
         })
         .catch((e) => {
-          console.log(e)
-          reject(null)
-        })
-    })
+          console.log(e);
+          reject(null);
+        });
+    });
   }
 
   async function fetchAttendanceData(startDate: string, endDate: string) {
     return new Promise<void | any>((res, rej) => {
       axios
         .get(
-          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           if (response.data.length > 0) {
             const apiData = response.data.map((item: UserAttendanceRecord) => {
               let status = item?.leave_status
                 ? `Leave ${item?.leave_status}`
-                : "Absent"
+                : "Absent";
 
               if (item?.time_in) {
-                const checkInTime = new Date(item.time_in)
-                const threshold = new Date(item.time_in)
-                threshold.setHours(10, 10, 0, 0)
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
 
                 if (checkInTime > threshold) {
-                  status = "Late"
+                  status = "Late";
                 } else {
-                  status = "Present"
+                  status = "Present";
                 }
               }
               return {
                 ...item,
                 date: item?.time_in || item?.leave_date,
                 status,
-              }
-            })
-            setAttendanceData(apiData)
+              };
+            });
+            setAttendanceData(apiData);
           }
-          res(true)
+          res(true);
         })
         .catch((e) => {
-          console.log(e)
-          rej(null)
-        })
-    })
+          console.log(e);
+          rej(null);
+        });
+    });
   }
 
   async function fetchData() {
     axios.get(`/${userID}/dashboard`).then((response) => {
-      setData(response.data)
-    })
+      setData(response.data);
+    });
   }
 
   const RenderReimbursement = useCallback(() => {
@@ -113,21 +113,21 @@ export default function ManagerDashboard({
             id={userID}
             passingData={reimbursementData || []}
             onAddRefresh={async () => {
-              const startDate = moment().startOf("month").toISOString()
-              const endDate = moment().endOf("month").toISOString()
-              await fetchReimbursementData(startDate, endDate)
+              const startDate = moment().startOf("month").toISOString();
+              const endDate = moment().endOf("month").toISOString();
+              await fetchReimbursementData(startDate, endDate);
             }}
             onFilterReturn={async (start, end) => {
-              await fetchReimbursementData(start, end)
+              await fetchReimbursementData(start, end);
             }}
             onReset={async (start, end) => {
-              await fetchReimbursementData(start, end)
+              await fetchReimbursementData(start, end);
             }}
           />
         </CardContent>
       </Card>
-    )
-  }, [reimbursementData])
+    );
+  }, [reimbursementData]);
 
   const RenderAttendance = useCallback(() => {
     return (
@@ -142,8 +142,8 @@ export default function ManagerDashboard({
           />
         </CardContent>
       </Card>
-    )
-  }, [attendanceData])
+    );
+  }, [attendanceData]);
 
   return (
     <div className="flex flex-1 gap-5">
@@ -202,5 +202,5 @@ export default function ManagerDashboard({
         </Tabs>
       </div>
     </div>
-  )
+  );
 }

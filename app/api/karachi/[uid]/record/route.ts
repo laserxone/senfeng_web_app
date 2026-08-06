@@ -1,18 +1,18 @@
-import pool from "@/config/db"
-import { checkSuperadmin } from "@/lib/checkSuperadmin"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
+  const { uid } = await params;
 
-  let salaryRows
-  let salaries
+  let salaryRows;
+  let salaries;
 
   try {
-    const isAdmin = await checkSuperadmin(uid)
+    const isAdmin = await checkSuperadmin(uid);
     if (isAdmin) {
       salaries = await pool.query(
         `
@@ -24,8 +24,8 @@ export async function GET(
             WHERE issued = $1 AND u.office = 'karachi'
             ORDER BY s.year DESC, s.month DESC;
         `,
-        [true]
-      )
+        [true],
+      );
     } else {
       salaries = await pool.query(
         `
@@ -37,19 +37,19 @@ export async function GET(
             WHERE s.issued = $1 AND s.user_id = $2
             ORDER BY s.year DESC, s.month DESC;
         `,
-        [true, uid]
-      )
+        [true, uid],
+      );
     }
 
-    salaryRows = salaries.rows
+    salaryRows = salaries.rows;
 
     const commissionIds = [
       ...new Set(
         salaryRows.flatMap((row) =>
-          Array.isArray(row.issued_commissions) ? row.issued_commissions : []
-        )
+          Array.isArray(row.issued_commissions) ? row.issued_commissions : [],
+        ),
       ),
-    ]
+    ];
 
     if (commissionIds.length) {
       const commissionsResult = await pool.query(
@@ -72,27 +72,27 @@ export async function GET(
             ON s.customer_id = cu.id
         WHERE c.id = ANY($1)
     `,
-        [commissionIds]
-      )
+        [commissionIds],
+      );
 
       const commissionsMap = new Map(
-        commissionsResult.rows.map((row) => [row.id, row])
-      )
+        commissionsResult.rows.map((row) => [row.id, row]),
+      );
 
       salaryRows.forEach((salary) => {
         salary.issued_commissions_detail = (salary.issued_commissions || [])
           .map((id: any) => commissionsMap.get(id))
-          .filter(Boolean)
-      })
+          .filter(Boolean);
+      });
     }
 
-    return NextResponse.json(salaries.rows, { status: 200 })
+    return NextResponse.json(salaries.rows, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: error.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import { MyImgZooming } from "@/components/shared/media/img-zooming"
-import PageTablePagination from "@/components/shared/tables/app-table"
-import { Button } from "@/components/ui/button"
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import PageTablePagination from "@/components/shared/tables/app-table";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import Spinner from "@/components/ui/spinner"
-import { TIMEZONE } from "@/constants/data"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { AttendanceTableRow, UserAttendanceRecord } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
+} from "@/components/ui/dialog";
+import Spinner from "@/components/ui/spinner";
+import { TIMEZONE } from "@/constants/data";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { AttendanceTableRow, UserAttendanceRecord } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
   BadgeCheck,
@@ -39,13 +39,13 @@ import {
   UserMinus,
   Users,
   Wrench,
-} from "lucide-react"
-import momentT from "moment-timezone"
-import { useRouter } from "nextjs-toploader/app"
-import { useEffect, useMemo, useState } from "react"
-import DashboardStatsCard from "./aftersales-dashboard-stats-card"
-import EmptyState from "./aftersales-emptystate"
-import FeedbackDialog from "./aftersales-feedback-dialog"
+} from "lucide-react";
+import momentT from "moment-timezone";
+import { useRouter } from "nextjs-toploader/app";
+import { useEffect, useMemo, useState } from "react";
+import DashboardStatsCard from "./aftersales-dashboard-stats-card";
+import EmptyState from "./aftersales-emptystate";
+import FeedbackDialog from "./aftersales-feedback-dialog";
 import {
   formatCurrency,
   formatDate,
@@ -53,57 +53,57 @@ import {
   isCompleted,
   isResolved,
   percent,
-} from "./aftersales-functions"
-import MiniMetric from "./aftersales-minimetric"
-import SectionTitle from "./aftersales-section-tile"
-import StatusBadge from "./aftersales-statusbadge"
+} from "./aftersales-functions";
+import MiniMetric from "./aftersales-minimetric";
+import SectionTitle from "./aftersales-section-tile";
+import StatusBadge from "./aftersales-statusbadge";
 import {
   AfterSalesFeedbackResponse,
   AfterSalesPOSResponse,
   AfterSalesReimbursement,
   ComplaintAssignment,
-} from "./aftersales-types"
-import AfterSalesDashboard from "./AfterSalesDashboard"
+} from "./aftersales-types";
+import AfterSalesDashboard from "./AfterSalesDashboard";
 
 export default function AfterSalesDashboardNew({
   userID,
 }: {
-  userID: string | number | null
+  userID: string | number | null;
 }) {
-  const { reimbursement_approval } = useUserDetail()
+  const { reimbursement_approval } = useUserDetail();
 
-  const [data, setData] = useState<AfterSalesReimbursement[]>([])
+  const [data, setData] = useState<AfterSalesReimbursement[]>([]);
   const [feedbacks, setFeedbacks] = useState<AfterSalesFeedbackResponse | null>(
-    null
-  )
+    null,
+  );
 
   const start = momentT
     .tz(TIMEZONE)
     .startOf("month")
     .startOf("day")
     .utc()
-    .toISOString()
+    .toISOString();
   const end = momentT
     .tz(TIMEZONE)
     .endOf("month")
     .endOf("day")
     .utc()
-    .toISOString()
+    .toISOString();
 
   useEffect(() => {
     if (userID) {
-      fetchData()
-      fetchFeedbackData()
+      fetchData();
+      fetchFeedbackData();
     }
-  }, [userID, reimbursement_approval])
+  }, [userID, reimbursement_approval]);
 
   async function fetchData() {
     try {
       if (reimbursement_approval) {
         const reimbursement = await axios.get(
-          `/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`
-        )
-        setData(reimbursement.data)
+          `/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`,
+        );
+        setData(reimbursement.data);
       }
     } finally {
     }
@@ -112,9 +112,9 @@ export default function AfterSalesDashboardNew({
   async function fetchFeedbackData() {
     try {
       const feedback = await axios.get(
-        `/${userID}/dashboard/aftersales/memberfeedback?start=${start}&end=${end}`
-      )
-      setFeedbacks(feedback.data)
+        `/${userID}/dashboard/aftersales/memberfeedback?start=${start}&end=${end}`,
+      );
+      setFeedbacks(feedback.data);
     } finally {
     }
   }
@@ -170,23 +170,23 @@ export default function AfterSalesDashboardNew({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 const Feedback = ({
   data,
   iconSize = "",
 }: {
-  data: AfterSalesFeedbackResponse | null
-  iconSize?: string
+  data: AfterSalesFeedbackResponse | null;
+  iconSize?: string;
 }) => {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   const analytics = useMemo(() => {
-    const completed = data?.withFeedback.total ?? 0
-    const totalPending = data?.withoutFeedback?.total ?? 0
-    const satisfied = data?.satisfied ?? 0
-    const unsatisfied = data?.unsatisfied ?? 0
+    const completed = data?.withFeedback.total ?? 0;
+    const totalPending = data?.withoutFeedback?.total ?? 0;
+    const satisfied = data?.satisfied ?? 0;
+    const unsatisfied = data?.unsatisfied ?? 0;
 
     return {
       total: completed + totalPending,
@@ -194,8 +194,8 @@ const Feedback = ({
       satisfied,
       unsatisfied,
       satisfactionRate: percent(satisfied, satisfied + unsatisfied),
-    }
-  }, [data])
+    };
+  }, [data]);
 
   return (
     <>
@@ -260,8 +260,8 @@ const Feedback = ({
         open={open}
       />
     </>
-  )
-}
+  );
+};
 
 const Complaint = ({
   userID,
@@ -269,50 +269,50 @@ const Complaint = ({
   end,
   iconSize = "",
 }: {
-  userID: string | number | null
-  start: string
-  end: string
-  iconSize?: string
+  userID: string | number | null;
+  start: string;
+  end: string;
+  iconSize?: string;
 }) => {
-  const { base_route } = useUserDetail()
-  const [data, setData] = useState<ComplaintAssignment[]>([])
-  const router = useRouter()
+  const { base_route } = useUserDetail();
+  const [data, setData] = useState<ComplaintAssignment[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
     try {
       const complaint = await axios.get(
-        `/${userID}/dashboard/aftersales/complaint?start=${start}&end=${end}`
-      )
-      setData(complaint.data)
+        `/${userID}/dashboard/aftersales/complaint?start=${start}&end=${end}`,
+      );
+      setData(complaint.data);
     } finally {
     }
   }
 
   const analytics = useMemo(() => {
     const newComplaints = data.filter(
-      (item) => !item.engineer_id && !item.assignment_id
-    ).length
+      (item) => !item.engineer_id && !item.assignment_id,
+    ).length;
     const pending = data.filter(
       (item) =>
         (item.engineer_id || item.assignment_id) &&
-        (!item.logs || item.logs.length === 0)
-    ).length
+        (!item.logs || item.logs.length === 0),
+    ).length;
     const resolved = data.filter((item) =>
-      isResolved(item.status || item.complaint_status)
-    ).length
+      isResolved(item.status || item.complaint_status),
+    ).length;
     const installations = data.filter(
-      (item) => item.installation || item.complaint_installation
-    ).length
+      (item) => item.installation || item.complaint_installation,
+    ).length;
     const completed = data.filter((item) =>
-      isCompleted(item.status || item.complaint_status)
-    ).length
+      isCompleted(item.status || item.complaint_status),
+    ).length;
 
-    return { newComplaints, pending, resolved, installations, completed }
-  }, [data])
+    return { newComplaints, pending, resolved, installations, completed };
+  }, [data]);
 
   return (
     <>
@@ -357,39 +357,39 @@ const Complaint = ({
         ]}
       />
     </>
-  )
-}
+  );
+};
 
 const POSAfterSales = ({
   iconSize = "",
   userID,
 }: {
-  iconSize?: string
-  userID: string | number | null
+  iconSize?: string;
+  userID: string | number | null;
 }) => {
-  const [data, setData] = useState<null | AfterSalesPOSResponse>(null)
+  const [data, setData] = useState<null | AfterSalesPOSResponse>(null);
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
     try {
-      const pos = await axios.get(`/${userID}/dashboard/aftersales/pos`)
+      const pos = await axios.get(`/${userID}/dashboard/aftersales/pos`);
       setData(
         pos.data?.data && "total_sales" in pos.data
           ? pos.data
-          : pos.data?.data || null
-      )
+          : pos.data?.data || null,
+      );
     } finally {
     }
   }
 
-  const totalSales = Number(data?.total_sales || 0)
-  const completed = Number(data?.total_completed || 0)
-  const pending = Number(data?.total_pending || 0)
-  const collection = Number(data?.collection || 0)
-  const collectionRate = collection.toFixed(2)
+  const totalSales = Number(data?.total_sales || 0);
+  const completed = Number(data?.total_completed || 0);
+  const pending = Number(data?.total_pending || 0);
+  const collection = Number(data?.collection || 0);
+  const collectionRate = collection.toFixed(2);
 
   return (
     <DashboardStatsCard
@@ -424,8 +424,8 @@ const POSAfterSales = ({
         },
       ]}
     />
-  )
-}
+  );
+};
 
 const TeamAttendanceAfterSales = ({
   start,
@@ -433,83 +433,83 @@ const TeamAttendanceAfterSales = ({
   iconSize = "",
   userID,
 }: {
-  userID: string | number | null
-  start: string
-  end: string
-  iconSize?: string
+  userID: string | number | null;
+  start: string;
+  end: string;
+  iconSize?: string;
 }) => {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
-  const [data, setData] = useState<AttendanceTableRow[]>([])
+  const [data, setData] = useState<AttendanceTableRow[]>([]);
 
   useEffect(() => {
-    if (userID) fetchData()
-  }, [userID])
+    if (userID) fetchData();
+  }, [userID]);
 
   async function fetchData() {
     try {
       const team = await axios.get(
-        `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}`
-      )
+        `/${userID}/attendance?team=true&start_date=${start}&end_date=${end}`,
+      );
       const apiData = team.data.map((item: UserAttendanceRecord) => {
         let status = item?.leave_status
           ? `Leave ${item?.leave_status}`
-          : "Absent"
+          : "Absent";
 
         if (item?.time_in) {
-          const checkInTime = new Date(item.time_in)
-          const threshold = new Date(item.time_in)
-          threshold.setHours(10, 10, 0, 0)
-          status = checkInTime > threshold ? "Late" : "Present"
+          const checkInTime = new Date(item.time_in);
+          const threshold = new Date(item.time_in);
+          threshold.setHours(10, 10, 0, 0);
+          status = checkInTime > threshold ? "Late" : "Present";
         }
 
         return {
           ...item,
           date: item?.time_in || item?.leave_date || item.date,
           status,
-        }
-      })
-      setData(generateAttendanceData(apiData, start, end))
+        };
+      });
+      setData(generateAttendanceData(apiData, start, end));
     } finally {
     }
   }
 
   const analytics = useMemo(() => {
-    const present = data.filter((item) => item.status === "Present").length
-    const absent = data.filter((item) => item.status === "Absent").length
-    const late = data.filter((item) => item.status === "Late").length
+    const present = data.filter((item) => item.status === "Present").length;
+    const absent = data.filter((item) => item.status === "Absent").length;
+    const late = data.filter((item) => item.status === "Late").length;
     const workingDays = Array.from(
-      new Set(data.map((item) => item.date))
-    ).length
-    const trackedDays = present + absent + late
+      new Set(data.map((item) => item.date)),
+    ).length;
+    const trackedDays = present + absent + late;
     const users = Object.values(
       data.reduce<
         Record<
           string,
           {
-            name: string
-            present: number
-            absent: number
-            late: number
-            total: number
+            name: string;
+            present: number;
+            absent: number;
+            late: number;
+            total: number;
           }
         >
       >((acc, item) => {
-        const key = item.user_email || item.user_name
+        const key = item.user_email || item.user_name;
         acc[key] ||= {
           name: item.user_name || key,
           present: 0,
           absent: 0,
           late: 0,
           total: 0,
-        }
-        acc[key].total += 1
-        if (item.status === "Present") acc[key].present += 1
-        if (item.status === "Absent") acc[key].absent += 1
-        if (item.status === "Late") acc[key].late += 1
-        return acc
-      }, {})
-    )
+        };
+        acc[key].total += 1;
+        if (item.status === "Present") acc[key].present += 1;
+        if (item.status === "Absent") acc[key].absent += 1;
+        if (item.status === "Late") acc[key].late += 1;
+        return acc;
+      }, {}),
+    );
 
     return {
       present,
@@ -520,8 +520,8 @@ const TeamAttendanceAfterSales = ({
       presentPercentage: percent(present, trackedDays),
       absentPercentage: percent(absent, trackedDays),
       latePercentage: percent(late, trackedDays),
-    }
-  }, [data])
+    };
+  }, [data]);
 
   return (
     <>
@@ -576,18 +576,18 @@ const TeamAttendanceAfterSales = ({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};
 
 const ReimbursementAfterSalesMetrics = ({
   data,
   iconSize = "",
 }: {
-  data: AfterSalesReimbursement[]
-  iconSize?: string
+  data: AfterSalesReimbursement[];
+  iconSize?: string;
 }) => {
-  const pending = data.filter((item) => !item.verified).length
-  const approved = data.filter((item) => item.verified).length
+  const pending = data.filter((item) => !item.verified).length;
+  const approved = data.filter((item) => item.verified).length;
 
   return (
     <section className="rounded-2xl border border-border bg-card p-3 text-card-foreground shadow-sm">
@@ -621,51 +621,51 @@ const ReimbursementAfterSalesMetrics = ({
         />
       </div>
     </section>
-  )
-}
+  );
+};
 
 export const ReimbursementAfterSales = ({
   data,
   onRefresh,
   userID,
 }: {
-  userID: string | number | null
-  data: AfterSalesReimbursement[]
-  onRefresh: () => Promise<void>
+  userID: string | number | null;
+  data: AfterSalesReimbursement[];
+  onRefresh: () => Promise<void>;
 }) => {
-  const [page, setPage] = useState(0)
-  const [selectedItem, setSelectedItem] = useState<number | null>(null)
-  const [deleteItem, setDeleteItem] = useState<number | null>(null)
+  const [page, setPage] = useState(0);
+  const [selectedItem, setSelectedItem] = useState<number | null>(null);
+  const [deleteItem, setDeleteItem] = useState<number | null>(null);
 
   useEffect(() => {
-    setPage(0)
-  }, [data.length])
+    setPage(0);
+  }, [data.length]);
 
   async function handleVerify(id: number) {
-    if (!id) return
+    if (!id) return;
 
-    setSelectedItem(id)
+    setSelectedItem(id);
     try {
       await axios.put(`/${userID}/reimbursement/${id}`, {
         verified: true,
-      })
+      });
 
-      await onRefresh()
+      await onRefresh();
     } finally {
-      setSelectedItem(null)
+      setSelectedItem(null);
     }
   }
 
   async function handleDelete(id: number) {
-    if (!id) return
+    if (!id) return;
 
-    setDeleteItem(id)
+    setDeleteItem(id);
     try {
-      await axios.delete(`/${userID}/reimbursement/${id}`)
+      await axios.delete(`/${userID}/reimbursement/${id}`);
 
-      await onRefresh()
+      await onRefresh();
     } finally {
-      setDeleteItem(null)
+      setDeleteItem(null);
     }
   }
 
@@ -674,13 +674,13 @@ export const ReimbursementAfterSales = ({
       [...data].sort(
         (a, b) =>
           new Date(b.created_at || b.date).getTime() -
-          new Date(a.created_at || a.date).getTime()
+          new Date(a.created_at || a.date).getTime(),
       ),
-    [data]
-  )
-  const selected = sortedData[page]
-  const canPrevious = page > 0
-  const canNext = page < sortedData.length - 1
+    [data],
+  );
+  const selected = sortedData[page];
+  const canPrevious = page > 0;
+  const canNext = page < sortedData.length - 1;
 
   return (
     <section className="flex w-[320px] flex-col justify-between gap-2 rounded-2xl border border-border bg-card p-3 text-card-foreground shadow-sm">
@@ -710,7 +710,7 @@ export const ReimbursementAfterSales = ({
               disabled={!canNext}
               onClick={() =>
                 setPage((current) =>
-                  Math.min(sortedData.length - 1, current + 1)
+                  Math.min(sortedData.length - 1, current + 1),
                 )
               }
               className="h-8 px-2.5"
@@ -822,28 +822,28 @@ export const ReimbursementAfterSales = ({
         </div>
       )}
     </section>
-  )
-}
+  );
+};
 
 function AttendanceTable({
   users,
 }: {
   users: {
-    name: string
-    present: number
-    absent: number
-    late: number
-    total: number
-    rate: number
-  }[]
+    name: string;
+    present: number;
+    absent: number;
+    late: number;
+    total: number;
+    rate: number;
+  }[];
 }) {
   const columns: ColumnDef<{
-    name: string
-    present: number
-    absent: number
-    late: number
-    total: number
-    rate: number
+    name: string;
+    present: number;
+    absent: number;
+    late: number;
+    total: number;
+    rate: number;
   }>[] = [
     {
       accessorKey: "name",
@@ -857,7 +857,7 @@ function AttendanceTable({
             Team Member
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div className="ml-2">{row.getValue("name")}</div>,
     },
@@ -873,7 +873,7 @@ function AttendanceTable({
             Present
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("present")}</div>,
     },
@@ -890,7 +890,7 @@ function AttendanceTable({
             Absent
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("absent")}</div>,
     },
@@ -907,7 +907,7 @@ function AttendanceTable({
             Late
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("late")}</div>,
     },
@@ -924,11 +924,11 @@ function AttendanceTable({
             Attendance
             <ArrowUpDown />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => <div>{row.getValue("rate")}%</div>,
     },
-  ]
+  ];
 
-  return <PageTablePagination columns={columns} data={users} />
+  return <PageTablePagination columns={columns} data={users} />;
 }

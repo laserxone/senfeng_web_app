@@ -1,8 +1,8 @@
-import { UserAttendanceRecord } from "@/lib/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { Button } from "@/components/ui/button"
-import { ArrowUpDown } from "lucide-react"
-import moment from "moment"
+import { UserAttendanceRecord } from "@/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
+import moment from "moment";
 
 export const columns: ColumnDef<UserAttendanceRecord>[] = [
   {
@@ -17,7 +17,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
           Date
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div>
@@ -39,7 +39,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
           Employee
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("user_name")}</div>,
   },
@@ -55,7 +55,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
           Time In
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div className="ml-2">
@@ -77,7 +77,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
           Time Out
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div className="ml-2">
@@ -103,7 +103,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
           Note Time In
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("note_time_in")}</div>,
   },
@@ -120,7 +120,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
           Note Time Out
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => <div>{row.getValue("note_time_out")}</div>,
   },
@@ -137,7 +137,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
           Status
           <ArrowUpDown />
         </Button>
-      )
+      );
     },
     cell: ({ row }) => (
       <div
@@ -154,4 +154,4 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
       </div>
     ),
   },
-]
+];

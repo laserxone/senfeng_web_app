@@ -1,19 +1,19 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ oid: string }> }
+  { params }: { params: Promise<{ oid: string }> },
 ) {
-  const item = await req.json()
+  const item = await req.json();
 
-  const { oid } = await params
+  const { oid } = await params;
 
   if (!oid) {
     return NextResponse.json(
       { message: "Missing order item ID" },
-      { status: 400 }
-    )
+      { status: 400 },
+    );
   }
 
   const {
@@ -32,7 +32,7 @@ export async function PUT(
     inventory_id = null,
     location = "Lahore",
     show = false,
-  } = item
+  } = item;
 
   try {
     await pool.query(
@@ -70,20 +70,20 @@ export async function PUT(
         customer_id,
         show,
         oid,
-      ]
-    )
+      ],
+    );
 
     return NextResponse.json(
       { message: "Order item updated successfully" },
-      { status: 200 }
-    )
+      { status: 200 },
+    );
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
     return NextResponse.json(
       { message: error?.message || "Error saving data, try again" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

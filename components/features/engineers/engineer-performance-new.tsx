@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -23,7 +23,7 @@ import {
   Wrench,
   Zap,
   type LucideIcon,
-} from "lucide-react"
+} from "lucide-react";
 import {
   Line,
   LineChart,
@@ -35,27 +35,27 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts"
+} from "recharts";
 
 type Engineer = {
-  rank: number
-  name: string
-  role: string
-  score: number
-  tier: "GOLD" | "SILVER" | "RED"
-  status: string
-}
+  rank: number;
+  name: string;
+  role: string;
+  score: number;
+  tier: "GOLD" | "SILVER" | "RED";
+  status: string;
+};
 
 type Task = {
-  id: string
-  type: string
-  icon: LucideIcon
-  engineer: string
-  level: string
-  time: string
-  status: "In Progress" | "Assigned" | "Escalated"
-  points: number
-}
+  id: string;
+  type: string;
+  icon: LucideIcon;
+  engineer: string;
+  level: string;
+  time: string;
+  status: "In Progress" | "Assigned" | "Escalated";
+  points: number;
+};
 
 const engineers: Engineer[] = [
   {
@@ -122,7 +122,7 @@ const engineers: Engineer[] = [
     tier: "RED",
     status: "At Risk",
   },
-]
+];
 
 const tasks: Task[] = [
   {
@@ -175,7 +175,7 @@ const tasks: Task[] = [
     status: "Escalated",
     points: 4,
   },
-]
+];
 
 const radarData = [
   { kpi: "Response", value: 92 },
@@ -184,7 +184,7 @@ const radarData = [
   { kpi: "Completion", value: 91 },
   { kpi: "Skill", value: 89 },
   { kpi: "Uniform", value: 94 },
-]
+];
 
 const trendData = [
   { month: "Dec", Arjun: 72, Neha: 50, Rohit: 35, Vikram: 25, Ananya: 10 },
@@ -193,7 +193,7 @@ const trendData = [
   { month: "Mar", Arjun: 90, Neha: 68, Rohit: 50, Vikram: 35, Ananya: 21 },
   { month: "Apr", Arjun: 83, Neha: 59, Rohit: 38, Vikram: 29, Ananya: 14 },
   { month: "May", Arjun: 94, Neha: 75, Rohit: 58, Vikram: 42, Ananya: 25 },
-]
+];
 
 const stats: Array<[string, string, string, LucideIcon, string]> = [
   ["Active Engineers", "128", "+12%", Users, "from-primary to-cyan-500"],
@@ -208,7 +208,7 @@ const stats: Array<[string, string, string, LucideIcon, string]> = [
   ["On-Time Arrival", "91.3%", "+3.7%", Clock, "from-emerald-500 to-teal-500"],
   ["In Field", "78", "Live", UserCheck, "from-sky-500 to-blue-600"],
   ["Escalations", "14", "+7", AlertTriangle, "from-rose-500 to-red-600"],
-]
+];
 
 const decisions: Array<
   [
@@ -252,29 +252,29 @@ const decisions: Array<
     "red",
     58,
   ],
-]
+];
 
 const cn = (...classes: Array<string | false | null | undefined>) =>
-  classes.filter(Boolean).join(" ")
+  classes.filter(Boolean).join(" ");
 
 function Panel({
   children,
   className = "",
 }: {
-  children: ReactNode
-  className?: string
+  children: ReactNode;
+  className?: string;
 }) {
   return (
     <section
       className={cn(
         "relative overflow-hidden rounded-[1.35rem] border border-white/55 bg-white/82 text-slate-950 shadow-[0_18px_55px_rgba(15,23,42,0.10)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70 dark:text-white dark:shadow-black/30",
-        className
+        className,
       )}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent dark:via-white/30" />
       {children}
     </section>
-  )
+  );
 }
 
 function SectionTitle({
@@ -283,10 +283,10 @@ function SectionTitle({
   icon: Icon,
   action,
 }: {
-  title: string
-  subtitle?: string
-  icon: LucideIcon
-  action?: string
+  title: string;
+  subtitle?: string;
+  icon: LucideIcon;
+  action?: string;
 }) {
   return (
     <div className="mb-3 flex items-start justify-between gap-3">
@@ -311,21 +311,21 @@ function SectionTitle({
         </button>
       ) : null}
     </div>
-  )
+  );
 }
 
 function ProgressRing({
   value,
   className = "",
 }: {
-  value: number
-  className?: string
+  value: number;
+  className?: string;
 }) {
   return (
     <div
       className={cn(
         "grid h-12 w-12 shrink-0 place-items-center rounded-full shadow-inner",
-        className
+        className,
       )}
       style={{
         background: `conic-gradient(#22c55e ${value * 3.6}deg, rgba(148,163,184,0.25) 0deg)`,
@@ -335,7 +335,7 @@ function ProgressRing({
         {value}%
       </div>
     </div>
-  )
+  );
 }
 
 function StatusPill({ status }: { status: Task["status"] }) {
@@ -348,18 +348,18 @@ function StatusPill({ status }: { status: Task["status"] }) {
         status === "Assigned" &&
           "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
         status === "In Progress" &&
-          "bg-blue-500/10 text-blue-600 dark:text-blue-300"
+          "bg-blue-500/10 text-blue-600 dark:text-blue-300",
       )}
     >
       {status}
     </span>
-  )
+  );
 }
 
 export default function EngineerPerformance() {
-  const topEngineer = engineers[0]
-  const secondEngineer = engineers[1]
-  const thirdEngineer = engineers[2]
+  const topEngineer = engineers[0];
+  const secondEngineer = engineers[1];
+  const thirdEngineer = engineers[2];
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] p-3 text-slate-950 sm:p-4 dark:bg-[#05070d] dark:text-white">
@@ -397,7 +397,7 @@ export default function EngineerPerformance() {
                   ["Bonus Pool", "450K", Gift],
                   ["Risk Alerts", "14", AlertTriangle],
                 ].map(([label, value, Icon]) => {
-                  const HeroIcon = Icon as LucideIcon
+                  const HeroIcon = Icon as LucideIcon;
 
                   return (
                     <div
@@ -412,7 +412,7 @@ export default function EngineerPerformance() {
                         {value as string}
                       </p>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -466,7 +466,7 @@ export default function EngineerPerformance() {
               <div
                 className={cn(
                   "absolute inset-x-0 top-0 h-1 bg-gradient-to-r",
-                  gradient
+                  gradient,
                 )}
               />
               <div className="flex items-center justify-between gap-3">
@@ -482,7 +482,7 @@ export default function EngineerPerformance() {
                       "text-xs font-black",
                       index === 5
                         ? "text-red-600 dark:text-red-300"
-                        : "text-emerald-600 dark:text-emerald-300"
+                        : "text-emerald-600 dark:text-emerald-300",
                     )}
                   >
                     {change}
@@ -491,7 +491,7 @@ export default function EngineerPerformance() {
                 <span
                   className={cn(
                     "grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br text-white shadow-lg transition group-hover:scale-105",
-                    gradient
+                    gradient,
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -520,7 +520,7 @@ export default function EngineerPerformance() {
                         "rounded-2xl border p-2 text-center shadow-sm",
                         index === 1
                           ? "border-amber-300/50 bg-amber-100/80 pt-4 dark:border-amber-300/20 dark:bg-amber-500/15"
-                          : "border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-white/10"
+                          : "border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-white/10",
                       )}
                     >
                       <div className="mx-auto grid h-10 w-10 place-items-center rounded-2xl bg-slate-950 text-sm font-black text-white dark:bg-white dark:text-slate-950">
@@ -534,7 +534,7 @@ export default function EngineerPerformance() {
                       </p>
                       <p className="text-sm font-black">{engineer.score}%</p>
                     </div>
-                  )
+                  ),
                 )}
               </div>
 
@@ -549,7 +549,7 @@ export default function EngineerPerformance() {
                         "grid h-8 w-8 shrink-0 place-items-center rounded-xl text-xs font-black",
                         engineer.rank === 1
                           ? "bg-amber-500 text-white"
-                          : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300"
+                          : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300",
                       )}
                     >
                       {engineer.rank}
@@ -583,7 +583,7 @@ export default function EngineerPerformance() {
 
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-5">
                 {tasks.map((task) => {
-                  const TaskIcon = task.icon
+                  const TaskIcon = task.icon;
 
                   return (
                     <div
@@ -597,7 +597,7 @@ export default function EngineerPerformance() {
                             ? "bg-red-500"
                             : task.status === "Assigned"
                               ? "bg-emerald-500"
-                              : "bg-blue-500"
+                              : "bg-blue-500",
                         )}
                       />
                       <div className="flex items-start justify-between gap-3">
@@ -633,7 +633,7 @@ export default function EngineerPerformance() {
                                 "font-mono text-lg font-black",
                                 task.status === "Escalated"
                                   ? "text-red-600 dark:text-red-300"
-                                  : "text-blue-600 dark:text-blue-300"
+                                  : "text-blue-600 dark:text-blue-300",
                               )}
                             >
                               {task.time}
@@ -654,7 +654,7 @@ export default function EngineerPerformance() {
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </Panel>
@@ -794,7 +794,7 @@ export default function EngineerPerformance() {
                           "transition hover:bg-blue-50 dark:hover:bg-white/10",
                           index === 0
                             ? "bg-amber-50/80 dark:bg-amber-500/10"
-                            : "bg-white/72 dark:bg-white/5"
+                            : "bg-white/72 dark:bg-white/5",
                         )}
                       >
                         <td className="border-b border-slate-200/70 p-3 font-black dark:border-white/10">
@@ -825,7 +825,7 @@ export default function EngineerPerformance() {
                                 engineer.score < 85 &&
                                 "bg-orange-500/10 text-orange-600 dark:text-orange-300",
                               engineer.score < 70 &&
-                                "bg-red-500/10 text-red-600 dark:text-red-300"
+                                "bg-red-500/10 text-red-600 dark:text-red-300",
                             )}
                           >
                             {engineer.status}
@@ -860,7 +860,7 @@ export default function EngineerPerformance() {
                       color === "orange" &&
                         "border-orange-300/40 bg-orange-50/90 dark:bg-orange-500/15",
                       color === "red" &&
-                        "border-red-300/40 bg-red-50/90 dark:bg-red-500/15"
+                        "border-red-300/40 bg-red-50/90 dark:bg-red-500/15",
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -871,7 +871,7 @@ export default function EngineerPerformance() {
                             color === "amber" && "text-amber-500",
                             color === "green" && "text-emerald-500",
                             color === "orange" && "text-orange-500",
-                            color === "red" && "text-red-500"
+                            color === "red" && "text-red-500",
                           )}
                         />
                       </span>
@@ -936,5 +936,5 @@ export default function EngineerPerformance() {
         </div>
       </div>
     </div>
-  )
+  );
 }

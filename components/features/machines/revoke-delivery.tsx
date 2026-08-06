@@ -1,40 +1,40 @@
-import { useState } from "react"
+import { useState } from "react";
 
-import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog"
+import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase"
-import { MachineResponse } from "@/lib/types"
-import "pdfjs-dist/build/pdf.worker.mjs"
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { TriggerFirebaseForMachine } from "@/lib/triggerFirebase";
+import { MachineResponse } from "@/lib/types";
+import "pdfjs-dist/build/pdf.worker.mjs";
 
 const RevokeDelivery = ({
   onRefresh,
   onClose,
   data,
 }: {
-  onRefresh: () => Promise<void>
-  onClose: () => void
-  data: MachineResponse | null
+  onRefresh: () => Promise<void>;
+  onClose: () => void;
+  data: MachineResponse | null;
 }) => {
-  const [loading, setLoading] = useState(false)
-  const { userID } = useUserDetail()
+  const [loading, setLoading] = useState(false);
+  const { userID } = useUserDetail();
 
   async function handleSubmit() {
-    if (!data?.machine?.id) return
+    if (!data?.machine?.id) return;
 
-    setLoading(true)
+    setLoading(true);
 
     axios
       .get(`/${userID}/machine/${data?.machine?.id}/revoke`)
       .then(async () => {
-        TriggerFirebaseForMachine()
-        await onRefresh()
-        onClose()
+        TriggerFirebaseForMachine();
+        await onRefresh();
+        onClose();
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   return (
@@ -46,7 +46,7 @@ const RevokeDelivery = ({
       onPressCancel={() => onClose()}
       onPressYes={handleSubmit}
     />
-  )
-}
+  );
+};
 
-export default RevokeDelivery
+export default RevokeDelivery;

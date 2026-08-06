@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Crown, Users } from "lucide-react"
-import { Performer } from "@/lib/types"
-import { useEffect, useState } from "react"
-import { getDownloadURL, ref } from "firebase/storage"
-import { storage } from "@/config/firebase"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Crown, Users } from "lucide-react";
+import { Performer } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { getDownloadURL, ref } from "firebase/storage";
+import { storage } from "@/config/firebase";
 
 interface TopPerformersProps {
-  performers: Performer[]
+  performers: Performer[];
 }
 
 export function TopPerformers({ performers }: TopPerformersProps) {
-  const [topPerformer, ...otherPerformers] = performers
+  const [topPerformer, ...otherPerformers] = performers;
 
   const getInitials = (name: string) => {
     return name
@@ -21,8 +21,8 @@ export function TopPerformers({ performers }: TopPerformersProps) {
       .map((n) => n[0])
       .join("")
       .toUpperCase()
-      .slice(0, 2)
-  }
+      .slice(0, 2);
+  };
 
   return (
     <div className="space-y-4">
@@ -137,28 +137,28 @@ export function TopPerformers({ performers }: TopPerformersProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 const RenderProfilePicture = ({ dp }: { dp?: string }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
+  const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (dp) {
       try {
         if (dp?.includes("http")) {
-          setLocalImage(dp)
+          setLocalImage(dp);
         } else {
-          const storageRef = ref(storage, dp)
+          const storageRef = ref(storage, dp);
           getDownloadURL(storageRef).then((url) => {
-            setLocalImage(url)
-          })
+            setLocalImage(url);
+          });
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
     }
-  }, [])
+  }, []);
 
-  if (localImage) return <AvatarImage src={localImage || ""} />
-}
+  if (localImage) return <AvatarImage src={localImage || ""} />;
+};

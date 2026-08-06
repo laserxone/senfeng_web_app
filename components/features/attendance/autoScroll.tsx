@@ -1,28 +1,28 @@
-import { useIsMobile } from "@/hooks/use-mobile"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import Link from "next/link"
-import { useEffect, useRef, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useIsMobile } from "@/hooks/use-mobile";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const AutoScrollMembers = ({
   onUpdate,
 }: {
-  onUpdate?: (item: boolean) => void
+  onUpdate?: (item: boolean) => void;
 }) => {
-  const { userID, base_route } = useUserDetail()
+  const { userID, base_route } = useUserDetail();
   const [localData, setLocalData] = useState<
     { id: number; member: boolean; name: string }[]
-  >([])
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-  const [isHovered, setIsHovered] = useState(false)
-  const isMobile = useIsMobile()
+  >([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await axios.get(`/${userID}/scroll`)
-        const customers = res.data || []
+        const res = await axios.get(`/${userID}/scroll`);
+        const customers = res.data || [];
 
         const temp = [...customers]
           .filter((item) => item.name?.trim() || item.owner?.trim())
@@ -35,47 +35,47 @@ const AutoScrollMembers = ({
               }`.trim(),
           }))
           .filter((item) => !!item.name)
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort((a, b) => a.name.localeCompare(b.name));
 
-        setLocalData(temp)
+        setLocalData(temp);
       } catch (error) {
-        console.error("Error fetching data", error)
+        console.error("Error fetching data", error);
       }
     }
 
     if (userID) {
-      fetchData()
+      fetchData();
     }
-  }, [userID])
+  }, [userID]);
 
   useEffect(() => {
-    onUpdate?.(localData.length > 0)
-  }, [localData.length, onUpdate])
+    onUpdate?.(localData.length > 0);
+  }, [localData.length, onUpdate]);
 
   useEffect(() => {
-    if (localData.length === 0) return
+    if (localData.length === 0) return;
 
-    const scrollContainer = scrollRef.current
-    if (!scrollContainer) return
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
 
     const interval = window.setInterval(() => {
-      if (isHovered) return
+      if (isHovered) return;
 
       if (
         scrollContainer.scrollTop + scrollContainer.clientHeight >=
         scrollContainer.scrollHeight
       ) {
-        scrollContainer.scrollTop = 0
-        return
+        scrollContainer.scrollTop = 0;
+        return;
       }
 
-      scrollContainer.scrollTop += 1
-    }, 18)
+      scrollContainer.scrollTop += 1;
+    }, 18);
 
     return () => {
-      window.clearInterval(interval)
-    }
-  }, [isHovered, localData.length])
+      window.clearInterval(interval);
+    };
+  }, [isHovered, localData.length]);
 
   const colors = [
     "bg-red-500",
@@ -86,13 +86,13 @@ const AutoScrollMembers = ({
     "bg-pink-600",
     "bg-teal-600",
     "bg-orange-500",
-  ]
+  ];
 
-  if (localData.length == 0) return null
+  if (localData.length == 0) return null;
 
-  const duplicatedList = [...localData]
+  const duplicatedList = [...localData];
 
-  if (isMobile) return null
+  if (isMobile) return null;
   return (
     <div className="w-[240px] shrink-0">
       <div className="fixed mt-1 w-[240px] overflow-hidden rounded-md border bg-background/95 shadow-sm ring-1 ring-border/40 backdrop-blur">
@@ -112,7 +112,7 @@ const AutoScrollMembers = ({
             className="no-scrollbar h-[calc(100dvh-158px)] space-y-1 overflow-y-auto pr-1"
           >
             {duplicatedList.map((item, index) => {
-              const randomColor = colors[index % colors.length]
+              const randomColor = colors[index % colors.length];
               return (
                 <Link
                   key={`${item.id}-${index}`}
@@ -139,13 +139,13 @@ const AutoScrollMembers = ({
                     </p>
                   </div>
                 </Link>
-              )
+              );
             })}
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AutoScrollMembers
+export default AutoScrollMembers;

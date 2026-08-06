@@ -1,75 +1,75 @@
-"use client"
-import { BarStats } from "@/components/shared/charts/bar_stats/page"
-import { Stats } from "@/components/shared/charts/pie_stats/page"
-import { Sale } from "@/components/shared/charts/sales/page"
-import CurrencyFormatter from "@/components/shared/common/currency-formatter"
-import CustomerMap from "@/components/features/customers/components/customer-map"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { PakCities } from "@/constants/data"
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { MapProvider } from "@/providers/map-provider"
-import { useEffect, useState } from "react"
+"use client";
+import { BarStats } from "@/components/shared/charts/bar_stats/page";
+import { Stats } from "@/components/shared/charts/pie_stats/page";
+import { Sale } from "@/components/shared/charts/sales/page";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
+import CustomerMap from "@/components/features/customers/components/customer-map";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PakCities } from "@/constants/data";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MapProvider } from "@/providers/map-provider";
+import { useEffect, useState } from "react";
 type DashboardData = {
-  total_payment_this_month: number
-  payment_change_percentage: number
+  total_payment_this_month: number;
+  payment_change_percentage: number;
 
-  total_machines_sold_this_month: number
-  machines_sold_change_percentage: number
+  total_machines_sold_this_month: number;
+  machines_sold_change_percentage: number;
 
-  total_new_customers_this_month: number
-  new_customer_change_percentage: number
+  total_new_customers_this_month: number;
+  new_customer_change_percentage: number;
 
-  machines_sold_last_3_months: any[]
-  recent_sales: any[]
-  industry_count: any[]
-}
+  machines_sold_last_3_months: any[];
+  recent_sales: any[];
+  industry_count: any[];
+};
 export default function DealerDashboard({
   id: userID,
 }: {
-  id: string | number
+  id: string | number;
 }) {
-  const [customers, setCustomers] = useState<any[]>([])
-  const [data, setData] = useState<DashboardData>()
-  const [loading, setLoading] = useState(true)
-  const debouncedUserId = useDebounce(userID, 1000)
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [data, setData] = useState<DashboardData>();
+  const [loading, setLoading] = useState(true);
+  const debouncedUserId = useDebounce(userID, 1000);
 
   useEffect(() => {
     if (debouncedUserId) {
-      fetchData()
+      fetchData();
     }
-  }, [debouncedUserId])
+  }, [debouncedUserId]);
 
   function fetchData() {
-    fetchCustomerList()
-    fetchDashboardData()
+    fetchCustomerList();
+    fetchDashboardData();
   }
 
   async function fetchDashboardData() {
     axios
       .get(`/${debouncedUserId}/dashboard`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
       })
       .catch((e) => console.log(e))
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   async function fetchCustomerList() {
     try {
-      let list1 = []
+      let list1 = [];
       axios.get(`/${debouncedUserId}/customer?map=true`).then((response) => {
-        const customerList = response.data
-        const newArray = mergeArrays(customerList, PakCities)
+        const customerList = response.data;
+        const newArray = mergeArrays(customerList, PakCities);
 
-        setCustomers(newArray)
-      })
+        setCustomers(newArray);
+      });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
   }
 
@@ -77,20 +77,20 @@ export default function DealerDashboard({
     return array1
       .map((obj1) => {
         const matchingCity = array2.find(
-          (obj2) => obj2?.name === obj1?.location
-        )
+          (obj2) => obj2?.name === obj1?.location,
+        );
 
         if (matchingCity) {
           return {
             ...obj1,
             latitude: matchingCity.lat,
             longitude: matchingCity.lng,
-          }
+          };
         } else {
-          return null
+          return null;
         }
       })
-      .filter(Boolean)
+      .filter(Boolean);
   }
 
   return (
@@ -252,5 +252,5 @@ export default function DealerDashboard({
         )}
       </div>
     </div>
-  )
+  );
 }

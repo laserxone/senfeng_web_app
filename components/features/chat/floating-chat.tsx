@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { BellNotification } from "@/components/shared/notifications/NotificationBadge"
-import { playNotificationSound } from "@/components/shared/notifications/playNotificationSound"
-import { Button } from "@/components/ui/button"
+import { BellNotification } from "@/components/shared/notifications/NotificationBadge";
+import { playNotificationSound } from "@/components/shared/notifications/playNotificationSound";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import { useMessagesNotification } from "@/hooks/use-message-notification"
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import { MessageCircle } from "lucide-react"
-import { useEffect, useState } from "react"
-import MessagePage from "./message-page"
+} from "@/components/ui/sheet";
+import { useMessagesNotification } from "@/hooks/use-message-notification";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { MessageCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import MessagePage from "./message-page";
 
 export default function FloatingChat() {
-  const [open, setOpen] = useState(false)
-  const { conversations } = useMessagesNotification()
+  const [open, setOpen] = useState(false);
+  const { conversations } = useMessagesNotification();
 
   useEffect(() => {
     if (conversations > 0) {
-      playNotificationSound()
+      playNotificationSound();
     }
-  }, [conversations])
+  }, [conversations]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -52,5 +52,5 @@ export default function FloatingChat() {
         <MessagePage embedded onClose={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
-  )
+  );
 }

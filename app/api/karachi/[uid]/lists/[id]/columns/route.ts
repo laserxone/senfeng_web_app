@@ -1,3 +1,3 @@
-import { columnRoutes } from "@/lib/custom-lists-routes"
+import { columnRoutes } from "@/lib/custom-lists-routes";
 
-export const { POST } = columnRoutes("karachi")
+export const { POST } = columnRoutes("karachi");

@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
+import { TrendingUp } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import type { SalesTarget } from "@/lib/types"
-import CircularProgress from "@/components/shared/common/circular-progress"
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import type { SalesTarget } from "@/lib/types";
+import CircularProgress from "@/components/shared/common/circular-progress";
 
 export default function TargetOverview({
   data,
   onClick,
 }: {
-  data?: SalesTarget
-  onClick: () => void
+  data?: SalesTarget;
+  onClick: () => void;
 }) {
-  const achieved = Number(data?.target_achieved || 0)
-  const remaining = Number(data?.remaining_target || 0)
-  const targetTotal = achieved + remaining
+  const achieved = Number(data?.target_achieved || 0);
+  const remaining = Number(data?.remaining_target || 0);
+  const targetTotal = achieved + remaining;
   const achievement =
     targetTotal > 0
       ? Math.round((achieved / targetTotal) * 100)
       : achieved > 0
         ? 100
-        : 0
-  const progressAchievement = Math.min(100, Math.max(0, achievement))
+        : 0;
+  const progressAchievement = Math.min(100, Math.max(0, achievement));
 
   return (
     <Card className="h-full w-full overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-[300px]">
@@ -81,7 +81,7 @@ export default function TargetOverview({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function BreakdownRow({
@@ -89,9 +89,9 @@ function BreakdownRow({
   value,
   active,
 }: {
-  label: string
-  value: number
-  active?: boolean
+  label: string;
+  value: number;
+  active?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
@@ -107,7 +107,7 @@ function BreakdownRow({
         {formatCurrency(value)}
       </span>
     </div>
-  )
+  );
 }
 
 function formatCurrency(value: number) {
@@ -115,5 +115,5 @@ function formatCurrency(value: number) {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(value);
 }

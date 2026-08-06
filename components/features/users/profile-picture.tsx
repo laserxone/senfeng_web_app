@@ -1,35 +1,35 @@
-import { useEffect, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { GetProfileImage } from "@/lib/getProfileImage"
-import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { GetProfileImage } from "@/lib/getProfileImage";
+import { cn } from "@/lib/utils";
 
 export const ProfilePicture = ({
   img,
   name,
   className = "",
 }: {
-  img?: string
-  name?: string
-  className?: string
+  img?: string;
+  name?: string;
+  className?: string;
 }) => {
-  const [localImage, setLocalImage] = useState<string | null>(null)
+  const [localImage, setLocalImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchImage() {
       if (img?.includes("http")) {
-        setLocalImage(img)
+        setLocalImage(img);
       } else {
-        const imgResult = await GetProfileImage(img)
-        setLocalImage(imgResult)
+        const imgResult = await GetProfileImage(img);
+        setLocalImage(imgResult);
       }
     }
 
     if (img) {
-      fetchImage()
+      fetchImage();
     } else {
-      setLocalImage(null)
+      setLocalImage(null);
     }
-  }, [img])
+  }, [img]);
 
   return (
     <Avatar className={cn("mr-4 h-24 w-24", className)}>
@@ -38,5 +38,5 @@ export const ProfilePicture = ({
       )}
       <AvatarFallback>{name?.substring(0, 2)}</AvatarFallback>
     </Avatar>
-  )
-}
+  );
+};

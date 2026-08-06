@@ -1,28 +1,28 @@
-"use client"
-import { ReimbursementAfterSales } from "@/components/features/aftersales/AfterSalesDashboardNew"
-import { AfterSalesReimbursement } from "@/components/features/aftersales/aftersales-types"
-import SalesTeamProgressChartCRM from "@/components/shared/charts/sales_progress/crm-sales-progress"
-import { Button } from "@/components/ui/button"
+"use client";
+import { ReimbursementAfterSales } from "@/components/features/aftersales/AfterSalesDashboardNew";
+import { AfterSalesReimbursement } from "@/components/features/aftersales/aftersales-types";
+import SalesTeamProgressChartCRM from "@/components/shared/charts/sales_progress/crm-sales-progress";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useDebounce } from "@/hooks/use-debounce"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import formatCurrency from "@/lib/formatCurrency"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import formatCurrency from "@/lib/formatCurrency";
 import {
   AdminTeamTasks,
   CRMCustomer,
@@ -31,8 +31,8 @@ import {
   CRMTask,
   CRMTopFollowup,
   TeamTaskForAdmin,
-} from "@/lib/types"
-import { OfficeContext } from "@/store/context/OfficeContext"
+} from "@/lib/types";
+import { OfficeContext } from "@/store/context/OfficeContext";
 import {
   Banknote,
   BriefcaseBusiness,
@@ -48,47 +48,47 @@ import {
   Search,
   UserRound,
   UsersRound,
-} from "lucide-react"
-import moment from "moment"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useContext, useEffect, useMemo, useState } from "react"
+} from "lucide-react";
+import moment from "moment";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useContext, useEffect, useMemo, useState } from "react";
 
 export default function CRMDashboard({ userID }: { userID: string | number }) {
-  const [data, setData] = useState<CRMDashboardData>()
-  const [loading, setLoading] = useState(false)
-  const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([])
-  const { base_route } = useUserDetail()
-  const debouncedUserId = useDebounce(userID, 1000)
-  const { state: OfficeState } = useContext(OfficeContext)!
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [unassigned, setUnassigned] = useState(false)
-  const [topOpen, setTopOpen] = useState(false)
+  const [data, setData] = useState<CRMDashboardData>();
+  const [loading, setLoading] = useState(false);
+  const [userTaskData, setUserTaskData] = useState<AdminTeamTasks[]>([]);
+  const { base_route } = useUserDetail();
+  const debouncedUserId = useDebounce(userID, 1000);
+  const { state: OfficeState } = useContext(OfficeContext)!;
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [unassigned, setUnassigned] = useState(false);
+  const [topOpen, setTopOpen] = useState(false);
   const [reimbursementApprovals, setReimbursementApprovals] = useState<
     AfterSalesReimbursement[]
-  >([])
-  const router = useRouter()
+  >([]);
+  const router = useRouter();
 
   useEffect(() => {
     if (debouncedUserId && OfficeState.value.data) {
-      fetchData()
+      fetchData();
     }
-  }, [debouncedUserId, OfficeState])
+  }, [debouncedUserId, OfficeState]);
 
   function fetchData() {
-    setLoading(true)
-    fetchDashboardData()
-    fetchReimbursementApprovals()
+    setLoading(true);
+    fetchDashboardData();
+    fetchReimbursementApprovals();
   }
 
   async function fetchReimbursementApprovals() {
-    const start = moment().startOf("month").startOf("day").utc().toISOString()
-    const end = moment().endOf("month").endOf("day").utc().toISOString()
+    const start = moment().startOf("month").startOf("day").utc().toISOString();
+    const end = moment().endOf("month").endOf("day").utc().toISOString();
     try {
       const res = await axios.get(
-        `/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`
-      )
-      setReimbursementApprovals(res.data)
+        `/${userID}/reimbursementapproval?start_date=${start}&end_date=${end}`,
+      );
+      setReimbursementApprovals(res.data);
     } finally {
     }
   }
@@ -97,44 +97,44 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
     axios
       .get(`/${debouncedUserId}/dashboard?office=${OfficeState.value.data}`)
       .then((response) => {
-        setData(response.data)
+        setData(response.data);
         if (response.data?.team_task) {
-          const today = new Date()
-          today.setHours(0, 0, 0, 0)
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
 
-          const yesterday = new Date(today)
-          yesterday.setDate(today.getDate() - 1)
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
 
-          const todayEnd = new Date(today)
-          todayEnd.setHours(23, 59, 59, 999)
+          const todayEnd = new Date(today);
+          todayEnd.setHours(23, 59, 59, 999);
 
           const splitTasksByDay = response.data.team_task.map(
             (user: { tasks: CRMTask[] }) => {
               const yesterdayTasks = user.tasks.filter((task) => {
-                const createdAt = new Date(task.created_at)
-                return createdAt >= yesterday && createdAt < today
-              })
+                const createdAt = new Date(task.created_at);
+                return createdAt >= yesterday && createdAt < today;
+              });
 
               const todayTasks = user.tasks.filter((task) => {
-                const createdAt = new Date(task.created_at)
-                return createdAt >= today && createdAt <= todayEnd
-              })
+                const createdAt = new Date(task.created_at);
+                return createdAt >= today && createdAt <= todayEnd;
+              });
 
               return {
                 ...user,
                 yesterdayTasks,
                 todayTasks,
-              }
-            }
-          )
+              };
+            },
+          );
 
-          setUserTaskData(splitTasksByDay)
+          setUserTaskData(splitTasksByDay);
         }
       })
       .catch((e) => console.log(e))
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   return (
@@ -317,7 +317,7 @@ export default function CRMDashboard({ userID }: { userID: string | number }) {
         onClose={() => setTopOpen(false)}
       />
     </div>
-  )
+  );
 }
 
 const TopDialog = ({
@@ -325,11 +325,11 @@ const TopDialog = ({
   data = [],
   onClose,
 }: {
-  open: boolean
-  data: CRMTopFollowup[]
-  onClose: () => void
+  open: boolean;
+  data: CRMTopFollowup[];
+  onClose: () => void;
 }) => {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-full sm:max-w-4xl">
@@ -408,19 +408,19 @@ const TopDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const UnassignedDialog = ({
   open,
   data = [],
   onClose,
 }: {
-  open: boolean
-  data: CRMCustomer[]
-  onClose: () => void
+  open: boolean;
+  data: CRMCustomer[];
+  onClose: () => void;
 }) => {
-  const { base_route } = useUserDetail()
+  const { base_route } = useUserDetail();
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-full sm:max-w-4xl">
@@ -465,25 +465,25 @@ const UnassignedDialog = ({
         </ScrollArea>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const FeedbackDialog = ({
   open,
   data = [],
   onClose,
 }: {
-  open: boolean
-  data: CRMCustomer[]
-  onClose: () => void
+  open: boolean;
+  data: CRMCustomer[];
+  onClose: () => void;
 }) => {
   const withFeedback = data.filter(
-    (item: any) => item.has_feedback_this_month === true
-  )
+    (item: any) => item.has_feedback_this_month === true,
+  );
 
   const withoutFeedback = data.filter(
-    (item: any) => item.has_feedback_this_month === false
-  )
+    (item: any) => item.has_feedback_this_month === false,
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -507,27 +507,27 @@ const FeedbackDialog = ({
         </div>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 const CustomerList = ({
   title,
   count,
   data,
 }: {
-  title: string
-  count: number
-  data: CRMCustomer[]
+  title: string;
+  count: number;
+  data: CRMCustomer[];
 }) => {
-  const { base_route } = useUserDetail()
-  const [page, setPage] = useState(1)
-  const [search, setSearch] = useState("")
-  const pageSize = 10
+  const { base_route } = useUserDetail();
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const pageSize = 10;
   const filteredCustomers = useMemo(() => {
-    const term = search.trim().toLowerCase()
+    const term = search.trim().toLowerCase();
 
     if (!term) {
-      return data
+      return data;
     }
 
     return data.filter((customer: any) => {
@@ -545,34 +545,37 @@ const CustomerList = ({
         customer.numbers,
         customer.customer_phone,
         customer.customer_number,
-      ]
+      ];
 
       return searchableValues
         .flatMap((value) => (Array.isArray(value) ? value : [value]))
         .filter((value) => value !== undefined && value !== null)
         .join(" ")
         .toLowerCase()
-        .includes(term)
-    })
-  }, [data, search])
-  const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / pageSize))
+        .includes(term);
+    });
+  }, [data, search]);
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCustomers.length / pageSize),
+  );
   const startItem =
-    filteredCustomers.length === 0 ? 0 : (page - 1) * pageSize + 1
-  const endItem = Math.min(page * pageSize, filteredCustomers.length)
+    filteredCustomers.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, filteredCustomers.length);
   const visibleCustomers = useMemo(
     () => filteredCustomers.slice((page - 1) * pageSize, page * pageSize),
-    [filteredCustomers, page]
-  )
+    [filteredCustomers, page],
+  );
 
   useEffect(() => {
-    setPage(1)
-  }, [data, search])
+    setPage(1);
+  }, [data, search]);
 
   useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages)
+      setPage(totalPages);
     }
-  }, [page, totalPages])
+  }, [page, totalPages]);
 
   return (
     <div className="rounded-lg border">
@@ -696,14 +699,14 @@ const CustomerList = ({
         </div>
       </ScrollArea>
     </div>
-  )
-}
+  );
+};
 
 const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
   const completedCount = tasks.filter(
-    (task) => task.status === "Completed"
-  ).length
-  const pendingCount = tasks.length - completedCount
+    (task) => task.status === "Completed",
+  ).length;
+  const pendingCount = tasks.length - completedCount;
 
   return (
     <Card className="w-full overflow-hidden rounded-md border-border/70 bg-card shadow-none">
@@ -740,7 +743,7 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
         ) : (
           <div className="space-y-1.5">
             {tasks.map((task) => {
-              const completed = task.status === "Completed"
+              const completed = task.status === "Completed";
 
               return (
                 <div
@@ -789,14 +792,14 @@ const renderTaskCard = (tasks: TeamTaskForAdmin[], label: string) => {
                     </div>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 function DashboardInfoCard({
   title,
@@ -806,17 +809,17 @@ function DashboardInfoCard({
   items,
   loading,
 }: {
-  title: string
-  icon: React.ElementType
-  iconClassName: string
-  bottomClassName: string
+  title: string;
+  icon: React.ElementType;
+  iconClassName: string;
+  bottomClassName: string;
   items: {
-    label: string
-    value: string | number
-    className?: string
-    onClick?: () => void
-  }[]
-  loading: boolean
+    label: string;
+    value: string | number;
+    className?: string;
+    onClick?: () => void;
+  }[];
+  loading: boolean;
 }) {
   return (
     <Card
@@ -855,17 +858,17 @@ function DashboardInfoCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function LoansCard({ loans }: { loans: CRMLoan[] }) {
-  const [activeTab, setActiveTab] = useState<"active" | "closed">("active")
+  const [activeTab, setActiveTab] = useState<"active" | "closed">("active");
 
-  const activeLoans = loans.filter((loan) => loan.status === "active")
-  const closedLoans = loans.filter((loan) => loan.status === "closed")
+  const activeLoans = loans.filter((loan) => loan.status === "active");
+  const closedLoans = loans.filter((loan) => loan.status === "closed");
 
-  const filteredLoans = activeTab === "active" ? activeLoans : closedLoans
-  const { base_route } = useUserDetail()
+  const filteredLoans = activeTab === "active" ? activeLoans : closedLoans;
+  const { base_route } = useUserDetail();
   return (
     <Card className="shadow-sm">
       <CardHeader>
@@ -935,7 +938,7 @@ function LoansCard({ loans }: { loans: CRMLoan[] }) {
         </Link>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function LoanStatus({ title, value }: { title: string; value: number }) {
@@ -944,7 +947,7 @@ function LoanStatus({ title, value }: { title: string; value: number }) {
       <p className="text-xs text-muted-foreground">{title}</p>
       <p className="mt-1 text-xl font-bold">{value}</p>
     </div>
-  )
+  );
 }
 
 function getInitials(name = "") {
@@ -954,5 +957,5 @@ function getInitials(name = "") {
     .slice(0, 2)
     .map((item) => item[0])
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 }

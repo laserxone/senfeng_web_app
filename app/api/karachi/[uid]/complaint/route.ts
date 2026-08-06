@@ -1,29 +1,29 @@
-import pool from "@/config/db"
-import { checkSuperadmin } from "@/lib/checkSuperadmin"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
-  const searchParams = new URL(req.url).searchParams
-  const start_date = searchParams.get("start_date")
-  const end_date = searchParams.get("end_date")
+  const { uid } = await params;
+  const searchParams = new URL(req.url).searchParams;
+  const start_date = searchParams.get("start_date");
+  const end_date = searchParams.get("end_date");
 
   try {
-    const isAdmin = await checkSuperadmin(uid)
-    const queryParams = []
-    let query = ""
+    const isAdmin = await checkSuperadmin(uid);
+    const queryParams = [];
+    let query = "";
 
     const userQuery = await pool.query(
       `SELECT id, designation, complaint_assigned FROM users WHERE id = $1`,
-      [uid]
-    )
-    const user = userQuery.rows[0]
+      [uid],
+    );
+    const user = userQuery.rows[0];
 
     if (!user?.id) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 })
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     if (user.complaint_assigned || isAdmin) {
@@ -94,15 +94,15 @@ export async function GET(
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
         WHERE c.customer_id IS NOT NULL AND c.managing_office = 'karachi'
-      `
+      `;
 
       if (start_date && end_date) {
-        const paramIndex = queryParams.length + 1
-        query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`
-        queryParams.push(start_date, end_date)
+        const paramIndex = queryParams.length + 1;
+        query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+        queryParams.push(start_date, end_date);
       }
 
-      query += ` ORDER BY c.created_at DESC`
+      query += ` ORDER BY c.created_at DESC`;
     } else {
       if (user.designation === "Engineer") {
         query = `
@@ -133,16 +133,16 @@ export async function GET(
         LEFT JOIN customer cu ON c.customer_id = cu.id
         LEFT JOIN users owner_user ON cu.ownership = owner_user.id
         WHERE ca.engineer_id = $1 AND c.status != 'completed'
-      `
-        queryParams.push(uid)
+      `;
+        queryParams.push(uid);
 
         if (start_date && end_date) {
-          const paramIndex = queryParams.length + 1
-          query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`
-          queryParams.push(start_date, end_date)
+          const paramIndex = queryParams.length + 1;
+          query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+          queryParams.push(start_date, end_date);
         }
 
-        query += ` ORDER BY c.created_at DESC`
+        query += ` ORDER BY c.created_at DESC`;
       } else if (user.designation === "Sales") {
         query = `
         SELECT 
@@ -180,111 +180,111 @@ export async function GET(
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
         WHERE cu.ownership = $1
-      `
-        queryParams.push(uid)
+      `;
+        queryParams.push(uid);
 
         if (start_date && end_date) {
-          const paramIndex = queryParams.length + 1
-          query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`
-          queryParams.push(start_date, end_date)
+          const paramIndex = queryParams.length + 1;
+          query += ` AND c.created_at BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
+          queryParams.push(start_date, end_date);
         }
 
-        query += ` ORDER BY c.created_at DESC`
+        query += ` ORDER BY c.created_at DESC`;
       } else {
         return NextResponse.json(
           { message: "No data to display" },
-          { status: 404 }
-        )
+          { status: 404 },
+        );
       }
     }
-    const result = await pool.query(query, queryParams)
-    return NextResponse.json(result.rows, { status: 200 })
+    const result = await pool.query(query, queryParams);
+    return NextResponse.json(result.rows, { status: 200 });
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
     return NextResponse.json(
       { message: error.message || "Error occured" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(req: NextRequest) {
-  const data = await req.json()
+  const data = await req.json();
 
   try {
     if (!data || Object.keys(data).length === 0) {
       return NextResponse.json(
         { message: "No data provided for insertion" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    const fields = Object.keys(data)
-    const values = Object.values(data)
-    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ")
+    const fields = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
     const query = `
     INSERT INTO complaints (${fields.join(", ")})
     VALUES (${placeholders})
     RETURNING *
-`
+`;
 
-    const { rows } = await pool.query(query, values)
-    return NextResponse.json(rows[0], { status: 200 })
+    const { rows } = await pool.query(query, values);
+    return NextResponse.json(rows[0], { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
       { message: error.message || "Error occured" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function PUT(req: NextRequest) {
   try {
-    const data = await req.json()
-    const { id, ...updates } = data
+    const data = await req.json();
+    const { id, ...updates } = data;
 
     if (!id) {
-      return NextResponse.json({ message: "ID is required" }, { status: 400 })
+      return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields: any[] = []
-    const values = []
+    const fields: any[] = [];
+    const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
       if (value !== undefined) {
-        fields.push(`${key} = $${index + 1}`)
-        values.push(value)
+        fields.push(`${key} = $${index + 1}`);
+        values.push(value);
       }
-    })
+    });
 
     if (fields.length === 0) {
       return NextResponse.json(
         { message: "No valid data provided for update" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    values.push(id)
+    values.push(id);
     const query = `
             UPDATE complaints 
             SET ${fields.join(", ")}
             WHERE id = $${values.length}
-        `
+        `;
 
-    await pool.query(query, values)
+    await pool.query(query, values);
 
     return NextResponse.json(
       { message: "Updated successfully" },
-      { status: 200 }
-    )
+      { status: 200 },
+    );
   } catch (error) {
-    console.error("Error updating inventory data:", error)
+    console.error("Error updating inventory data:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

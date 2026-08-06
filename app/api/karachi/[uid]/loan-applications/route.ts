@@ -1,16 +1,16 @@
-import pool from "@/config/db"
-import { sendNotification } from "@/lib/sendNotification"
-import { NextRequest, NextResponse } from "next/server"
-import { NOTIFICATION_TYPES } from "@/constants/notifications"
+import pool from "@/config/db";
+import { sendNotification } from "@/lib/sendNotification";
+import { NextRequest, NextResponse } from "next/server";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(request.url);
 
-    const applicantId = searchParams.get("applicant_id")
-    const approverId = searchParams.get("approver_id")
+    const applicantId = searchParams.get("applicant_id");
+    const approverId = searchParams.get("approver_id");
 
-    let result
+    let result;
 
     if (applicantId) {
       result = await pool.query(
@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
         GROUP BY la.id, u.name, u.designation, ah.name
         ORDER BY la.created_at DESC
         `,
-        [parseInt(applicantId)]
-      )
+        [parseInt(applicantId)],
+      );
     } else if (approverId) {
-      const approverIdInt = parseInt(approverId)
+      const approverIdInt = parseInt(approverId);
 
       // const userResult = await pool.query(
       //   `SELECT designation, full_access FROM users WHERE id = $1`,
@@ -140,8 +140,8 @@ export async function GET(request: NextRequest) {
             CASE WHEN la.status = 'in_progress' THEN 0 ELSE 1 END,
             la.created_at DESC
           `,
-        [approverIdInt]
-      )
+        [approverIdInt],
+      );
       // }
     } else {
       result = await pool.query(`
@@ -169,27 +169,27 @@ export async function GET(request: NextRequest) {
         LEFT JOIN users approver ON lapp.approver_id = approver.id
         GROUP BY la.id, u.name, u.designation, ah.name
         ORDER BY la.created_at DESC
-      `)
+      `);
     }
 
-    return NextResponse.json(result.rows)
+    return NextResponse.json(result.rows);
   } catch (error: any) {
-    console.log("Error fetching loan applications:", error)
+    console.log("Error fetching loan applications:", error);
 
     return NextResponse.json(
       { message: error?.message || "Failed to fetch loan applications" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
-  const client = await pool.connect()
+  const client = await pool.connect();
 
   try {
-    await client.query("BEGIN")
+    await client.query("BEGIN");
 
-    const body = await request.json()
+    const body = await request.json();
 
     const {
       applicant_id,
@@ -211,13 +211,13 @@ export async function POST(request: NextRequest) {
       supporting_documents,
       salary_deduction_consent,
       terms_accepted,
-    } = body
+    } = body;
 
-    const timestamp = Date.now().toString(36).toUpperCase()
+    const timestamp = Date.now().toString(36).toUpperCase();
 
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-    const application_number = `LOAN-${timestamp}-${random}`
+    const application_number = `LOAN-${timestamp}-${random}`;
 
     const applicationResult = await client.query(
       `
@@ -273,10 +273,10 @@ export async function POST(request: NextRequest) {
         JSON.stringify(supporting_documents || []),
         salary_deduction_consent || false,
         terms_accepted || false,
-      ]
-    )
+      ],
+    );
 
-    const application = applicationResult.rows[0]
+    const application = applicationResult.rows[0];
 
     if (hierarchy_id) {
       const approversResult = await client.query(
@@ -286,8 +286,8 @@ export async function POST(request: NextRequest) {
         WHERE hierarchy_id = $1
         ORDER BY approval_order
         `,
-        [hierarchy_id]
-      )
+        [hierarchy_id],
+      );
 
       for (const approver of approversResult.rows) {
         await client.query(
@@ -300,8 +300,8 @@ export async function POST(request: NextRequest) {
           )
           VALUES ($1, $2, $3, 'pending')
           `,
-          [application.id, approver.user_id, approver.approval_order]
-        )
+          [application.id, approver.user_id, approver.approval_order],
+        );
       }
 
       await client.query(
@@ -310,41 +310,41 @@ export async function POST(request: NextRequest) {
         SET status = 'in_progress'
         WHERE id = $1
         `,
-        [application.id]
-      )
+        [application.id],
+      );
 
       if (approversResult.rows.length > 0) {
         const nameQuery = await pool.query(
           `SELECT name from users WHERE id = $1`,
-          [applicant_id]
-        )
-        const name = nameQuery.rows?.[0]?.name || ""
-        const sendTo = approversResult.rows?.[0].user_id ?? null
+          [applicant_id],
+        );
+        const name = nameQuery.rows?.[0]?.name || "";
+        const sendTo = approversResult.rows?.[0].user_id ?? null;
         sendNotification(
           `${name} submitted loan application requesting your approval`,
           `applications/loan?l=${application.id}`,
           sendTo,
           NOTIFICATION_TYPES.loan_application_submitted.title,
-          NOTIFICATION_TYPES.loan_application_submitted.category
-        )
+          NOTIFICATION_TYPES.loan_application_submitted.category,
+        );
       }
     }
 
-    await client.query("COMMIT")
+    await client.query("COMMIT");
 
     return NextResponse.json(application, {
       status: 201,
-    })
+    });
   } catch (error) {
-    await client.query("ROLLBACK")
+    await client.query("ROLLBACK");
 
-    console.error("Error creating loan application:", error)
+    console.error("Error creating loan application:", error);
 
     return NextResponse.json(
       { error: "Failed to create loan application" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   } finally {
-    client.release()
+    client.release();
   }
 }

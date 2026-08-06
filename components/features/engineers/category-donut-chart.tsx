@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface CategoryDonutChartProps {
   data: {
-    category: string
-    total: number
-  }[]
+    category: string;
+    total: number;
+  }[];
 }
 
-const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#8b5cf6", "#ec4899"]
+const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 export function CategoryDonutChart({ data }: CategoryDonutChartProps) {
   const chartData = data.map((item) => ({
     name: item.category,
     value: item.total,
-  }))
+  }));
 
   return (
     <Card className="border border-border bg-card shadow-sm">
@@ -73,5 +73,5 @@ export function CategoryDonutChart({ data }: CategoryDonutChartProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

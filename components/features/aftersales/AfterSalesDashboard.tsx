@@ -1,16 +1,16 @@
-"use client"
-import Attendance from "@/components/features/attendance/attendance"
-import RenderFines from "@/components/features/employee-finance/render-fines"
-import SalaryRecord from "@/components/features/employee-finance/salary-record"
-import Reimbursement from "@/components/features/reimbursements/Reimbursement"
-import TeamTask from "@/components/features/tasks/team-task"
-import UserTabs from "@/components/features/users/user-tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { useSidebar } from "@/components/ui/sidebar"
-import { useIsMobile } from "@/hooks/use-mobile"
-import axios from "@/lib/axios"
-import { UserAttendanceRecord, UserReimbursementType } from "@/lib/types"
+"use client";
+import Attendance from "@/components/features/attendance/attendance";
+import RenderFines from "@/components/features/employee-finance/render-fines";
+import SalaryRecord from "@/components/features/employee-finance/salary-record";
+import Reimbursement from "@/components/features/reimbursements/Reimbursement";
+import TeamTask from "@/components/features/tasks/team-task";
+import UserTabs from "@/components/features/users/user-tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import axios from "@/lib/axios";
+import { UserAttendanceRecord, UserReimbursementType } from "@/lib/types";
 import {
   BadgeAlert,
   CalendarCheck,
@@ -18,116 +18,116 @@ import {
   UserPlus,
   Users,
   Wallet,
-} from "lucide-react"
-import moment from "moment"
-import { useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
-import PendingFeedbackData from "./aftersales-pending-feedback"
-import { DashboardData } from "./aftersales-types"
+} from "lucide-react";
+import moment from "moment";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import PendingFeedbackData from "./aftersales-pending-feedback";
+import { DashboardData } from "./aftersales-types";
 
 export default function AfterSalesDashboard({
   data,
   onRefresh,
   userID,
 }: {
-  userID: string | number
-  data: DashboardData
-  onRefresh: () => Promise<void>
+  userID: string | number;
+  data: DashboardData;
+  onRefresh: () => Promise<void>;
 }) {
   const [reimbursementData, setReimbursementData] = useState<
     UserReimbursementType[]
-  >([])
+  >([]);
   const [attendanceData, setAttendanceData] = useState<UserAttendanceRecord[]>(
-    []
-  )
-  const [activeTab, setActiveTab] = useState("feedback")
-  const [allFines, setAllFines] = useState(0)
-  const [allTeamTasks, setAllTeamTasks] = useState(0)
+    [],
+  );
+  const [activeTab, setActiveTab] = useState("feedback");
+  const [allFines, setAllFines] = useState(0);
+  const [allTeamTasks, setAllTeamTasks] = useState(0);
 
-  const { open } = useSidebar()
-  const searchParams = useSearchParams()
-  const isMobile = useIsMobile()
+  const { open } = useSidebar();
+  const searchParams = useSearchParams();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (userID) {
-      const startDate = moment().startOf("month").toISOString()
-      const endDate = moment().endOf("month").toISOString()
-      fetchReimbursementData(startDate, endDate)
-      fetchAttendanceData(startDate, endDate)
+      const startDate = moment().startOf("month").toISOString();
+      const endDate = moment().endOf("month").toISOString();
+      fetchReimbursementData(startDate, endDate);
+      fetchAttendanceData(startDate, endDate);
     }
-  }, [userID])
+  }, [userID]);
 
   useEffect(() => {
-    const paramTab = searchParams.get("p")
+    const paramTab = searchParams.get("p");
     if (paramTab) {
-      setActiveTab(paramTab)
+      setActiveTab(paramTab);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   function routeTo(targetTab: string) {
     window.history.pushState(
       {},
       "",
-      `${window.location.pathname}?p=${targetTab}`
-    )
+      `${window.location.pathname}?p=${targetTab}`,
+    );
   }
 
   async function fetchReimbursementData(startDate: string, endDate: string) {
     return new Promise<boolean>((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
-          setReimbursementData(response.data)
-          resolve(true)
+          setReimbursementData(response.data);
+          resolve(true);
         })
         .catch((e) => {
-          console.log(e)
-          reject(false)
-        })
-    })
+          console.log(e);
+          reject(false);
+        });
+    });
   }
 
   async function fetchAttendanceData(startDate: string, endDate: string) {
     return new Promise<boolean>((res, rej) => {
       axios
         .get(
-          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`
+          `/${userID}/attendance?start_date=${startDate}&end_date=${endDate}`,
         )
         .then((response) => {
           if (response.data.length > 0) {
             const apiData = response.data.map((item: UserAttendanceRecord) => {
               let status = item?.leave_status
                 ? `Leave ${item?.leave_status}`
-                : "Absent"
+                : "Absent";
 
               if (item?.time_in) {
-                const checkInTime = new Date(item.time_in)
-                const threshold = new Date(item.time_in)
-                threshold.setHours(10, 10, 0, 0)
+                const checkInTime = new Date(item.time_in);
+                const threshold = new Date(item.time_in);
+                threshold.setHours(10, 10, 0, 0);
 
                 if (checkInTime > threshold) {
-                  status = "Late"
+                  status = "Late";
                 } else {
-                  status = "Present"
+                  status = "Present";
                 }
               }
               return {
                 ...item,
                 date: item?.time_in || item?.leave_date,
                 status,
-              }
-            })
-            setAttendanceData(apiData)
+              };
+            });
+            setAttendanceData(apiData);
           }
-          res(true)
+          res(true);
         })
         .catch((e) => {
-          console.log(e)
-          rej(false)
-        })
-    })
+          console.log(e);
+          rej(false);
+        });
+    });
   }
 
   const RenderReimbursement = useCallback(() => {
@@ -139,39 +139,39 @@ export default function AfterSalesDashboard({
               id={userID}
               passingData={reimbursementData || []}
               onAddRefresh={async () => {
-                const startDate = moment().startOf("month").toISOString()
-                const endDate = moment().endOf("month").toISOString()
-                await fetchReimbursementData(startDate, endDate)
+                const startDate = moment().startOf("month").toISOString();
+                const endDate = moment().endOf("month").toISOString();
+                await fetchReimbursementData(startDate, endDate);
               }}
               onReset={async (start, end) => {
-                await fetchReimbursementData(start, end)
+                await fetchReimbursementData(start, end);
               }}
               onFilterReturn={async (start, end) => {
-                await fetchReimbursementData(start, end)
+                await fetchReimbursementData(start, end);
               }}
             />
           </ScrollArea>
         </CardContent>
       </Card>
-    )
-  }, [reimbursementData])
+    );
+  }, [reimbursementData]);
 
   const RenderFeedback = useCallback(() => {
     return (
       <PendingFeedbackData data={data} onRefresh={onRefresh} user_id={userID} />
-    )
-  }, [data])
+    );
+  }, [data]);
 
   const RenderAttendance = useCallback(() => {
     return (
       <Attendance
         passingData={attendanceData}
         onFilterReturn={async (start, end) => {
-          await fetchAttendanceData(start, end)
+          await fetchAttendanceData(start, end);
         }}
       />
-    )
-  }, [attendanceData])
+    );
+  }, [attendanceData]);
 
   const tabs = [
     {
@@ -211,13 +211,13 @@ export default function AfterSalesDashboard({
       icon: BadgeAlert,
       count: allFines,
     },
-  ]
+  ];
 
   const tabsMaxWidth = isMobile
     ? "max-w-[calc(100dvw-35px)]"
     : open
       ? "max-w-[calc(100dvw-290px)]"
-      : "max-w-[calc(100dvw-80px)]"
+      : "max-w-[calc(100dvw-80px)]";
 
   return (
     <div className="flex flex-1 gap-5">
@@ -254,5 +254,5 @@ export default function AfterSalesDashboard({
         </div>
       </div>
     </div>
-  )
+  );
 }

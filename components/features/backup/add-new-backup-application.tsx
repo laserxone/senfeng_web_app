@@ -1,15 +1,15 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { UploadImage } from "@/lib/uploadFunction"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { UploadImage } from "@/lib/uploadFunction";
 import {
   Banknote,
   CalendarDays,
@@ -19,25 +19,25 @@ import {
   RotateCcw,
   Settings,
   Truck,
-} from "lucide-react"
-import { FormEvent, useEffect, useState } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import AppCalendar from "@/components/features/calendar/app-calendar"
+import AppCalendar from "@/components/features/calendar/app-calendar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { CustomerSearch } from "@/components/features/customers/components/customer-search"
-import Dropzone from "@/components/shared/uploads/dropzone"
-import { CustomerMachines } from "@/components/features/machines/customer-machines"
-import { RequiredStar } from "@/components/shared/common/RequiredStar"
-import { BackupInventory } from "./backup-inventory"
-import { BackupFormData, BackupFormErrors, Hierarchy } from "./backup-types"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CustomerSearch } from "@/components/features/customers/components/customer-search";
+import Dropzone from "@/components/shared/uploads/dropzone";
+import { CustomerMachines } from "@/components/features/machines/customer-machines";
+import { RequiredStar } from "@/components/shared/common/RequiredStar";
+import { BackupInventory } from "./backup-inventory";
+import { BackupFormData, BackupFormErrors, Hierarchy } from "./backup-types";
 
 const initialFormData: BackupFormData = {
   name: "",
@@ -49,88 +49,88 @@ const initialFormData: BackupFormData = {
   hierarchyId: "",
   saleId: undefined,
   inventoryId: undefined,
-}
+};
 
 export default function AddNewBackupApplication() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [customerID, setCustomerID] = useState<string | null | number>(null)
-  const [formErrors, setFormErrors] = useState<BackupFormErrors>({})
-  const [hierarchies, setHierarchies] = useState<Hierarchy[]>([])
-  const [formData, setFormData] = useState<BackupFormData>(initialFormData)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [customerID, setCustomerID] = useState<string | null | number>(null);
+  const [formErrors, setFormErrors] = useState<BackupFormErrors>({});
+  const [hierarchies, setHierarchies] = useState<Hierarchy[]>([]);
+  const [formData, setFormData] = useState<BackupFormData>(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
   useEffect(() => {
-    if (!userID) return
+    if (!userID) return;
 
-    loadInitialData()
-  }, [userID])
+    loadInitialData();
+  }, [userID]);
 
   async function loadInitialData() {
-    fetchHierarchy()
+    fetchHierarchy();
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!userID) return
+    if (!userID) return;
 
-    const nextErrors: BackupFormErrors = {}
+    const nextErrors: BackupFormErrors = {};
 
     if (!formData.hierarchyId) {
-      nextErrors.hierarchyId = "Approval hierarchy is required."
+      nextErrors.hierarchyId = "Approval hierarchy is required.";
     }
 
     if (!customerID) {
-      nextErrors.customerId = "Customer is required."
+      nextErrors.customerId = "Customer is required.";
     }
 
     if (!formData.saleId) {
-      nextErrors.saleId = "Machine is required."
+      nextErrors.saleId = "Machine is required.";
     }
 
     if (!formData.inventoryId) {
-      nextErrors.inventoryId = "Backup item is required."
+      nextErrors.inventoryId = "Backup item is required.";
     }
 
     if (!formData.amount) {
-      nextErrors.amount = "Security amount is required."
+      nextErrors.amount = "Security amount is required.";
     }
 
     if (!formData.dateOfDelivery) {
-      nextErrors.dateOfDelivery = "Date of delivery is required."
+      nextErrors.dateOfDelivery = "Date of delivery is required.";
     }
 
     if (!formData.expectedReturnDate) {
-      nextErrors.expectedReturnDate = "Expected return date is required."
+      nextErrors.expectedReturnDate = "Expected return date is required.";
     }
 
     if (Object.keys(nextErrors).length > 0) {
-      setFormErrors(nextErrors)
-      toast.error("Please fill all required fields.")
-      return
+      setFormErrors(nextErrors);
+      toast.error("Please fill all required fields.");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      let imagePath: string | null = null
+      let imagePath: string | null = null;
 
       if (formData.image) {
         const safeFileName = formData.image.name.replace(
           /[^a-zA-Z0-9._-]/g,
-          "-"
-        )
+          "-",
+        );
 
         imagePath =
-          `backup-applications/${userID}/` + `${Date.now()}-${safeFileName}`
+          `backup-applications/${userID}/` + `${Date.now()}-${safeFileName}`;
 
         await UploadImage(
           URL.createObjectURL(formData.image),
           imagePath,
-          formData.image.type || "application/octet-stream"
-        )
+          formData.image.type || "application/octet-stream",
+        );
       }
 
       await axios.post(`/${userID}/backup-applications`, {
@@ -152,72 +152,72 @@ export default function AddNewBackupApplication() {
           : null,
         sale_id: formData.saleId ?? null,
         backup_inventory_id: formData?.inventoryId ?? null,
-      })
+      });
 
-      const hierarchyId = formData.hierarchyId
+      const hierarchyId = formData.hierarchyId;
 
       setFormData({
         ...initialFormData,
         hierarchyId,
-      })
+      });
 
-      await Promise.all([fetchHierarchy()])
+      await Promise.all([fetchHierarchy()]);
 
-      handleCreateOpenChange(false)
+      handleCreateOpenChange(false);
 
-      toast.success("Backup application submitted successfully")
+      toast.success("Backup application submitted successfully");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const selectedHierarchy = hierarchies.find(
-    (hierarchy) => hierarchy.id === parseInt(formData.hierarchyId)
-  )
+    (hierarchy) => hierarchy.id === parseInt(formData.hierarchyId),
+  );
 
   function handleCreateOpenChange(open: boolean) {
-    setIsCreateOpen(open)
+    setIsCreateOpen(open);
 
     if (!open) {
-      setFormErrors({})
-      setFormData(initialFormData)
+      setFormErrors({});
+      setFormData(initialFormData);
     }
   }
 
   const handleImageUpload = (e: File | null) => {
-    const file = e || null
+    const file = e || null;
 
-    updateField("image", file)
-  }
+    updateField("image", file);
+  };
 
   async function fetchHierarchy() {
-    const res = await axios.get(`/${userID}/hierarchies`)
+    const res = await axios.get(`/${userID}/hierarchies`);
 
     const backupHierarchies: Hierarchy[] =
       res.data?.filter((item: Hierarchy) => item.hierarchy_type === "backup") ||
-      []
+      [];
 
-    setHierarchies(backupHierarchies)
+    setHierarchies(backupHierarchies);
 
     if (backupHierarchies.length > 0) {
-      updateField("hierarchyId", backupHierarchies[0].id.toString())
+      updateField("hierarchyId", backupHierarchies[0].id.toString());
     }
   }
 
   const updateField = <K extends keyof BackupFormData>(
     field: K,
-    value: BackupFormData[K]
+    value: BackupFormData[K],
   ) => {
     setFormErrors((prev) => ({
       ...prev,
       [field]: undefined,
-    }))
+    }));
 
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   return (
     <>
@@ -317,15 +317,15 @@ export default function AddNewBackupApplication() {
                     <CustomerSearch
                       value={customerID}
                       onReturn={(val) => {
-                        setCustomerID(val)
+                        setCustomerID(val);
                         setFormErrors((prev) => ({
                           ...prev,
                           customerId: undefined,
                           saleId: undefined,
                           inventoryId: undefined,
-                        }))
-                        updateField("saleId", undefined)
-                        updateField("inventoryId", undefined)
+                        }));
+                        updateField("saleId", undefined);
+                        updateField("inventoryId", undefined);
                       }}
                     />
                     <FieldError
@@ -347,8 +347,8 @@ export default function AddNewBackupApplication() {
                         value={formData.saleId ?? null}
                         customer_id={customerID}
                         onReturn={(e) => {
-                          updateField("saleId", e)
-                          updateField("inventoryId", undefined)
+                          updateField("saleId", e);
+                          updateField("inventoryId", undefined);
                         }}
                       />
                       <FieldError
@@ -497,5 +497,5 @@ export default function AddNewBackupApplication() {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

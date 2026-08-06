@@ -1,5 +1,5 @@
-import pool from "@/config/db"
-import { NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -8,13 +8,13 @@ export async function GET() {
       FROM users
       WHERE active = true
       ORDER BY name ASC
-    `)
-    return NextResponse.json(users.rows)
+    `);
+    return NextResponse.json(users.rows);
   } catch (error) {
-    console.error("Error fetching users:", error)
+    console.error("Error fetching users:", error);
     return NextResponse.json(
       { error: "Failed to fetch users" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }

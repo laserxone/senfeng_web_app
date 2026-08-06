@@ -1,10 +1,10 @@
-"use client"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+"use client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -28,49 +28,49 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
   useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
-import { Icons } from "@/components/shared/common/icons"
-import { auth } from "@/config/firebase"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { useProfileImage } from "@/hooks/use-profile-image"
-import useUserDetail from "@/hooks/use-user-detail"
-import { setUserOffice } from "@/lib/axios"
+import { Icons } from "@/components/shared/common/icons";
+import { auth } from "@/config/firebase";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useProfileImage } from "@/hooks/use-profile-image";
+import useUserDetail from "@/hooks/use-user-detail";
+import { setUserOffice } from "@/lib/axios";
 
-import NotificationBadge from "@/components/shared/notifications/NotificationBadge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useDuePayments } from "@/hooks/use-due-payments"
-import { useMachineDelivery } from "@/hooks/use-machine-delivery"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { signOut } from "firebase/auth"
-import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useContext, useEffect } from "react"
+import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useDuePayments } from "@/hooks/use-due-payments";
+import { useMachineDelivery } from "@/hooks/use-machine-delivery";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { signOut } from "firebase/auth";
+import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useContext, useEffect } from "react";
 
 export const company = {
   name: "SENFENG",
   logo: "/logo.png",
   plan: "Pakistan",
-}
+};
 
 export default function AppSidebar({ office }: { office: string }) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
-  const { setOffice } = useContext(OfficeContext)!
-  const profileImage = useProfileImage()
-  const { toggleSidebar } = useSidebar()
-  const isMobile = useIsMobile()
-  const { isAdmin, name, email, base_route, nav_items } = useUserDetail()
-  const { pendingDelivery } = useMachineDelivery()
-  const { pending } = useDuePayments()
+  const { setOffice } = useContext(OfficeContext)!;
+  const profileImage = useProfileImage();
+  const { toggleSidebar } = useSidebar();
+  const isMobile = useIsMobile();
+  const { isAdmin, name, email, base_route, nav_items } = useUserDetail();
+  const { pendingDelivery } = useMachineDelivery();
+  const { pending } = useDuePayments();
 
   useEffect(() => {
     if (office) {
-      setUserOffice(`/${office}`)
-      setOffice(office)
+      setUserOffice(`/${office}`);
+      setOffice(office);
     }
-  }, [office])
+  }, [office]);
 
   return (
     <Sidebar collapsible="icon">
@@ -91,10 +91,10 @@ export default function AppSidebar({ office }: { office: string }) {
               {nav_items.map((item, index) => {
                 const Icon = item.icon
                   ? Icons[item.icon as keyof typeof Icons]
-                  : Icons.logo
+                  : Icons.logo;
                 const openCollapsible = item?.isActive
                   ? item.isActive?.some((val) => pathname.includes(val))
-                  : false
+                  : false;
                 return item?.items && item?.items?.length > 0 ? (
                   <Collapsible
                     key={item.title}
@@ -123,8 +123,9 @@ export default function AppSidebar({ office }: { office: string }) {
                               >
                                 <Link
                                   onClick={() => {
-                                    if (isMobile) toggleSidebar()
-                                    if (subItem.title === "POS") toggleSidebar()
+                                    if (isMobile) toggleSidebar();
+                                    if (subItem.title === "POS")
+                                      toggleSidebar();
                                   }}
                                   href={`/${base_route}${subItem.url}`}
                                 >
@@ -158,7 +159,7 @@ export default function AppSidebar({ office }: { office: string }) {
                     >
                       <Link
                         onClick={() => {
-                          if (isMobile) toggleSidebar()
+                          if (isMobile) toggleSidebar();
                         }}
                         href={`/${base_route}${item.url}`}
                       >
@@ -167,7 +168,7 @@ export default function AppSidebar({ office }: { office: string }) {
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                )
+                );
               })}
             </SidebarMenu>
           </SidebarGroup>
@@ -256,7 +257,7 @@ export default function AppSidebar({ office }: { office: string }) {
                 </DropdownMenuGroup>
                 <DropdownMenuItem
                   onClick={() => {
-                    signOut(auth)
+                    signOut(auth);
                     // localStorage.removeItem("user_email");
                     // router.replace("/login");
                   }}
@@ -271,5 +272,5 @@ export default function AppSidebar({ office }: { office: string }) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

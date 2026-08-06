@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Check, ChevronsUpDown } from "lucide-react"
-import * as React from "react"
+import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -12,23 +12,23 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
-import { PakCities } from "@/constants/data"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/command";
+import { PakCities } from "@/constants/data";
+import { cn } from "@/lib/utils";
 
 export function CitiesSearch({
   value,
   onReturn,
 }: {
-  value: string
-  onReturn: (val: string) => void
+  value: string;
+  onReturn: (val: string) => void;
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
   const [data] = React.useState(
     PakCities.map((item) => {
-      return { value: item.name, label: item.name }
-    })
-  )
+      return { value: item.name, label: item.name };
+    }),
+  );
 
   return (
     <>
@@ -38,8 +38,8 @@ export function CitiesSearch({
         aria-expanded={open}
         className="w-full justify-between"
         onClick={(e) => {
-          e.preventDefault()
-          setOpen(!open)
+          e.preventDefault();
+          setOpen(!open);
         }}
       >
         {value
@@ -59,15 +59,15 @@ export function CitiesSearch({
                   key={index}
                   value={item.label}
                   onSelect={() => {
-                    onReturn(item.value)
-                    setOpen(false)
+                    onReturn(item.value);
+                    setOpen(false);
                   }}
                 >
                   {item.label}
                   <Check
                     className={cn(
                       "ml-auto",
-                      value === item.value ? "opacity-100" : "opacity-0"
+                      value === item.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                 </CommandItem>
@@ -77,5 +77,5 @@ export function CitiesSearch({
         </Command>
       </CommandDialog>
     </>
-  )
+  );
 }

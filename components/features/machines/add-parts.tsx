@@ -1,35 +1,35 @@
-import axios from "@/lib/axios"
-import { UploadImage } from "@/lib/uploadFunction"
-import { OfficeContext } from "@/store/context/OfficeContext"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Package, Trash2 } from "lucide-react"
-import moment from "moment"
-import { useContext, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
-import { z } from "zod"
-import AppCalendar from "@/components/features/calendar/app-calendar"
-import ChequeCredit from "./cheque-credit"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import axios from "@/lib/axios";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Package, Trash2 } from "lucide-react";
+import moment from "moment";
+import { useContext, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import AppCalendar from "@/components/features/calendar/app-calendar";
+import ChequeCredit from "./cheque-credit";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import { ChequeProp } from "@/lib/types"
-import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase"
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { ChequeProp } from "@/lib/types";
+import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
 
 const formSchema = z.object({
   serial_no: z.string().min(1, { message: "Name is required." }),
@@ -40,28 +40,28 @@ const formSchema = z.object({
   totalPrice: z.coerce.number<number>({ error: "Price is required" }),
   cnic: z.string().optional(),
   order_item: z.number().nullable().optional(),
-})
+});
 
 const AddParts = ({
   customer_id,
   user_id,
   onRefresh,
 }: {
-  customer_id?: number
-  user_id: number | string
-  onRefresh: () => Promise<void>
+  customer_id?: number;
+  user_id: number | string;
+  onRefresh: () => Promise<void>;
 }) => {
-  const [isSpeedMoney, setIsSpeedMoney] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [cheque, setCheque] = useState(false)
-  const [value, setValue] = useState<string>()
-  const [total, setTotal] = useState<ChequeProp[]>([])
-  const { state: OfficeState } = useContext(OfficeContext)!
+  const [isSpeedMoney, setIsSpeedMoney] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [cheque, setCheque] = useState(false);
+  const [value, setValue] = useState<string>();
+  const [total, setTotal] = useState<ChequeProp[]>([]);
+  const { state: OfficeState } = useContext(OfficeContext)!;
   const [newParts, setNewParts] = useState([
     { name: "", model: "", power: "", serial_no: "" },
-  ])
-  const [errors, setErrors] = useState<any>({})
-  const [open, setOpen] = useState(false)
+  ]);
+  const [errors, setErrors] = useState<any>({});
+  const [open, setOpen] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -75,38 +75,38 @@ const AddParts = ({
       cnic: "",
       order_item: null,
     },
-  })
+  });
 
-  type FormValues = z.infer<typeof formSchema>
+  type FormValues = z.infer<typeof formSchema>;
 
   function validateNewParts() {
-    let newErrors: any = {}
+    let newErrors: any = {};
 
     newParts.forEach((part, index) => {
-      let partErrors: any = {}
+      let partErrors: any = {};
 
       Object.entries(part).forEach(([key, value]) => {
         if (!value.trim()) {
           partErrors[key] =
-            `${key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")} is required`
+            `${key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")} is required`;
         }
-      })
+      });
 
       if (Object.keys(partErrors).length > 0) {
-        newErrors[index] = partErrors
+        newErrors[index] = partErrors;
       }
-    })
+    });
 
-    setErrors(newErrors)
+    setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0
+    return Object.keys(newErrors).length === 0;
   }
 
   function onSubmit(values: FormValues) {
-    if (!validateNewParts()) return
-    setErrors({})
-    setLoading(true)
-    let baseLink = `/${user_id}/machine?cheque=${cheque}`
+    if (!validateNewParts()) return;
+    setErrors({});
+    setLoading(true);
+    let baseLink = `/${user_id}/machine?cheque=${cheque}`;
 
     axios
       .post(baseLink, {
@@ -126,7 +126,7 @@ const AddParts = ({
       .then(async (response) => {
         if (response.data?.sale_id) {
           if (cheque) {
-            const saleID = response.data.sale_id
+            const saleID = response.data.sale_id;
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
@@ -134,47 +134,47 @@ const AddParts = ({
                   OfficeState.value.data
                 }/customer/${customer_id}/machine/${saleID}/installments/${moment()
                   .valueOf()
-                  .toString()}_${idx}.png`
-                const imgRef = await UploadImage(item.img, name)
+                  .toString()}_${idx}.png`;
+                const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
                   image: name,
                   amount: item.amount,
                   sale_id: saleID,
-                })
-              })
-            )
+                });
+              }),
+            );
 
-            console.log("All installments saved:", res)
-            TriggerFirebaseForChequeAlerts()
+            console.log("All installments saved:", res);
+            TriggerFirebaseForChequeAlerts();
           }
         }
-        onRefresh()
-        handleClose(false)
+        onRefresh();
+        handleClose(false);
       })
       .finally(() => {
-        setLoading(false)
-      })
+        setLoading(false);
+      });
   }
 
   function handleClose(val: boolean) {
-    form.reset()
-    setOpen(false)
-    setNewParts([{ name: "", model: "", power: "", serial_no: "" }])
+    form.reset();
+    setOpen(false);
+    setNewParts([{ name: "", model: "", power: "", serial_no: "" }]);
   }
 
   function generatePlaceholder(key: string) {
     if (key === "name") {
-      return "Laser Source"
+      return "Laser Source";
     }
     if (key === "model") {
-      return "RAYCUS-RFL-C3000S-CE"
+      return "RAYCUS-RFL-C3000S-CE";
     }
     if (key === "power") {
-      return "3000W"
+      return "3000W";
     }
     if (key === "serial_no") {
-      return "C1000A24B000XXX"
+      return "C1000A24B000XXX";
     }
   }
 
@@ -279,15 +279,15 @@ const AddParts = ({
                                 <Input
                                   value={val}
                                   onChange={(e) => {
-                                    const value = e.target.value
+                                    const value = e.target.value;
                                     setNewParts((prev) => {
-                                      const updated = [...prev]
+                                      const updated = [...prev];
                                       updated[index] = {
                                         ...updated[index],
                                         [key]: value.toUpperCase(),
-                                      }
-                                      return updated
-                                    })
+                                      };
+                                      return updated;
+                                    });
                                   }}
                                   placeholder={`Example: ${generatePlaceholder(key)}`}
                                 />
@@ -362,12 +362,12 @@ const AddParts = ({
                               <Checkbox
                                 checked={isSpeedMoney}
                                 onCheckedChange={(checked: boolean) => {
-                                  setIsSpeedMoney(checked)
-                                  field.onChange(checked)
+                                  setIsSpeedMoney(checked);
+                                  field.onChange(checked);
 
                                   if (!checked) {
-                                    form.setValue("speedMoney", 0)
-                                    form.setValue("speedMoneyNote", "")
+                                    form.setValue("speedMoney", 0);
+                                    form.setValue("speedMoneyNote", "");
                                   }
                                 }}
                               />
@@ -472,7 +472,7 @@ const AddParts = ({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};
 
-export default AddParts
+export default AddParts;

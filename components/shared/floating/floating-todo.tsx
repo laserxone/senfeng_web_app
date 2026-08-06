@@ -1,17 +1,17 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { useTodos } from "@/hooks/use-todos"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { ListCheck, X } from "lucide-react"
-import moment from "moment"
-import { useEffect, useState } from "react"
-import { BellNotification } from "@/components/shared/notifications/NotificationBadge"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
+"use client";
+import { Button } from "@/components/ui/button";
+import { useTodos } from "@/hooks/use-todos";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { ListCheck, X } from "lucide-react";
+import moment from "moment";
+import { useEffect, useState } from "react";
+import { BellNotification } from "@/components/shared/notifications/NotificationBadge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
 import {
   Sheet,
   SheetClose,
@@ -20,7 +20,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 
 function FloatingTodoButton({ pending }: { pending: number }) {
   return (
@@ -32,69 +32,71 @@ function FloatingTodoButton({ pending }: { pending: number }) {
     >
       <BellNotification Icon={ListCheck} count={pending} />
     </Button>
-  )
+  );
 }
 
 export default function FloatingTodo() {
-  const [isOpen, setIsOpen] = useState(false)
-  const { tasks, setTasks, fetchTasks } = useTodos()
-  const [newTask, setNewTask] = useState("")
-  const { userID } = useUserDetail()
-  const [loading, setLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const { tasks, setTasks, fetchTasks } = useTodos();
+  const [newTask, setNewTask] = useState("");
+  const { userID } = useUserDetail();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (userID) fetchTasks()
-  }, [userID])
+    if (userID) fetchTasks();
+  }, [userID]);
 
   const addTask = async () => {
-    if (!newTask.trim()) return
+    if (!newTask.trim()) return;
 
-    const tempId = Date.now()
-    const optimisticTask = { id: tempId, title: newTask, is_done: false }
-    setTasks((prev) => [...prev, optimisticTask])
-    setNewTask("")
+    const tempId = Date.now();
+    const optimisticTask = { id: tempId, title: newTask, is_done: false };
+    setTasks((prev) => [...prev, optimisticTask]);
+    setNewTask("");
 
     try {
       const response = await axios.post(`/${userID}/todo`, {
         title: newTask,
-      })
+      });
 
-      setTasks((prev) => prev.map((t) => (t.id === tempId ? response.data : t)))
+      setTasks((prev) =>
+        prev.map((t) => (t.id === tempId ? response.data : t)),
+      );
     } catch (err) {
-      setTasks((prev) => prev.filter((t) => t.id !== tempId))
-      console.error("Failed to add task:", err)
+      setTasks((prev) => prev.filter((t) => t.id !== tempId));
+      console.error("Failed to add task:", err);
     }
-  }
+  };
 
   const toggleTask = async (id: number, done: boolean) => {
     setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, is_done: done } : t))
-    )
+      prev.map((t) => (t.id === id ? { ...t, is_done: done } : t)),
+    );
 
     try {
       await axios.put(`/${userID}/todo/${id}`, {
         is_done: done,
-      })
+      });
     } catch (err) {
       setTasks((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, is_done: !done } : t))
-      )
-      console.error("Failed to update task:", err)
+        prev.map((t) => (t.id === id ? { ...t, is_done: !done } : t)),
+      );
+      console.error("Failed to update task:", err);
     }
-  }
+  };
 
   async function handleClear() {
-    setLoading(true)
+    setLoading(true);
     try {
-      await axios.get(`/${userID}/todo/clear`)
-      await fetchTasks()
+      await axios.get(`/${userID}/todo/clear`);
+      await fetchTasks();
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
-  const pendingTasks = tasks.filter((task) => !task.is_done)
-  const completedTasks = tasks.filter((task) => task.is_done)
+  const pendingTasks = tasks.filter((task) => !task.is_done);
+  const completedTasks = tasks.filter((task) => task.is_done);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -224,8 +226,8 @@ export default function FloatingTodo() {
               className="flex-1"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  e.preventDefault()
-                  addTask()
+                  e.preventDefault();
+                  addTask();
                 }
               }}
             />
@@ -234,5 +236,5 @@ export default function FloatingTodo() {
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

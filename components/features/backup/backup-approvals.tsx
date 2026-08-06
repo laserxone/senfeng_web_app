@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import useUserDetail from "@/hooks/use-user-detail"
-import axios from "@/lib/axios"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   Check,
@@ -14,9 +14,9 @@ import {
   History,
   X,
   XCircle,
-} from "lucide-react"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -25,89 +25,89 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import Spinner from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
-import BackupApplicationCard from "./backup-application-card"
-import BackupApplicationDetails from "./backup-application-detail"
-import EmptyState from "./backup-empty-state"
-import { formatCurrency } from "./backup-helper-functions"
-import { BackupApplication } from "./backup-types"
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import BackupApplicationCard from "./backup-application-card";
+import BackupApplicationDetails from "./backup-application-detail";
+import EmptyState from "./backup-empty-state";
+import { formatCurrency } from "./backup-helper-functions";
+import { BackupApplication } from "./backup-types";
 
 export default function RenderMyApprovals() {
-  const { userID } = useUserDetail()
+  const { userID } = useUserDetail();
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
-  const [applications, setApplications] = useState<BackupApplication[]>([])
+  const [applications, setApplications] = useState<BackupApplication[]>([]);
 
   const [selectedApplication, setSelectedApplication] =
-    useState<BackupApplication | null>(null)
+    useState<BackupApplication | null>(null);
 
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
-  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false)
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
 
   const [approvalAction, setApprovalAction] = useState<"approved" | "rejected">(
-    "approved"
-  )
+    "approved",
+  );
 
-  const [approvalComments, setApprovalComments] = useState("")
+  const [approvalComments, setApprovalComments] = useState("");
 
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    if (!userID) return
+    if (!userID) return;
 
-    fetchData()
-  }, [userID])
+    fetchData();
+  }, [userID]);
 
   async function fetchData() {
-    setLoading(true)
+    setLoading(true);
 
     try {
       const res = await axios.get(
-        `/${userID}/backup-applications?approver_id=${userID}`
-      )
+        `/${userID}/backup-applications?approver_id=${userID}`,
+      );
 
-      setApplications(res.data)
+      setApplications(res.data);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const pendingApplications = applications.filter(
-    (application) => application.is_my_turn
-  )
+    (application) => application.is_my_turn,
+  );
 
   const processedApplications = applications.filter(
-    (application) => !application.is_my_turn && application.my_approval_status
-  )
+    (application) => !application.is_my_turn && application.my_approval_status,
+  );
 
   const viewableApplications = applications.filter(
-    (application) => !application.is_my_turn && !application.my_approval_status
-  )
+    (application) => !application.is_my_turn && !application.my_approval_status,
+  );
 
   const handleViewDetails = (application: BackupApplication) => {
-    setSelectedApplication(application)
-    setIsDetailDialogOpen(true)
-  }
+    setSelectedApplication(application);
+    setIsDetailDialogOpen(true);
+  };
 
   const handleApprovalClick = (
     application: BackupApplication,
-    action: "approved" | "rejected"
+    action: "approved" | "rejected",
   ) => {
-    setSelectedApplication(application)
-    setApprovalAction(action)
-    setApprovalComments("")
-    setIsApprovalDialogOpen(true)
-  }
+    setSelectedApplication(application);
+    setApprovalAction(action);
+    setApprovalComments("");
+    setIsApprovalDialogOpen(true);
+  };
 
   const handleSubmitApproval = async () => {
-    if (!selectedApplication || !userID) return
+    if (!selectedApplication || !userID) return;
 
-    setIsProcessing(true)
+    setIsProcessing(true);
 
     try {
       await axios.post(
@@ -116,30 +116,30 @@ export default function RenderMyApprovals() {
           approver_id: userID,
           action: approvalAction,
           comments: approvalComments,
-        }
-      )
+        },
+      );
 
-      await fetchData()
+      await fetchData();
 
-      setIsApprovalDialogOpen(false)
-      setSelectedApplication(null)
+      setIsApprovalDialogOpen(false);
+      setSelectedApplication(null);
 
       toast.success(
         approvalAction === "approved"
           ? "Application approved"
-          : "Application rejected"
-      )
+          : "Application rejected",
+      );
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center py-10">
         <Spinner />
       </div>
-    )
+    );
   }
 
   return (
@@ -180,7 +180,7 @@ export default function RenderMyApprovals() {
                     {
                       processedApplications.filter(
                         (application) =>
-                          application.my_approval_status === "approved"
+                          application.my_approval_status === "approved",
                       ).length
                     }
                   </p>
@@ -205,7 +205,7 @@ export default function RenderMyApprovals() {
                     {
                       processedApplications.filter(
                         (application) =>
-                          application.my_approval_status === "rejected"
+                          application.my_approval_status === "rejected",
                       ).length
                     }
                   </p>
@@ -342,9 +342,9 @@ export default function RenderMyApprovals() {
               <Button
                 className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
                 onClick={() => {
-                  setIsDetailDialogOpen(false)
+                  setIsDetailDialogOpen(false);
 
-                  handleApprovalClick(selectedApplication, "approved")
+                  handleApprovalClick(selectedApplication, "approved");
                 }}
               >
                 <Check className="mr-2 size-4" />
@@ -355,9 +355,9 @@ export default function RenderMyApprovals() {
                 variant="destructive"
                 className="flex-1"
                 onClick={() => {
-                  setIsDetailDialogOpen(false)
+                  setIsDetailDialogOpen(false);
 
-                  handleApprovalClick(selectedApplication, "rejected")
+                  handleApprovalClick(selectedApplication, "rejected");
                 }}
               >
                 <X className="mr-2 size-4" />
@@ -435,7 +435,7 @@ export default function RenderMyApprovals() {
               className={cn(
                 approvalAction === "approved"
                   ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                  : "bg-red-600 hover:bg-red-700"
+                  : "bg-red-600 hover:bg-red-700",
               )}
             >
               {isProcessing
@@ -448,5 +448,5 @@ export default function RenderMyApprovals() {
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

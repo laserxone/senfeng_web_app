@@ -1,14 +1,14 @@
-import pool from "@/config/db"
-import { NextRequest, NextResponse } from "next/server"
+import pool from "@/config/db";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> }
+  { params }: { params: Promise<{ uid: string }> },
 ) {
-  const { uid } = await params
-  const searchParams = req.nextUrl.searchParams
-  const start_date = searchParams.get("start_date")
-  const end_date = searchParams.get("end_date")
+  const { uid } = await params;
+  const searchParams = req.nextUrl.searchParams;
+  const start_date = searchParams.get("start_date");
+  const end_date = searchParams.get("end_date");
 
   try {
     const customersResult = await pool.query(
@@ -21,13 +21,13 @@ export async function GET(
         OR s.id IS NOT NULL
       )
     ORDER BY c.created_at DESC`,
-      [uid]
-    )
+      [uid],
+    );
 
-    const customers = customersResult.rows
+    const customers = customersResult.rows;
 
-    const customersWithFeedback = []
-    const customersWithoutFeedback = []
+    const customersWithFeedback = [];
+    const customersWithoutFeedback = [];
 
     for (const customer of customers) {
       const feedbackResult = await pool.query(
@@ -39,26 +39,26 @@ export async function GET(
                 ORDER BY created_at DESC
                 LIMIT 1
                 `,
-        [customer.id, uid, start_date, end_date]
-      )
+        [customer.id, uid, start_date, end_date],
+      );
 
       if (feedbackResult.rows.length > 0) {
         customersWithFeedback.push({
           customer,
           latestFeedback: feedbackResult.rows[0],
-        })
+        });
       } else {
-        customersWithoutFeedback.push(customer)
+        customersWithoutFeedback.push(customer);
       }
     }
-    return NextResponse.json(customersWithoutFeedback, { status: 200 })
+    return NextResponse.json(customersWithoutFeedback, { status: 200 });
   } catch (error: any) {
-    console.error("Error fetching data: ", error)
+    console.error("Error fetching data: ", error);
     return NextResponse.json(
       { message: error.message || "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 
-export const revalidate = 0
+export const revalidate = 0;

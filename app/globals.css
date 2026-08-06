@@ -79,13 +79,13 @@
   --chart-8: oklch(0.6024 0.2141 295.91);
   --radius: 0.625rem;
   --sidebar: oklch(0.22 0.02 255);
---sidebar-foreground: oklch(0.96 0.01 185);
---sidebar-primary: oklch(0.70 0.14 185);
---sidebar-primary-foreground: oklch(0.18 0.02 220);
---sidebar-accent: oklch(37.05% 0.04405 255.162);
---sidebar-accent-foreground: oklch(0.95 0.01 185);
---sidebar-border: oklch(0.30 0.02 255);
---sidebar-ring: oklch(0.75 0.16 185);
+  --sidebar-foreground: oklch(0.96 0.01 185);
+  --sidebar-primary: oklch(0.7 0.14 185);
+  --sidebar-primary-foreground: oklch(0.18 0.02 220);
+  --sidebar-accent: oklch(37.05% 0.04405 255.162);
+  --sidebar-accent-foreground: oklch(0.95 0.01 185);
+  --sidebar-border: oklch(0.3 0.02 255);
+  --sidebar-ring: oklch(0.75 0.16 185);
 }
 
 .dark {
@@ -286,12 +286,11 @@
   background-color: rgba(200, 200, 200, 0.6);
 }
 
-
 [data-sidebar="menu-button"] {
   transition:
-    transform .2s ease,
-    background-color .2s ease,
-    color .2s ease;
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 [data-sidebar="menu-button"]:hover {

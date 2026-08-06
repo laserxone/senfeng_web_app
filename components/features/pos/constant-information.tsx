@@ -1,8 +1,8 @@
-import { Copy } from "lucide-react"
-import { Label } from "@/components/ui/label"
-import { FaPhone } from "react-icons/fa6"
-import { FaGlobe } from "react-icons/fa"
-import moment from "moment"
+import { Copy } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { FaPhone } from "react-icons/fa6";
+import { FaGlobe } from "react-icons/fa";
+import moment from "moment";
 
 const Disclaimer = () => {
   return (
@@ -15,8 +15,8 @@ const Disclaimer = () => {
         signature.
       </Label>
     </div>
-  )
-}
+  );
+};
 
 const Footer = () => {
   return (
@@ -56,8 +56,8 @@ const Footer = () => {
         <Label>www.senfenglaserpk.com</Label>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const CompanyDetails = ({ createdAt }) => {
   return (
@@ -86,8 +86,8 @@ const CompanyDetails = ({ createdAt }) => {
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const Header = ({ onClick }) => {
   return (
@@ -103,8 +103,8 @@ const Header = ({ onClick }) => {
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
 const FormField = ({
   phoneNumber,
@@ -164,8 +164,8 @@ const FormField = ({
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 
 const BankDetail = () => {
   return (
@@ -241,7 +241,7 @@ const BankDetail = () => {
         </tbody>
       </table>
     </div>
-  )
-}
+  );
+};
 
-export { BankDetail, CompanyDetails, Disclaimer, Footer, FormField, Header }
+export { BankDetail, CompanyDetails, Disclaimer, Footer, FormField, Header };

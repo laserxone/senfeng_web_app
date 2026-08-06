@@ -1,94 +1,94 @@
-"use client"
-import { Button } from "@/components/ui/button"
+"use client";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Spinner from "@/components/ui/spinner"
-import { auth } from "@/config/firebase"
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Spinner from "@/components/ui/spinner";
+import { auth } from "@/config/firebase";
 
-import { cn } from "@/lib/utils"
-import { confirmPasswordReset } from "firebase/auth"
-import { CircleCheck } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { cn } from "@/lib/utils";
+import { confirmPasswordReset } from "firebase/auth";
+import { CircleCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [validation, setValidation] = useState([false, false])
-  const [matched, setMatched] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [validation, setValidation] = useState([false, false]);
+  const [matched, setMatched] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (password.length > 7) {
       if (validation[0] == false)
         setValidation((prevState) => {
-          const newState = [...prevState]
-          newState[0] = true
-          return newState
-        })
+          const newState = [...prevState];
+          newState[0] = true;
+          return newState;
+        });
     } else {
       if (validation[0] == true)
         setValidation((prevState) => {
-          const newState = [...prevState]
-          newState[0] = false
-          return newState
-        })
+          const newState = [...prevState];
+          newState[0] = false;
+          return newState;
+        });
     }
 
     if (!/[0-9]/.test(password)) {
       if (validation[1] == true)
         setValidation((prevState) => {
-          const newState = [...prevState]
-          newState[1] = false
-          return newState
-        })
+          const newState = [...prevState];
+          newState[1] = false;
+          return newState;
+        });
     } else {
       if (validation[1] == false)
         setValidation((prevState) => {
-          const newState = [...prevState]
-          newState[1] = true
-          return newState
-        })
+          const newState = [...prevState];
+          newState[1] = true;
+          return newState;
+        });
     }
 
     if (password == confirmPassword) {
-      if (matched == false) setMatched(true)
+      if (matched == false) setMatched(true);
     } else {
-      if (matched == true) setMatched(false)
+      if (matched == true) setMatched(false);
     }
-  }, [password, confirmPassword])
+  }, [password, confirmPassword]);
 
   async function handlePasswordCreation() {
-    setLoading(true)
+    setLoading(true);
     try {
       const oobCode =
-        new URLSearchParams(window.location.search).get("oobCode") ?? ""
-      const mode = new URLSearchParams(window.location.search).get("mode")
+        new URLSearchParams(window.location.search).get("oobCode") ?? "";
+      const mode = new URLSearchParams(window.location.search).get("mode");
       const continueUrl =
         new URLSearchParams(window.location.search).get("continueUrl") ??
-        "http://app.senfenglaserpk.com/login"
+        "http://app.senfenglaserpk.com/login";
       confirmPasswordReset(auth, oobCode, password)
         .then(() => {
-          setLoading(false)
-          toast.success("Password creation successfull, login to continue")
-          router.replace(continueUrl)
+          setLoading(false);
+          toast.success("Password creation successfull, login to continue");
+          router.replace(continueUrl);
         })
         .catch((e) => {
-          console.log(e)
-          setLoading(false)
-          toast.error(e?.message || "Error password creation")
-        })
+          console.log(e);
+          setLoading(false);
+          toast.error(e?.message || "Error password creation");
+        });
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
     // setShowSuccessfull(true);
   }
@@ -179,5 +179,5 @@ export default function Page() {
         </div>
       </div>
     </div>
-  )
+  );
 }

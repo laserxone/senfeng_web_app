@@ -1,3 +1,3 @@
-import { rowDetailRoutes } from "@/lib/custom-lists-routes"
+import { rowDetailRoutes } from "@/lib/custom-lists-routes";
 
-export const { PUT, DELETE } = rowDetailRoutes("lahore")
+export const { PUT, DELETE } = rowDetailRoutes("lahore");
