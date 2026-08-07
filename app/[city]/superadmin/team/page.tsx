@@ -326,6 +326,7 @@ const AddUserDialog = ({
     axios
       .post(`/${userID}/user`, {
         ...values,
+        email : values.email.trim().toLocaleLowerCase(),
         name: values.name.toUpperCase(),
       })
       .then(async (response) => {

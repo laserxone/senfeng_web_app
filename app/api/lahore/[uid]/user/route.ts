@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const { rows } = await pool.query(query, values);
     const newUser = rows[0];
 
-    sendPasswordReset(email);
+    await sendPasswordReset(email);
 
     return NextResponse.json(newUser, { status: 200 });
   } catch (error: any) {
