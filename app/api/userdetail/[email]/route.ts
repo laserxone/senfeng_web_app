@@ -9,6 +9,7 @@ import {
   employeeNavItems,
   EngineersPerformance,
   FinanceItem,
+  Lists,
   myCloud,
   OwnerSidebarItems,
   POSNavItem,
@@ -118,6 +119,9 @@ export async function GET(
       }
       if (user.repairing_and_maintenance) {
         nav_items.push(RepairAndMaintenance);
+      }
+      if (user.list_page) {
+        nav_items.push(Lists);
       }
       if (user.superadmin_cloud_access) {
         nav_items.push(myCloud);

@@ -251,8 +251,14 @@ export const OwnerSidebarItems = [
       "delivery/otherdelivery",
       "delivery/delivered",
       "delivery/due-payments",
+      "lists",
     ],
     items: [
+      {
+        title: "Lists",
+        url: "/lists",
+        shortcut: ["l", "i", "s", "t"],
+      },
       {
         title: "Due Payment",
         url: "/delivery/due-payments",
@@ -540,6 +546,15 @@ export const Careers = {
   shortcut: ["a", "p", "p"],
   items: [],
   group: "hr",
+};
+
+export const Lists = {
+  title: "Lists",
+  url: "/lists",
+  icon: "lists",
+  shortcut: ["l", "i", "s", "t"],
+  items: [],
+  group: "store",
 };
 
 export const FinanceItem = {

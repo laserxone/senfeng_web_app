@@ -346,6 +346,13 @@ export default function LoanApplications() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!selectedHierarchy?.approvers?.length) {
+      toast.error(
+        "The selected loan hierarchy must have at least one approver.",
+      );
+      return;
+    }
+
     setIsSubmitting(true);
 
     const supportingDocumentPaths = await Promise.all(
@@ -432,6 +439,7 @@ export default function LoanApplications() {
   const selectedHierarchy = hierarchies?.find(
     (h) => h.id === parseInt(formData.hierarchyId),
   );
+  const hasApprovers = Boolean(selectedHierarchy?.approvers?.length);
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
@@ -1110,7 +1118,8 @@ export default function LoanApplications() {
                       isSubmitting ||
                       !formData.termsAccepted ||
                       !formData.salaryDeductionConsent ||
-                      !formData.hierarchyId
+                      !formData.hierarchyId ||
+                      !hasApprovers
                     }
                     className="h-12 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-lg shadow-lg hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600"
                   >

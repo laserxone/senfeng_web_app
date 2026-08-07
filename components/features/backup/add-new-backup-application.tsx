@@ -80,6 +80,9 @@ export default function AddNewBackupApplication() {
 
     if (!formData.hierarchyId) {
       nextErrors.hierarchyId = "Approval hierarchy is required.";
+    } else if (!selectedHierarchy?.approvers?.length) {
+      nextErrors.hierarchyId =
+        "The selected backup hierarchy must have at least one approver.";
     }
 
     if (!customerID) {
@@ -174,6 +177,7 @@ export default function AddNewBackupApplication() {
   const selectedHierarchy = hierarchies.find(
     (hierarchy) => hierarchy.id === parseInt(formData.hierarchyId),
   );
+  const hasApprovers = Boolean(selectedHierarchy?.approvers?.length);
 
   function handleCreateOpenChange(open: boolean) {
     setIsCreateOpen(open);
@@ -298,6 +302,12 @@ export default function AddNewBackupApplication() {
                       </div>
                     </div>
                   )}
+                {selectedHierarchy && !hasApprovers && (
+                  <p className="text-xs text-destructive">
+                    This backup hierarchy has no approvers. Add an approver
+                    before submitting an application.
+                  </p>
+                )}
               </FieldSet>
 
               {/* BACKUP DETAILS */}
@@ -485,7 +495,7 @@ export default function AddNewBackupApplication() {
 
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !hasApprovers}
                 className="h-12 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-lg shadow-lg hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600"
               >
                 {isSubmitting

@@ -75,6 +75,18 @@ export const NOTIFICATION_TYPES = {
     title: "Backup Application Rejected",
     category: NOTIFICATION_CATEGORIES.SALES,
   },
+  gift_applied: {
+    title: "Gift Application Submitted",
+    category: NOTIFICATION_CATEGORIES.SALES,
+  },
+  gift_approved: {
+    title: "Gift Application Approved",
+    category: NOTIFICATION_CATEGORIES.SALES,
+  },
+  gift_rejected: {
+    title: "Gift Application Rejected",
+    category: NOTIFICATION_CATEGORIES.SALES,
+  },
   quotation_submitted: {
     title: "Quotation Submitted",
     category: NOTIFICATION_CATEGORIES.SALES,

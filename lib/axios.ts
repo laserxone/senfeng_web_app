@@ -5,10 +5,12 @@ import { toast } from "sonner";
 declare module "axios" {
   interface AxiosRequestConfig {
     cancelKey?: string;
+    office?: string;
   }
 
   interface InternalAxiosRequestConfig {
     cancelKey?: string;
+    office?: string;
   }
 }
 
@@ -36,7 +38,8 @@ axios.interceptors.request.use((config) => {
     requestUrl.startsWith("userdetail") ||
     requestUrl.startsWith("/userdetail");
 
-  config.baseURL = isUserDetailRequest ? BASE_URL : `${BASE_URL}${userOffice}`;
+  const office = config.office ?? userOffice;
+  config.baseURL = isUserDetailRequest ? BASE_URL : `${BASE_URL}${office}`;
 
   config.headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
   config.headers["Pragma"] = "no-cache";

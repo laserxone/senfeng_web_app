@@ -54,6 +54,7 @@ import {
   ScrollText,
   ShieldCheck,
   Zap,
+  ListCheck,
 } from "lucide-react";
 
 export const Icons = {
@@ -114,6 +115,7 @@ export const Icons = {
   sales: BadgeDollarSign,
   performance: Zap,
   khata: Scroll,
+  lists: ListCheck,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden="true"

@@ -183,6 +183,24 @@ export async function POST(request: NextRequest) {
       sale_id,
       backup_inventory_id,
     } = body;
+    if (!hierarchy_id) {
+      await client.query("ROLLBACK");
+      return NextResponse.json(
+        { message: "Approval hierarchy is required" },
+        { status: 400 },
+      );
+    }
+    const approversResult = await client.query(
+      `SELECT user_id, approval_order FROM hierarchy_approvers WHERE hierarchy_id = $1 ORDER BY approval_order`,
+      [hierarchy_id],
+    );
+    if (!approversResult.rows.length) {
+      await client.query("ROLLBACK");
+      return NextResponse.json(
+        { message: "The selected hierarchy must have at least one approver" },
+        { status: 400 },
+      );
+    }
 
     const applicationResult = await client.query(
       `
@@ -224,16 +242,6 @@ export async function POST(request: NextRequest) {
     const application = applicationResult.rows[0];
 
     if (hierarchy_id) {
-      const approversResult = await client.query(
-        `
-        SELECT user_id, approval_order
-        FROM hierarchy_approvers
-        WHERE hierarchy_id = $1
-        ORDER BY approval_order
-        `,
-        [hierarchy_id],
-      );
-
       for (const approver of approversResult.rows) {
         await client.query(
           `

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import Spinner from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -27,12 +28,14 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useRouter } from "nextjs-toploader/app";
 
-type ListColumn = { id: string; name: string };
-type ListRow = { id: string; values: Record<string, string> };
-type CustomList = {
+export type ListColumn = { id: string; name: string };
+export type ListRow = { id: string; values: Record<string, string> };
+export type CustomList = {
   id: string;
   name: string;
   description: string;
@@ -42,8 +45,12 @@ type CustomList = {
   isPinned?: boolean;
   updatedAt: string;
 };
-type ListForm = { name: string; description: string; columnCount: number };
-type DeleteTarget = {
+export type ListForm = {
+  name: string;
+  description: string;
+  columnCount: number;
+};
+export type DeleteTarget = {
   type: "list" | "row" | "column";
   id: string;
   name: string;
@@ -53,7 +60,6 @@ const emptyListForm = { name: "", description: "", columnCount: 3 };
 
 export default function ListsPage() {
   const [lists, setLists] = useState<CustomList[]>([]);
-  const [activeListId, setActiveListId] = useState<string | null>(null);
   const [listDialogOpen, setListDialogOpen] = useState(false);
   const [listForm, setListForm] = useState(emptyListForm);
   const [columnNames, setColumnNames] = useState<string[]>([
@@ -62,23 +68,22 @@ export default function ListsPage() {
     "Column 3",
   ]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
-  const [rowDialogOpen, setRowDialogOpen] = useState(false);
-  const [editingRowId, setEditingRowId] = useState<string | null>(null);
-  const [rowValues, setRowValues] = useState<Record<string, string>>({});
-  const [columnDialogOpen, setColumnDialogOpen] = useState(false);
-  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
-  const [columnName, setColumnName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
   const [search, setSearch] = useState("");
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [gridView, setGridView] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [savingList, setSavingList] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [pinningListId, setPinningListId] = useState<string | null>(null);
   const { userID } = useUserDetail();
-
-  const activeList = useMemo(
-    () => lists.find((list) => list.id === activeListId) ?? null,
-    [activeListId, lists],
+  const { city } = useParams<{ city: string }>();
+  const router = useRouter();
+  const requestConfig = useMemo(
+    () => ({ office: city ? `/${city.toLowerCase()}` : undefined }),
+    [city],
   );
+
   const visibleLists = useMemo(
     () =>
       lists.filter((list) =>
@@ -128,8 +133,8 @@ export default function ListsPage() {
     if (!userID) return;
     setLoading(true);
     try {
-      const response = await axios.get(listUrl);
-      const mapped = response.data.map(toList);
+      const response = await axios.get(listUrl, requestConfig);
+      const mapped: CustomList[] = response.data.map(toList);
       setLists(mapped);
       setPinnedIds(
         mapped.filter((list) => list.isPinned).map((list) => list.id),
@@ -137,35 +142,10 @@ export default function ListsPage() {
     } finally {
       setLoading(false);
     }
-  }, [userID, listUrl, toList]);
+  }, [userID, listUrl, requestConfig, toList]);
 
-  const openList = async (listId: string) => {
-    try {
-      const response = await axios.get(`${listUrl}/${listId}`);
-      const detail = toList(response.data);
-      const cellValues = new Map<string, string>();
-      response.data.cells?.forEach(
-        (cell: { row_id: number; column_id: number; value: string | null }) =>
-          cellValues.set(`${cell.row_id}-${cell.column_id}`, cell.value || ""),
-      );
-      detail.rows = response.data.rows.map((row: { id: number }) => ({
-        id: String(row.id),
-        values: Object.fromEntries(
-          detail.columns.map((column) => [
-            column.id,
-            cellValues.get(`${row.id}-${column.id}`) || "",
-          ]),
-        ),
-      }));
-      detail.recordCount = detail.rows.length;
-      setLists((current) =>
-        current.map((item) => (item.id === listId ? detail : item)),
-      );
-      setActiveListId(listId);
-    } catch {
-      /* axios interceptor displays the error */
-    }
-  };
+  const openList = (listId: string) =>
+    router.push(`/${city}/superadmin/lists/${listId}`);
 
   useEffect(() => {
     fetchLists();
@@ -216,224 +196,100 @@ export default function ListsPage() {
       return toast.error("Column names must be unique.");
     }
 
-    if (editingListId) {
-      try {
-        const current = lists.find((list) => list.id === editingListId);
-        await axios.put(`${listUrl}/${editingListId}`, {
-          title: name,
-          description: listForm.description.trim(),
-        });
-        await Promise.all(
-          names.map((columnName, index) =>
-            current?.columns[index]
-              ? axios.put(
-                  `${listUrl}/${editingListId}/columns/${current.columns[index].id}`,
-                  { name: columnName },
-                )
-              : axios.post(`${listUrl}/${editingListId}/columns`, {
-                  name: columnName,
-                }),
-          ),
-        );
-        await Promise.all(
-          (current?.columns.slice(names.length) || []).map((column) =>
-            axios.delete(`${listUrl}/${editingListId}/columns/${column.id}`),
-          ),
-        );
-        await fetchLists();
-        if (activeListId === editingListId) await openList(editingListId);
-        toast.success("List updated.");
-      } catch {
-        return;
-      }
-    } else {
-      try {
-        await axios.post(listUrl, {
-          title: name,
-          description: listForm.description.trim(),
-          columns: names,
-        });
-        await fetchLists();
-        toast.success("List created.");
-      } catch {
-        return;
-      }
-    }
-    setListDialogOpen(false);
-    resetListDialog();
-  };
-
-  const openAddRow = () => {
-    if (!activeList) return;
-    setEditingRowId(null);
-    setRowValues(
-      Object.fromEntries(activeList.columns.map((column) => [column.id, ""])),
-    );
-    setRowDialogOpen(true);
-  };
-
-  const openEditRow = (row: ListRow) => {
-    setEditingRowId(row.id);
-    setRowValues(row.values);
-    setRowDialogOpen(true);
-  };
-
-  const saveRow = async () => {
-    if (!activeList) return;
+    if (savingList) return;
+    setSavingList(true);
     try {
-      const values = Object.fromEntries(Object.entries(rowValues));
-      if (editingRowId)
-        await axios.put(`${listUrl}/${activeList.id}/rows/${editingRowId}`, {
-          values,
-        });
-      else await axios.post(`${listUrl}/${activeList.id}/rows`, { values });
-      await openList(activeList.id);
-      toast.success(editingRowId ? "Entry updated." : "Entry added.");
-      setRowDialogOpen(false);
-    } catch {
-      return;
-    }
-  };
-
-  const openAddColumn = () => {
-    setEditingColumnId(null);
-    setColumnName("");
-    setColumnDialogOpen(true);
-  };
-
-  const openEditColumn = (column: ListColumn) => {
-    setEditingColumnId(column.id);
-    setColumnName(column.name);
-    setColumnDialogOpen(true);
-  };
-
-  const saveColumn = async () => {
-    if (!activeList || !columnName.trim())
-      return toast.error("Please enter a column name.");
-    const name = columnName.trim();
-    if (
-      activeList.columns.some(
-        (column) =>
-          column.id !== editingColumnId &&
-          column.name.toLowerCase() === name.toLowerCase(),
-      )
-    )
-      return toast.error("Column names must be unique.");
-    try {
-      if (editingColumnId)
-        await axios.put(
-          `${listUrl}/${activeList.id}/columns/${editingColumnId}`,
-          { name },
-        );
-      else await axios.post(`${listUrl}/${activeList.id}/columns`, { name });
-      await openList(activeList.id);
-      toast.success(editingColumnId ? "Column updated." : "Column added.");
-      setColumnDialogOpen(false);
-    } catch {
-      return;
+      if (editingListId) {
+        try {
+          const current = lists.find((list) => list.id === editingListId);
+          await axios.put(`${listUrl}/${editingListId}`, {
+            title: name,
+            description: listForm.description.trim(),
+          });
+          await Promise.all(
+            names.map((columnName, index) =>
+              current?.columns[index]
+                ? axios.put(
+                    `${listUrl}/${editingListId}/columns/${current.columns[index].id}`,
+                    { name: columnName },
+                  )
+                : axios.post(`${listUrl}/${editingListId}/columns`, {
+                    name: columnName,
+                  }),
+            ),
+          );
+          await Promise.all(
+            (current?.columns.slice(names.length) || []).map((column) =>
+              axios.delete(`${listUrl}/${editingListId}/columns/${column.id}`),
+            ),
+          );
+          await fetchLists();
+          toast.success("List updated.");
+        } catch {
+          return;
+        }
+      } else {
+        try {
+          await axios.post(listUrl, {
+            title: name,
+            description: listForm.description.trim(),
+            columns: names,
+          });
+          await fetchLists();
+          toast.success("List created.");
+        } catch {
+          return;
+        }
+      }
+      setListDialogOpen(false);
+      resetListDialog();
+    } finally {
+      setSavingList(false);
     }
   };
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
-    if (deleteTarget.type === "list") {
-      try {
-        await axios.delete(`${listUrl}/${deleteTarget.id}`);
-      } catch {
-        return;
-      }
-      setLists((current) =>
-        current.filter((list) => list.id !== deleteTarget.id),
-      );
-      if (activeListId === deleteTarget.id) setActiveListId(null);
-      toast.success("List deleted.");
-    }
-    if (deleteTarget.type === "row" && activeList) {
-      try {
-        await axios.delete(
-          `${listUrl}/${activeList.id}/rows/${deleteTarget.id}`,
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      if (deleteTarget.type === "list") {
+        try {
+          await axios.delete(`${listUrl}/${deleteTarget.id}`);
+        } catch {
+          return;
+        }
+        setLists((current) =>
+          current.filter((list) => list.id !== deleteTarget.id),
         );
-        await openList(activeList.id);
-      } catch {
-        return;
+        toast.success("List deleted.");
       }
-      toast.success("Entry deleted.");
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
-    if (deleteTarget.type === "column" && activeList) {
-      try {
-        await axios.delete(
-          `${listUrl}/${activeList.id}/columns/${deleteTarget.id}`,
-        );
-        await openList(activeList.id);
-      } catch {
-        return;
-      }
-      toast.success("Column and its entries deleted.");
-    }
-    setDeleteTarget(null);
   };
 
-  if (activeList)
-    return (
-      <>
-        <ListWorkspace
-          list={activeList}
-          onBack={() => setActiveListId(null)}
-          onEditList={() => openEditList(activeList)}
-          onAddRow={openAddRow}
-          onEditRow={openEditRow}
-          onDeleteRow={(row) =>
-            setDeleteTarget({ type: "row", id: row.id, name: "this entry" })
-          }
-          onAddColumn={openAddColumn}
-          onEditColumn={openEditColumn}
-          onDeleteColumn={(column) =>
-            setDeleteTarget({
-              type: "column",
-              id: column.id,
-              name: column.name,
-            })
-          }
-        />
-        <ListDialog
-          open={listDialogOpen}
-          onOpenChange={setListDialogOpen}
-          form={listForm}
-          setForm={setListForm}
-          columnNames={columnNames}
-          setColumnNames={setColumnNames}
-          onCountChange={changeColumnCount}
-          onSave={saveList}
-          isEditing={!!editingListId}
-        />
-        <RowDialog
-          list={activeList}
-          open={rowDialogOpen}
-          onOpenChange={setRowDialogOpen}
-          values={rowValues}
-          setValues={setRowValues}
-          onSave={saveRow}
-          isEditing={!!editingRowId}
-        />
-        <ColumnDialog
-          open={columnDialogOpen}
-          onOpenChange={setColumnDialogOpen}
-          name={columnName}
-          setName={setColumnName}
-          onSave={saveColumn}
-          isEditing={!!editingColumnId}
-        />
-        <DeleteDialog
-          target={deleteTarget}
-          onCancel={() => setDeleteTarget(null)}
-          onConfirm={confirmDelete}
-        />
-      </>
-    );
+  const togglePinned = async (list: CustomList, isPinned: boolean) => {
+    if (pinningListId) return;
+    setPinningListId(list.id);
+    try {
+      await axios.put(
+        `${listUrl}/${list.id}`,
+        { is_pinned: !isPinned },
+        requestConfig,
+      );
+      setPinnedIds((ids) =>
+        isPinned ? ids.filter((id) => id !== list.id) : [...ids, list.id],
+      );
+    } finally {
+      setPinningListId(null);
+    }
+  };
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-5">
+      <div className="flex min-w-0 flex-1 flex-col gap-5 overflow-x-hidden">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b pb-5">
           <div>
             <div className="flex items-center gap-2">
@@ -483,7 +339,7 @@ export default function ListsPage() {
           </div>
         </div>
         {pinnedLists.length > 0 && (
-          <section className="space-y-3">
+          <section className="min-w-0 space-y-3">
             <div className="flex items-center gap-2">
               <Pin className="h-4 w-4 text-primary" />
               <h2 className="font-semibold">Pinned</h2>
@@ -505,17 +361,13 @@ export default function ListsPage() {
                     name: list.name,
                   })
                 }
-                onPin={async () => {
-                  await axios.put(`${listUrl}/${list.id}`, {
-                    is_pinned: false,
-                  });
-                  setPinnedIds((ids) => ids.filter((id) => id !== list.id));
-                }}
+                onPin={() => togglePinned(list, true)}
+                pinning={pinningListId === list.id}
               />
             ))}
           </section>
         )}
-        <section>
+        <section className="min-w-0">
           <div className="mb-3 flex items-center gap-2">
             <h2 className="font-semibold">All lists</h2>
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -556,12 +408,8 @@ export default function ListsPage() {
                       name: list.name,
                     })
                   }
-                  onPin={async () => {
-                    await axios.put(`${listUrl}/${list.id}`, {
-                      is_pinned: true,
-                    });
-                    setPinnedIds((ids) => [...ids, list.id]);
-                  }}
+                  onPin={() => togglePinned(list, false)}
+                  pinning={pinningListId === list.id}
                 />
               ))}
             </div>
@@ -573,10 +421,8 @@ export default function ListsPage() {
               onDelete={(list) =>
                 setDeleteTarget({ type: "list", id: list.id, name: list.name })
               }
-              onPin={async (list) => {
-                await axios.put(`${listUrl}/${list.id}`, { is_pinned: true });
-                setPinnedIds((ids) => [...ids, list.id]);
-              }}
+              onPin={(list) => togglePinned(list, false)}
+              pinningListId={pinningListId}
             />
           )}
         </section>
@@ -591,17 +437,19 @@ export default function ListsPage() {
         onCountChange={changeColumnCount}
         onSave={saveList}
         isEditing={!!editingListId}
+        loading={savingList}
       />
       <DeleteDialog
         target={deleteTarget}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={confirmDelete}
+        loading={deleting}
       />
     </>
   );
 }
 
-function ListWorkspace({
+export function ListWorkspace({
   list,
   onBack,
   onEditList,
@@ -623,33 +471,56 @@ function ListWorkspace({
   onDeleteColumn: (column: ListColumn) => void;
 }) {
   return (
-    <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
+    <div className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card px-4 py-3 shadow-sm sm:px-5">
         <div className="flex items-center gap-3">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
+            className="rounded-full"
             onClick={onBack}
             aria-label="Back to lists"
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Heading
-            panel
-            title={list.name}
-            description={list.description || "Manage columns and entries."}
-          />
+          <div className="min-w-0">
+            <Heading
+              panel
+              title={list.name}
+              description={list.description || "Manage columns and entries."}
+            />
+            <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="rounded-md bg-muted px-2 py-0.5 font-medium text-foreground">
+                {list.rows.length}{" "}
+                {list.rows.length === 1 ? "entry" : "entries"}
+              </span>
+              <span>
+                {list.columns.length}{" "}
+                {list.columns.length === 1 ? "column" : "columns"}
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={onEditList} className="gap-2">
+        <div className="flex flex-wrap items-center gap-1 rounded-xl border bg-muted/40 p-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEditList}
+            className="gap-1.5"
+          >
             <Pencil className="h-4 w-4" />
             Edit list
           </Button>
-          <Button variant="outline" onClick={onAddColumn} className="gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onAddColumn}
+            className="gap-1.5"
+          >
             <Plus className="h-4 w-4" />
             Add column
           </Button>
-          <Button onClick={onAddRow} className="gap-2">
+          <Button size="sm" onClick={onAddRow} className="gap-1.5 shadow-sm">
             <Plus className="h-4 w-4" />
             Add entry
           </Button>
@@ -658,12 +529,12 @@ function ListWorkspace({
       <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-max text-sm">
-            <thead className="bg-muted/60">
+            <thead className="bg-muted/70 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 {list.columns.map((column) => (
                   <th
                     key={column.id}
-                    className="min-w-44 border-b px-4 py-3 text-left font-semibold"
+                    className="min-w-44 border-b px-4 py-3.5 text-left font-semibold"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span>{column.name}</span>
@@ -671,7 +542,7 @@ function ListWorkspace({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-7 w-7 rounded-md"
                           onClick={() => onEditColumn(column)}
                           aria-label={`Edit ${column.name} column`}
                         >
@@ -680,7 +551,7 @@ function ListWorkspace({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          className="h-7 w-7 rounded-md text-destructive hover:text-destructive"
                           onClick={() => onDeleteColumn(column)}
                           aria-label={`Delete ${column.name} column`}
                         >
@@ -690,7 +561,7 @@ function ListWorkspace({
                     </div>
                   </th>
                 ))}
-                <th className="w-28 border-b px-4 py-3 text-right font-semibold">
+                <th className="w-24 border-b px-4 py-3.5 text-right font-semibold">
                   Actions
                 </th>
               </tr>
@@ -698,11 +569,14 @@ function ListWorkspace({
             <tbody>
               {list.rows.length ? (
                 list.rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-muted/30">
+                  <tr
+                    key={row.id}
+                    className="transition-colors hover:bg-muted/40"
+                  >
                     {list.columns.map((column) => (
                       <td
                         key={column.id}
-                        className="max-w-72 border-b px-4 py-3 text-muted-foreground"
+                        className="max-w-72 border-b px-4 py-3.5 text-muted-foreground"
                       >
                         {row.values[column.id] || (
                           <span className="text-muted-foreground/50">—</span>
@@ -714,7 +588,7 @@ function ListWorkspace({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-8 w-8 rounded-md"
                           onClick={() => onEditRow(row)}
                           aria-label="Edit entry"
                         >
@@ -723,7 +597,7 @@ function ListWorkspace({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="h-8 w-8 rounded-md text-destructive hover:text-destructive"
                           onClick={() => onDeleteRow(row)}
                           aria-label="Delete entry"
                         >
@@ -737,9 +611,15 @@ function ListWorkspace({
                 <tr>
                   <td
                     colSpan={list.columns.length + 1}
-                    className="px-6 py-20 text-center text-muted-foreground"
+                    className="px-6 py-24 text-center text-muted-foreground"
                   >
-                    No entries yet. Add the first row to this list.
+                    <ClipboardList className="mx-auto mb-3 h-6 w-6 text-muted-foreground/50" />
+                    <p className="font-medium text-foreground">
+                      No entries yet
+                    </p>
+                    <p className="mt-1 text-sm">
+                      Add the first row to start building this list.
+                    </p>
                   </td>
                 </tr>
               )}
@@ -758,6 +638,7 @@ function ListSummary({
   onEdit,
   onDelete,
   onPin,
+  pinning = false,
 }: {
   list: CustomList;
   pinned?: boolean;
@@ -765,20 +646,21 @@ function ListSummary({
   onEdit: () => void;
   onDelete: () => void;
   onPin: () => void;
+  pinning?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card p-4 shadow-sm">
+    <div className="flex min-w-0 flex-wrap items-center gap-4 rounded-xl border bg-card p-4 shadow-sm">
       <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
         <ClipboardList className="h-5 w-5" />
       </div>
-      <button className="min-w-48 flex-1 text-left" onClick={onOpen}>
+      <button className="min-w-0 flex-1 text-left" onClick={onOpen}>
         <div className="flex items-center gap-2">
-          <span className="font-semibold">{list.name}</span>
+          <span className="truncate font-semibold">{list.name}</span>
           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
             Active
           </span>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 truncate text-sm text-muted-foreground">
           {list.description || "No description added."}
         </p>
       </button>
@@ -799,9 +681,14 @@ function ListSummary({
           variant="outline"
           size="icon"
           onClick={onPin}
+          disabled={pinning}
           aria-label={pinned ? "Unpin list" : "Pin list"}
         >
-          <Pin className={`h-4 w-4 ${pinned ? "fill-current" : ""}`} />
+          {pinning ? (
+            <Spinner />
+          ) : (
+            <Pin className={`h-4 w-4 ${pinned ? "fill-current" : ""}`} />
+          )}
         </Button>
         <Button
           variant="outline"
@@ -831,12 +718,14 @@ function ListsTable({
   onEdit,
   onDelete,
   onPin,
+  pinningListId,
 }: {
   lists: CustomList[];
   onOpen: (id: string) => void;
   onEdit: (list: CustomList) => void;
   onDelete: (list: CustomList) => void;
   onPin: (list: CustomList) => void;
+  pinningListId: string | null;
 }) {
   if (!lists.length)
     return (
@@ -845,8 +734,8 @@ function ListsTable({
       </div>
     );
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
-      <div className="overflow-x-auto">
+    <div className="min-w-0 max-w-full overflow-hidden rounded-xl border bg-card">
+      <div className="max-w-full overflow-x-auto">
         <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-muted/50 text-left text-muted-foreground">
             <tr>
@@ -906,9 +795,14 @@ function ListsTable({
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => onPin(list)}
+                      disabled={pinningListId === list.id}
                       aria-label="Pin list"
                     >
-                      <Pin className="h-3.5 w-3.5" />
+                      {pinningListId === list.id ? (
+                        <Spinner className="h-3.5 w-3.5" />
+                      ) : (
+                        <Pin className="h-3.5 w-3.5" />
+                      )}
                     </Button>
                     <Button
                       variant="outline"
@@ -949,6 +843,7 @@ function ListDialog({
   onCountChange,
   onSave,
   isEditing,
+  loading,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -959,6 +854,7 @@ function ListDialog({
   onCountChange: (count: number) => void;
   onSave: () => void;
   isEditing: boolean;
+  loading: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -975,6 +871,7 @@ function ListDialog({
             <Label>List name</Label>
             <Input
               value={form.name}
+              disabled={loading}
               onChange={(event) =>
                 setForm({ ...form, name: event.target.value })
               }
@@ -990,6 +887,7 @@ function ListDialog({
             </Label>
             <Textarea
               value={form.description}
+              disabled={loading}
               onChange={(event) =>
                 setForm({ ...form, description: event.target.value })
               }
@@ -1003,6 +901,7 @@ function ListDialog({
               min="1"
               max="20"
               value={form.columnCount}
+              disabled={loading}
               onChange={(event) => onCountChange(Number(event.target.value))}
             />
           </div>
@@ -1013,6 +912,7 @@ function ListDialog({
                 <Input
                   key={index}
                   value={name}
+                  disabled={loading}
                   onChange={(event) =>
                     setColumnNames(
                       columnNames.map((item: string, itemIndex: number) =>
@@ -1027,11 +927,23 @@ function ListDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancel
           </Button>
-          <Button onClick={onSave}>
-            {isEditing ? "Save changes" : "Create list"}
+          <Button onClick={onSave} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner /> {isEditing ? "Saving changes" : "Creating list"}
+              </>
+            ) : isEditing ? (
+              "Save changes"
+            ) : (
+              "Create list"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1039,7 +951,7 @@ function ListDialog({
   );
 }
 
-function RowDialog({
+export function RowDialog({
   list,
   open,
   onOpenChange,
@@ -1047,6 +959,7 @@ function RowDialog({
   setValues,
   onSave,
   isEditing,
+  loading,
 }: {
   list: CustomList;
   open: boolean;
@@ -1055,6 +968,7 @@ function RowDialog({
   setValues: (values: Record<string, string>) => void;
   onSave: () => void;
   isEditing: boolean;
+  loading: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1071,6 +985,7 @@ function RowDialog({
               <Label>{column.name}</Label>
               <Input
                 value={values[column.id] || ""}
+                disabled={loading}
                 onChange={(event) =>
                   setValues({ ...values, [column.id]: event.target.value })
                 }
@@ -1080,11 +995,23 @@ function RowDialog({
           ))}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancel
           </Button>
-          <Button onClick={onSave}>
-            {isEditing ? "Save changes" : "Add entry"}
+          <Button onClick={onSave} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner /> {isEditing ? "Saving changes" : "Adding entry"}
+              </>
+            ) : isEditing ? (
+              "Save changes"
+            ) : (
+              "Add entry"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1092,13 +1019,14 @@ function RowDialog({
   );
 }
 
-function ColumnDialog({
+export function ColumnDialog({
   open,
   onOpenChange,
   name,
   setName,
   onSave,
   isEditing,
+  loading,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -1106,6 +1034,7 @@ function ColumnDialog({
   setName: (name: string) => void;
   onSave: () => void;
   isEditing: boolean;
+  loading: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1123,17 +1052,30 @@ function ColumnDialog({
           <Input
             autoFocus
             value={name}
+            disabled={loading}
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && onSave()}
             placeholder="e.g. Quantity"
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancel
           </Button>
-          <Button onClick={onSave}>
-            {isEditing ? "Save changes" : "Add column"}
+          <Button onClick={onSave} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner /> {isEditing ? "Saving changes" : "Adding column"}
+              </>
+            ) : isEditing ? (
+              "Save changes"
+            ) : (
+              "Add column"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1145,10 +1087,12 @@ function DeleteDialog({
   target,
   onCancel,
   onConfirm,
+  loading,
 }: {
   target: DeleteTarget;
   onCancel: () => void;
   onConfirm: () => void;
+  loading: boolean;
 }) {
   const noun =
     target?.type === "column"
@@ -1168,11 +1112,17 @@ function DeleteDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} disabled={loading}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Delete
+          <Button variant="destructive" onClick={onConfirm} disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner /> Deleting
+              </>
+            ) : (
+              "Delete"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

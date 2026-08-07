@@ -1,4 +1,4 @@
-import ListsPage from "@/components/page-compositions/general/list-page";
+import ListsPage from "@/components/features/lists/lists-page";
 
 export default function Page() {
   return <ListsPage />;
