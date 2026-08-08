@@ -17,6 +17,7 @@ import {
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  Calculator,
   Filter,
   RotateCcw,
   Search,
@@ -48,6 +49,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Spinner from "@/components/ui/spinner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -104,6 +114,11 @@ const PageTable = <T extends object>({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [search, setSearch] = useState("");
+  const [exportFormat, setExportFormat] = useState<"pdf" | "excel" | null>(
+    null,
+  );
+  const [totalColumnIndex, setTotalColumnIndex] = useState("none");
+  const [exporting, setExporting] = useState(false);
   const debouncedSearch = useDebounce(search, 500);
   const { userID } = useUserDetail();
   const isMobile = useIsMobile();
@@ -219,30 +234,81 @@ const PageTable = <T extends object>({
   }
 
   async function handleExcelDownload() {
-    try {
-      const { headers, rows } = getVisibleExportData();
-      if (!rows.length || !headers.length) return;
-      await exportToExcel(
-        headers,
-        rows,
-        "Table-Export.xlsx",
-        false,
-        "",
-        false,
-        userID,
-      );
-    } catch (error) {
-      console.error("Error exporting Excel:", error);
-    }
+    setTotalColumnIndex("none");
+    setExportFormat("excel");
   }
 
   async function handlePdfDownload() {
+    setTotalColumnIndex("none");
+    setExportFormat("pdf");
+  }
+
+  function parseNumericValue(value: string) {
+    const normalized = value
+      .trim()
+      .replace(/^\((.*)\)$/, "-$1")
+      .replace(/^(?:Rs\.?|PKR|USD|EUR|GBP|\$|€|£|¥)\s*/i, "")
+      .replace(/,/g, "");
+
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(normalized)) return null;
+    const number = Number(normalized);
+    return Number.isFinite(number) ? number : null;
+  }
+
+  function getSelectedTotal(headers: string[], rows: string[][]) {
+    if (totalColumnIndex === "none") return null;
+
+    const columnIndex = Number(totalColumnIndex);
+    if (!Number.isInteger(columnIndex) || !headers[columnIndex]) return null;
+
+    const total = rows.reduce((sum, row) => {
+      const value = parseNumericValue(row[columnIndex] ?? "");
+      return sum + (value ?? 0);
+    }, 0);
+
+    return {
+      columnName: headers[columnIndex],
+      value: total,
+      displayValue: new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: 2,
+      }).format(total),
+    };
+  }
+
+  async function confirmExport() {
     try {
       const { headers, rows } = getVisibleExportData();
       if (!rows.length || !headers.length) return;
-      await exportToPdf(headers, rows, "Table-Export.pdf", userID);
+      const selectedTotal = getSelectedTotal(headers, rows);
+      setExporting(true);
+
+      if (exportFormat === "excel") {
+        const rowsWithTotal = selectedTotal
+          ? [...rows, [], ["Total", selectedTotal.value]]
+          : rows;
+        await exportToExcel(
+          headers,
+          rowsWithTotal,
+          "Table-Export.xlsx",
+          false,
+          "",
+          false,
+          userID,
+        );
+      } else if (exportFormat === "pdf") {
+        await exportToPdf(
+          headers,
+          rows,
+          "Table-Export.pdf",
+          userID,
+          selectedTotal,
+        );
+      }
+      setExportFormat(null);
     } catch (error) {
-      console.error("Error exporting PDF:", error);
+      console.error("Error exporting table:", error);
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -285,6 +351,74 @@ const PageTable = <T extends object>({
           {children}
         </div>
       )}
+
+      <Dialog
+        open={exportFormat !== null}
+        onOpenChange={(open) => {
+          if (!open && !exporting) setExportFormat(null);
+        }}
+      >
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-[420px]">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <Calculator className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold text-foreground">
+                  Add a column total
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  Optionally total a numeric column before exporting.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  Column to sum
+                </Label>
+                <Select
+                  value={totalColumnIndex}
+                  onValueChange={setTotalColumnIndex}
+                >
+                  <SelectTrigger className="h-9 rounded-lg">
+                    <SelectValue placeholder="Choose a column" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No total</SelectItem>
+                    {getVisibleExportData().headers.map((header, index) => {
+                      const hasNumericValue = getVisibleExportData().rows.some(
+                        (row) => parseNumericValue(row[index] ?? "") !== null,
+                      );
+
+                      return hasNumericValue ? (
+                        <SelectItem
+                          key={`${header}-${index}`}
+                          value={String(index)}
+                        >
+                          {header}
+                        </SelectItem>
+                      ) : null;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="h-9 w-full rounded-lg"
+                disabled={exporting}
+                onClick={confirmExport}
+              >
+                {exporting && <Spinner />}
+                Export {exportFormat === "pdf" ? "PDF" : "Excel"}
+              </Button>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       <div
         className={`relative flex flex-1 ${height} ${isMobile && tableWidth ? tableWidth : ""}`}

@@ -8,6 +8,11 @@ type ExportPdfRequest = {
   rows?: unknown[][];
   fileName?: string;
   format?: string;
+  total?: {
+    columnName?: string;
+    value?: number;
+    displayValue?: string;
+  };
 };
 
 const pageSize: [number, number] = [841.89, 595.28];
@@ -118,6 +123,18 @@ export async function POST(request: Request) {
         color: colors.white,
       });
       y = bannerTop - bannerHeight - 14;
+
+      if (body.total?.columnName && Number.isFinite(body.total.value)) {
+        const totalText = `TOTAL: ${body.total.displayValue ?? body.total.value}`;
+        page.drawText(safeText(totalText), {
+          x: margin,
+          y,
+          size: 8,
+          font: boldFont,
+          color: colors.text,
+        });
+        y -= 16;
+      }
     };
 
     const getWrappedCells = (values: string[], rowFont: PDFFont) =>

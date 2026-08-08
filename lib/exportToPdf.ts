@@ -6,6 +6,7 @@ export default async function exportToPdf(
   rows: string[][],
   fileName = "Table-export.pdf",
   userID: string | number | null = null,
+  total?: { columnName: string; value: number; displayValue: string } | null,
 ) {
   if (!headers.length || !rows.length) {
     throw new Error("No data available to export");
@@ -19,6 +20,7 @@ export default async function exportToPdf(
     headers,
     rows,
     fileName,
+    total,
   };
 
   try {
