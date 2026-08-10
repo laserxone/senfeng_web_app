@@ -1,40 +1,58 @@
 import { db } from "@/config/firebase";
 import axios from "@/lib/axios";
+import { UserConversation } from "@/lib/types";
 import { doc, onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import useUserDetail from "./use-user-detail";
 
 export function useMessagesNotification() {
   const { userID } = useUserDetail();
-  const [conversations, setConversations] = useState(0);
+  const [conversations, setConversations] = useState<UserConversation[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchConversations = useCallback(async () => {
     if (!userID) return;
 
-    fetchConversations();
+    setLoading(true);
+    try {
+      const response = await axios.get(`/${userID}/chat`);
+      setConversations(response.data);
+    } finally {
+      setLoading(false);
+    }
+  }, [userID]);
+
+  useEffect(() => {
+    if (!userID) {
+      setConversations([]);
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => void fetchConversations(), 150);
+    };
 
     const unsub = onSnapshot(
       doc(db, "conversations_meta", userID.toString()),
-      () => {
-        fetchConversations();
-      },
+      refresh,
     );
 
-    return () => unsub();
-  }, [userID]);
+    refresh();
+    return () => {
+      if (timer) clearTimeout(timer);
+      unsub();
+    };
+  }, [fetchConversations, userID]);
 
-  const fetchConversations = async () => {
-    const response = await axios.get(`/${userID}/chat`);
-    let unreadConversationsCount = 0;
-    const convs = response.data.map((c: { unreadCount: number }) => {
-      if (Number(c.unreadCount) > 0) {
-        unreadConversationsCount++;
-      }
-      return c;
-    });
+  const unreadCount = useMemo(
+    () =>
+      conversations.filter(
+        (conversation) => Number(conversation.conversation?.unreadCount) > 0,
+      ).length,
+    [conversations],
+  );
 
-    setConversations(unreadConversationsCount);
-  };
-
-  return { conversations };
+  return { conversations, loading, unreadCount };
 }

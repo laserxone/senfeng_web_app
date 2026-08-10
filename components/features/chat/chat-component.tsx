@@ -139,7 +139,7 @@ const Chatcomponent = ({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-muted/30">
-      {stateLoading ? (
+      {stateLoading || loading ? (
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
           <Spinner />
         </div>

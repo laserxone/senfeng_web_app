@@ -16,30 +16,35 @@ export default function UserChatIcon({
   onChatSelected,
   className,
   active = null,
+  conversations: providedConversations,
+  loading: providedLoading,
 }: {
   myId: number | string;
   onChatSelected: (val: UserConversation) => void;
   className?: string;
   active?: number | null;
+  conversations?: UserConversation[];
+  loading?: boolean;
 }) {
-  const [conversations, setConversations] = useState<UserConversation[]>([]);
+  const [fetchedConversations, setFetchedConversations] =
+    useState<UserConversation[]>([]);
   const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   const fetchConversations = useCallback(async () => {
-    setLoading(true);
+    setLocalLoading(true);
     try {
       const response = await axios.get(`/${myId}/chat`);
       const convs = response.data;
 
-      setConversations(convs);
+      setFetchedConversations(convs);
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   }, [myId]);
 
   useEffect(() => {
-    if (!myId) return;
+    if (providedConversations || !myId) return;
 
     queueMicrotask(() => void fetchConversations());
 
@@ -51,7 +56,10 @@ export default function UserChatIcon({
     );
 
     return () => unsub();
-  }, [fetchConversations, myId]);
+  }, [fetchConversations, myId, providedConversations]);
+
+  const conversations = providedConversations ?? fetchedConversations;
+  const loading = providedLoading ?? localLoading;
 
   const filtered = conversations.filter((item) =>
     item?.name?.toLowerCase().includes(search.toLowerCase()),

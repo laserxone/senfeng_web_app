@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import Spinner from "@/components/ui/spinner";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { ConversationType, UserConversation } from "@/lib/types";
@@ -14,15 +15,21 @@ import UserChatIcon from "./chatIcon";
 type MessagePageProps = {
   embedded?: boolean;
   onClose?: () => void;
+  conversations?: UserConversation[];
+  conversationsLoading?: boolean;
 };
 
 export default function MessagePage({
   embedded = false,
   onClose,
+  conversations,
+  conversationsLoading,
 }: MessagePageProps) {
   const { userID, base_route } = useUserDetail();
   const [selectedConversation, setSelectedConversation] =
     useState<ConversationType | null>(null);
+  const [openingUser, setOpeningUser] =
+    useState<UserConversation | null>(null);
   const [loading, setLoading] = useState(false);
 
   const getConversation = useCallback(
@@ -71,7 +78,12 @@ export default function MessagePage({
   }, [embedded, getConversation, userID]);
 
   const selectUser = async (item: UserConversation) => {
-    if (item.id === selectedConversation?.user?.id) return;
+    if (
+      item.id === selectedConversation?.user?.id ||
+      item.id === openingUser?.id
+    ) {
+      return;
+    }
 
     if (!embedded) {
       const url = new URL(window.location.href);
@@ -79,19 +91,18 @@ export default function MessagePage({
       window.history.pushState({}, "", url);
     }
 
-    setSelectedConversation((prevState) => {
-      if (!prevState) return prevState;
-      const newState = { ...prevState };
-      newState.user.name = item.name;
-      newState.user.dp = item.dp;
-      return newState;
-    });
-
-    await getConversation(item.id);
+    setSelectedConversation(null);
+    setOpeningUser(item);
+    try {
+      await getConversation(item.id);
+    } finally {
+      setOpeningUser(null);
+    }
   };
 
   const clearSelection = () => {
     setSelectedConversation(null);
+    setOpeningUser(null);
 
     if (!embedded) {
       const url = new URL(window.location.href);
@@ -100,12 +111,15 @@ export default function MessagePage({
     }
   };
 
+  const activeUser = selectedConversation?.user ?? openingUser;
+  const conversationOpen = Boolean(activeUser);
+
   return (
     <div
       className={`grid min-h-0 flex-1 grid-cols-1 overflow-hidden md:grid-cols-[320px_minmax(0,1fr)] ${embedded ? "h-full" : "h-[calc(100dvh-70px)] rounded-xl border bg-background"}`}
     >
       <aside
-        className={`${selectedConversation ? "hidden md:flex" : "flex"} min-h-0 flex-col border-r bg-background`}
+        className={`${conversationOpen ? "hidden md:flex" : "flex"} min-h-0 flex-col border-r bg-background`}
       >
         <div className="flex h-[69px] shrink-0 items-center justify-between gap-3 border-b px-5">
           <div className="min-w-0">
@@ -114,36 +128,34 @@ export default function MessagePage({
               Select a user to start messaging
             </p>
           </div>
-          {embedded && onClose ? (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="md:hidden"
-              onClick={onClose}
-              aria-label="Close messages"
-            >
-              <X />
-            </Button>
+          {!conversationOpen ? (
+            <MessagePanelActions
+              embedded={embedded}
+              onClose={onClose}
+              href={`/${base_route}/messages`}
+            />
           ) : null}
         </div>
 
         <div className="min-h-0 flex-1 overflow-hidden">
           <UserChatIcon
-            active={selectedConversation?.user?.id ?? null}
+            active={activeUser?.id ?? null}
             className={
               embedded ? "h-[calc(88dvh-113px)]" : "h-[calc(100dvh-182px)]"
             }
             myId={userID}
+            conversations={conversations}
+            loading={conversationsLoading}
             onChatSelected={(item) => void selectUser(item)}
           />
         </div>
       </aside>
 
       <main
-        className={`${selectedConversation ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-muted/20`}
+        className={`${conversationOpen ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-muted/20`}
       >
-        {!selectedConversation ? (
-          <EmptyChat embedded={embedded} onClose={onClose} />
+        {!conversationOpen ? (
+          <EmptyChat />
         ) : (
           <>
             <div className="flex h-[69px] shrink-0 items-center justify-between gap-3 border-b bg-background px-4 sm:px-5">
@@ -158,53 +170,36 @@ export default function MessagePage({
                   <MessagesSquare />
                 </Button>
                 <ProfilePicture
-                  img={selectedConversation.user?.dp}
-                  name={selectedConversation.user?.name}
+                  img={activeUser?.dp}
+                  name={activeUser?.name}
                   className="mr-0 size-9"
                 />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">
-                    {selectedConversation.user?.name}
+                    {activeUser?.name}
                   </p>
                   <p className="text-xs text-muted-foreground">Conversation</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
-                {embedded ? (
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Open full messages page"
-                  >
-                    <Link
-                      href={`/${base_route}/messages?chat=${selectedConversation.user.id}`}
-                    >
-                      <Maximize2 />
-                    </Link>
-                  </Button>
-                ) : null}
-                {embedded && onClose ? (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={onClose}
-                    aria-label="Close messages"
-                  >
-                    <X />
-                  </Button>
-                ) : null}
-              </div>
+              <MessagePanelActions
+                embedded={embedded}
+                onClose={onClose}
+                href={`/${base_route}/messages?chat=${activeUser?.id}`}
+              />
             </div>
 
             <div className="min-h-0 flex-1">
-              <Chatcomponent
-                id={selectedConversation.id}
-                user={selectedConversation.user}
-                stateLoading={loading}
-                onSetLoading={setLoading}
-              />
+              {selectedConversation ? (
+                <Chatcomponent
+                  id={selectedConversation.id}
+                  user={selectedConversation.user}
+                  stateLoading={loading}
+                  onSetLoading={setLoading}
+                />
+              ) : (
+                <OpeningConversation />
+              )}
             </div>
           </>
         )}
@@ -213,26 +208,47 @@ export default function MessagePage({
   );
 }
 
-function EmptyChat({
+function MessagePanelActions({
   embedded,
+  href,
   onClose,
 }: {
   embedded: boolean;
+  href: string;
   onClose?: () => void;
 }) {
+  if (!embedded) return null;
+
   return (
-    <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-8 text-center">
-      {embedded && onClose ? (
+    <div className="flex shrink-0 items-center gap-1">
+      <Button
+        asChild
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Open full messages page"
+        onClick={onClose}
+      >
+        <Link href={href}>
+          <Maximize2 />
+        </Link>
+      </Button>
+      {onClose ? (
         <Button
           variant="ghost"
           size="icon-sm"
-          className="absolute top-4 right-4"
           onClick={onClose}
           aria-label="Close messages"
         >
           <X />
         </Button>
       ) : null}
+    </div>
+  );
+}
+
+function EmptyChat() {
+  return (
+    <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden p-8 text-center">
       <div className="max-w-sm">
         <span className="mx-auto mb-5 grid size-20 place-items-center rounded-3xl bg-primary/10 text-primary ring-1 ring-primary/10">
           <Send className="size-8" />
@@ -244,6 +260,15 @@ function EmptyChat({
           Choose a user from the list to start or continue a conversation.
         </p>
       </div>
+    </div>
+  );
+}
+
+function OpeningConversation() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+      <Spinner className="size-5" />
+      <p className="text-sm font-medium">Opening conversation...</p>
     </div>
   );
 }
