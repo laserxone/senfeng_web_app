@@ -164,14 +164,19 @@ const ClientCard = memo(
       }
     }
 
-    const infoItem = (label: string, value?: string | number | null) => (
+    const infoItem = (label: string, value?: string | number | null, additional?: string) => (
       <div className="min-w-0 rounded-md border bg-muted/20 px-2.5 py-2 ring-1 ring-transparent transition-colors hover:bg-muted/30">
         <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
           {label}
         </p>
-        <p className="mt-0.5 text-sm leading-5 font-semibold break-words text-foreground">
+        <p className="mt-0.5 text-sm leading-5 font-semibold wrap-break-word text-foreground">
           {value || "N/A"}
         </p>
+        {
+          additional && <p className="mt-0.5 text-xs leading-5 wrap-break-word text-foreground">
+            {additional}
+          </p>
+        }
       </div>
     );
 
@@ -341,112 +346,112 @@ const ClientCard = memo(
                 {((!data?.machine?.cancelled_detail &&
                   !data?.machine?.commission_issued) ||
                   override) && (
-                  <>
-                    <Button
-                      size="sm"
-                      className="h-7 rounded-md px-2.5 text-xs"
-                      onClick={() => {
-                        if (!data?.editAllowed) {
-                          toast.info("You are not allowed to edit machine");
-                          return;
-                        }
+                    <>
+                      <Button
+                        size="sm"
+                        className="h-7 rounded-md px-2.5 text-xs"
+                        onClick={() => {
+                          if (!data?.editAllowed) {
+                            toast.info("You are not allowed to edit machine");
+                            return;
+                          }
 
-                        if (data?.machine?.type === "Parts") {
-                          setEditParts(true);
-                        } else {
-                          setEditMachine(true);
-                        }
-                      }}
-                    >
-                      <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                      {data?.machine?.type === "Parts"
-                        ? "Edit Parts"
-                        : "Edit Machine"}
-                    </Button>
+                          if (data?.machine?.type === "Parts") {
+                            setEditParts(true);
+                          } else {
+                            setEditMachine(true);
+                          }
+                        }}
+                      >
+                        <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                        {data?.machine?.type === "Parts"
+                          ? "Edit Parts"
+                          : "Edit Machine"}
+                      </Button>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 rounded-md px-2.5 text-xs"
-                        >
-                          <MoreHorizontal className="mr-1.5 h-3.5 w-3.5" />
-                          More
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 rounded-md px-2.5 text-xs"
+                          >
+                            <MoreHorizontal className="mr-1.5 h-3.5 w-3.5" />
+                            More
+                          </Button>
+                        </DropdownMenuTrigger>
 
-                      <DropdownMenuContent align="end" className="w-52">
-                        {data?.machine &&
-                          (!data?.machine?.payment_lock || override) && (
+                        <DropdownMenuContent align="end" className="w-52">
+                          {data?.machine &&
+                            (!data?.machine?.payment_lock || override) && (
+                              <DropdownMenuItem
+                                className="text-xs"
+                                onClick={() => {
+                                  if (!data?.editAllowed) {
+                                    toast.info(
+                                      "You are not allowed to add payment",
+                                    );
+                                    return;
+                                  }
+
+                                  setAddPayment(true);
+                                }}
+                              >
+                                <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+                                Add Payment
+                              </DropdownMenuItem>
+                            )}
+
+                          {installments.length > 0 && (
                             <DropdownMenuItem
                               className="text-xs"
-                              onClick={() => {
-                                if (!data?.editAllowed) {
-                                  toast.info(
-                                    "You are not allowed to add payment",
-                                  );
-                                  return;
-                                }
-
-                                setAddPayment(true);
-                              }}
+                              onClick={() => setInstallmentVisible(true)}
                             >
-                              <CreditCard className="mr-1.5 h-3.5 w-3.5" />
-                              Add Payment
+                              <CalendarClock className="mr-2 h-3.5 w-3.5" />
+                              Installments
                             </DropdownMenuItem>
                           )}
 
-                        {installments.length > 0 && (
                           <DropdownMenuItem
                             className="text-xs"
-                            onClick={() => setInstallmentVisible(true)}
+                            onClick={() => setCredit(true)}
                           >
-                            <CalendarClock className="mr-2 h-3.5 w-3.5" />
-                            Installments
+                            <Banknote className="mr-2 h-3.5 w-3.5" />
+                            Credit Cheque
                           </DropdownMenuItem>
-                        )}
 
-                        <DropdownMenuItem
-                          className="text-xs"
-                          onClick={() => setCredit(true)}
-                        >
-                          <Banknote className="mr-2 h-3.5 w-3.5" />
-                          Credit Cheque
-                        </DropdownMenuItem>
+                          {data && !data?.machine?.ready_for_delivery && (
+                            <DropdownMenuItem
+                              className="text-xs"
+                              onClick={() => setReadyForDelivery(data)}
+                            >
+                              <Truck className="mr-2 h-3.5 w-3.5" />
+                              Apply For Delivery
+                            </DropdownMenuItem>
+                          )}
 
-                        {data && !data?.machine?.ready_for_delivery && (
-                          <DropdownMenuItem
-                            className="text-xs"
-                            onClick={() => setReadyForDelivery(data)}
-                          >
-                            <Truck className="mr-2 h-3.5 w-3.5" />
-                            Apply For Delivery
-                          </DropdownMenuItem>
-                        )}
+                          {data && data?.machine?.ready_for_delivery && (
+                            <DropdownMenuItem
+                              className="text-xs text-destructive"
+                              onClick={() => setRevokeDelivery(data)}
+                            >
+                              <Truck className="mr-2 h-3.5 w-3.5" />
+                              Revoke Delivery
+                            </DropdownMenuItem>
+                          )}
 
-                        {data && data?.machine?.ready_for_delivery && (
-                          <DropdownMenuItem
-                            className="text-xs text-destructive"
-                            onClick={() => setRevokeDelivery(data)}
-                          >
-                            <Truck className="mr-2 h-3.5 w-3.5" />
-                            Revoke Delivery
-                          </DropdownMenuItem>
-                        )}
+                          <DropdownMenuSeparator />
 
-                        <DropdownMenuSeparator />
-
-                        <div className="w-full px-1 py-1">
-                          <CancelDeal
-                            machine={data?.machine}
-                            onRefresh={onRefresh}
-                          />
-                        </div>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                )}
+                          <div className="w-full px-1 py-1">
+                            <CancelDeal
+                              machine={data?.machine}
+                              onRefresh={onRefresh}
+                            />
+                          </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
 
                 {isAdmin && (
                   <DropdownMenu>
@@ -613,7 +618,8 @@ const ClientCard = memo(
                     : ["N/A"]
                   ).map((item, index) => (
                     <Fragment key={index}>
-                      {infoItem(`Order ${index + 1}`, item)}
+                      {infoItem(`Order ${index + 1}`, item, machine?.shipment_title?.[index])}
+
                     </Fragment>
                   ))}
                   {machine.delivery_date &&

@@ -607,6 +607,7 @@ export type MachineProps = {
   owner?: string;
   user_name?: string;
   sale_id?: number;
+  shipment_title?: string[]
 };
 
 export type InstallmentProps = {

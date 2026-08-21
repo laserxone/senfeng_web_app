@@ -23,17 +23,52 @@ export async function GET(
     const user = userDetail.rows?.[0];
 
     if (isAdmin) {
+      
       const machineQuery = `
-  SELECT s.*, 
-      co.commission_issued AS commission_issued,
-         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
-         cm.id AS cancelled_id,
-         cm.created_at AS cancelled_at,
-         cm.issued AS cancelled_issued,
-         cm.reason AS cancelled_reason
+   SELECT 
+    s.*,
+    co.commission_issued AS commission_issued,
+
+    CASE 
+      WHEN cm.id IS NOT NULL THEN TRUE 
+      ELSE FALSE 
+    END AS cancelled_detail,
+
+    cm.id AS cancelled_id,
+    cm.created_at AS cancelled_at,
+    cm.issued AS cancelled_issued,
+    cm.reason AS cancelled_reason,
+
+    COALESCE(
+      (
+        SELECT ARRAY_AGG(
+          COALESCE(
+            (
+              SELECT o.title
+              FROM order_items oi
+              JOIN orders o ON o.id = oi.order_id
+              WHERE oi.machine_serial = serial.machine_serial
+              ORDER BY oi.id DESC
+              LIMIT 1
+            ),
+            'Nil'
+          )
+          ORDER BY serial.idx
+        )
+        FROM unnest(s.order_no_arr) WITH ORDINALITY 
+          AS serial(machine_serial, idx)
+      ),
+      ARRAY[]::text[]
+    ) AS shipment_title
+
   FROM sale s
-  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
-  LEFT JOIN commissions co ON s.id = co.sale_id 
+
+  LEFT JOIN cancelled_machine cm
+    ON s.id = cm.machine_id
+
+  LEFT JOIN commissions co
+    ON s.id = co.sale_id
+
   WHERE s.id = $1
 `;
 

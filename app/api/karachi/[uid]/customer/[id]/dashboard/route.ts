@@ -49,7 +49,38 @@ export async function GET(
         else missingFields.push(field);
       });
 
-      const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
+      const machinesQuery = `
+            SELECT s.*, 
+         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
+         cm.id AS cancelled_id,
+         cm.created_at AS cancelled_at,
+         cm.issued AS cancelled_issued,
+         cm.reason AS cancelled_reason,
+         COALESCE(
+      (
+        SELECT ARRAY_AGG(
+          COALESCE(
+            (
+              SELECT o.title
+              FROM order_items oi
+              JOIN orders o ON o.id = oi.order_id
+              WHERE oi.machine_serial = serial.machine_serial
+              ORDER BY oi.id DESC
+              LIMIT 1
+            ),
+            'Nil'
+          )
+          ORDER BY serial.idx
+        )
+        FROM unnest(s.order_no_arr) WITH ORDINALITY 
+          AS serial(machine_serial, idx)
+      ),
+      ARRAY[]::text[]
+    ) AS shipment_title
+  FROM sale s
+  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
+             WHERE s.customer_id = $1 ORDER BY s.contract_date ASC
+            `;
       const partsQuery = `SELECT * FROM savedinvoices_karachi WHERE customer_id = $1 ORDER BY id ASC`;
       const machinesResult = await pool.query(machinesQuery, [id]);
       const partsResult = await pool.query(partsQuery, [id]);
