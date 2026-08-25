@@ -20,9 +20,13 @@ import RenderStockItemsOtherView from "./render-stock-items-other-view";
 export default function LowStock({
   stock,
   handleOrderStock,
+  open,
+  onOpenChange,
 }: {
   stock: StockProps[];
   handleOrderStock: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const [search, setSearch] = useState("");
   const [lowStockStatus, setLowStockStatus] = useState(false);
@@ -30,7 +34,6 @@ export default function LowStock({
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
-  const [open, setOpen] = useState(false);
   useEffect(() => {
     if (stock.length > 0) {
       const hasLowStock = stock.some(
@@ -42,10 +45,6 @@ export default function LowStock({
       setLowStockStatus(hasLowStock);
     }
   }, [stock]);
-
-  function handleToggle() {
-    setOpen(!open);
-  }
 
   const filteredStock = useMemo(
     () =>
@@ -73,13 +72,13 @@ export default function LowStock({
   return (
     <>
       <Button
-        onClick={handleToggle}
+        onClick={() => onOpenChange(true)}
         className={`h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal ${lowStockStatus ? "blinking-button" : ""}`}
       >
         <div className="break-words">Low Stock</div>
       </Button>
 
-      <Dialog open={open} onOpenChange={handleToggle}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-6xl">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

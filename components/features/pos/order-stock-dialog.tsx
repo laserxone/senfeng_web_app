@@ -46,7 +46,7 @@ import "./Button.css";
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
 
-async function convertImageToPngDataUrl(url: string) {
+export async function convertImageToPngDataUrl(url: string) {
   const response = await fetch(url);
   if (!response.ok) throw new Error("Unable to download product image");
 
@@ -121,7 +121,7 @@ const OrderStockDialog = ({
     setSelectedItems([]);
   };
 
-  async function handleCreatePdf() {
+  async function handleCreatePdf() { 
     setLoading(true);
 
     const headers = [

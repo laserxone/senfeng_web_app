@@ -184,6 +184,89 @@
   animation: pulseOpacity 1.5s ease-in-out infinite;
 }
 
+/* Chatcn: scoped to the messenger; these variables do not alter the app theme. */
+[data-chat-theme="lunar"] {
+  --chat-bg-app: #fafafa;
+  --chat-bg-sidebar: #f4f4f5;
+  --chat-bg-main: #fff;
+  --chat-bg-header: rgba(255, 255, 255, 0.75);
+  --chat-bg-composer: rgba(255, 255, 255, 0.82);
+  --chat-bubble-outgoing: #6366f1;
+  --chat-bubble-outgoing-text: #fff;
+  --chat-bubble-incoming: #f4f4f5;
+  --chat-bubble-incoming-text: #18181b;
+  --chat-accent: #6366f1;
+  --chat-accent-soft: rgb(99 102 241 / 8%);
+  --chat-green: #22c55e;
+  --chat-red: #ef4444;
+  --chat-text-primary: #18181b;
+  --chat-text-secondary: #71717a;
+  --chat-text-tertiary: #a1a1aa;
+  --chat-border: rgb(0 0 0 / 6%);
+  --chat-border-strong: rgb(0 0 0 / 10%);
+  --chat-shadow-md: 0 4px 12px rgb(0 0 0 / 6%);
+  --chat-shadow-toolbar: 0 2px 16px rgb(0 0 0 / 12%);
+  --chat-bubble-radius: 14px;
+  --chat-bubble-radius-grouped: 4px;
+  --chat-input-radius: 20px;
+}
+
+.dark [data-chat-theme="lunar"] {
+  --chat-bg-app: #09090b;
+  --chat-bg-sidebar: #18181b;
+  --chat-bg-main: #09090b;
+  --chat-bg-header: rgb(24 24 27 / 75%);
+  --chat-bg-composer: rgb(24 24 27 / 82%);
+  --chat-bubble-outgoing: #818cf8;
+  --chat-bubble-outgoing-text: #fff;
+  --chat-bubble-incoming: #27272a;
+  --chat-bubble-incoming-text: #fafafa;
+  --chat-accent: #818cf8;
+  --chat-accent-soft: rgb(129 140 248 / 10%);
+  --chat-green: #4ade80;
+  --chat-red: #f87171;
+  --chat-text-primary: #fafafa;
+  --chat-text-secondary: #a1a1aa;
+  --chat-text-tertiary: #52525b;
+  --chat-border: rgb(255 255 255 / 6%);
+  --chat-border-strong: rgb(255 255 255 / 10%);
+  --chat-shadow-md: 0 4px 16px rgb(0 0 0 / 30%);
+  --chat-shadow-toolbar: 0 2px 20px rgb(0 0 0 / 40%);
+}
+
+@keyframes chat-message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes chat-typing-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+.chat-message {
+  animation: chat-message-enter 250ms ease-out;
+}
+.chat-typing-dot {
+  animation: chat-typing-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-message,
+  .chat-typing-dot {
+    animation: none;
+  }
+}
+
 .loading-page {
   position: absolute;
   top: 0;

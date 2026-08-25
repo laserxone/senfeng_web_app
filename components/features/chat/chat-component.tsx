@@ -5,7 +5,7 @@ import axios from "@/lib/axios";
 import exportToExcel from "@/lib/exportToExcel";
 import { TriggerFirebase } from "@/lib/triggerFirebase";
 import { Messages, UserConversation } from "@/lib/types";
-import { Clock, Send } from "lucide-react";
+import { Clock, Reply, Send, SmilePlus, X } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -21,6 +21,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import Spinner from "@/components/ui/spinner";
+import exportToPdf, { PdfImageCell } from "@/lib/exportToPdf";
+import { getDownloadURL, ref } from "firebase/storage";
+import { storage } from "@/config/firebase";
+import { convertImageToPngDataUrl } from "../pos/order-stock-dialog";
 
 type ChatComponentType = {
   id: number | undefined;
@@ -41,6 +45,10 @@ const Chatcomponent = ({
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
   const [visibleCount, setVisibleCount] = useState(20);
+  const [replyingTo, setReplyingTo] = useState<Messages | null>(null);
+  const [reactionMenuFor, setReactionMenuFor] = useState<
+    string | number | null
+  >(null);
 
   useEffect(() => {
     if (!id) return;
@@ -86,22 +94,33 @@ const Chatcomponent = ({
     const created = new Date();
 
     const tempId = `temp-${Date.now()}`;
-    const tempMessage = {
+    const replyToMessageId = replyingTo?.id;
+    const tempMessage: Messages = {
       id: tempId,
       message: input,
       created_at: created,
       sender_id: userID,
       pending: true,
+      reply_to_message_id: replyToMessageId ?? null,
+      reply_to: replyingTo
+        ? {
+            id: replyingTo.id,
+            sender_id: replyingTo.sender_id,
+            message: replyingTo.message,
+          }
+        : null,
     };
 
     setTempMessages((prev) => [...prev, tempMessage]);
     setInput("");
+    setReplyingTo(null);
 
     axios
       .post(`/${userID}/conversations/${id}`, {
         senderId: userID,
         message: input,
         created_at: created,
+        replyToMessageId,
       })
       .then(() => {
         if (id && user?.id) {
@@ -112,6 +131,28 @@ const Chatcomponent = ({
       .catch(() => {
         setTempMessages((prev) => prev.filter((msg) => msg.id !== tempId));
       });
+  };
+
+  const toggleReaction = async (messageId: string | number, emoji: string) => {
+    const current = combinedMessages.find(
+      (message) => message.id === messageId,
+    );
+    const mine = current?.reactions
+      ?.find((reaction) => reaction.emoji === emoji)
+      ?.userIds.some((id) => Number(id) === Number(userID));
+    try {
+      await axios({
+        method: mine ? "delete" : "post",
+        url: `/${userID}/conversations/${id}/reactions`,
+        data: { messageId, userId: userID, emoji },
+      });
+      if (id && user?.id) {
+        await TriggerFirebase(id.toString(), user.id.toString());
+        await TriggerFirebase("", userID.toString());
+      }
+    } finally {
+      setReactionMenuFor(null);
+    }
   };
 
   const markAsRead = async () => {
@@ -168,6 +209,18 @@ const Chatcomponent = ({
                       : "bg-accent text-accent-foreground"
                   }`}
                 >
+                  {item.reply_to ? (
+                    <div
+                      className={`mb-2 border-l-2 pl-2 text-xs ${isMe ? "border-primary-foreground/60 text-primary-foreground/80" : "border-primary/60 text-muted-foreground"}`}
+                    >
+                      <p className="font-medium">
+                        {Number(item.reply_to.sender_id) === Number(userID)
+                          ? "You"
+                          : user?.name}
+                      </p>
+                      <p className="line-clamp-1">{item.reply_to.message}</p>
+                    </div>
+                  ) : null}
                   <div className="text-sm">{item.message}</div>
                   {item.data && item.data.trim() && (
                     <Button
@@ -181,6 +234,70 @@ const Chatcomponent = ({
                       Open
                     </Button>
                   )}
+                </div>
+                <div className="flex flex-wrap items-center gap-1">
+                  {item.reactions?.map((reaction) => {
+                    const reacted = reaction.userIds.some(
+                      (reactionUserId) =>
+                        Number(reactionUserId) === Number(userID),
+                    );
+                    return (
+                      <button
+                        key={reaction.emoji}
+                        type="button"
+                        onClick={() =>
+                          void toggleReaction(item.id, reaction.emoji)
+                        }
+                        className={`rounded-full border px-2 py-0.5 text-xs transition-colors ${reacted ? "border-primary/40 bg-primary/10" : "bg-background hover:bg-muted"}`}
+                      >
+                        {reaction.emoji} {reaction.userIds.length}
+                      </button>
+                    );
+                  })}
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      className="size-6"
+                      onClick={() =>
+                        setReactionMenuFor(
+                          reactionMenuFor === item.id ? null : item.id,
+                        )
+                      }
+                      aria-label="Add reaction"
+                    >
+                      <SmilePlus className="size-3.5" />
+                    </Button>
+                    {reactionMenuFor === item.id ? (
+                      <div className="absolute z-10 mt-1 flex gap-1 rounded-lg border bg-popover p-1 shadow-md">
+                        {[
+                          "\u{1F44D}",
+                          "\u2764\uFE0F",
+                          "\u{1F602}",
+                          "\u{1F389}",
+                          "\u{1F440}",
+                        ].map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            className="grid size-7 place-items-center rounded hover:bg-muted"
+                            onClick={() => void toggleReaction(item.id, emoji)}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="size-6"
+                    onClick={() => setReplyingTo(item)}
+                    aria-label="Reply to message"
+                  >
+                    <Reply className="size-3.5" />
+                  </Button>
                 </div>
                 <span className="text-[11px] text-muted-foreground">
                   {item.pending ? (
@@ -201,6 +318,29 @@ const Chatcomponent = ({
       )}
 
       <div className="w-full border-t bg-background px-4 py-3 sm:px-5">
+        {replyingTo ? (
+          <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border bg-muted/40 px-3 py-2 text-xs">
+            <div className="min-w-0">
+              <p className="font-medium">
+                Replying to{" "}
+                {Number(replyingTo.sender_id) === Number(userID)
+                  ? "yourself"
+                  : user?.name}
+              </p>
+              <p className="truncate text-muted-foreground">
+                {replyingTo.message}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setReplyingTo(null)}
+              aria-label="Cancel reply"
+            >
+              <X className="size-3.5" />
+            </Button>
+          </div>
+        ) : null}
         <div className="flex items-center gap-2">
           <Input
             value={input}
@@ -244,43 +384,101 @@ const RenderSelectedContent = ({
   const [loading, setLoading] = useState(false);
   const { base_route, userID } = useUserDetail();
 
-  async function handleCreateExcel() {
-    setLoading(true);
-
-    const headers = [
-      "Name",
-      "English Name",
-      "New Order",
-      "Buying Price",
-      "Image",
-    ];
-
-    try {
-      if (data.length === 0) {
-        toast.info("Please select items first.");
-        return;
+  async function handleCreatePdf() {
+      setLoading(true);
+  
+      const headers = [
+        "Name",
+        "English Name",
+        "New Order",
+        "Buying Price",
+        "Image",
+      ];
+  
+      try {
+  
+        if (data.length === 0) {
+          toast.info("No items selected");
+          return;
+        }
+  
+        const formattedData = await Promise.all(
+          data.map(async (item : any) => {
+            let image: PdfImageCell = { type: "image", alt: "No image found" };
+  
+            if (item.img) {
+              try {
+                const url = await getDownloadURL(
+                  ref(storage, `products/${item.img}`),
+                );
+                image = {
+                  type: "image",
+                  url,
+                  data: await convertImageToPngDataUrl(url),
+                  alt: "Product image",
+                };
+              } catch {
+                // The PDF renderer shows a consistent fallback when an image URL
+                // is unavailable or Firebase cannot resolve it.
+              }
+            }
+  
+            return [
+              item.chinese_name || "No chinese name",
+              item.name || "Unnamed product",
+              item.new_order ?? 0,
+              item.buying ?? 0,
+              image,
+            ];
+          }),
+        );
+  
+        await exportToPdf(headers, formattedData, "New Order.pdf", userID);
+      } catch (error) {
+        console.log(error);
+        toast.error("Error creating PDF");
+      } finally {
+        setLoading(false);
       }
-      await exportToExcel(
-        headers,
-        data.map((item: any) => [
-          item.chinese_name,
-          item.name,
-          item.new_order,
-          item.buying,
-          item.img,
-        ]),
-        "New Order.xlsx",
-        true,
-        "",
-        true,
-        userID,
-      );
-    } catch (error) {
-      toast.error("Error creating excel");
-    } finally {
-      setLoading(false);
     }
-  }
+
+  // async function handleCreateExcel() {
+  //   setLoading(true);
+
+  //   const headers = [
+  //     "Name",
+  //     "English Name",
+  //     "New Order",
+  //     "Buying Price",
+  //     "Image",
+  //   ];
+
+  //   try {
+  //     if (data.length === 0) {
+  //       toast.info("Please select items first.");
+  //       return;
+  //     }
+  //     await exportToExcel(
+  //       headers,
+  //       data.map((item: any) => [
+  //         item.chinese_name,
+  //         item.name,
+  //         item.new_order,
+  //         item.buying,
+  //         item.img,
+  //       ]),
+  //       "New Order.xlsx",
+  //       true,
+  //       "",
+  //       true,
+  //       userID,
+  //     );
+  //   } catch (error) {
+  //     toast.error("Error creating excel");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
 
   if (type === "feedback")
     return (
@@ -376,9 +574,9 @@ const RenderSelectedContent = ({
               <Label className="text-lg text-muted-foreground">
                 Entries: {data.length}
               </Label>
-              <Button disabled={data.length === 0} onClick={handleCreateExcel}>
+              <Button disabled={data.length === 0} onClick={handleCreatePdf}>
                 {loading && <Spinner className="mr-2" />}
-                Export
+                Export PDF
               </Button>
             </div>
             <ScrollArea className="h-[80vh] px-4">

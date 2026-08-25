@@ -1,6 +1,6 @@
 "use client";
 import axios from "@/lib/axios";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
 import { FaMinusCircle, FaPlus } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -65,6 +65,8 @@ export type SelectedUser = {
   label: null | string;
 };
 
+type PosDialog = "inward" | "outward" | "low-stock" | "order-stock";
+
 export default function POS() {
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
     null,
@@ -115,7 +117,42 @@ export default function POS() {
   const [discount, setDiscount] = useState<number | string>("");
   const [inwardModal, setInwardModal] = useState(false);
   const [outwardModal, setOutwardModal] = useState(false);
+  const [lowStockModal, setLowStockModal] = useState(false);
   const [total, setTotal] = useState(0);
+
+  const updatePosDialogQuery = useCallback((dialog?: PosDialog) => {
+    const url = new URL(window.location.href);
+
+    if (dialog) {
+      url.searchParams.set("pos_dialog", dialog);
+      window.history.pushState({}, "", url);
+    } else {
+      url.searchParams.delete("pos_dialog");
+      window.history.replaceState({}, "", url);
+    }
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
+
+  useEffect(() => {
+    const syncPosDialogFromUrl = () => {
+      const dialog = new URLSearchParams(window.location.search).get(
+        "pos_dialog",
+      ) as PosDialog | null;
+
+      setInwardModal(dialog === "inward");
+      setOutwardModal(dialog === "outward");
+      setLowStockModal(dialog === "low-stock");
+      setOrderStockVisible(dialog === "order-stock");
+    };
+
+    syncPosDialogFromUrl();
+    window.addEventListener("popstate", syncPosDialogFromUrl);
+
+    return () => {
+      window.removeEventListener("popstate", syncPosDialogFromUrl);
+    };
+  }, []);
 
   useEffect(() => {
     if (debouncedUserId) {
@@ -544,16 +581,16 @@ export default function POS() {
   }
 
   function handleInward() {
-    setInwardModal(true);
+    updatePosDialogQuery("inward");
   }
 
   function handleOutward() {
-    setOutwardModal(true);
+    updatePosDialogQuery("outward");
   }
 
   function handleOrderStock() {
     setDialogVisible(false);
-    setOrderStockVisible(true);
+    updatePosDialogQuery("order-stock");
   }
 
   return loading ? (
@@ -801,7 +838,11 @@ export default function POS() {
 
             <OrderStockDialog
               dialogVisible={orderStockVisible}
-              onCloseDialog={setOrderStockVisible}
+              onCloseDialog={(open) =>
+                open
+                  ? updatePosDialogQuery("order-stock")
+                  : updatePosDialogQuery()
+              }
               stock={stock.filter(
                 (item) =>
                   item.threshold != null &&
@@ -960,7 +1001,16 @@ export default function POS() {
                 <div className="break-words">Outward Gatepass</div>
               </Button>
 
-              <LowStock handleOrderStock={handleOrderStock} stock={stock} />
+              <LowStock
+                handleOrderStock={handleOrderStock}
+                stock={stock}
+                open={lowStockModal}
+                onOpenChange={(open) =>
+                  open
+                    ? updatePosDialogQuery("low-stock")
+                    : updatePosDialogQuery()
+                }
+              />
 
               {selectedSearchItem && selectedSearchItem?.id && (
                 <Link
@@ -1135,7 +1185,9 @@ export default function POS() {
 
       <InwardModal
         visible={inwardModal}
-        onClose={setInwardModal}
+        onClose={(open) =>
+          open ? updatePosDialogQuery("inward") : updatePosDialogQuery()
+        }
         data={stock}
         onRefresh={async () => {
           setLoading(true);
@@ -1143,7 +1195,12 @@ export default function POS() {
         }}
       />
 
-      <OutwardModal visible={outwardModal} onClose={setOutwardModal} />
+      <OutwardModal
+        visible={outwardModal}
+        onClose={(open) =>
+          open ? updatePosDialogQuery("outward") : updatePosDialogQuery()
+        }
+      />
     </>
   );
 }

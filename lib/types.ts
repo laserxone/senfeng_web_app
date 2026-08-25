@@ -984,6 +984,14 @@ export type Messages = {
   is_read?: boolean;
   data?: any;
   pending?: boolean;
+  reply_to_message_id?: number | string | null;
+  reply_to?: Pick<Messages, "id" | "sender_id" | "message"> | null;
+  reactions?: MessageReaction[];
+};
+
+export type MessageReaction = {
+  emoji: string;
+  userIds: Array<number | string>;
 };
 
 export type UserRepairing = {

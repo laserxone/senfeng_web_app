@@ -29,6 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
@@ -37,13 +38,11 @@ import {
 import { TIMEZONE } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
-import exportToExcel from "@/lib/exportToExcel";
 import { UserReimbursementType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
 import momentT from "moment-timezone";
 import Link from "next/link";
-import Spinner from "@/components/ui/spinner";
 
 export default function Page() {
   const [filterVisible, setFilterVisible] = useState(false);
@@ -84,8 +83,7 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       axios
         .get(
-          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${
-            user || ""
+          `/${userID}/reimbursement?start_date=${startDate}&end_date=${endDate}&user=${user || ""
           }`,
         )
         .then((response) => {
@@ -192,9 +190,8 @@ export default function Page() {
         if (currentItem.customer_id)
           return (
             <Link
-              href={`/${base_route}/${
-                currentItem.customer_member ? "member" : "customer"
-              }/${currentItem.customer_id}`}
+              href={`/${base_route}/${currentItem.customer_member ? "member" : "customer"
+                }/${currentItem.customer_id}`}
               target="blank"
               onClick={(e) => e.stopPropagation()}
             >
