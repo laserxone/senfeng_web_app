@@ -568,8 +568,8 @@ const RenderSelectedContent = ({
         <SheetContent
           style={{ width: "100%", maxWidth: "95vw", alignItems: "flex-start" }}
         >
-          <SheetHeader className="mb-4">
-            <div className="flex items-center justify-between">
+          <SheetHeader className="w-full">
+            <div className="flex items-center justify-between w-full pr-6">
               <SheetTitle className="text-2xl">New Stock Order</SheetTitle>
               <Label className="text-lg text-muted-foreground">
                 Entries: {data.length}
@@ -579,7 +579,9 @@ const RenderSelectedContent = ({
                 Export PDF
               </Button>
             </div>
-            <ScrollArea className="h-[80vh] px-4">
+            
+          </SheetHeader>
+          <ScrollArea className="h-[80vh] px-4 w-full">
               {data.length == 0 ? (
                 <div className="flex flex-1 flex-col gap-2">
                   <p>No data to display</p>
@@ -592,7 +594,6 @@ const RenderSelectedContent = ({
                 </div>
               )}
             </ScrollArea>
-          </SheetHeader>
         </SheetContent>
       </Sheet>
     );
