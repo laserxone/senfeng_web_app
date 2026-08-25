@@ -1,4 +1,15 @@
-import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import fontkit from "@pdf-lib/fontkit";
+import {
+  PDFDocument,
+  PDFName,
+  PDFString,
+  StandardFonts,
+  rgb,
+  type PDFImage,
+  type PDFFont,
+} from "pdf-lib";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -15,11 +26,21 @@ type ExportPdfRequest = {
   };
 };
 
+type PdfImageCell = {
+  type: "image";
+  url?: string;
+  data?: string;
+  alt?: string;
+};
+
+type PdfCell = string | PdfImageCell;
+
 const pageSize: [number, number] = [841.89, 595.28];
 const margin = 24;
 const fontSize = 7;
 const lineHeight = 9;
 const cellPadding = 6;
+let chineseFontBytes: Uint8Array | null = null;
 const colors = {
   navy: rgb(0.035, 0.09, 0.18),
   blue: rgb(0.08, 0.36, 0.68),
@@ -51,10 +72,49 @@ export async function POST(request: Request) {
     }
 
     const headers = body.headers.map(formatValue);
-    const rows = body.rows.map((row) => row.map(formatValue));
     const pdf = await PDFDocument.create();
+    pdf.registerFontkit(fontkit);
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdf.embedFont(StandardFonts.HelveticaBold);
+    let chineseFont: PDFFont | null = null;
+    const imageCache = new Map<string, PDFImage | null>();
+
+    const resolveCell = async (value: unknown): Promise<PdfCell> => {
+      if (!isImageCell(value)) return formatValue(value);
+
+      const url = value.url || "";
+      const data = value.data || "";
+      const alt = value.alt || "No image found";
+      if (!url && !data) return { type: "image", alt };
+
+      const imageSource = data || url;
+      if (!imageCache.has(imageSource)) {
+        try {
+          const image = data
+            ? await embedDataUriImage(pdf, data)
+            : await fetchAndEmbedImage(pdf, url);
+          imageCache.set(imageSource, image);
+        } catch {
+          imageCache.set(imageSource, null);
+        }
+      }
+
+      return { type: "image", url, data, alt };
+    };
+
+    const rows = await Promise.all(
+      body.rows.map((row) => Promise.all(row.map(resolveCell))),
+    );
+
+    const needsChineseFont = [...headers, ...rows.flat()].some(
+      (value) => !isImageCell(value) && containsChinese(value),
+    );
+    if (needsChineseFont) {
+      chineseFontBytes ??= await readFile(
+        path.join(process.cwd(), "public", "fonts", "NotoSansSC-Regular.ttf"),
+      );
+      chineseFont = await pdf.embedFont(chineseFontBytes, { subset: false });
+    }
     const columnWidth = (pageSize[0] - margin * 2) / headers.length;
     let page = pdf.addPage(pageSize);
     let y = 0;
@@ -137,18 +197,71 @@ export async function POST(request: Request) {
       }
     };
 
-    const getWrappedCells = (values: string[], rowFont: PDFFont) =>
+    const getCellFont = (value: PdfCell | undefined, header = false) => {
+      if (chineseFont && !isImageCell(value) && containsChinese(value || "")) {
+        return chineseFont;
+      }
+
+      return header ? boldFont : font;
+    };
+
+    const drawMixedText = (
+      text: string,
+      x: number,
+      y: number,
+      header = false,
+    ) => {
+      const defaultFont = header ? boldFont : font;
+
+      if (!chineseFont || !containsChinese(text)) {
+        page.drawText(text, {
+          x,
+          y,
+          size: fontSize,
+          font: defaultFont,
+          color: header ? colors.white : colors.text,
+        });
+        return;
+      }
+
+      let cursor = x;
+      for (const run of splitTextIntoFontRuns(text)) {
+        const runFont = run.chinese ? chineseFont : defaultFont;
+        page.drawText(run.text, {
+          x: cursor,
+          y,
+          size: fontSize,
+          font: runFont,
+          color: header ? colors.white : colors.text,
+        });
+        cursor += runFont.widthOfTextAtSize(run.text, fontSize);
+      }
+    };
+
+    const getWrappedCells = (values: PdfCell[], header = false) =>
       headers.map((_, index) =>
-        wrapText(values[index] || "", columnWidth - cellPadding * 2, rowFont),
+        wrapText(
+          isImageCell(values[index])
+            ? values[index].url
+              ? "Open image"
+              : values[index].alt || "No image found"
+            : values[index] || "",
+          columnWidth - cellPadding * 2,
+          getCellFont(values[index], header),
+        ),
       );
 
     const drawWrappedRow = (
       wrappedCells: string[][],
       header = false,
       shaded = false,
+      row?: PdfCell[],
     ) => {
       const lines = Math.max(1, ...wrappedCells.map((cell) => cell.length));
-      const height = Math.max(22, lines * lineHeight + cellPadding * 2);
+      const includesImage = !header && row?.some(isImageCell);
+      const height = includesImage
+        ? Math.max(82, lines * lineHeight + cellPadding * 2)
+        : Math.max(22, lines * lineHeight + cellPadding * 2);
 
       wrappedCells.forEach((cellLines, index) => {
         const x = margin + index * columnWidth;
@@ -163,14 +276,74 @@ export async function POST(request: Request) {
           color: header ? colors.blue : shaded ? colors.zebra : colors.white,
         });
 
-        cellLines.forEach((text, lineIndex) => {
-          page.drawText(text, {
-            x: x + cellPadding,
-            y: y - cellPadding - fontSize - lineIndex * lineHeight,
-            size: fontSize,
-            font: header ? boldFont : font,
-            color: header ? colors.white : colors.text,
+        const imageCell = row?.[index];
+        if (!header && isImageCell(imageCell)) {
+          const framePadding = 4;
+          const maxWidth = columnWidth - cellPadding * 2;
+          const maxHeight = height - cellPadding * 2;
+          const frameWidth = Math.min(82, maxWidth);
+          const frameHeight = Math.min(64, maxHeight);
+          const frameX = x + (columnWidth - frameWidth) / 2;
+          const frameY = y - height + (height - frameHeight) / 2;
+          const imageSource = imageCell.data || imageCell.url || "";
+          const image = imageCache.get(imageSource);
+
+          page.drawRectangle({
+            x: frameX,
+            y: frameY,
+            width: frameWidth,
+            height: frameHeight,
+            borderWidth: 0.45,
+            borderColor: colors.line,
+            color: colors.zebra,
           });
+
+          if (image) {
+            const { width, height: imageHeight } = image.scaleToFit(
+              Math.max(1, frameWidth - framePadding * 2),
+              Math.max(1, frameHeight - framePadding * 2),
+            );
+            const imageX = frameX + (frameWidth - width) / 2;
+            const imageY = frameY + (frameHeight - imageHeight) / 2;
+            page.drawImage(image, {
+              x: imageX,
+              y: imageY,
+              width,
+              height: imageHeight,
+            });
+            addLinkAnnotation(
+              page,
+              imageX,
+              imageY,
+              width,
+              imageHeight,
+              imageCell.url!,
+            );
+          } else {
+            page.drawText("No image found", {
+              x:
+                frameX +
+                Math.max(
+                  3,
+                  (frameWidth - font.widthOfTextAtSize("No image found", 6)) /
+                    2,
+                ),
+              y: frameY + frameHeight / 2 - 2,
+              size: 6,
+              font: boldFont,
+              color: colors.muted,
+            });
+          }
+          return;
+        }
+
+        cellLines.forEach((text, lineIndex) => {
+          drawMixedText(
+            text,
+            x + cellPadding,
+            y - cellPadding - fontSize - lineIndex * lineHeight,
+            header,
+          );
         });
       });
       y -= height;
@@ -178,20 +351,20 @@ export async function POST(request: Request) {
       return height;
     };
 
-    const wrappedHeaders = getWrappedCells(headers, boldFont);
+    const wrappedHeaders = getWrappedCells(headers, true);
 
     const startPage = () => {
       drawReportHeading();
-      drawWrappedRow(wrappedHeaders, true);
+      drawWrappedRow(wrappedHeaders, true, false, headers);
       hasDataOnPage = false;
     };
 
     startPage();
 
-    rows.forEach((row, rowIndex) => {
-      const wrappedCells = getWrappedCells(row, font);
+    for (const [rowIndex, row] of rows.entries()) {
+      const wrappedCells = getWrappedCells(row);
       const requiredHeight = Math.max(
-        22,
+        row.some(isImageCell) ? 82 : 22,
         Math.max(...wrappedCells.map((cell) => cell.length)) * lineHeight +
           cellPadding * 2,
       );
@@ -215,7 +388,7 @@ export async function POST(request: Request) {
           cell.slice(lineOffset, lineOffset + sectionLines),
         );
 
-        drawWrappedRow(section, false, rowIndex % 2 === 1);
+        drawWrappedRow(section, false, rowIndex % 2 === 1, row);
         hasDataOnPage = true;
         lineOffset += sectionLines;
 
@@ -224,7 +397,7 @@ export async function POST(request: Request) {
           startPage();
         }
       }
-    });
+    }
 
     const pages = pdf.getPages();
     pages.forEach((reportPage, index) => {
@@ -288,8 +461,83 @@ function formatValue(value: unknown) {
   return safeText(String(value));
 }
 
+function isImageCell(value: unknown): value is PdfImageCell {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { type?: unknown }).type === "image"
+  );
+}
+
+async function fetchAndEmbedImage(pdf: PDFDocument, url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Image request failed");
+
+  const bytes = await response.arrayBuffer();
+  const contentType = response.headers.get("content-type") || "";
+  return contentType.includes("png")
+    ? pdf.embedPng(bytes)
+    : pdf.embedJpg(bytes);
+}
+
+async function embedDataUriImage(pdf: PDFDocument, dataUri: string) {
+  const match = /^data:image\/(png|jpe?g);base64,(.+)$/i.exec(dataUri);
+  if (!match) throw new Error("Invalid image data");
+
+  const bytes = Uint8Array.from(Buffer.from(match[2], "base64"));
+  return match[1].toLowerCase() === "png"
+    ? pdf.embedPng(bytes)
+    : pdf.embedJpg(bytes);
+}
+
+function addLinkAnnotation(
+  page: ReturnType<PDFDocument["addPage"]>,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  url: string,
+) {
+  const annotation = page.doc.context.register(
+    page.doc.context.obj({
+      Type: PDFName.of("Annot"),
+      Subtype: PDFName.of("Link"),
+      Rect: [x, y, x + width, y + height],
+      Border: [0, 0, 0],
+      A: {
+        Type: PDFName.of("Action"),
+        S: PDFName.of("URI"),
+        URI: PDFString.of(url),
+      },
+    }),
+  );
+
+  page.node.addAnnot(annotation);
+}
+
 function safeText(value: string) {
-  return value.replace(/[^\x20-\x7E\n]/g, "?");
+  return value;
+}
+
+function containsChinese(value: string) {
+  return /[\u3000-\u303F\u3400-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF]/.test(value);
+}
+
+function splitTextIntoFontRuns(value: string) {
+  const runs: { text: string; chinese: boolean }[] = [];
+
+  for (const character of value) {
+    const chinese = containsChinese(character);
+    const previousRun = runs.at(-1);
+
+    if (previousRun && previousRun.chinese === chinese) {
+      previousRun.text += character;
+    } else {
+      runs.push({ text: character, chinese });
+    }
+  }
+
+  return runs;
 }
 
 function wrapText(value: string, width: number, font: PDFFont) {

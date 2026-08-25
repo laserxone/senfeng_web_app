@@ -23,7 +23,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Spinner from "@/components/ui/spinner";
 import { storage } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
-import exportToExcel from "@/lib/exportToExcel";
+// import exportToExcel from "@/lib/exportToExcel";
+import exportToPdf, { type PdfImageCell } from "@/lib/exportToPdf";
 import { StockProps } from "@/lib/types";
 import { getDownloadURL, ref } from "firebase/storage";
 import {
@@ -44,6 +45,48 @@ import "./Button.css";
 
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
+
+async function convertImageToPngDataUrl(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Unable to download product image");
+
+  const sourceBlob = await response.blob();
+  const objectUrl = URL.createObjectURL(sourceBlob);
+
+  try {
+    const image = new Image();
+    image.src = objectUrl;
+    await image.decode();
+
+    const canvas = document.createElement("canvas");
+    const canvasWidth = 480;
+    const canvasHeight = 360;
+    const padding = 18;
+    const scale = Math.min(
+      (canvasWidth - padding * 2) / image.naturalWidth,
+      (canvasHeight - padding * 2) / image.naturalHeight,
+    );
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Unable to prepare product image");
+
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvasWidth, canvasHeight);
+    context.drawImage(
+      image,
+      (canvasWidth - width) / 2,
+      (canvasHeight - height) / 2,
+      width,
+      height,
+    );
+    return canvas.toDataURL("image/jpeg", 0.72);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
 
 const OrderStockDialog = ({
   dialogVisible,
@@ -78,7 +121,7 @@ const OrderStockDialog = ({
     setSelectedItems([]);
   };
 
-  async function handleCreateExcel() {
+  async function handleCreatePdf() {
     setLoading(true);
 
     const headers = [
@@ -89,33 +132,51 @@ const OrderStockDialog = ({
       "Image",
     ];
 
-    const formattedData = stock
-      .filter((item) => selectedItems.includes(item.id))
-      .map((item) => [
-        item.chinese_name,
-        item.name,
-        item.new_order,
-        item.buying,
-        item.img,
-      ]);
-
     try {
-      if (formattedData.length === 0) {
+      const selectedStock = stock.filter((item) =>
+        selectedItems.includes(item.id),
+      );
+
+      if (selectedStock.length === 0) {
         toast.info("No items selected");
         return;
       }
-      await exportToExcel(
-        headers,
-        formattedData,
-        "New Order.xlsx",
-        true,
-        "products",
-        true,
-        userID,
+
+      const formattedData = await Promise.all(
+        selectedStock.map(async (item) => {
+          let image: PdfImageCell = { type: "image", alt: "No image found" };
+
+          if (item.img) {
+            try {
+              const url = await getDownloadURL(
+                ref(storage, `products/${item.img}`),
+              );
+              image = {
+                type: "image",
+                url,
+                data: await convertImageToPngDataUrl(url),
+                alt: "Product image",
+              };
+            } catch {
+              // The PDF renderer shows a consistent fallback when an image URL
+              // is unavailable or Firebase cannot resolve it.
+            }
+          }
+
+          return [
+            item.chinese_name || "No chinese name",
+            item.name || "Unnamed product",
+            item.new_order ?? 0,
+            item.buying ?? 0,
+            image,
+          ];
+        }),
       );
+
+      await exportToPdf(headers, formattedData, "New Order.pdf", userID);
     } catch (error) {
       console.log(error);
-      toast.error("Error creating excel");
+      toast.error("Error creating PDF");
     } finally {
       setLoading(false);
     }
@@ -229,14 +290,14 @@ const OrderStockDialog = ({
                 <Button
                   size="sm"
                   disabled={selectedItems.length === 0 || loading}
-                  onClick={handleCreateExcel}
+                  onClick={handleCreatePdf}
                 >
                   {loading ? (
                     <Spinner className="mr-2" />
                   ) : (
                     <Download className="mr-2 h-4 w-4" />
                   )}
-                  Export
+                  Export PDF
                 </Button>
               )}
 

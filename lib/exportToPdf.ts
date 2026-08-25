@@ -1,9 +1,16 @@
 import { saveAs } from "file-saver";
 import axios from "./axios";
 
+export type PdfImageCell = {
+  type: "image";
+  url?: string;
+  data?: string;
+  alt?: string;
+};
+
 export default async function exportToPdf(
   headers: string[],
-  rows: string[][],
+  rows: (string | number | PdfImageCell | null | undefined)[][],
   fileName = "Table-export.pdf",
   userID: string | number | null = null,
   total?: { columnName: string; value: number; displayValue: string } | null,
