@@ -574,7 +574,7 @@ const RenderSelectedContent = ({
               <Label className="text-lg text-muted-foreground">
                 Entries: {data.length}
               </Label>
-              <Button disabled={data.length === 0} onClick={handleCreatePdf}>
+              <Button disabled={data.length === 0 || loading} onClick={handleCreatePdf}>
                 {loading && <Spinner className="mr-2" />}
                 Export PDF
               </Button>
