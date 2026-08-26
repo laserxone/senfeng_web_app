@@ -2,7 +2,7 @@ import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
 import { createLinkPreview } from "@/lib/link-preview";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
@@ -73,8 +73,8 @@ export async function POST(
     );
   }
 
-  const linkPreview = await createLinkPreview(message.trim());
   const client = await pool.connect();
+  let messageId: number | string | undefined;
   try {
     await client.query("BEGIN");
     if (replyToMessageId) {
@@ -90,19 +90,19 @@ export async function POST(
         );
       }
     }
-    await client.query(
+    const inserted = await client.query(
       `INSERT INTO messages (conversation_id, sender_id, message, data, link_preview, created_at, reply_to_message_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+       VALUES ($1, $2, $3, $4, NULL, $5, $6) RETURNING id`,
       [
         cid,
         senderId,
         message.trim(),
         data || null,
-        linkPreview,
         created_at || new Date(),
         replyToMessageId || null,
       ],
     );
+    messageId = inserted.rows[0]?.id;
     await client.query(
       `UPDATE conversations SET last_message = $1, last_updated = NOW() WHERE id = $2`,
       [message.trim(), cid],
@@ -118,10 +118,25 @@ export async function POST(
 
   sendNotificationFromMe(cid, Number(senderId), message.trim());
 
-  const db = admin.firestore();
-  // await db.collection('conversations_meta').doc(cid).set({
-  //     updated: Date.now(),
-  // });
+  if (messageId) {
+    after(async () => {
+      const linkPreview = await createLinkPreview(message.trim());
+      if (!linkPreview) return;
+      try {
+        await pool.query(
+          `UPDATE messages SET link_preview = $1 WHERE id = $2`,
+          [linkPreview, messageId],
+        );
+        await admin
+          .firestore()
+          .collection("messages_meta")
+          .doc(cid)
+          .set({ updated: Date.now() }, { merge: true });
+      } catch {
+        // A preview is optional; never affect the delivered message on failure.
+      }
+    });
+  }
 
   return NextResponse.json({ success: true });
 }

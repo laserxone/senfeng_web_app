@@ -12,7 +12,7 @@ export type LinkPreview = {
 // Product pages commonly include structured product data and can exceed 512 KB.
 // Keep a firm cap while allowing normal Shopify-style product pages to preview.
 const MAX_HTML_BYTES = 1024 * 1024;
-const REQUEST_TIMEOUT_MS = 3_000;
+const REQUEST_TIMEOUT_MS = 10_000;
 
 function firstUrl(text: string) {
   return text.match(/https?:\/\/[^\s<>{}"']+/i)?.[0]?.replace(/[),.!?]+$/, "");
