@@ -263,7 +263,7 @@ const OldRecordSheet = ({
                 <AppCalendarRange date={rangeDate} onChange={setRangeDate} />
               </div>
 
-              <div className="space-y-2">
+             
                 <Select onValueChange={setFilterValue} value={filterValue}>
                   <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Filter by user" />
@@ -281,7 +281,7 @@ const OldRecordSheet = ({
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-              </div>
+             
 
               <div className="space-y-2">
                 <FieldLabel>Select user</FieldLabel>

@@ -16,7 +16,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import MessagePage from "./message-page";
+import ChatcnMessagePage from "./chatcn-message-page";
 
 export default function FloatingChat() {
   const [open, setOpen] = useState(false);
@@ -35,7 +35,7 @@ export default function FloatingChat() {
         asChild
         size="icon"
         variant="outline"
-        className="relative rounded-xl md:hidden"
+        className="relative rounded-xl"
         aria-label="Open messages page"
       >
         <Link href={`/${base_route}/messages`}>
@@ -43,7 +43,7 @@ export default function FloatingChat() {
         </Link>
       </Button>
 
-      <Sheet open={open} onOpenChange={setOpen}>
+      {/* <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
             size="icon"
@@ -65,14 +65,14 @@ export default function FloatingChat() {
             </SheetHeader>
           </VisuallyHidden>
 
-          <MessagePage
+          <ChatcnMessagePage
             embedded
             conversations={conversations}
             conversationsLoading={loading}
             onClose={() => setOpen(false)}
           />
         </SheetContent>
-      </Sheet>
+      </Sheet> */}
     </>
   );
 }

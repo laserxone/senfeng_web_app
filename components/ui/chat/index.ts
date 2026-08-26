@@ -14,7 +14,7 @@ export {
   ChatTypingIndicator,
   ChatReplyPreview,
   ChatReadReceipts,
-} from "./chat";
+} from "./chat"
 export type {
   ChatProviderProps,
   ChatMessageProps,
@@ -26,7 +26,7 @@ export type {
   ChatMessageActionsProps,
   ChatTypingIndicatorProps,
   ChatReplyPreviewProps,
-} from "./chat";
+} from "./chat"
 
 // Feature components
 export {
@@ -36,7 +36,7 @@ export {
   ChatPinnedPanel,
   ChatNestedThread,
   ChatSearch,
-} from "./features";
+} from "./features"
 export type {
   Conversation,
   ChatForwardDialogProps,
@@ -47,7 +47,7 @@ export type {
   ChatNestedThreadProps,
   SearchResult,
   ChatSearchProps,
-} from "./features";
+} from "./features"
 
 // Pre-built layouts
 export {
@@ -62,7 +62,7 @@ export {
   TicketStatusBadge,
   TicketPriorityBadge,
   TicketFilterTabs,
-} from "./layouts";
+} from "./layouts"
 export type {
   ChatHeaderProps,
   SidebarConversation,
@@ -76,7 +76,7 @@ export type {
   TicketPriority,
   SupportTicket,
   SupportTicketsProps,
-} from "./layouts";
+} from "./layouts"
 
 // Security utilities
 export {
@@ -89,8 +89,8 @@ export {
   sanitizeFileName,
   isValidEmoji,
   formatReactionCount,
-} from "./security";
-export type { FileValidationResult } from "./security";
+} from "./security"
+export type { FileValidationResult } from "./security"
 
 // Types
 export type {
@@ -101,7 +101,7 @@ export type {
   MessageListItem,
   TypingUser,
   ChatTheme,
-} from "./types";
+} from "./types"
 
 // Hooks
 export {
@@ -111,4 +111,4 @@ export {
   useTypingIndicator,
   formatTimestamp,
   formatDateLabel,
-} from "./hooks";
+} from "./hooks"

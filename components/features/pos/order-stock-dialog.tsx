@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -104,6 +105,8 @@ const OrderStockDialog = ({
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [includeBuying, setIncludeBuying] = useState(false);
   const { userID, isAdmin } = useUserDetail();
   const [sendTo, setSendTo] = useState<number | null>(null);
 
@@ -121,16 +124,12 @@ const OrderStockDialog = ({
     setSelectedItems([]);
   };
 
-  async function handleCreatePdf() { 
+  async function handleCreatePdf() {
     setLoading(true);
 
-    const headers = [
-      "Name",
-      "English Name",
-      "New Order",
-      "Buying Price",
-      "Image",
-    ];
+    const headers = ["Name", "English Name", "New Order"];
+    if (includeBuying) headers.push("Buying Price");
+    headers.push("Image");
 
     try {
       const selectedStock = stock.filter((item) =>
@@ -163,17 +162,20 @@ const OrderStockDialog = ({
             }
           }
 
-          return [
+          const row: (string | number | PdfImageCell)[] = [
             item.chinese_name || "No chinese name",
             item.name || "Unnamed product",
             item.new_order ?? 0,
-            item.buying ?? 0,
-            image,
           ];
+          if (includeBuying) row.push(item.buying ?? 0);
+          row.push(image);
+
+          return row;
         }),
       );
 
       await exportToPdf(headers, formattedData, "New Order.pdf", userID);
+      setExportDialogOpen(false);
     } catch (error) {
       console.log(error);
       toast.error("Error creating PDF");
@@ -290,7 +292,10 @@ const OrderStockDialog = ({
                 <Button
                   size="sm"
                   disabled={selectedItems.length === 0 || loading}
-                  onClick={handleCreatePdf}
+                  onClick={() => {
+                    setIncludeBuying(false);
+                    setExportDialogOpen(true);
+                  }}
                 >
                   {loading ? (
                     <Spinner className="mr-2" />
@@ -404,6 +409,69 @@ const OrderStockDialog = ({
           </div>
         </ScrollArea>
       </DialogContent>
+      <Dialog
+        open={exportDialogOpen}
+        onOpenChange={(open) => !loading && setExportDialogOpen(open)}
+      >
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <Download className="h-4 w-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-sm font-semibold">
+                  Export order PDF
+                </DialogTitle>
+                <DialogDescription className="mt-0.5 text-xs text-muted-foreground">
+                  Choose the information to include in the report.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5">
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  checked={includeBuying}
+                  disabled={loading}
+                  onCheckedChange={(checked) =>
+                    setIncludeBuying(checked === true)
+                  }
+                />
+                <span className="min-w-0">
+                  <span className="block text-[11px] font-semibold uppercase text-muted-foreground">
+                    Buying
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    Include the buying-price column in the PDF.
+                  </span>
+                </span>
+              </label>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-9 rounded-lg"
+                  disabled={loading}
+                  onClick={() => setExportDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  className="h-9 rounded-lg"
+                  disabled={loading}
+                  onClick={handleCreatePdf}
+                >
+                  {loading && <Spinner className="mr-2" />}
+                  {loading ? "Creating PDF..." : "Export PDF"}
+                </Button>
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };

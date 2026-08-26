@@ -1,5 +1,5 @@
-import MessagePage from "@/components/features/chat/message-page";
+import ChatcnMessagePage from "@/components/features/chat/chatcn-message-page";
 
 export default function Page() {
-  return <MessagePage />;
+  return <ChatcnMessagePage />;
 }

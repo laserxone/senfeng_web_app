@@ -140,7 +140,7 @@ export function UserSearch({
         variant="outline"
         role="combobox"
         aria-expanded={open}
-        className="w-full justify-between"
+        className="w-full flex justify-between m-0"
         onClick={(e) => {
           e.preventDefault();
           setOpen(!open);

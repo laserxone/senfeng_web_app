@@ -74,7 +74,7 @@ function ChatHeader({
 
 // ─── Shared: Sidebar conversation item ────────────────────────────────────────
 
-export interface SidebarConversation {
+interface SidebarConversation {
   id: string;
   title: string;
   avatar?: string;
@@ -85,7 +85,7 @@ export interface SidebarConversation {
   isGroup?: boolean;
 }
 
-function ChatConversationItem({
+function ConversationItem({
   convo,
   isActive,
   onClick,
@@ -150,7 +150,9 @@ interface FullMessengerProps {
   onSelectConversation: (id: string) => void;
   messages: ChatMessageData[];
   typingUsers?: TypingUser[];
-  onSend: (text: string) => void;
+  onSend: (text: string, replyTo?: ChatMessageData | null) => void;
+  onReactionAdd?: (messageId: string, emoji: string) => void;
+  onReactionRemove?: (messageId: string, emoji: string) => void;
   title?: string;
   subtitle?: string;
   className?: string;
@@ -165,17 +167,31 @@ function FullMessenger({
   messages,
   typingUsers,
   onSend,
+  onReactionAdd,
+  onReactionRemove,
   title = "Messages",
   subtitle,
   className,
 }: FullMessengerProps) {
   const activeConvo = conversations.find((c) => c.id === activeConversationId);
   const showingConvo = !!activeConvo;
+  const [replyingTo, setReplyingTo] = React.useState<ChatMessageData | null>(
+    null,
+  );
+  const [conversationSearch, setConversationSearch] = React.useState("");
+  const visibleConversations = conversations.filter((conversation) =>
+    conversation.title
+      .toLocaleLowerCase()
+      .includes(conversationSearch.trim().toLocaleLowerCase()),
+  );
 
   return (
     <ChatProvider
       currentUser={currentUser}
       theme={theme}
+      onReply={setReplyingTo}
+      onReactionAdd={onReactionAdd}
+      onReactionRemove={onReactionRemove}
       className="h-full flex flex-col"
       style={{ height: "100%", display: "flex", flexDirection: "column" }}
     >
@@ -202,23 +218,32 @@ function FullMessenger({
           </div>
           {/* Search */}
           <div className="px-3 pb-2">
-            <div className="flex items-center gap-2 rounded-[10px] bg-[var(--chat-bg-main)] px-3 py-2 opacity-50">
+            <label className="flex items-center gap-2 rounded-[10px] bg-[var(--chat-bg-main)] px-3 py-2">
               <Search className="size-3.5" />
-              <span className="text-[14px] text-[var(--chat-text-tertiary)]">
-                Search
-              </span>
-            </div>
+              <input
+                value={conversationSearch}
+                onChange={(event) => setConversationSearch(event.target.value)}
+                placeholder="Search"
+                aria-label="Search conversations"
+                className="min-w-0 flex-1 bg-transparent text-[14px] text-[var(--chat-text-primary)] outline-none placeholder:text-[var(--chat-text-tertiary)]"
+              />
+            </label>
           </div>
           {/* Conversation list */}
           <div className="flex-1 overflow-y-auto py-1">
-            {conversations.map((c) => (
-              <ChatConversationItem
+            {visibleConversations.map((c) => (
+              <ConversationItem
                 key={c.id}
                 convo={c}
                 isActive={c.id === activeConversationId}
                 onClick={() => onSelectConversation(c.id)}
               />
             ))}
+            {visibleConversations.length === 0 && (
+              <p className="px-4 py-8 text-center text-[13px] text-[var(--chat-text-secondary)]">
+                No conversations found
+              </p>
+            )}
           </div>
         </aside>
 
@@ -270,7 +295,11 @@ function FullMessenger({
                 }
               />
               <ChatMessages messages={messages} typingUsers={typingUsers} />
-              <ChatComposer onSend={onSend} />
+              <ChatComposer
+                onSend={(text) => onSend(text, replyingTo)}
+                replyingTo={replyingTo}
+                onCancelReply={() => setReplyingTo(null)}
+              />
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center">
@@ -917,6 +946,8 @@ function SupportTickets({
 }
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
+
+const ChatConversationItem = ConversationItem;
 
 export {
   ChatHeader,

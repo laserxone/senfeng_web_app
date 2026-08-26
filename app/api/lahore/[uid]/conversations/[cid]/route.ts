@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import admin from "@/lib/firebaseAdmin";
+import { createLinkPreview } from "@/lib/link-preview";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,6 +9,16 @@ export async function GET(
   { params }: { params: Promise<{ cid: string }> },
 ) {
   const { cid } = await params;
+  const { searchParams } = new URL(req.url);
+  const usePagination = searchParams.has("limit");
+  const requestedLimit = Number(searchParams.get("limit"));
+  const limit = Math.min(
+    Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 30, 1),
+    100,
+  );
+  const beforeCreatedAt = searchParams.get("beforeCreatedAt");
+  const beforeId = Number(searchParams.get("beforeId"));
+
   const res = await pool.query(
     `SELECT m.*,
       CASE WHEN parent.id IS NULL THEN NULL ELSE json_build_object(
@@ -27,10 +38,24 @@ export async function GET(
     FROM messages m
     LEFT JOIN messages parent ON parent.id = m.reply_to_message_id
     WHERE m.conversation_id = $1
-    ORDER BY m.created_at ASC`,
-    [cid],
+      AND ($2::timestamptz IS NULL OR (m.created_at, m.id) < ($2::timestamptz, $3::bigint))
+    ORDER BY m.created_at ${usePagination ? "DESC" : "ASC"}, m.id ${usePagination ? "DESC" : "ASC"}
+    ${usePagination ? "LIMIT $4" : ""}`,
+    usePagination
+      ? [
+          cid,
+          beforeCreatedAt,
+          Number.isFinite(beforeId) ? beforeId : 0,
+          limit + 1,
+        ]
+      : [cid, null, 0],
   );
-  return NextResponse.json(res.rows);
+
+  if (!usePagination) return NextResponse.json(res.rows);
+
+  const hasMore = res.rows.length > limit;
+  const messages = res.rows.slice(0, limit).reverse();
+  return NextResponse.json({ messages, hasMore });
 }
 
 export async function POST(
@@ -48,6 +73,7 @@ export async function POST(
     );
   }
 
+  const linkPreview = await createLinkPreview(message.trim());
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -65,13 +91,14 @@ export async function POST(
       }
     }
     await client.query(
-      `INSERT INTO messages (conversation_id, sender_id, message, data, created_at, reply_to_message_id)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      `INSERT INTO messages (conversation_id, sender_id, message, data, link_preview, created_at, reply_to_message_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
       [
         cid,
         senderId,
         message.trim(),
         data || null,
+        linkPreview,
         created_at || new Date(),
         replyToMessageId || null,
       ],

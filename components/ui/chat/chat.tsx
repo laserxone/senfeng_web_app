@@ -12,6 +12,7 @@ import {
   Reply,
   SmilePlus,
   MoreHorizontal,
+  Pin,
   Pencil,
   Trash2,
   X,
@@ -23,6 +24,7 @@ import {
   Play,
   Pause,
   Mic,
+  FileText,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import type {
@@ -65,6 +67,7 @@ interface ChatProviderProps {
   onEdit?: (message: ChatMessageData) => void;
   onDelete?: (messageId: string) => void;
   onPin?: (messageId: string) => void;
+  onContentOpen?: (message: ChatMessageData) => void;
   children: React.ReactNode;
   style?: React.CSSProperties;
   className?: string;
@@ -81,6 +84,7 @@ function ChatProvider({
   onEdit,
   onDelete,
   onPin,
+  onContentOpen,
   children,
   style,
   className,
@@ -96,6 +100,7 @@ function ChatProvider({
       onEdit,
       onDelete,
       onPin,
+      onContentOpen,
     }),
     [
       currentUser,
@@ -107,6 +112,7 @@ function ChatProvider({
       onEdit,
       onDelete,
       onPin,
+      onContentOpen,
     ],
   );
 
@@ -129,6 +135,16 @@ const QUICK_REACTIONS = [
   "\u{1F64F}",
   "\u{1F525}",
 ];
+
+function getInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toUpperCase();
+}
 
 function QuickReactionPicker({
   onSelect,
@@ -167,7 +183,7 @@ interface ChatMessageActionsProps {
 }
 
 function ChatMessageActions({ message, isOutgoing }: ChatMessageActionsProps) {
-  const { onReply, onReactionAdd, onEdit, onDelete } = useChatContext();
+  const { onReply, onReactionAdd, onEdit, onDelete, onPin } = useChatContext();
   const [showReactions, setShowReactions] = React.useState(false);
   const [showMore, setShowMore] = React.useState(false);
 
@@ -210,7 +226,7 @@ function ChatMessageActions({ message, isOutgoing }: ChatMessageActionsProps) {
       <div className="relative">
         <button
           onClick={() => setShowMore(!showMore)}
-          className="flex size-7 items-center justify-center rounded-md text-[var(--chat-text-secondary)] transition-colors hover:bg-[var(--chat-accent-soft)] hover:text-[var(--chat-text-primary)]"
+          className="hidden"
           aria-label="More actions"
         >
           <MoreHorizontal className="size-3.5" />
@@ -235,6 +251,16 @@ function ChatMessageActions({ message, isOutgoing }: ChatMessageActionsProps) {
                 Edit
               </button>
             )}
+            <button
+              onClick={() => {
+                onPin?.(message.id);
+                setShowMore(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-[13px] text-[var(--chat-text-secondary)] transition-colors hover:bg-[var(--chat-accent-soft)] hover:text-[var(--chat-text-primary)]"
+            >
+              <Pin className="size-3.5" />
+              {message.isPinned ? "Unpin" : "Pin"}
+            </button>
             {isOutgoing && (
               <button
                 onClick={() => {
@@ -419,9 +445,10 @@ function ChatMessage({
   className,
 }: ChatMessageProps) {
   const timestamp = new Date(message.timestamp);
-  const { currentUser } = useChatContext();
+  const { currentUser, onContentOpen } = useChatContext();
   const radiusClass = getBubbleRadius(isOutgoing, position);
   const [lightboxImage, setLightboxImage] = React.useState<string | null>(null);
+  const sharedContent = getSharedContentInfo(message.data);
 
   return (
     <div
@@ -443,7 +470,7 @@ function ChatMessage({
             />
           ) : showAvatar ? (
             <div className="flex size-8 items-center justify-center rounded-full bg-[var(--chat-bubble-incoming)] text-[11px] font-semibold text-[var(--chat-text-secondary)]">
-              {message.senderName.charAt(0).toUpperCase()}
+              {getInitials(message.senderName)}
             </div>
           ) : null}
         </div>
@@ -485,6 +512,41 @@ function ChatMessage({
               <p className="whitespace-pre-wrap break-words text-[15px] leading-[1.35] tracking-[-0.01em]">
                 {message.text}
               </p>
+            )}
+            {sharedContent && (
+              <button
+                type="button"
+                onClick={() => onContentOpen?.(message)}
+                className={cn(
+                  "mt-2 flex w-full items-center gap-2.5 rounded-xl border p-2.5 text-left transition-colors",
+                  isOutgoing
+                    ? "border-white/20 bg-white/10 hover:bg-white/15"
+                    : "border-[var(--chat-border-strong)] bg-[var(--chat-bg-sidebar)] hover:bg-[var(--chat-bg-hover)]",
+                )}
+                aria-label={`Open ${sharedContent.title}`}
+              >
+                <span
+                  className={cn(
+                    "grid size-9 shrink-0 place-items-center rounded-lg",
+                    isOutgoing
+                      ? "bg-white/15 text-white"
+                      : "bg-[var(--chat-accent-soft)] text-[var(--chat-accent)]",
+                  )}
+                >
+                  <FileText className="size-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-semibold leading-tight">
+                    {sharedContent.title}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] opacity-70">
+                    {sharedContent.description}
+                  </span>
+                </span>
+                <span className="shrink-0 text-[11px] font-semibold opacity-80">
+                  Open
+                </span>
+              </button>
             )}
 
             {/* Images */}
@@ -568,7 +630,7 @@ function ChatMessage({
                 href={message.linkPreview.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="chat-content-card mt-1.5 block hover:opacity-90 transition-opacity"
+                className="chat-content-card mt-2 block overflow-hidden border-[var(--chat-border-strong)] bg-[var(--chat-bg-sidebar)] hover:opacity-90 transition-opacity"
               >
                 {message.linkPreview.image && (
                   <img
@@ -579,12 +641,19 @@ function ChatMessage({
                   />
                 )}
                 <div className="px-3 py-2">
+                  {message.linkPreview.siteName && (
+                    <p className="mb-1 truncate text-[10px] font-semibold uppercase tracking-wide text-[var(--chat-text-tertiary)]">
+                      {message.linkPreview.siteName}
+                    </p>
+                  )}
                   <p className="text-[13px] font-semibold text-[var(--chat-text-primary)]">
                     {message.linkPreview.title}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-[var(--chat-text-secondary)]">
-                    {message.linkPreview.description}
-                  </p>
+                  {message.linkPreview.description ? (
+                    <p className="mt-0.5 line-clamp-2 text-[12px] text-[var(--chat-text-secondary)]">
+                      {message.linkPreview.description}
+                    </p>
+                  ) : null}
                   <p className="mt-1 text-[11px] text-[var(--chat-accent)]">
                     {message.linkPreview.url}
                   </p>
@@ -607,14 +676,27 @@ function ChatMessage({
               {message.isEdited && (
                 <span className="text-[10px] italic opacity-50">edited</span>
               )}
-              <time className="text-[11px] tracking-[0.02em] opacity-60">
-                {formatTimestamp(timestamp)}
-              </time>
-              {isOutgoing && message.status && (
+              {message.status === "sending" ? (
+                <span className="text-[11px] tracking-[0.02em] opacity-70">
+                  Sending…
+                </span>
+              ) : (
+                <time className="text-[11px] tracking-[0.02em] opacity-60">
+                  {formatTimestamp(timestamp)}
+                </time>
+              )}
+              {isOutgoing && message.status && message.status !== "sending" && (
                 <ChatMessageStatus status={message.status} />
               )}
             </div>
           </div>
+
+          {/* Pin indicator */}
+          {message.isPinned && (
+            <div className="absolute -top-1.5 -right-1.5">
+              <Pin className="size-3 rotate-45 text-[var(--chat-orange)]" />
+            </div>
+          )}
         </div>
 
         {/* Reactions bar */}
@@ -659,6 +741,27 @@ function ChatMessage({
         )}
     </div>
   );
+}
+
+function getSharedContentInfo(data?: string) {
+  if (!data) return null;
+
+  try {
+    const parsed = JSON.parse(data) as { type?: unknown; content?: unknown };
+    if (!parsed || typeof parsed !== "object") return null;
+    const itemCount = Array.isArray(parsed.content) ? parsed.content.length : 0;
+    const entries = itemCount === 1 ? "1 entry" : `${itemCount} entries`;
+
+    if (parsed.type === "feedback") {
+      return { title: "Feedback report", description: entries };
+    }
+    if (parsed.type === "neworder") {
+      return { title: "New order", description: entries };
+    }
+    return { title: "Shared content", description: entries };
+  } catch {
+    return null;
+  }
 }
 
 // ─── Bubble radius helper ─────────────────────────────────────────────────────
@@ -1034,6 +1137,8 @@ function ChatMessages({
   messages,
   typingUsers = [],
   className,
+  onLoadMore,
+  hasMore = false,
 }: ChatMessagesProps) {
   const { currentUser, messageGroupingInterval } = useChatContext();
   const { containerRef, scrollToBottom, isAtBottom, unseenCount } =
@@ -1043,6 +1148,25 @@ function ChatMessages({
     () => groupMessages(messages, currentUser.id, messageGroupingInterval),
     [messages, currentUser.id, messageGroupingInterval],
   );
+  const [loadingMore, setLoadingMore] = React.useState(false);
+
+  const handleLoadMore = async () => {
+    if (!onLoadMore || loadingMore) return;
+    const element = containerRef.current;
+    const previousHeight = element?.scrollHeight ?? 0;
+    const previousTop = element?.scrollTop ?? 0;
+    setLoadingMore(true);
+    try {
+      await onLoadMore();
+      requestAnimationFrame(() => {
+        if (element)
+          element.scrollTop =
+            previousTop + element.scrollHeight - previousHeight;
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   return (
     <div
@@ -1058,7 +1182,21 @@ function ChatMessages({
         role="log"
         aria-live="polite"
       >
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="w-full">
+          {hasMore ? (
+            <div className="mb-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => void handleLoadMore()}
+                disabled={loadingMore}
+                className="rounded-md border border-[var(--chat-border-strong)] bg-[var(--chat-bg-sidebar)] px-3 py-1.5 text-xs font-medium text-[var(--chat-text-secondary)] transition-colors hover:bg-[var(--chat-bg-hover)] disabled:cursor-wait disabled:opacity-60"
+              >
+                {loadingMore
+                  ? "Loading older messages..."
+                  : "Load older messages"}
+              </button>
+            </div>
+          ) : null}
           {items.map((item, i) => {
             switch (item.type) {
               case "date":
@@ -1319,15 +1457,18 @@ function ChatComposer({
     [addFiles],
   );
 
+  // Attachments are deliberately unsupported in this application.
+  void handlePaste;
+  void handleDragOver;
+  void handleDragLeave;
+  void handleDrop;
+
   return (
     <div
       className={cn("chat-composer sticky bottom-0 z-10 relative", className)}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
       {/* Drop overlay */}
-      {isDragging && (
+      {false && isDragging && (
         <div className="chat-drop-overlay">
           <div className="flex flex-col items-center gap-2">
             <Upload className="size-8 text-[var(--chat-accent)]" />
@@ -1361,11 +1502,11 @@ function ChatComposer({
 
       {/* Composer body — frosted glass */}
       <div className="border-t border-[var(--chat-border)] bg-[var(--chat-bg-composer)] px-3 py-2 backdrop-blur-[20px] backdrop-saturate-[180%]">
-        <div className="mx-auto max-w-3xl">
+        <div>
           {/* Input row */}
           <div className="flex items-end gap-2">
             {/* + button with attachment popout */}
-            <div className="relative">
+            <div className="relative hidden">
               <button
                 onClick={() => setShowAttachMenu(!showAttachMenu)}
                 className={cn(
@@ -1444,7 +1585,6 @@ function ChatComposer({
                   resize();
                 }}
                 onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
                 placeholder={placeholder}
                 disabled={disabled}
                 rows={1}

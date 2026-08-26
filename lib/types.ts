@@ -607,7 +607,7 @@ export type MachineProps = {
   owner?: string;
   user_name?: string;
   sale_id?: number;
-  shipment_title?: string[]
+  shipment_title?: string[];
 };
 
 export type InstallmentProps = {
@@ -983,6 +983,13 @@ export type Messages = {
   created_at: string | Date;
   is_read?: boolean;
   data?: any;
+  link_preview?: {
+    url: string;
+    title: string;
+    description: string;
+    image?: string;
+    siteName?: string;
+  } | null;
   pending?: boolean;
   reply_to_message_id?: number | string | null;
   reply_to?: Pick<Messages, "id" | "sender_id" | "message"> | null;
