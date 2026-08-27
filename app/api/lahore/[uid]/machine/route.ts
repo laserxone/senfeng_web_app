@@ -5,7 +5,8 @@ import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export const createMachineHandler = (office: "lahore" | "karachi") =>
+  async function POST(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const inventory = searchParams.get("inventory");
 
@@ -72,16 +73,21 @@ export async function POST(req: NextRequest) {
     const machine = result.rows?.[0] ?? null;
 
     if (machine) {
+      await pool.query(
+        `INSERT INTO machine_review_history (sale_id, action, actor_id)
+         VALUES ($1, 'submitted', $2)`,
+        [machine.id, data.sell_by || null],
+      );
       const item =
         machine?.type === "Machine"
           ? NOTIFICATION_TYPES.machine_added
           : NOTIFICATION_TYPES.part_added;
-      sendNotificationToOwner(
-        `${machine?.serial_no}`,
-        `member/${machine?.customer_id}/${machine?.id}`,
-        "lahore",
+      await sendNotificationToOwner(
+        `Machine ${machine?.serial_no} needs your approval`,
+        `member/${machine?.customer_id}/${machine?.id}?review=1`,
+        office,
         item.category,
-        item.title,
+        "Machine needs approval",
       );
     }
     return NextResponse.json(
@@ -95,6 +101,6 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+  };
 
-export const revalidate = 0;
+export const POST = createMachineHandler("lahore");

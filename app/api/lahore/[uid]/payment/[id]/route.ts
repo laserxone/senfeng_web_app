@@ -21,5 +21,3 @@ export async function DELETE(
     );
   }
 }
-
-export const revalidate = 0;

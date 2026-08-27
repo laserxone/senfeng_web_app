@@ -5,7 +5,7 @@ import { NotificationCategory } from "@/constants/notifications";
 export const sendNotification = async (
   description: string,
   page: string,
-  sendTo: string,
+  sendTo: string | number,
   title: string,
   category: NotificationCategory,
 ) => {

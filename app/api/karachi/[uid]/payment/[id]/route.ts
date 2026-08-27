@@ -1,25 +1,6 @@
-import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const { id } = await params;
-
-    if (!id) {
-      return NextResponse.json({ message: "ID is required" }, { status: 400 });
-    }
-    await pool.query(`DELETE FROM payment WHERE id = $1`, [id]);
-
-    return NextResponse.json({ message: "Payment Deleted" }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json(
-      { message: error.message || "Internal Server Error" },
-      { status: 500 },
-    );
-  }
-}
-
-export const revalidate = 0;
+// This handler has no office-specific behavior, so Karachi reuses Lahore's
+// single source of truth. Office-specific payment notifications remain in the
+// parent payment routes.
+export {
+  DELETE,
+} from "@/app/api/lahore/[uid]/payment/[id]/route";

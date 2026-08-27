@@ -15,6 +15,7 @@ import { ChequeProp } from "@/lib/types";
 import {
   Banknote,
   CalendarDays,
+  Hash,
   ImageUp,
   ListChecks,
   ReceiptText,
@@ -38,6 +39,7 @@ const ChequeCredit = ({
           date: undefined,
           amount: 0,
           img: "",
+          cheque_number: "",
         })),
       );
     }
@@ -161,6 +163,21 @@ const ChequeCredit = ({
                         );
                       }
                     }}
+                  />
+                </div>
+
+                <div className="flex min-w-0 flex-col gap-1.5 lg:col-span-2">
+                  <Label className="flex items-center gap-1.5 text-xs font-semibold tracking-normal text-slate-500 uppercase">
+                    <Hash className="h-3.5 w-3.5" />
+                    Cheque number
+                  </Label>
+                  <Input
+                    placeholder="Enter cheque number"
+                    value={item.cheque_number}
+                    className="h-11 w-full rounded-xl border-slate-200 bg-slate-50/80 shadow-none"
+                    onChange={(e) =>
+                      handleUpdateData(e.target.value, index, "cheque_number")
+                    }
                   />
                 </div>
 

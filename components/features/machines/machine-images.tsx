@@ -267,8 +267,6 @@ export const ViewImagesSheet = ({
   data: MachineProps | undefined;
   customer_id: number | undefined;
 }) => {
-  if (!data) return null;
-
   const [contractPdfImages, setContractPdfImages] = useState<string[]>([]);
   const [otherPdfImages, setOtherPdfImages] = useState<string[]>([]);
   const [addImageVisible, setAddImageVisible] = useState(false);
@@ -398,6 +396,11 @@ export const ViewImagesSheet = ({
     contractPdfImages.length +
     otherImages.length +
     otherPdfImages.length;
+
+  // This component stays mounted while the machine request is loading. Keep
+  // every hook above this guard so the first render and the loaded render have
+  // the same hook order.
+  if (!data) return null;
 
   type SheetImageGroup = {
     title: string;

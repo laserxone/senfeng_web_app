@@ -184,6 +184,15 @@ WHERE c.id = $1`;
 
       const installments = installmentQuery.rows;
 
+      const reviewHistoryResult = await pool.query(
+        `SELECT h.*, u.name AS actor_name
+         FROM machine_review_history h
+         LEFT JOIN users u ON u.id = h.actor_id
+         WHERE h.sale_id = $1
+         ORDER BY h.created_at ASC`,
+        [id],
+      );
+
       let editAllowed = false;
 
       if (customer && customer?.ownership === Number(uid)) {
@@ -210,6 +219,7 @@ WHERE c.id = $1`;
           percentage_completion,
           unmatchedFields,
           installments,
+          reviewHistory: reviewHistoryResult.rows,
           editAllowed,
         },
         { status: 200 },
@@ -377,6 +387,15 @@ WHERE c.id = $1`;
 
       const installments = installmentQuery.rows;
 
+      const reviewHistoryResult = await pool.query(
+        `SELECT h.*, u.name AS actor_name
+         FROM machine_review_history h
+         LEFT JOIN users u ON u.id = h.actor_id
+         WHERE h.sale_id = $1
+         ORDER BY h.created_at ASC`,
+        [id],
+      );
+
       let editAllowed = false;
 
       if (customer && customer?.ownership === Number(uid)) {
@@ -405,6 +424,7 @@ WHERE c.id = $1`;
           percentage_completion,
           unmatchedFields,
           installments,
+          reviewHistory: reviewHistoryResult.rows,
           editAllowed,
         },
         { status: 200 },
@@ -611,5 +631,3 @@ export async function DELETE(
     client.release();
   }
 }
-
-export const revalidate = 0;

@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowUpDown,
+  Calendar,
   CheckCircle,
   EditIcon,
   ImageIcon,
@@ -11,7 +12,7 @@ import {
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 import PageTable from "@/components/shared/tables/app-table";
@@ -20,7 +21,14 @@ import EditMachine from "@/components/features/machines/edit-machine";
 import EditParts from "@/components/features/machines/edit-parts";
 import EditPayment from "@/components/features/machines/edit-payment";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetContent,
@@ -39,7 +47,7 @@ import { Colors } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
-import { InstallmentProps, MachinePayment, MachineResponse } from "@/lib/types";
+import { InstallmentProps, MachinePayment, MachineResponse, MachineReviewHistory } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -54,6 +62,7 @@ import ClientCard from "./machine-client-card";
 import { ImageSheet, ViewImagesSheet } from "./machine-images";
 import RevokeDelivery from "./revoke-delivery";
 import SendForDeliveryDialog from "./send-for-delivery";
+import CurrencyFormatter from "@/components/shared/common/currency-formatter";
 
 export default function Machine({
   id,
@@ -78,7 +87,7 @@ export default function Machine({
   const [selectedPayment, setSelectedPayment] = useState<MachinePayment | null>(
     null,
   );
-  const { userID, isAdmin } = useUserDetail();
+  const { userID, isAdmin, designation } = useUserDetail();
 
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [installmentVisible, setInstallmentVisible] = useState(false);
@@ -414,6 +423,18 @@ export default function Machine({
     fetchData(id);
   }
 
+  const reviewPanel = data?.machine ? (
+    <MachineReviewPanel
+      machine={data.machine}
+      history={data.reviewHistory || []}
+      userID={userID}
+      designation={designation}
+      onRefresh={async () => {
+        await fetchData(id);
+      }}
+    />
+  ) : null;
+
   return (
     <div className="flex flex-1 flex-col gap-3">
       <ClientCard
@@ -438,12 +459,16 @@ export default function Machine({
         setRevokeDelivery={setRevokeDelivery}
       />
 
+      {data?.machine?.review_status !== "approved" && reviewPanel}
+
       <PageTable
         columns={columns}
         data={payments}
         disableInput={true}
         onRowClick={(val, e) => {}}
       />
+
+      {data?.machine?.review_status === "approved" && reviewPanel}
 
       <EditMachine
         visible={editMachine}
@@ -579,6 +604,199 @@ export default function Machine({
   );
 }
 
+const MachineReviewPanel = ({
+  machine,
+  history,
+  userID,
+  designation,
+  onRefresh,
+}: {
+  machine: MachineResponse["machine"];
+  history: MachineReviewHistory[];
+  userID?: string | number;
+  designation?: string;
+  onRefresh: () => Promise<void>;
+}) => {
+  const [action, setAction] = useState<"approved" | "rejected" | "resubmit" | null>(null);
+  const [comment, setComment] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [reviewDetails, setReviewDetails] = useState<{ machine: Record<string, unknown>; customer: Record<string, unknown>; installments: Record<string, unknown>[] } | null>(null);
+  const reviewFlagHandled = useRef(false);
+  const isOwner = designation === "Owner";
+  const canReview = isOwner && machine.review_status === "pending";
+  const canViewReview = isOwner && machine.review_status !== "approved";
+  const canResubmit = Number(machine.sell_by) === Number(userID) && machine.review_status === "rejected";
+
+  async function submit() {
+    if (!action || !userID) return;
+    if (action === "rejected" && !comment.trim()) {
+      toast.error("A comment is required when rejecting a machine");
+      return;
+    }
+    setSaving(true);
+    try {
+      await axios.post(`/${userID}/machine/${machine.id}/review`, { action, comment });
+      toast.success(action === "resubmit" ? "Machine sent for review" : `Machine ${action}`);
+      setAction(null);
+      setComment("");
+      await onRefresh();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Unable to update machine review");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function openDetails() {
+    if (!userID) return;
+    setDetailsOpen(true);
+    setDetailsLoading(true);
+    setReviewDetails(null);
+    try {
+      const response = await axios.get(`/${userID}/machine/${machine.id}/review-detail`);
+      setReviewDetails(response.data);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Unable to load review details");
+      setDetailsOpen(false);
+    } finally {
+      setDetailsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const shouldOpenReview = new URLSearchParams(window.location.search).get("review") === "1";
+    if (shouldOpenReview && canReview && !reviewFlagHandled.current) {
+      reviewFlagHandled.current = true;
+      openDetails();
+    }
+  }, [canReview]);
+
+  return (
+    <div className="rounded-lg border bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/30 px-3 py-2">
+        <div>
+          <p className="text-sm font-semibold">Owner review</p>
+          <p className="text-xs text-muted-foreground">Approval comments for this machine.</p>
+        </div>
+        <div className="flex gap-2">
+          {canViewReview && <Button size="sm" className="h-8 rounded-lg" onClick={openDetails}>View details</Button>}
+          {canResubmit && <Button size="sm" variant="outline" className="h-8 rounded-lg" onClick={() => setAction("resubmit")}>Send for review again</Button>}
+        </div>
+      </div>
+      <div className="space-y-2 p-3">
+        {history.length ? history.map((item) => (
+          <div key={item.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
+            <Badge variant={item.action === "rejected" ? "destructive" : item.action === "approved" ? "default" : "secondary"} className="capitalize">{item.action}</Badge>
+            <span className="font-medium">{item.actor_name || "System"}</span>
+            <span className="text-muted-foreground">{moment(item.created_at).format("DD MMM YYYY, h:mm A")}</span>
+            {item.comment && <span className="w-full text-muted-foreground">{item.comment}</span>}
+          </div>
+        )) : <p className="text-xs text-muted-foreground">No review activity yet.</p>}
+      </div>
+
+      <Dialog open={detailsOpen} onOpenChange={(open) => !detailsLoading && setDetailsOpen(open)}>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-4xl">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <DialogTitle className="text-sm font-semibold">Review machine details</DialogTitle>
+            <p className="text-xs text-muted-foreground">Confirm the submitted customer and machine information before making a decision.</p>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-4 p-3.5">
+              {detailsLoading ? (
+                <div className="flex h-40 items-center justify-center"><Spinner /></div>
+              ) : reviewDetails ? (
+                <>
+                  <ReviewFieldGroup title="Customer details" values={reviewDetails.customer} />
+                  <ReviewFieldGroup title="Machine details" values={reviewDetails.machine} />
+                  {reviewDetails.installments.length > 0 && (
+                    <ReviewInstallments installments={reviewDetails.installments} />
+                  )}
+                  <div className="flex justify-end gap-2 border-t pt-3">
+                    <Button variant="outline" className="h-9 rounded-lg" onClick={() => setDetailsOpen(false)}>Close</Button>
+                    {canReview && <>
+                      <Button variant="destructive" className="h-9 rounded-lg" onClick={() => { setDetailsOpen(false); setAction("rejected"); }}>Reject</Button>
+                      <Button className="h-9 rounded-lg" onClick={() => { setDetailsOpen(false); setAction("approved"); }}>Approve</Button>
+                    </>}
+                  </div>
+                </>
+              ) : null}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!action} onOpenChange={(open) => !open && !saving && setAction(null)}>
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <DialogTitle className="text-sm font-semibold capitalize">{action === "resubmit" ? "Send for review again" : `${action} machine`}</DialogTitle>
+            <p className="text-xs text-muted-foreground">{action === "rejected" ? "Explain what the employee needs to correct." : "Add an optional comment for the machine record."}</p>
+          </DialogHeader>
+          <div className="p-3.5">
+            <Textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add comment" className="min-h-24 rounded-lg" />
+            <div className="mt-3 flex justify-end gap-2">
+              <Button variant="outline" className="h-9 rounded-lg" disabled={saving} onClick={() => setAction(null)}>Cancel</Button>
+              <Button className="h-9 rounded-lg" variant={action === "rejected" ? "destructive" : "default"} disabled={saving} onClick={submit}>{saving && <Spinner className="mr-2 h-4 w-4" />}{action === "resubmit" ? "Send for review" : action}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const ReviewFieldGroup = ({ title, values }: { title: string; values: Record<string, unknown> }) => (
+  <section>
+    <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {Object.entries(values).map(([key, value]) => (
+        <div key={key} className="min-w-0 rounded-lg border bg-muted/20 px-2.5 py-2">
+          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{key.replaceAll("_", " ")}</p>
+          <p className="mt-0.5 break-words text-xs text-foreground">{formatReviewValue(value)}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
+const ReviewInstallments = ({ installments }: { installments: Record<string, unknown>[] }) => (
+  <section>
+    <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Installments</h3>
+    <div className="space-y-2">
+      {installments.map((installment, index) => (
+        <div key={String(installment.id || index)} className="rounded-lg border bg-muted/20 p-2.5">
+          <p className="mb-2 text-xs font-semibold">Installment {index + 1}</p>
+          <div className="grid gap-3 sm:grid-cols-[112px_minmax(0,1fr)]">
+            <div className="flex min-h-24 items-center justify-center overflow-hidden rounded-lg border bg-background">
+              <MyImgZooming
+                img={typeof installment.image === "string" ? installment.image : null}
+                compact
+                className="max-h-24"
+              />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(installment).filter(([key]) => !["image", "created_at"].includes(key)).map(([key, value]) => (
+              <div key={key} className="min-w-0">
+                <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{key.replaceAll("_", " ")}</p>
+                <p className="break-words text-xs text-foreground">{key === "date" && value ? moment(value as string).format("YYYY-MM-DD") : formatReviewValue(value)}</p>
+              </div>
+            ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
+const formatReviewValue = (value: unknown) => {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return String(value);
+};
+
 const OverrideStamp = () => {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
@@ -602,17 +820,68 @@ const InstallmentSheet = ({
   updateData: (id: number, val: boolean) => void;
   onDeleteData: (id: number) => void;
 }) => {
-  const [imageOpen, setImageOpen] = useState(false);
+  const pendingCount = data.filter((item) => item.pending).length;
+  const totalAmount = data.reduce((total, item) => total + Number(item.amount || 0), 0);
 
-  const { isAdmin, userID } = useUserDetail();
+  return (
+    <Sheet open={visible} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        className="flex h-[100dvh] w-full flex-col overflow-hidden border-l bg-background p-0 sm:max-w-2xl"
+      >
+        <SheetHeader className="border-b bg-muted/35 px-5 py-4 text-left">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <SheetTitle className="text-base font-semibold tracking-tight">Installment schedule</SheetTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground">Cheque commitments and their current clearance status.</p>
+            </div>
+            <Badge variant={pendingCount ? "destructive" : "secondary"} className="rounded-full px-2.5 py-1 text-[11px]">
+              {pendingCount ? `${pendingCount} pending` : "All cleared"}
+            </Badge>
+          </div>
+          <div className="mt-3 flex items-center justify-between rounded-xl border bg-background/70 px-3 py-2">
+            <span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Total scheduled</span>
+            <span className="text-sm font-semibold tabular-nums"><CurrencyFormatter amount={totalAmount} /></span>
+          </div>
+        </SheetHeader>
 
-  const handleClose = useCallback(() => {
-    if (!imageOpen) {
-      onClose();
-    }
-  }, [imageOpen, onClose]);
+        <ScrollArea className="min-h-0 flex-1">
+          <div className="space-y-2.5 p-4">
+            {data.length > 0 ? (
+              data.map((item, index) => (
+                <InstallmentRow
+                  key={item.id}
+                  item={item}
+                  index={index + 1}
+                  updateData={updateData}
+                  onDeleteData={onDeleteData}
+                />
+              ))
+            ) : (
+              <div className="flex h-52 flex-col items-center justify-center rounded-xl border border-dashed bg-muted/15 text-center">
+                <Calendar className="mb-2 h-5 w-5 text-muted-foreground" />
+                <p className="text-sm font-medium">No installments</p>
+                <p className="mt-1 text-xs text-muted-foreground">Installment cheques will appear here.</p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
+  );
+};
 
-  const RenderEachRow = ({ item }: { item: InstallmentProps }) => {
+const InstallmentRow = ({
+  item,
+  index,
+  updateData,
+  onDeleteData,
+}: {
+  item: InstallmentProps;
+  index: number;
+  updateData: (id: number, val: boolean) => void;
+  onDeleteData: (id: number) => void;
+}) => {
+    const { isAdmin, userID } = useUserDetail();
     const [loading, setLoading] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -647,50 +916,45 @@ const InstallmentSheet = ({
     }
 
     return (
-      <div className="rounded-xl border bg-white p-3 shadow-sm transition hover:shadow-md dark:bg-neutral-900">
-        <div className="grid grid-cols-1 items-center gap-4 p-3 sm:grid-cols-2 lg:grid-cols-5">
-          <div>
-            {item.pending ? (
-              <Badge variant="destructive">Pending</Badge>
-            ) : (
-              <Badge variant="secondary">Paid</Badge>
-            )}
+      <div className="rounded-xl border bg-card p-3 shadow-sm transition-all hover:border-primary/25 hover:shadow-md">
+        <div className="flex gap-3">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${item.pending ? "bg-amber-500/10 text-amber-700" : "bg-emerald-500/10 text-emerald-700"}`}>
+            {String(index).padStart(2, "0")}
           </div>
-
-          {/* Date */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">Date</Label>
-            <Input
-              value={moment(item.date).format("YYYY-MM-DD")}
-              readOnly
-              className="h-8 text-sm"
-            />
-          </div>
-
-          {/* Amount */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">Amount</Label>
-            <Input value={item.amount} readOnly className="h-8 text-sm" />
-          </div>
-
-          {/* Image */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">Image</Label>
-            <MyImgZooming img={item.image} />
-          </div>
-
-          {/* Action */}
-          <div className="mt-3 flex flex-wrap justify-end gap-3 sm:mt-0">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold">Installment {index}</p>
+                <Badge variant={item.pending ? "outline" : "secondary"} className={item.pending ? "border-amber-500/40 bg-amber-500/10 text-amber-700" : "bg-emerald-500/10 text-emerald-700"}>
+                  {item.pending ? "Pending" : "Cleared"}
+                </Badge>
+              </div>
+              <span className="text-sm font-semibold tabular-nums"><CurrencyFormatter amount={item.amount} /></span>
+            </div>
+            <div className="mt-2 grid gap-2 text-xs sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+              <div className="rounded-lg bg-muted/55 px-2.5 py-2">
+                <span className="block text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Due date</span>
+                <span className="mt-0.5 block font-medium">{moment(item.date).format("YYYY-MM-DD")}</span>
+              </div>
+              <div className="rounded-lg bg-muted/55 px-2.5 py-2">
+                <span className="block text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Cheque no.</span>
+                <span className="mt-0.5 block truncate font-medium">{item.cheque_number || "Not provided"}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2 sm:justify-end">
+                <MyImgZooming img={item.image} compact />
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap justify-end gap-2 border-t pt-2.5">
             {isAdmin && item?.pending && (
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-2"
+                className="h-8 rounded-lg text-xs"
                 onClick={() => handlePaid(item.id)}
                 disabled={loading}
               >
                 {loading && <Spinner className="h-4 w-4 animate-spin" />}
-                Mark Paid
+                Mark cleared
               </Button>
             )}
 
@@ -698,46 +962,19 @@ const InstallmentSheet = ({
               <Button
                 onClick={() => handleDelete(item.id)}
                 variant="destructive"
+                size="sm"
+                className="h-8 rounded-lg text-xs"
                 disabled={deleteLoading}
               >
                 {deleteLoading && <Spinner className="h-4 w-4 animate-spin" />}
                 Delete
               </Button>
             )}
+            </div>
           </div>
         </div>
       </div>
     );
-  };
-
-  return (
-    <Sheet open={visible} onOpenChange={handleClose}>
-      <SheetContent
-        className="h-[100vh] w-full overflow-hidden sm:h-auto sm:w-[90vw] sm:max-w-[90vw]"
-        style={{ maxWidth: "100%", padding: "1rem" }}
-      >
-        <SheetHeader className="mb-6">
-          <SheetTitle className="text-2xl font-semibold">
-            Installments
-          </SheetTitle>
-        </SheetHeader>
-
-        <ScrollArea className="h-[calc(100vh-120px)] px-1 sm:h-[80vh]">
-          <div className="flex flex-1 flex-col gap-3">
-            {data.length > 0 ? (
-              data.map((item, index) => (
-                <RenderEachRow key={index} item={item} />
-              ))
-            ) : (
-              <div className="flex h-40 items-center justify-center text-muted-foreground">
-                No installments found
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
-  );
 };
 
 export const MyImg = ({ img }: { img: string | null }) => {

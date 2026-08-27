@@ -5,7 +5,8 @@ import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export const createPaymentHandler = (office: "lahore" | "karachi") =>
+  async function POST(req: NextRequest) {
   try {
     const data = await req.json();
 
@@ -13,6 +14,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { message: "No data provided for insertion" },
         { status: 400 },
+      );
+    }
+
+    const reviewResult = await pool.query(
+      `SELECT review_status FROM sale WHERE id = $1`,
+      [data.machine_id],
+    );
+    if (reviewResult.rows[0]?.review_status !== "approved") {
+      return NextResponse.json(
+        { message: "Machine approval is required before adding a payment" },
+        { status: 403 },
       );
     }
 
@@ -28,6 +40,27 @@ export async function POST(req: NextRequest) {
 
     const result = await pool.query(query, values);
 
+    // A cheque payment can clear its matching installment for this machine only.
+    if (
+      String(data.mode || "").toLowerCase() === "cheque" &&
+      String(data.cheque_id || "").trim()
+    ) {
+      await pool.query(
+        `UPDATE machine_installments
+         SET pending = FALSE
+         WHERE id = (
+           SELECT id
+           FROM machine_installments
+           WHERE sale_id = $1
+             AND pending = TRUE
+             AND TRIM(cheque_number) = $2
+           ORDER BY id ASC
+           LIMIT 1
+         )`,
+        [data.machine_id, String(data.cheque_id).trim()],
+      );
+    }
+
     const customerResult = await pool.query(
       `
             SELECT c.name AS customer_name, c.id AS customer_id
@@ -38,10 +71,10 @@ export async function POST(req: NextRequest) {
       [result.rows[0].id],
     );
 
-    sendNotificationToOwner(
+    await sendNotificationToOwner(
       `New payment added for ${customerResult.rows[0].customer_name}`,
       `member/${customerResult.rows[0].customer_id}/${result.rows[0].machine_id}?mp=${result.rows[0]?.id}`,
-      "lahore",
+      office,
       NOTIFICATION_TYPES.payment_added.category,
       NOTIFICATION_TYPES.payment_added.title,
     );
@@ -73,7 +106,9 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
+  };
+
+export const POST = createPaymentHandler("lahore");
 
 export async function PUT(req: NextRequest) {
   try {
@@ -123,5 +158,3 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-
-export const revalidate = 0;

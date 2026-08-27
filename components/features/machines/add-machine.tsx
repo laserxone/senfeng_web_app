@@ -33,6 +33,7 @@ import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Wrench } from "lucide-react";
 import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { toast } from "sonner";
 
 const AddMachine = ({
   customer_id,
@@ -103,6 +104,23 @@ const AddMachine = ({
   });
 
   function onSubmit(values: FormValues) {
+    if (
+      cheque &&
+      (total.length === 0 ||
+        total.some(
+          (item) =>
+            !item.date ||
+            !item.amount ||
+            !item.cheque_number.trim() ||
+            !item.img,
+        ))
+    ) {
+      toast.error(
+        "Complete every cheque installment, including the cheque number.",
+      );
+      return;
+    }
+
     setLoading(true);
     let baseLink = `/${user_id}/machine?inventory=${values.order_item}&cheque=${cheque}`;
     if (manual) {
@@ -142,6 +160,7 @@ const AddMachine = ({
                   date: item.date,
                   image: name,
                   amount: item.amount,
+                  cheque_number: item.cheque_number.trim(),
                   sale_id: saleID,
                 });
               }),

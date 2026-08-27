@@ -207,6 +207,21 @@ const ClientCard = memo(
                 </Badge>
               )}
 
+              {machine?.review_status && (
+                <Badge
+                  variant={
+                    machine.review_status === "approved"
+                      ? "default"
+                      : machine.review_status === "rejected"
+                        ? "destructive"
+                        : "secondary"
+                  }
+                  className="h-5 rounded-md px-2 text-[10px] font-semibold capitalize"
+                >
+                  Review: {machine.review_status}
+                </Badge>
+              )}
+
               {machine?.cancelled_detail && (
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -384,6 +399,7 @@ const ClientCard = memo(
                         <DropdownMenuContent align="end" className="w-52">
                           {data?.machine &&
                             (!data?.machine?.payment_lock || override) && (
+                              data?.machine?.review_status === "approved" && (
                               <DropdownMenuItem
                                 className="text-xs"
                                 onClick={() => {
@@ -400,6 +416,7 @@ const ClientCard = memo(
                                 <CreditCard className="mr-1.5 h-3.5 w-3.5" />
                                 Add Payment
                               </DropdownMenuItem>
+                              )
                             )}
 
                           {installments.length > 0 && (

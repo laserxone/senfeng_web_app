@@ -12,7 +12,11 @@ export const sendNotificationToOwner = async (
 ) => {
   try {
     const ownersResult = await pool.query(
-      `SELECT id FROM users WHERE designation = 'Owner' AND office = '${office}'`,
+      `SELECT id
+       FROM users
+       WHERE designation = 'Owner'
+         AND LOWER(office) = LOWER($1)`,
+      [office],
     );
     const ownerIds = ownersResult.rows.map((owner) => owner.id);
 

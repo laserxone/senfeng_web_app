@@ -47,6 +47,9 @@ export default function AddCheque({
     total.forEach((item, index) => {
       if (!item.date) newErrors.push(`Row ${index + 1}: Date is missing`);
       if (!item.amount) newErrors.push(`Row ${index + 1}: Amount is missing`);
+      if (!item.cheque_number.trim()) {
+        newErrors.push(`Row ${index + 1}: Cheque number is missing`);
+      }
       if (!item.img) newErrors.push(`Row ${index + 1}: Image is missing`);
     });
 
@@ -70,6 +73,7 @@ export default function AddCheque({
             date: item.date,
             image: name,
             amount: item.amount,
+            cheque_number: item.cheque_number.trim(),
             sale_id: saleID,
           });
         }),
@@ -87,7 +91,7 @@ export default function AddCheque({
   return (
     <Dialog open={visible} onOpenChange={onClose}>
       <DialogContent
-        className={`sm:max-w-lg" } max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300`}
+        className={`sm:max-w-4xl max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300`}
       >
         <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

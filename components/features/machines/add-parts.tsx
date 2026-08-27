@@ -30,6 +30,7 @@ import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { ChequeProp } from "@/lib/types";
 import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   serial_no: z.string().min(1, { message: "Name is required." }),
@@ -104,6 +105,23 @@ const AddParts = ({
 
   function onSubmit(values: FormValues) {
     if (!validateNewParts()) return;
+    if (
+      cheque &&
+      (total.length === 0 ||
+        total.some(
+          (item) =>
+            !item.date ||
+            !item.amount ||
+            !item.cheque_number.trim() ||
+            !item.img,
+        ))
+    ) {
+      toast.error(
+        "Complete every cheque installment, including the cheque number.",
+      );
+      return;
+    }
+
     setErrors({});
     setLoading(true);
     let baseLink = `/${user_id}/machine?cheque=${cheque}`;
@@ -140,6 +158,7 @@ const AddParts = ({
                   date: item.date,
                   image: name,
                   amount: item.amount,
+                  cheque_number: item.cheque_number.trim(),
                   sale_id: saleID,
                 });
               }),

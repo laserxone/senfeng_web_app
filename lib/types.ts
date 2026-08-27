@@ -607,8 +607,20 @@ export type MachineProps = {
   owner?: string;
   user_name?: string;
   sale_id?: number;
-  shipment_title?: string[];
-};
+    shipment_title?: string[];
+    review_status?: "pending" | "approved" | "rejected";
+    reviewed_at?: string | null;
+    reviewed_by?: number | null;
+  };
+
+  export type MachineReviewHistory = {
+    id: number;
+    action: "submitted" | "approved" | "rejected" | "resubmitted";
+    comment: string | null;
+    actor_id: number | null;
+    actor_name?: string | null;
+    created_at: string;
+  };
 
 export type InstallmentProps = {
   id: number;
@@ -616,6 +628,7 @@ export type InstallmentProps = {
   date: string;
   amount: number;
   image: string;
+  cheque_number: string | null;
 };
 
 export type MachineResponse = {
@@ -624,8 +637,9 @@ export type MachineResponse = {
   unmatchedFields: string[];
   installments: InstallmentProps[];
   customer: MyCustomer;
-  editAllowed: boolean;
-};
+    editAllowed: boolean;
+    reviewHistory?: MachineReviewHistory[];
+  };
 
 export type CommissionProps = {
   id: number;
@@ -1321,6 +1335,7 @@ export type ChequeProp = {
   date: Date | undefined;
   amount: number;
   img: string | null;
+  cheque_number: string;
 };
 
 export type SalaryRecord = {
