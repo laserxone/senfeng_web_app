@@ -19,7 +19,17 @@ import {
 import moment from "moment";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useEffect } from "react";
 import { DashboardData } from "./aftersales-types";
+import {
+  CompetitorPicker,
+  OTHER_COMPETITOR,
+} from "@/components/features/customer-relations/competitor-picker";
+
+function normalizeCompetitorName(value: string) {
+  const name = value.trim().replace(/\s+/g, " ");
+  return name ? `${name.charAt(0).toUpperCase()}${name.slice(1)}` : "";
+}
 
 const PendingFeedbackData = ({
   data,
@@ -31,6 +41,8 @@ const PendingFeedbackData = ({
   onRefresh: () => Promise<void>;
 }) => {
   const [search, setSearch] = useState("");
+  const [competitors, setCompetitors] = useState<string[]>([]);
+  const [settingsId, setSettingsId] = useState<number | string>();
   const { base_route } = useUserDetail();
   const filteredData = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -40,6 +52,17 @@ const PendingFeedbackData = ({
       objectValuesToSearchText(item).includes(query),
     );
   }, [data.withoutFeedback, search]);
+
+  useEffect(() => {
+    axios.get(`/${user_id}/settings`).then((response) => {
+      setSettingsId(response.data?.id);
+      setCompetitors(
+        Array.isArray(response.data?.competitors)
+          ? response.data.competitors
+          : [],
+      );
+    });
+  }, [user_id]);
 
   return (
     <div className="flex flex-col gap-2">
@@ -139,6 +162,9 @@ const PendingFeedbackData = ({
                   user_id={user_id}
                   onRefresh={onRefresh}
                   customer_id={item.id}
+                  competitors={competitors}
+                  settingsId={settingsId}
+                  onCompetitorsChange={setCompetitors}
                 />
               </div>
             </div>
@@ -157,10 +183,16 @@ const FeedbackForm = ({
   user_id,
   customer_id,
   onRefresh,
+  competitors,
+  settingsId,
+  onCompetitorsChange,
 }: {
   customer_id: number;
   user_id: string | number;
   onRefresh: () => Promise<void>;
+  competitors: string[];
+  settingsId: number | string | undefined;
+  onCompetitorsChange: (competitors: string[]) => void;
 }) => {
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
@@ -168,56 +200,137 @@ const FeedbackForm = ({
   const [top, setTop] = useState(false);
   const [satisfactory, setSatisfactory] = useState(false);
   const [rating, setRating] = useState(0);
+  const [alreadyPurchased, setAlreadyPurchased] = useState(false);
+  const [competitor, setCompetitor] = useState("");
+  const [otherCompetitor, setOtherCompetitor] = useState("");
+  const [reason, setReason] = useState("");
+  const isOtherCompetitor = competitor === OTHER_COMPETITOR;
+  const selectedCompetitor = normalizeCompetitorName(
+    isOtherCompetitor ? otherCompetitor : competitor,
+  );
   async function handleSaveFeedback() {
     setLoading(true);
-    axios
-      .post(`/${user_id}/feedback`, {
-        feedback,
-        type: "aftersales",
+    try {
+      if (alreadyPurchased && isOtherCompetitor) {
+        const exists = competitors.some(
+          (item) =>
+            item.toLocaleLowerCase() === selectedCompetitor.toLocaleLowerCase(),
+        );
+        if (!exists && settingsId) {
+          const nextCompetitors = [...competitors, selectedCompetitor];
+          await axios.put(`/${user_id}/settings`, {
+            id: settingsId,
+            competitors: nextCompetitors,
+          });
+          onCompetitorsChange(nextCompetitors);
+        }
+      }
+
+      await axios.post(`/${user_id}/feedback`, {
+        feedback: alreadyPurchased
+          ? `Already Purchsed -> ${selectedCompetitor} -> ${reason.trim()}`
+          : feedback,
         customer_id,
         user_id,
-        status: satisfactory ? "Satisfactory" : "Unsatisfactory",
-        next_followup: undefined,
-        top_follow: false,
+        status: alreadyPurchased
+          ? "Already Purchased"
+          : satisfactory
+            ? "Satisfactory"
+            : "Unsatisfactory",
+        next_followup: alreadyPurchased ? null : next,
+        top_follow: alreadyPurchased ? false : top,
+        is_already_purchased: alreadyPurchased,
+        competitor_name: alreadyPurchased ? selectedCompetitor : null,
+        reason: alreadyPurchased ? reason.trim() : null,
         rating,
-      })
-      .then(async () => {
-        await onRefresh();
-        setFeedback("");
-      })
-      .finally(() => {
-        setLoading(false);
       });
+      await onRefresh();
+      setFeedback("");
+      setAlreadyPurchased(false);
+      setCompetitor("");
+      setOtherCompetitor("");
+      setReason("");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="mt-3 rounded-xl border border-border bg-card p-3 text-card-foreground shadow-sm">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-        <div className="min-w-[260px] flex-1 space-y-1.5">
-          <Label className="text-xs font-semibold text-muted-foreground">
-            Response / Update
-          </Label>
+        <div className="min-w-[260px] flex-1 space-y-3">
+          <label className="flex min-h-9 items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-medium text-foreground">
+            <span>Already Purchased</span>
+            <Checkbox
+              checked={alreadyPurchased}
+              onCheckedChange={(checked) =>
+                setAlreadyPurchased(Boolean(checked))
+              }
+            />
+          </label>
 
-          <Input
-            placeholder="Enter response or update..."
-            value={feedback}
-            onChange={(event) => setFeedback(event.target.value)}
-            className="h-9 rounded-lg border-input bg-background text-sm shadow-none transition focus-visible:ring-2 focus-visible:ring-ring"
-          />
+          {alreadyPurchased ? (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Competitor <RequiredStar />
+                </Label>
+                <CompetitorPicker
+                  competitors={competitors}
+                  value={competitor}
+                  onChange={setCompetitor}
+                />
+              </div>
+              {isOtherCompetitor && (
+                <Input
+                  placeholder="Enter competitor name"
+                  value={otherCompetitor}
+                  onChange={(event) => setOtherCompetitor(event.target.value)}
+                  className="h-9 rounded-lg"
+                />
+              )}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Reason <RequiredStar />
+                </Label>
+                <Input
+                  placeholder="Why did they purchase from this competitor?"
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  className="h-9 rounded-lg"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <Label className="text-xs font-semibold text-muted-foreground">
+                Response / Update
+              </Label>
+
+              <Input
+                placeholder="Enter response or update..."
+                value={feedback}
+                onChange={(event) => setFeedback(event.target.value)}
+                className="h-9 rounded-lg border-input bg-background text-sm shadow-none transition focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </>
+          )}
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold text-muted-foreground">
-            Next Follow Up <RequiredStar />
-          </Label>
+        {!alreadyPurchased && (
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-muted-foreground">
+              Next Follow Up <RequiredStar />
+            </Label>
 
-          <AppCalendar
-            date={next}
-            onChange={setNext}
-            min={new Date()}
-            max={""}
-          />
-        </div>
+            <AppCalendar
+              date={next}
+              onChange={setNext}
+              min={new Date()}
+              max={""}
+            />
+          </div>
+        )}
         <div className="space-y-1.5">
           <div className="flex gap-2">
             <Label className="text-xs font-semibold text-muted-foreground">
@@ -230,27 +343,37 @@ const FeedbackForm = ({
             />
           </div>
 
-          <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/40 px-3 py-2">
-            <label className="flex items-center gap-2 text-xs font-medium text-foreground">
-              <Checkbox
-                checked={top}
-                onCheckedChange={(checked: boolean) => setTop(checked)}
-              />
-              Top Follow up
-            </label>
+          {!alreadyPurchased && (
+            <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/40 px-3 py-2">
+              <label className="flex items-center gap-2 text-xs font-medium text-foreground">
+                <Checkbox
+                  checked={top}
+                  onCheckedChange={(checked: boolean) => setTop(checked)}
+                />
+                Top Follow up
+              </label>
 
-            <label className="flex items-center gap-2 text-xs font-medium text-foreground">
-              <Checkbox
-                checked={satisfactory}
-                onCheckedChange={(checked: boolean) => setSatisfactory(checked)}
-              />
-              Satisfactory
-            </label>
-          </div>
+              <label className="flex items-center gap-2 text-xs font-medium text-foreground">
+                <Checkbox
+                  checked={satisfactory}
+                  onCheckedChange={(checked: boolean) =>
+                    setSatisfactory(checked)
+                  }
+                />
+                Satisfactory
+              </label>
+            </div>
+          )}
         </div>
 
         <Button
-          disabled={!feedback || loading || !next || rating === 0}
+          disabled={
+            loading ||
+            rating === 0 ||
+            (alreadyPurchased
+              ? !selectedCompetitor || !reason.trim()
+              : !feedback || !next)
+          }
           size="sm"
           className="h-9 shrink-0 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           onClick={handleSaveFeedback}

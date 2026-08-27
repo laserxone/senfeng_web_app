@@ -296,7 +296,6 @@ const CustomerEmployeeAfterSales = ({
     axios
       .post(`/${user_id}/feedback`, {
         feedback: feedback,
-        type: "aftersales",
         customer_id: selectedCustomer?.id,
         user_id: user_id,
         status: satisfactory ? "Satisfactory" : "Unsatisfactory",

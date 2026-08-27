@@ -1,6 +1,7 @@
 "use client";
 
 import useUserDetail from "@/hooks/use-user-detail";
+import { usePendingApplicationApprovals } from "@/hooks/use-pending-application-approvals";
 import {
   BadgeDollarSign,
   CalendarCheck,
@@ -76,11 +77,26 @@ const applications = [
 export default function ApplicationsPage() {
   const router = useRouter();
   const { base_route, designation } = useUserDetail();
+  const { pendingApprovals } = usePendingApplicationApprovals();
+
+  const approvalCount = (path: string) => {
+    if (path.endsWith("/loan")) return pendingApprovals.loan;
+    if (path.endsWith("/backup")) return pendingApprovals.backup;
+    if (path.endsWith("/gift")) return pendingApprovals.gift;
+    return 0;
+  };
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-        <Heading panel title="Applications" />
+        <div className="flex items-center gap-2">
+          <Heading panel title="Applications" />
+          {pendingApprovals.total > 0 && (
+            <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+              {pendingApprovals.total} awaiting approval
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -88,12 +104,18 @@ export default function ApplicationsPage() {
           const Icon = item.icon;
           if (designation === "Engineer" && item.title === "Apply for Backup")
             return null;
+          const count = approvalCount(item.path);
           return (
             <button
               key={item.title}
               onClick={() => router.push(`/${base_route}${item.path}`)}
-              className="group rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+              className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
             >
+              {count > 0 && (
+                <span className="absolute top-3 right-3 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm animate-pulse-opacity">
+                  {count > 9 ? "9+" : count}
+                </span>
+              )}
               <div
                 className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl ${item.color}`}
               >

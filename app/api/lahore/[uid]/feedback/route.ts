@@ -5,9 +5,16 @@ import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+function getOffice(req: NextRequest): "lahore" | "karachi" {
+  return req.nextUrl.pathname.startsWith("/api/karachi/")
+    ? "karachi"
+    : "lahore";
+}
+
+async function getFeedback(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
   const searchParams = req.nextUrl.searchParams;
@@ -30,7 +37,7 @@ SELECT
 FROM feedback f
 LEFT JOIN customer c ON f.customer_id = c.id
 LEFT JOIN users u ON f.user_id = u.id
-WHERE u.office = 'lahore'
+WHERE u.office = '${office}'
 ORDER BY created_at DESC;
 
     `;
@@ -46,8 +53,8 @@ ORDER BY created_at DESC;
 
       const limitedAccess = user.limited_access;
 
-      let queryParams = [];
-      let conditions = [];
+      const queryParams: string[] = [];
+      const conditions: string[] = [];
 
       let query = `
     SELECT 
@@ -98,18 +105,22 @@ ORDER BY created_at DESC;
       const result = await pool.query(query, queryParams);
       return NextResponse.json(result.rows, { status: 200 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error ", error);
     return NextResponse.json(
-      { message: error.message || "Something went wrong" },
+      {
+        message:
+          error instanceof Error ? error.message : "Something went wrong",
+      },
       { status: 500 },
     );
   }
 }
 
-export async function POST(req: NextRequest) {
+async function postFeedback(req: NextRequest, office: "lahore" | "karachi") {
   try {
     const { rating = 0, ...data } = await req.json();
+    delete data.type;
 
     if (!data || Object.keys(data).length === 0) {
       return NextResponse.json(
@@ -117,6 +128,27 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
+    if (!data.customer_id) {
+      return NextResponse.json(
+        { message: "Customer is required for feedback" },
+        { status: 400 },
+      );
+    }
+
+    const customerResult = await pool.query(
+      "SELECT member FROM customer WHERE id = $1",
+      [data.customer_id],
+    );
+
+    if (!customerResult.rows[0]) {
+      return NextResponse.json(
+        { message: "Customer not found" },
+        { status: 404 },
+      );
+    }
+
+    data.type = customerResult.rows[0].member ? "aftersales" : "feedback";
 
     const fields = Object.keys(data);
     const values = Object.values(data);
@@ -141,7 +173,6 @@ export async function POST(req: NextRequest) {
         values.push(data.followup_type);
       }
     }
-
     const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
     const query = `
@@ -182,7 +213,7 @@ export async function POST(req: NextRequest) {
       sendNotificationToOwner(
         customerName,
         `feedback?f=${result.rows?.[0]?.id}`,
-        "lahore",
+        office,
         NOTIFICATION_TYPES.feedback_added.category,
         NOTIFICATION_TYPES.feedback_added.title,
       );
@@ -199,6 +230,17 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ uid: string }> },
+) {
+  return getFeedback(req, context, getOffice(req));
+}
+
+export async function POST(req: NextRequest) {
+  return postFeedback(req, getOffice(req));
 }
 
 export const revalidate = 0;

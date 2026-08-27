@@ -41,6 +41,7 @@ import NotificationBadge from "@/components/shared/notifications/NotificationBad
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDuePayments } from "@/hooks/use-due-payments";
 import { useMachineDelivery } from "@/hooks/use-machine-delivery";
+import { usePendingApplicationApprovals } from "@/hooks/use-pending-application-approvals";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { signOut } from "firebase/auth";
 import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
@@ -64,6 +65,7 @@ export default function AppSidebar({ office }: { office: string }) {
   const { isAdmin, name, email, base_route, nav_items } = useUserDetail();
   const { pendingDelivery } = useMachineDelivery();
   const { pending } = useDuePayments();
+  const { pendingApprovals } = usePendingApplicationApprovals();
 
   useEffect(() => {
     if (office) {
@@ -110,6 +112,10 @@ export default function AppSidebar({ office }: { office: string }) {
                         >
                           {item.icon && <Icon />}
                           <span className="text-[14px]">{item.title}</span>
+                          {item.title === "Human Resources" &&
+                            pendingApprovals.total > 0 && (
+                              <NotificationBadge count={pendingApprovals.total} />
+                            )}
                           <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
@@ -141,6 +147,10 @@ export default function AppSidebar({ office }: { office: string }) {
                                       pending > 0 && (
                                         <NotificationBadge count={pending} />
                                       )}
+                                    {subItem.title === "Applications" &&
+                                      pendingApprovals.total > 0 && (
+                                        <NotificationBadge count={pendingApprovals.total} />
+                                      )}
                                   </span>
                                 </Link>
                               </SidebarMenuSubButton>
@@ -164,7 +174,9 @@ export default function AppSidebar({ office }: { office: string }) {
                         href={`/${base_route}${item.url}`}
                       >
                         <Icon />
-                        <span className="text-[14px]">{item.title}</span>
+                        <span className="text-[14px]">
+                          {item.title}
+                        </span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -231,11 +243,10 @@ export default function AppSidebar({ office }: { office: string }) {
                   {isAdmin && (
                     <>
                       <Link
-                        href={`${
-                          pathname.includes("karachi")
+                        href={`${pathname.includes("karachi")
                             ? pathname.replace("karachi", "lahore")
                             : pathname.replace("lahore", "karachi")
-                        }`}
+                          }`}
                       >
                         <DropdownMenuItem>
                           <CreditCard />

@@ -233,6 +233,8 @@ export default function MemberDetail({
     );
   }, [taskData, customer_id]);
 
+  console.log(feedback)
+
   const RenderFeedbackTabs = useCallback(() => {
     return (
       <FeedbackTab
@@ -969,6 +971,8 @@ function FeedbackTab({
           moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf(),
       ),
   );
+  console.log("data", data)
+  console.log("local", localData)
 
   async function handleDelete(id: number) {
     setSelectedDelete(id);

@@ -12,7 +12,7 @@ export default function NotificationBadge({
 
   return (
     <span
-      className="inline-flex max-w-[3.25rem] min-w-[1.5rem] items-center justify-center truncate rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white shadow-sm"
+      className="inline-flex max-w-[3.25rem] min-w-[1.5rem] items-center justify-center truncate rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white shadow-sm animate-pulse-opacity"
       title={String(display)}
     >
       {display}
