@@ -5,6 +5,7 @@ import { Stats } from "@/components/shared/charts/pie_stats/page";
 import { Sale } from "@/components/shared/charts/sales/page";
 import SalesTeamProgressChart from "@/components/shared/charts/sales_progress/page";
 import CustomerMap from "@/components/features/customers/components/customer-map";
+import RecentQuotations from "@/components/features/sales/recent-quotations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -260,11 +261,22 @@ export default function SuperadminDashboard() {
         </Card>
       </div>
 
-      {loading ? (
-        <Skeleton className="h-64" />
-      ) : (
-        <SalesTeamProgressChart passingData={data?.team_progress || []} />
-      )}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="xl:col-span-2">
+          {loading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <SalesTeamProgressChart passingData={data?.team_progress || []} />
+          )}
+        </div>
+        <div className="min-h-0 xl:h-[505px]">
+          {loading ? (
+            <Skeleton className="h-full" />
+          ) : (
+            <RecentQuotations data={data?.recentQuotations} />
+          )}
+        </div>
+      </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4">
           {loading ? (

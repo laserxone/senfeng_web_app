@@ -19,6 +19,7 @@ export default function RecentQuotations({
   const columns: ColumnDef<QuotationData>[] = [
     {
       accessorKey: "id",
+      size: 56,
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -36,6 +37,7 @@ export default function RecentQuotations({
 
     {
       accessorKey: "customer_name",
+      size: 160,
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -61,6 +63,7 @@ export default function RecentQuotations({
     },
     {
       accessorKey: "price",
+      size: 110,
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -78,6 +81,7 @@ export default function RecentQuotations({
 
     {
       accessorKey: "date",
+      size: 105,
       filterFn: "includesString",
       header: ({ column }) => {
         return (
@@ -95,7 +99,7 @@ export default function RecentQuotations({
   ];
 
   return (
-    <Card className="flex h-full w-full flex-col overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-full">
+    <Card className="flex h-[500px] w-full flex-col overflow-hidden border border-slate-200/80 p-0 shadow-sm ring-1 ring-black/5 xl:h-full">
       <CardContent className="flex min-h-0 flex-1 flex-col p-4">
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
           <div className="flex min-w-0 items-center gap-2">
@@ -125,13 +129,14 @@ export default function RecentQuotations({
         </div>
 
         {quotations.length ? (
-          <div className="mt-3 min-h-0 flex-1 rounded-md border border-slate-200/80 bg-background/80">
+          <div className="mt-3 flex min-h-0 flex-1 flex-col rounded-md border border-slate-200/80 bg-background/80">
             <PageTable
+            download={false}
               columns={columns}
               data={quotations}
               disableInput
               hideFooter
-              height="min-h-[calc(100dvh-290px)]"
+              height="h-full min-h-0"
             />
           </div>
         ) : (

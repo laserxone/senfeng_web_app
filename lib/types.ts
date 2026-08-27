@@ -1087,6 +1087,7 @@ export type AdminDashboard = {
   total_new_customers_this_month: string;
   total_payment_this_month: string;
   recent_sales: AdminDashboardRecentSales[];
+  recentQuotations: QuotationData[];
   team_progress: AdminTeamProgress[];
   team_task: {
     assigned_user_id: number;

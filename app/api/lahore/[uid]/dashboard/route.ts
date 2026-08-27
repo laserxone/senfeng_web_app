@@ -1087,6 +1087,15 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
   ORDER BY MAX(task.created_at) DESC;
 `;
 
+  const recentQuotationsQuery = `
+    SELECT q.*, u.name AS user_name
+    FROM quotation q
+    INNER JOIN users u ON u.id = q.user_id
+    WHERE LOWER(u.office) = '${office}'
+    ORDER BY q.id DESC
+    LIMIT 10;
+  `;
+
   const [
     paymentResult,
     machinesSoldResult,
@@ -1096,6 +1105,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
     feedbackResult,
     tempProgressResult,
     taskResult,
+    recentQuotationsResult,
   ] = await Promise.all([
     pool.query(paymentQuery, [firstDayOfCurrentMonth, lastDayOfCurrentMonth]),
     pool.query(machinesSoldQuery, [
@@ -1114,6 +1124,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
       lastDayOfCurrentMonth,
     ]),
     pool.query(taskQuery, [startOfYesterdayUTC, endOfTodayUTC]),
+    pool.query(recentQuotationsQuery),
   ]);
 
   const formattedFeedbackData = feedbackResult.rows.map((row) => ({
@@ -1300,6 +1311,7 @@ ORDER BY created_at DESC
     machines_sold_last_3_months: dateArray,
     feedback_status_last_6_months: formattedFeedbackData,
     team_progress: tempProgressResult.rows,
+    recentQuotations: recentQuotationsResult.rows,
     team_task: updatedTasks,
     complaint_stats: complaintStats.rows?.[0],
     pos_stats: { pending: totalPending },
