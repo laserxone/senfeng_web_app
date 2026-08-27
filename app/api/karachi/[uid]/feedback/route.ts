@@ -1,1 +1,1 @@
-export { GET, POST, revalidate } from "@/app/api/lahore/[uid]/feedback/route";
+export { GET, POST } from "@/app/api/lahore/[uid]/feedback/route";
