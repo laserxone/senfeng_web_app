@@ -26,9 +26,12 @@ export const createMachineReviewDetailHandler = (office: "lahore" | "karachi") =
            'industry', c.industry
          ) AS customer,
          json_build_object(
+           'type', s.type,
            'power', s.power,
            'source', s.source,
            'serial_no', s.serial_no,
+           'parts_information', s.parts_information,
+           'contract_date', s.contract_date,
            'review_status', s.review_status
          ) AS machine,
          COALESCE(

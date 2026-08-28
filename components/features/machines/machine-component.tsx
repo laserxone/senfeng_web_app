@@ -709,7 +709,7 @@ const MachineReviewPanel = ({
               ) : reviewDetails ? (
                 <>
                   <ReviewFieldGroup title="Customer details" values={reviewDetails.customer} />
-                  <ReviewFieldGroup title="Machine details" values={reviewDetails.machine} />
+                  <ReviewMachineDetails machine={reviewDetails.machine} />
                   {reviewDetails.installments.length > 0 && (
                     <ReviewInstallments installments={reviewDetails.installments} />
                   )}
@@ -759,6 +759,58 @@ const ReviewFieldGroup = ({ title, values }: { title: string; values: Record<str
     </div>
   </section>
 );
+
+const ReviewMachineDetails = ({ machine }: { machine: Record<string, unknown> }) => {
+  const isPartsSale = machine.type === "Parts";
+  const parts = Array.isArray(machine.parts_information)
+    ? machine.parts_information.filter(
+        (part): part is Record<string, unknown> =>
+          typeof part === "object" && part !== null && !Array.isArray(part),
+      )
+    : [];
+  const machineValues = Object.fromEntries(
+    Object.entries(machine).filter(([key]) => key !== "type" && key !== "parts_information"),
+  );
+
+  if (!isPartsSale) {
+    return <ReviewFieldGroup title="Machine details" values={machineValues} />;
+  }
+
+  return (
+    <section>
+      <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Parts details</h3>
+      {parts.length > 0 ? (
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {parts.map((part, index) => (
+            <div key={index} className="rounded-lg border bg-muted/20 p-2.5">
+              <p className="mb-2 text-xs font-semibold">Part {index + 1}</p>
+              <div className="space-y-1.5">
+                {Object.entries(part).map(([key, value]) => (
+                  <div key={key} className="flex justify-between gap-2 text-xs">
+                    <span className="text-muted-foreground">{key.replaceAll("_", " ")}</span>
+                    <span className="max-w-[130px] truncate text-right font-medium">{formatReviewValue(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">No parts information available.</p>
+      )}
+      <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {Object.entries(machineValues).map(([key, value]) => (
+          <div key={key} className="min-w-0 rounded-lg border bg-muted/20 px-2.5 py-2">
+            <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{key.replaceAll("_", " ")}</p>
+            <p className="mt-0.5 break-words text-xs text-foreground">
+              {key === "contract_date" && value ? moment(value as string).format("YYYY-MM-DD") : formatReviewValue(value)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const ReviewInstallments = ({ installments }: { installments: Record<string, unknown>[] }) => (
   <section>
