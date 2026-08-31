@@ -129,6 +129,7 @@ const AddReimbursementDialog = ({
       form.reset();
       setSelectedCustomer(null);
       setSelectedRadio("customer");
+      onClose();
     } catch (error) {
       console.log(error);
     } finally {
