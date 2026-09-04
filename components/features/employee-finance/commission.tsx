@@ -17,6 +17,9 @@ import {
   CommissionOwnerProps,
 } from "@/lib/types";
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   BadgeCheck,
   ChevronRight,
   CircleDollarSign,
@@ -68,6 +71,50 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+type SortDirection = "asc" | "desc";
+
+function SortableTableHead({
+  children,
+  className,
+  direction,
+  onClick,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  direction?: SortDirection;
+  onClick: () => void;
+}) {
+  const SortIcon =
+    direction === "asc"
+      ? ArrowUp
+      : direction === "desc"
+        ? ArrowDown
+        : ArrowUpDown;
+
+  return (
+    <TableHead
+      className={className}
+      aria-sort={
+        direction === "asc"
+          ? "ascending"
+          : direction === "desc"
+            ? "descending"
+            : "none"
+      }
+    >
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={onClick}
+        className="-ml-2 h-8 gap-1.5 px-2 text-left font-medium hover:bg-muted"
+      >
+        {children}
+        <SortIcon className="size-3.5" aria-hidden="true" />
+      </Button>
+    </TableHead>
+  );
+}
+
 export default function Commission({
   owner,
   crm,
@@ -79,6 +126,20 @@ export default function Commission({
 }
 
 const OwnerView = () => {
+  type OwnerSortKey =
+    | "request_date"
+    | "user_name"
+    | "customer_name"
+    | "customer_owner"
+    | "customer_group"
+    | "machine_name"
+    | "order_no_arr"
+    | "total_amount"
+    | "images"
+    | "commission_amount"
+    | "note"
+    | "status";
+
   const { userID } = useUserDetail();
   const [data, setData] = useState<CommissionOwnerProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,6 +153,9 @@ const OwnerView = () => {
     null,
   );
   const [search, setSearch] = useState("");
+  const [sortByMonth, setSortByMonth] = useState<
+    Record<string, { key: OwnerSortKey; direction: SortDirection }>
+  >({});
   const { state } = useSidebar();
   const isMobile = useIsMobile();
   useEffect(() => {
@@ -133,6 +197,62 @@ const OwnerView = () => {
     }`;
     return allSearch.toLowerCase().includes(search.toLowerCase());
   });
+
+  function toggleSort(month: string, key: OwnerSortKey) {
+    setSortByMonth((current) => {
+      const currentSort = current[month];
+
+      return {
+        ...current,
+        [month]: {
+          key,
+          direction:
+            currentSort?.key === key && currentSort.direction === "asc"
+              ? "desc"
+              : "asc",
+        },
+      };
+    });
+  }
+
+  function getSortValue(item: CommissionOwnerProps, key: OwnerSortKey) {
+    if (key === "images") {
+      return (
+        (item.contract_images_png?.length ?? 0) +
+        (item.machine_nameplate_images?.length ?? 0)
+      );
+    }
+    if (key === "status") {
+      return item.commission_issued
+        ? 3
+        : item.is_approved === true
+          ? 2
+          : item.is_approved === false
+            ? 0
+            : 1;
+    }
+    if (key === "order_no_arr") return item.order_no_arr?.join(", ") ?? "";
+    return item[key] ?? "";
+  }
+
+  function sortGroupData(month: string, items: CommissionOwnerProps[]) {
+    const sort = sortByMonth[month];
+    if (!sort) return items;
+
+    return [...items].sort((a, b) => {
+      const first = getSortValue(a, sort.key);
+      const second = getSortValue(b, sort.key);
+      const comparison =
+        typeof first === "number" && typeof second === "number"
+          ? first - second
+          : String(first).localeCompare(String(second), undefined, {
+              numeric: true,
+              sensitivity: "base",
+            });
+
+      return sort.direction === "asc" ? comparison : -comparison;
+    });
+  }
 
   const groupedData: Record<string, CommissionOwnerProps[]> =
     groupByMonth(filteredData);
@@ -423,103 +543,217 @@ const OwnerView = () => {
           {Object.keys(groupedData).length === 0 ? (
             <p>No data available.</p>
           ) : (
-            Object.entries(groupedData).map(([month, items]) => (
-              <Collapsible
-                key={month}
-                className="min-w-0 rounded-xl border bg-background"
-              >
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="group h-auto w-full justify-start gap-2 rounded-xl px-3 py-3 text-left transition-none hover:bg-card hover:text-accent-foreground sm:px-4"
-                  >
-                    <ChevronRight className="transition-transform group-data-[state=open]:rotate-90" />
-                    <span className="font-semibold">
-                      {moment(month, "YYYY-MM").format("MMMM YYYY")}
-                    </span>
-                    <span className="ml-auto rounded-full border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
-                      {items.length} rows
-                    </span>
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <div className="relative min-w-0 flex-1 p-2 pt-0 sm:p-3 sm:pt-0">
-                    {/* <ScrollArea
+            Object.entries(groupedData).map(([month, items]) => {
+              const sort = sortByMonth[month];
+
+              return (
+                <Collapsible
+                  key={month}
+                  className="min-w-0 rounded-xl border bg-background"
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="group h-auto w-full justify-start gap-2 rounded-xl px-3 py-3 text-left transition-none hover:bg-card hover:text-accent-foreground sm:px-4"
+                    >
+                      <ChevronRight className="transition-transform group-data-[state=open]:rotate-90" />
+                      <span className="font-semibold">
+                        {moment(month, "YYYY-MM").format("MMMM YYYY")}
+                      </span>
+                      <span className="ml-auto rounded-full border bg-muted/30 px-2 py-0.5 text-xs text-muted-foreground">
+                        {items.length} rows
+                      </span>
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="relative min-w-0 flex-1 p-2 pt-0 sm:p-3 sm:pt-0">
+                      {/* <ScrollArea
                         className={`w-full  ${state === 'expanded' ? "max-w-[calc(100dvw-310px)]" : "max-w-[calc(100dvw-100px)]"}  overflow-x-auto`}
                       > */}
-                    <div
-                      className={`custom-scrollbar rounded-lg border ${
-                        !isMobile && state === "expanded"
-                          ? "xl:max-w-[calc(100dvw-330px)]"
-                          : "xl:max-w-[calc(100dvw-130px)]"
-                      } ${isMobile && "w-[calc(100dvw-50px)]"}`}
-                    >
-                      <Table className="w-[2100px] min-w-[2100px]">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="min-w-[120px]">
-                              Request Date
-                            </TableHead>
-                            <TableHead className="min-w-[150px]">
-                              Employee
-                            </TableHead>
-                            <TableHead className="min-w-[180px]">
-                              Customer
-                            </TableHead>
-                            <TableHead className="min-w-[170px]">
-                              Owner
-                            </TableHead>
-                            <TableHead className="min-w-[150px]">
-                              Group
-                            </TableHead>
-                            <TableHead className="min-w-[190px]">
-                              Machine
-                            </TableHead>
-                            <TableHead className="min-w-[180px]">
-                              Order No
-                            </TableHead>
-                            <TableHead className="min-w-[110px]">
-                              Price
-                            </TableHead>
-                            <TableHead className="min-w-[100px]">
-                              Images
-                            </TableHead>
-                            <TableHead className="min-w-[300px]">
-                              Commission
-                            </TableHead>
-                            <TableHead className="min-w-[220px]">
-                              Note
-                            </TableHead>
-                            <TableHead
-                              className={`min-w-[220px] ${!isMobile && "sticky right-0 z-30 border-l"} bg-background shadow-[-8px_0_12px_-12px_rgba(0,0,0,0.35)]`}
-                            >
-                              Status
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody className="bg-white dark:bg-gray-900">
-                          {items.map((item, i) => (
-                            <RenderEachRow
-                              index={i}
-                              key={item.id}
-                              item={item}
-                              onRefresh={fetchData}
-                              onReturn={(i) => setSelectedRow(i)}
-                              onDisapprove={() => {
-                                setSelectedItem(item);
-                                setVisibleDisapprove(true);
-                              }}
-                            />
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    {/* <ScrollBar orientation="horizontal" />
+                      <div
+                        className={`custom-scrollbar rounded-lg border ${
+                          !isMobile && state === "expanded"
+                            ? "xl:max-w-[calc(100dvw-330px)]"
+                            : "xl:max-w-[calc(100dvw-130px)]"
+                        } ${isMobile && "w-[calc(100dvw-50px)]"}`}
+                      >
+                        <Table className="w-[2100px] min-w-[2100px]">
+                          <TableHeader>
+                            <TableRow>
+                              <SortableTableHead
+                                className="min-w-[120px]"
+                                direction={
+                                  sort?.key === "request_date"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "request_date")
+                                }
+                              >
+                                Request Date
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[150px]"
+                                direction={
+                                  sort?.key === "user_name"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() => toggleSort(month, "user_name")}
+                              >
+                                Employee
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[180px]"
+                                direction={
+                                  sort?.key === "customer_name"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "customer_name")
+                                }
+                              >
+                                Customer
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[170px]"
+                                direction={
+                                  sort?.key === "customer_owner"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "customer_owner")
+                                }
+                              >
+                                Owner
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[150px]"
+                                direction={
+                                  sort?.key === "customer_group"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "customer_group")
+                                }
+                              >
+                                Group
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[190px]"
+                                direction={
+                                  sort?.key === "machine_name"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "machine_name")
+                                }
+                              >
+                                Machine
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[180px]"
+                                direction={
+                                  sort?.key === "order_no_arr"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "order_no_arr")
+                                }
+                              >
+                                Order No
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[110px]"
+                                direction={
+                                  sort?.key === "total_amount"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "total_amount")
+                                }
+                              >
+                                Price
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[100px]"
+                                direction={
+                                  sort?.key === "images"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() => toggleSort(month, "images")}
+                              >
+                                Images
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[300px]"
+                                direction={
+                                  sort?.key === "commission_amount"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "commission_amount")
+                                }
+                              >
+                                Commission
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[220px]"
+                                direction={
+                                  sort?.key === "note"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() => toggleSort(month, "note")}
+                              >
+                                Note
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className={`min-w-[220px] ${!isMobile && "sticky right-0 z-30 border-l"} bg-background shadow-[-8px_0_12px_-12px_rgba(0,0,0,0.35)]`}
+                                direction={
+                                  sort?.key === "status"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() => toggleSort(month, "status")}
+                              >
+                                Status
+                              </SortableTableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody className="bg-white dark:bg-gray-900">
+                            {sortGroupData(month, items).map((item, i) => (
+                              <RenderEachRow
+                                index={i}
+                                key={item.id}
+                                item={item}
+                                onRefresh={fetchData}
+                                onReturn={(i) => setSelectedRow(i)}
+                                onDisapprove={() => {
+                                  setSelectedItem(item);
+                                  setVisibleDisapprove(true);
+                                }}
+                              />
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      {/* <ScrollBar orientation="horizontal" />
                       </ScrollArea> */}
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-            ))
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })
           )}
         </div>
       )}
