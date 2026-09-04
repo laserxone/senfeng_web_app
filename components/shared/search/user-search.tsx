@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UserDashboard } from "@/lib/types";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 type UserSearchProps = {
   value?: number | null | string;
@@ -60,7 +61,8 @@ export function UserSearch({
   const [data, setData] = React.useState<LocalUserData[]>([]);
   const [city, setCity] = React.useState("lahore");
   const [showInactive, setShowInactive] = React.useState(false);
-  const { userID, designation, office } = useUserDetail();
+  const { userID, designation } = useUserDetail();
+  const {state : OfficeState} = React.useContext(OfficeContext)!
 
   React.useEffect(() => {
     async function fetchData() {
@@ -117,14 +119,14 @@ export function UserSearch({
   }, [userID]);
 
   React.useEffect(() => {
-    if (office) {
+    if (OfficeState.value.data) {
       if (designation === "Sales") {
         setCity("");
       } else {
-        setCity(office);
+        setCity(OfficeState.value.data.toLowerCase());
       }
     }
-  }, [office, designation]);
+  }, [OfficeState, designation]);
 
   const filteredData = data
     .filter((item) => item?.data?.office?.includes(city))
@@ -133,6 +135,7 @@ export function UserSearch({
       return item?.data?.active;
     });
 
+    console.log(city)
   return (
     <>
       <Button
