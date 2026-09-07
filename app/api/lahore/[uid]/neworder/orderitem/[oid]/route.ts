@@ -1,6 +1,12 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
+function getDefaultLocation(req: NextRequest) {
+  return req.nextUrl.pathname.startsWith("/api/karachi/")
+    ? "Karachi"
+    : "Lahore";
+}
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ oid: string }> },
@@ -30,9 +36,10 @@ export async function PUT(
     machine_source = null,
     machine_power = null,
     inventory_id = null,
-    location = "Lahore",
+    location: itemLocation,
     show = false,
   } = item;
+  const location = itemLocation || getDefaultLocation(req);
 
   try {
     await pool.query(

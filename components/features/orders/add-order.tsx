@@ -65,7 +65,7 @@ const AddOrderDialog = ({
   const [loading, setLoading] = useState(false);
   const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
 
-  const [manual, setManual] = useState(false);
+  const [manualModes, setManualModes] = useState<boolean[]>([false]);
 
   useEffect(() => {
     if (visible && user_id) {
@@ -113,6 +113,10 @@ const AddOrderDialog = ({
   };
 
   const addItem = () => {
+    const show = items
+      .filter((item) => item.is_machine)
+      .every((item) => item.show);
+
     setItems([
       ...items,
       {
@@ -130,9 +134,10 @@ const AddOrderDialog = ({
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
-        show: true,
+        show,
       },
     ]);
+    setManualModes((prevModes) => [...prevModes, false]);
   };
 
   const removeItem = (index: number) => {
@@ -143,6 +148,19 @@ const AddOrderDialog = ({
     const newErrors = [...errors];
     newErrors.splice(index, 1);
     setErrors(newErrors);
+    setManualModes((prevModes) =>
+      prevModes.filter((_, modeIndex) => modeIndex !== index),
+    );
+  };
+
+  const machineItems = items.filter((item) => item.is_machine);
+  const areAllMachinesShown =
+    machineItems.length > 0 && machineItems.every((item) => item.show);
+
+  const setAllMachinesVisibility = (show: boolean) => {
+    setItems((prevItems) =>
+      prevItems.map((item) => (item.is_machine ? { ...item, show } : item)),
+    );
   };
 
   const validateItems = () => {
@@ -285,6 +303,7 @@ const AddOrderDialog = ({
     ]);
 
     setErrors([]);
+    setManualModes([false]);
   }
 
   return (
@@ -308,6 +327,22 @@ const AddOrderDialog = ({
 
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
           <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3 py-2.5">
+              <div>
+                <Label>Machine visibility</Label>
+                <p className="mt-0.5 text-xs normal-case tracking-normal text-muted-foreground">
+                  Apply visibility to every new machine being added.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={areAllMachinesShown}
+                  disabled={machineItems.length === 0}
+                  onCheckedChange={setAllMachinesVisibility}
+                />
+                <Label>{areAllMachinesShown ? "Show all" : "Hide all"}</Label>
+              </div>
+            </div>
             {items.map((item, index) => (
               <div
                 key={index}
@@ -534,8 +569,14 @@ const AddOrderDialog = ({
                     {item.is_machine && (
                       <div className="mt-2 flex items-center gap-2">
                         <Switch
-                          checked={manual}
-                          onCheckedChange={(val) => setManual(val)}
+                          checked={manualModes[index] ?? false}
+                          onCheckedChange={(val) =>
+                            setManualModes((prevModes) =>
+                              prevModes.map((mode, modeIndex) =>
+                                modeIndex === index ? val : mode,
+                              ),
+                            )
+                          }
                         />
                         <Label>Manual?</Label>
                       </div>
@@ -568,7 +609,7 @@ const AddOrderDialog = ({
                           <Label>
                             Model <RequiredStar />
                           </Label>
-                          {manual ? (
+                          {manualModes[index] ? (
                             <Input
                               value={item.machine_model}
                               onChange={(e) => {
@@ -598,7 +639,7 @@ const AddOrderDialog = ({
                           <Label>
                             Source <RequiredStar />
                           </Label>
-                          {manual ? (
+                          {manualModes[index] ? (
                             <Input
                               value={item.machine_source}
                               onChange={(e) => {
@@ -638,7 +679,7 @@ const AddOrderDialog = ({
                             Power <RequiredStar />
                           </Label>
 
-                          {manual ? (
+                          {manualModes[index] ? (
                             <Input
                               value={item.machine_power}
                               onChange={(e) => {

@@ -66,7 +66,7 @@ const CreateOrderDialog = ({
   const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
   const [title, setTitle] = useState("");
   const { userID } = useUserDetail();
-  const [manual, setManual] = useState(false);
+  const [manualModes, setManualModes] = useState<boolean[]>([false]);
 
   useEffect(() => {
     if (visible && userID) {
@@ -114,6 +114,10 @@ const CreateOrderDialog = ({
   };
 
   const addItem = () => {
+    const show = items
+      .filter((item) => item.is_machine)
+      .every((item) => item.show);
+
     setItems([
       ...items,
       {
@@ -131,10 +135,11 @@ const CreateOrderDialog = ({
         status: "Order Placed",
         isExisting: false,
         inventory_id: null,
-        show: true,
+        show,
         location: "Lahore",
       },
     ]);
+    setManualModes((prevModes) => [...prevModes, false]);
   };
 
   const removeItem = (index: number) => {
@@ -145,6 +150,19 @@ const CreateOrderDialog = ({
     const newErrors = [...errors];
     newErrors.splice(index, 1);
     setErrors(newErrors);
+    setManualModes((prevModes) =>
+      prevModes.filter((_, modeIndex) => modeIndex !== index),
+    );
+  };
+
+  const machineItems = items.filter((item) => item.is_machine);
+  const areAllMachinesShown =
+    machineItems.length > 0 && machineItems.every((item) => item.show);
+
+  const setAllMachinesVisibility = (show: boolean) => {
+    setItems((prevItems) =>
+      prevItems.map((item) => (item.is_machine ? { ...item, show } : item)),
+    );
   };
 
   const validateItems = () => {
@@ -266,6 +284,7 @@ const CreateOrderDialog = ({
     ]);
 
     setErrors([]);
+    setManualModes([false]);
   }
 
   return (
@@ -297,6 +316,22 @@ const CreateOrderDialog = ({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3 py-2.5">
+              <div>
+                <Label>Machine visibility</Label>
+                <p className="mt-0.5 text-xs normal-case tracking-normal text-muted-foreground">
+                  Apply visibility to every machine in this shipment.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={areAllMachinesShown}
+                  disabled={machineItems.length === 0}
+                  onCheckedChange={setAllMachinesVisibility}
+                />
+                <Label>{areAllMachinesShown ? "Show all" : "Hide all"}</Label>
+              </div>
             </div>
             {items.map((item, index) => (
               <div
@@ -544,8 +579,14 @@ const CreateOrderDialog = ({
                     {item.is_machine && (
                       <div className="mt-2 flex items-center gap-2">
                         <Switch
-                          checked={manual}
-                          onCheckedChange={(val) => setManual(val)}
+                          checked={manualModes[index] ?? false}
+                          onCheckedChange={(val) =>
+                            setManualModes((prevModes) =>
+                              prevModes.map((mode, modeIndex) =>
+                                modeIndex === index ? val : mode,
+                              ),
+                            )
+                          }
                         />
                         <Label>Manual?</Label>
                       </div>
@@ -579,7 +620,7 @@ const CreateOrderDialog = ({
                           <Label>
                             Model <RequiredStar />
                           </Label>
-                          {manual ? (
+                          {manualModes[index] ? (
                             <Input
                               value={item.machine_model}
                               onChange={(e) => {
@@ -609,7 +650,7 @@ const CreateOrderDialog = ({
                           <Label>
                             Source <RequiredStar />
                           </Label>
-                          {manual ? (
+                          {manualModes[index] ? (
                             <Input
                               value={item.machine_source}
                               onChange={(e) => {
@@ -649,7 +690,7 @@ const CreateOrderDialog = ({
                             Power <RequiredStar />
                           </Label>
 
-                          {manual ? (
+                          {manualModes[index] ? (
                             <Input
                               value={item.machine_power}
                               onChange={(e) => {

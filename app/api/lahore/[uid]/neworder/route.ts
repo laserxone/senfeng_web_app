@@ -1,6 +1,12 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
+function getDefaultLocation(req: NextRequest) {
+  return req.nextUrl.pathname.startsWith("/api/karachi/")
+    ? "Karachi"
+    : "Lahore";
+}
+
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
@@ -90,7 +96,7 @@ export async function POST(req: NextRequest) {
       const threshold = item.threshold || 0;
       const new_order = item.new_order || 0;
       const buying_price = item.buying_price || 0;
-      const location = item?.location || "Lahore";
+      const location = item?.location || getDefaultLocation(req);
       const show = item?.show || false;
 
       await pool.query(

@@ -1,5 +1,9 @@
 # UI conventions
 
+## Route modules
+
+- Never re-export an imported `revalidate` value from a route module.
+
 ## Dialogs
 
 Follow the dialog pattern in `components/features/customer-relations/add-feedback.tsx`.
