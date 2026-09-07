@@ -74,7 +74,6 @@ export default function DetailComponent({ id }: { id: string | null }) {
   const [active, setActive] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [employeeId, setEmployeeId] = useState<string | null>(null);
   const [fixedData, setFixedData] = useState<UserProfile>({
     designation: "",
     dp: "",
@@ -137,7 +136,6 @@ export default function DetailComponent({ id }: { id: string | null }) {
       .then((response) => {
         if (response.data.length > 0) {
           const apiData = response.data.length > 0 ? response.data[0] : {};
-          setEmployeeId(apiData?.id);
           setFixedData({
             id: apiData?.id,
             designation: apiData?.designation,
@@ -234,10 +232,10 @@ export default function DetailComponent({ id }: { id: string | null }) {
   };
 
   async function handleSave() {
-    if (!employeeId) return;
+    if (!id) return;
     setDataLoading(true);
     axios
-      .put(`/${userID}/user/${employeeId}`, {
+      .put(`/${userID}/user/${id}`, {
         basic_salary: form?.basic_salary || 0,
         fuel: form?.fuel || 0,
         monthly_target: form?.monthly_target || 0,
@@ -285,6 +283,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
     "Dealer",
   ];
 
+  if(!id) return null
   return (
     <div className="flex w-full justify-center pb-4">
       <div className="w-full space-y-5">
@@ -465,56 +464,56 @@ export default function DetailComponent({ id }: { id: string | null }) {
               <DocumentCard
                 type={"cnic"}
                 docsData={docsData}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
                 userID={userID}
               />
               <DocumentCard
                 type={"father_cnic"}
                 docsData={docsData}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
                 userID={userID}
               />
               <DocumentCard
                 type={"police"}
                 docsData={docsData}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
                 userID={userID}
               />
               <DocumentCard
                 type={"education"}
                 docsData={docsData}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
                 userID={userID}
               />
               <DocumentCard
                 type={"resume"}
                 docsData={docsData}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
                 userID={userID}
               />
               <DocumentCard
                 type={"appointment_letter"}
                 docsData={docsData}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
                 userID={userID}
               />
               <DocumentCard
                 type={"contract"}
                 docsData={docsData}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
                 userID={userID}
               />
               <DocumentCardOther
                 userID={userID}
                 otherDocs={otherDocs}
-                employeeId={employeeId}
+                employeeId={id}
                 fetchData={fetchData}
               />
             </div>
@@ -768,36 +767,31 @@ const DocumentCard = ({
     try {
       const extension = file.name.split(".").pop();
       const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
+      const oldFilePath = docsData?.[type as keyof typeof docsData];
 
-      // Step 1: Delete old file if exists
-      if (
-        docsData?.[type as keyof typeof docsData] &&
-        !docsData[type as keyof typeof docsData].includes("http")
-      ) {
-        const oldFileRef = ref(
-          storage,
-          docsData[type as keyof typeof docsData],
-        );
-        await deleteObject(oldFileRef).catch((err) =>
-          console.log("Old file could not be deleted:", err),
-        );
-      }
-
-      // Step 2: Upload new file
-      const uploadedPath = await UploadImage(
+      // Upload first so a failed replacement does not remove the existing file.
+      await UploadImage(
         URL.createObjectURL(file),
         newFilePath,
         file.type || "application/octet-stream",
       );
 
       const updatedData = {
-        ...docsData,
-        password: undefined,
-        confirmPassword: undefined,
-        currentPassword: undefined,
         [type]: newFilePath,
       };
       await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+
+      // Same-extension reuploads overwrite the same Firebase path. Only remove
+      // the previous object when the replacement uses a different path.
+      if (
+        oldFilePath &&
+        oldFilePath !== newFilePath &&
+        !oldFilePath.includes("http")
+      ) {
+        await deleteObject(ref(storage, oldFilePath)).catch((err) =>
+          console.log("Old file could not be deleted:", err),
+        );
+      }
 
       toast.success("File uploaded successfully");
       await fetchData();

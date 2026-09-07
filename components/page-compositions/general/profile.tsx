@@ -563,13 +563,6 @@ const DocumentCard = ({
       const extension = file.name.split(".").pop();
       const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
 
-      if (docsData?.[type] && !docsData[type].includes("http")) {
-        const oldFileRef = ref(storage, docsData[type]);
-        await deleteObject(oldFileRef).catch((err) =>
-          console.log("Old file could not be deleted:", err),
-        );
-      }
-
       const uploadedPath = await UploadImage(
         URL.createObjectURL(file),
         newFilePath,
@@ -577,7 +570,6 @@ const DocumentCard = ({
       );
 
       const updatedData = {
-        ...docsData,
         [type]: newFilePath,
       };
       await axios.put(`/${userId}`, updatedData);
