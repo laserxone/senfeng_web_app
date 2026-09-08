@@ -283,7 +283,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
     "Dealer",
   ];
 
-  if(!id) return null
+  if(!id || !userID) return null
   return (
     <div className="flex w-full justify-center pb-4">
       <div className="w-full space-y-5">
@@ -466,52 +466,52 @@ export default function DetailComponent({ id }: { id: string | null }) {
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                userID={userID}
+               
               />
               <DocumentCard
                 type={"father_cnic"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                userID={userID}
+                
               />
               <DocumentCard
                 type={"police"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                userID={userID}
+               
               />
               <DocumentCard
                 type={"education"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                userID={userID}
+               
               />
               <DocumentCard
                 type={"resume"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                userID={userID}
+                
               />
               <DocumentCard
                 type={"appointment_letter"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                userID={userID}
+                
               />
               <DocumentCard
                 type={"contract"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                userID={userID}
+                
               />
               <DocumentCardOther
-                userID={userID}
+                
                 otherDocs={otherDocs}
                 employeeId={id}
                 fetchData={fetchData}
@@ -525,12 +525,12 @@ export default function DetailComponent({ id }: { id: string | null }) {
 }
 
 const DocumentCardOther = ({
-  userID,
+  
   otherDocs,
   employeeId,
   fetchData,
 }: {
-  userID: number | string;
+ 
   otherDocs: string[];
   employeeId: string | null;
   fetchData: () => Promise<void>;
@@ -548,7 +548,7 @@ const DocumentCardOther = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { state: OfficeState } = useContext(OfficeContext)!;
   const [open, setOpen] = useState(false);
-  const userId = userID;
+  
 
   useEffect(() => {
     async function loadFiles() {
@@ -601,7 +601,7 @@ const DocumentCardOther = ({
 
       const fileName = `${Date.now()}-${file.name}`;
 
-      const newFilePath = `${OfficeState.value.data}/${userId}/profile/other_docs/${fileName}`;
+      const newFilePath = `${OfficeState.value.data}/${employeeId}/profile/other_docs/${fileName}`;
 
       await UploadImage(
         URL.createObjectURL(file),
@@ -618,7 +618,7 @@ const DocumentCardOther = ({
         other_docs: [...updatedOtherDocs],
       };
 
-      await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+      await axios.put(`/${employeeId}/user/${employeeId}`, updatedData);
 
       await fetchData();
 
@@ -699,7 +699,6 @@ const DocumentCardOther = ({
                       employeeId={employeeId}
                       otherDocs={otherDocs}
                       fetchData={fetchData}
-                      userId={userId}
                     />
                   );
                 })}
@@ -718,13 +717,11 @@ const DocumentCardOther = ({
 
 const DocumentCard = ({
   type,
-  userID,
   docsData,
   employeeId,
   fetchData,
 }: {
   type: string;
-  userID: number | string;
   docsData: DocsDataType;
   employeeId: string | null;
   fetchData: () => Promise<void>;
@@ -734,7 +731,7 @@ const DocumentCard = ({
   const [fileName, setFileName] = useState<string | undefined>("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { state: OfficeState } = useContext(OfficeContext)!;
-  const userId = userID;
+  
 
   useEffect(() => {
     if (docsData?.[type as keyof typeof docsData]) {
@@ -766,7 +763,7 @@ const DocumentCard = ({
     setLoading(true);
     try {
       const extension = file.name.split(".").pop();
-      const newFilePath = `${OfficeState.value.data}/${userId}/profile/${type}.${extension}`;
+      const newFilePath = `${OfficeState.value.data}/${employeeId}/profile/${type}.${extension}`;
       const oldFilePath = docsData?.[type as keyof typeof docsData];
 
       // Upload first so a failed replacement does not remove the existing file.
@@ -779,7 +776,7 @@ const DocumentCard = ({
       const updatedData = {
         [type]: newFilePath,
       };
-      await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+      await axios.put(`/${employeeId}/user/${employeeId}`, updatedData);
 
       // Same-extension reuploads overwrite the same Firebase path. Only remove
       // the previous object when the replacement uses a different path.
@@ -862,13 +859,13 @@ const DocumentCard = ({
 
 const RenderEachFile = ({
   file,
-  userId,
+ 
   otherDocs,
   employeeId,
   fetchData,
 }: {
   file: any;
-  userId: number | string;
+ 
   otherDocs: string[];
   employeeId: string | null;
   fetchData: () => Promise<void>;
@@ -877,7 +874,7 @@ const RenderEachFile = ({
   const cleanName = file.name.replace(/^\d+-/, "");
 
   const handleDelete = async (path: string) => {
-    if (!userId || !employeeId) return;
+    if (!employeeId) return;
     try {
       setLoading(true);
 
@@ -898,7 +895,7 @@ const RenderEachFile = ({
         other_docs: updatedOtherDocs,
       };
 
-      await axios.put(`/${userId}/user/${employeeId}`, updatedData);
+      await axios.put(`/${employeeId}/user/${employeeId}`, updatedData);
       await fetchData();
 
       toast.success("File deleted successfully");
