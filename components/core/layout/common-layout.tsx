@@ -15,12 +15,12 @@ export default async function CommonLayout({
     <KBar>
       <SidebarProvider>
         <AppSidebar office={office} />
-        <SidebarInset>
-          <div className="flex flex-1 flex-col">
-            <div className="w-full">
+        <SidebarInset className="h-svh min-h-0 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="w-full shrink-0">
               <Header />
             </div>
-            <div className="flex flex-1">{children}</div>
+            <div className="flex min-h-0 flex-1">{children}</div>
           </div>
         </SidebarInset>
       </SidebarProvider>

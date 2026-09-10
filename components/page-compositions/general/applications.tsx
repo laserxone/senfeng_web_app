@@ -1,10 +1,14 @@
 "use client";
 
-import useUserDetail from "@/hooks/use-user-detail";
+import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
+import Heading from "@/components/ui/heading";
+import { useMachineApproval } from "@/hooks/use-machine-approval";
 import { usePendingApplicationApprovals } from "@/hooks/use-pending-application-approvals";
+import useUserDetail from "@/hooks/use-user-detail";
 import {
   BadgeDollarSign,
   CalendarCheck,
+  ClipboardCheck,
   CloudUpload,
   FileText,
   Gift,
@@ -13,7 +17,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useRouter } from "nextjs-toploader/app";
-import Heading from "@/components/ui/heading";
 
 const applications = [
   {
@@ -76,8 +79,11 @@ const applications = [
 
 export default function ApplicationsPage() {
   const router = useRouter();
-  const { base_route, designation } = useUserDetail();
+  const { base_route, designation, isAdmin } = useUserDetail();
   const { pendingApprovals } = usePendingApplicationApprovals();
+  const { pending: pendingMachineApprovals } = useMachineApproval();
+  const totalPendingApprovals =
+    pendingApprovals.total + pendingMachineApprovals?.length;
 
   const approvalCount = (path: string) => {
     if (path.endsWith("/loan")) return pendingApprovals.loan;
@@ -91,9 +97,9 @@ export default function ApplicationsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
         <div className="flex items-center gap-2">
           <Heading panel title="Applications" />
-          {pendingApprovals.total > 0 && (
+          {totalPendingApprovals > 0 && (
             <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-              {pendingApprovals.total} awaiting approval
+              {totalPendingApprovals} awaiting approval
             </span>
           )}
         </div>
@@ -111,11 +117,11 @@ export default function ApplicationsPage() {
               onClick={() => router.push(`/${base_route}${item.path}`)}
               className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
             >
-              {count > 0 && (
-                <span className="absolute top-3 right-3 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm animate-pulse-opacity">
-                  {count > 9 ? "9+" : count}
+          
+                <span className="absolute top-3 right-3 ">
+                  <NotificationBadge count={count}/>
                 </span>
-              )}
+             
               <div
                 className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl ${item.color}`}
               >
@@ -127,6 +133,28 @@ export default function ApplicationsPage() {
             </button>
           );
         })}
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => router.push(`/${base_route}/applications/machines`)}
+            className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+          >
+          
+              <span className="absolute top-3 right-3">
+                <NotificationBadge count={pendingMachineApprovals.length}/>
+              </span>
+          
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+              <ClipboardCheck size={34} />
+            </div>
+            <h3 className="font-semibold text-slate-900">
+              Pending approval machines
+            </h3>
+            <p className="mt-2 text-sm text-slate-500">
+              Machines awaiting your approval
+            </p>
+          </button>
+        )}
       </div>
     </div>
   );

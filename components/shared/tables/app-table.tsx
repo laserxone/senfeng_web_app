@@ -209,8 +209,10 @@ const PageTable = <T extends object>({
             .replace(/\b\w/g, (letter) => letter.toUpperCase());
     });
 
+    // Export every row that remains after filtering and sorting, before the
+    // pagination row model limits the table to the current page.
     const rows = table
-      .getRowModel()
+      .getPrePaginationRowModel()
       .rows.map((row) =>
         exportableColumns.map((column) =>
           formatExportValue(row.getValue(column.id)),
@@ -333,7 +335,7 @@ const PageTable = <T extends object>({
             <ExportButton
               handleExcelDownload={handleExcelDownload}
               handlePdfDownload={handlePdfDownload}
-              disabled={!table.getRowModel().rows.length}
+              disabled={!table.getPrePaginationRowModel().rows.length}
             />
           )}
           {filter && (

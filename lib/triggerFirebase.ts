@@ -23,6 +23,12 @@ export async function TriggerFirebaseForMachine() {
   });
 }
 
+export async function TriggerFirebaseForMachineApproval() {
+  await setDoc(doc(db, "machine", "approval"), {
+    updated: serverTimestamp(),
+  });
+}
+
 export async function TriggerFirebaseForPendingPayments() {
   await setDoc(doc(db, "payment-requests", "requests"), {
     updated: serverTimestamp(),

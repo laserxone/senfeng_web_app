@@ -37,9 +37,12 @@ import { useProfileImage } from "@/hooks/use-profile-image";
 import useUserDetail from "@/hooks/use-user-detail";
 import { setUserOffice } from "@/lib/axios";
 
-import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
+import NotificationBadge, {
+  NotificationDot,
+} from "@/components/shared/notifications/NotificationBadge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDuePayments } from "@/hooks/use-due-payments";
+import { useMachineApproval } from "@/hooks/use-machine-approval";
 import { useMachineDelivery } from "@/hooks/use-machine-delivery";
 import { usePendingApplicationApprovals } from "@/hooks/use-pending-application-approvals";
 import { OfficeContext } from "@/store/context/OfficeContext";
@@ -66,6 +69,10 @@ export default function AppSidebar({ office }: { office: string }) {
   const { pendingDelivery } = useMachineDelivery();
   const { pending } = useDuePayments();
   const { pendingApprovals } = usePendingApplicationApprovals();
+  const { pending: pendingMachineApprovals } = useMachineApproval();
+  const totalPendingApprovals =
+    pendingApprovals.total + (pendingMachineApprovals?.length ?? 0);
+  const totalPendingDelivery = pendingDelivery + pending;
 
   useEffect(() => {
     if (office) {
@@ -112,10 +119,12 @@ export default function AppSidebar({ office }: { office: string }) {
                         >
                           {item.icon && <Icon />}
                           <span className="text-[14px]">{item.title}</span>
-                          {item.title === "Human Resources" &&
-                            pendingApprovals.total > 0 && (
-                              <NotificationBadge count={pendingApprovals.total} />
-                            )}
+                          {item.title === "Human Resources" && (
+                            <NotificationDot count={totalPendingApprovals} />
+                          )}
+                          {item.title === "Delivery & Logistics" && (
+                            <NotificationDot count={totalPendingDelivery} />
+                          )}
                           <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
@@ -137,20 +146,17 @@ export default function AppSidebar({ office }: { office: string }) {
                                 >
                                   <span className="text-[14px]">
                                     {subItem.title}{" "}
-                                    {subItem.title === "Machine Delivery" &&
-                                      pendingDelivery > 0 && (
-                                        <NotificationBadge
-                                          count={pendingDelivery}
-                                        />
-                                      )}{" "}
-                                    {subItem.title === "Due Payment" &&
-                                      pending > 0 && (
-                                        <NotificationBadge count={pending} />
-                                      )}
-                                    {subItem.title === "Applications" &&
-                                      pendingApprovals.total > 0 && (
-                                        <NotificationBadge count={pendingApprovals.total} />
-                                      )}
+                                    {subItem.title === "Machine Delivery" && (
+                                      <NotificationBadge count={pendingDelivery} />
+                                    )}{" "}
+                                    {subItem.title === "Due Payment" && (
+                                      <NotificationBadge count={pending} />
+                                    )}
+                                    {subItem.title === "Applications" && (
+                                      <NotificationBadge
+                                        count={totalPendingApprovals}
+                                      />
+                                    )}
                                   </span>
                                 </Link>
                               </SidebarMenuSubButton>
@@ -174,9 +180,7 @@ export default function AppSidebar({ office }: { office: string }) {
                         href={`/${base_route}${item.url}`}
                       >
                         <Icon />
-                        <span className="text-[14px]">
-                          {item.title}
-                        </span>
+                        <span className="text-[14px]">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -243,10 +247,11 @@ export default function AppSidebar({ office }: { office: string }) {
                   {isAdmin && (
                     <>
                       <Link
-                        href={`${pathname.includes("karachi")
+                        href={`${
+                          pathname.includes("karachi")
                             ? pathname.replace("karachi", "lahore")
                             : pathname.replace("lahore", "karachi")
-                          }`}
+                        }`}
                       >
                         <DropdownMenuItem>
                           <CreditCard />

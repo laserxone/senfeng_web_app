@@ -1,5 +1,4 @@
-import { ArrowUpDown } from "lucide-react";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import PageTable from "@/components/shared/tables/app-table";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -7,15 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ArrowUpDown } from "lucide-react";
+import { Dispatch, SetStateAction } from "react";
 import "./Button.css";
-import PageTable from "@/components/shared/tables/app-table";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import useUserDetail from "@/hooks/use-user-detail";
 import formatCurrency from "@/lib/formatCurrency";
@@ -24,8 +17,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import axios from "axios";
-import Spinner from "@/components/ui/spinner";
 
 type PageTableRef = {
   handleClear: () => void;
@@ -163,7 +154,12 @@ const SearchResultModal = ({
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("total")}</div>,
+      cell: ({ row }) => {
+        const pending = Number(row.original.total_paid || 0)
+        return (
+          <div>{row.getValue("total")} {pending > 0 && `(${pending})`}</div>
+        )
+      },
     },
 
     {

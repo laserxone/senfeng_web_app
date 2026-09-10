@@ -3,7 +3,6 @@
 import { AddExpensesDialog } from "@/components/features/employee-finance/employee-expense";
 import EngineerModal from "@/components/features/pos/engineer-modal";
 import GatePassSlip from "@/components/features/pos/gatepass-slip";
-import NotificationBadge from "@/components/features/pos/NotificationBadge";
 import { OrderDonutChart } from "@/components/features/pos/order-donut-chart";
 import SearchResultModal from "@/components/features/pos/search-result-modal";
 import Reimbursement from "@/components/features/reimbursements/Reimbursement";
@@ -11,6 +10,7 @@ import AddTaskDialog from "@/components/features/tasks/dialogs/add-task-dialog";
 import TaskDetail from "@/components/features/tasks/task-detail";
 import CurrencyFormatter from "@/components/shared/common/currency-formatter";
 import { MyImgZooming } from "@/components/shared/media/img-zooming";
+import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
 import PageTable from "@/components/shared/tables/app-table";
 import { Button } from "@/components/ui/button";
 import {
