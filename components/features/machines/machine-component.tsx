@@ -47,7 +47,12 @@ import { Colors } from "@/constants/data";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { DeleteFromStorage } from "@/lib/deleteFunction";
-import { InstallmentProps, MachinePayment, MachineResponse, MachineReviewHistory } from "@/lib/types";
+import {
+  InstallmentProps,
+  MachinePayment,
+  MachineResponse,
+  MachineReviewHistory,
+} from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { getDownloadURL, ref } from "firebase/storage";
 import moment from "moment";
@@ -617,17 +622,25 @@ const MachineReviewPanel = ({
   designation?: string;
   onRefresh: () => Promise<void>;
 }) => {
-  const [action, setAction] = useState<"approved" | "rejected" | "resubmit" | null>(null);
+  const [action, setAction] = useState<
+    "approved" | "rejected" | "resubmit" | null
+  >(null);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
-  const [reviewDetails, setReviewDetails] = useState<{ machine: Record<string, unknown>; customer: Record<string, unknown>; installments: Record<string, unknown>[] } | null>(null);
+  const [reviewDetails, setReviewDetails] = useState<{
+    machine: Record<string, unknown>;
+    customer: Record<string, unknown>;
+    installments: Record<string, unknown>[];
+  } | null>(null);
   const reviewFlagHandled = useRef(false);
   const isOwner = designation === "Owner";
   const canReview = isOwner && machine.review_status === "pending";
   const canViewReview = isOwner && machine.review_status !== "approved";
-  const canResubmit = Number(machine.sell_by) === Number(userID) && machine.review_status === "rejected";
+  const canResubmit =
+    Number(machine.sell_by) === Number(userID) &&
+    machine.review_status === "rejected";
 
   async function submit() {
     if (!action || !userID) return;
@@ -637,13 +650,20 @@ const MachineReviewPanel = ({
     }
     setSaving(true);
     try {
-      await axios.post(`/${userID}/machine/${machine.id}/review`, { action, comment });
-      toast.success(action === "resubmit" ? "Machine sent for review" : `Machine ${action}`);
+      await axios.post(`/${userID}/machine/${machine.id}/review`, {
+        action,
+        comment,
+      });
+      toast.success(
+        action === "resubmit" ? "Machine sent for review" : `Machine ${action}`,
+      );
       setAction(null);
       setComment("");
       await onRefresh();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Unable to update machine review");
+      toast.error(
+        error?.response?.data?.message || "Unable to update machine review",
+      );
     } finally {
       setSaving(false);
     }
@@ -655,10 +675,14 @@ const MachineReviewPanel = ({
     setDetailsLoading(true);
     setReviewDetails(null);
     try {
-      const response = await axios.get(`/${userID}/machine/${machine.id}/review-detail`);
+      const response = await axios.get(
+        `/${userID}/machine/${machine.id}/review-detail`,
+      );
       setReviewDetails(response.data);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Unable to load review details");
+      toast.error(
+        error?.response?.data?.message || "Unable to load review details",
+      );
       setDetailsOpen(false);
     } finally {
       setDetailsLoading(false);
@@ -666,7 +690,8 @@ const MachineReviewPanel = ({
   }
 
   useEffect(() => {
-    const shouldOpenReview = new URLSearchParams(window.location.search).get("review") === "1";
+    const shouldOpenReview =
+      new URLSearchParams(window.location.search).get("review") === "1";
     if (shouldOpenReview && canReview && !reviewFlagHandled.current) {
       reviewFlagHandled.current = true;
       openDetails();
@@ -678,47 +703,128 @@ const MachineReviewPanel = ({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/30 px-3 py-2">
         <div>
           <p className="text-sm font-semibold">Owner review</p>
-          <p className="text-xs text-muted-foreground">Approval comments for this machine.</p>
+          <p className="text-xs text-muted-foreground">
+            Approval comments for this machine.
+          </p>
         </div>
         <div className="flex gap-2">
-          {canViewReview && <Button size="sm" className="h-8 rounded-lg" onClick={openDetails}>View details</Button>}
-          {canResubmit && <Button size="sm" variant="outline" className="h-8 rounded-lg" onClick={() => setAction("resubmit")}>Send for review again</Button>}
+          {canViewReview && (
+            <Button size="sm" className="h-8 rounded-lg" onClick={openDetails}>
+              View details
+            </Button>
+          )}
+          {canResubmit && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 rounded-lg"
+              onClick={() => setAction("resubmit")}
+            >
+              Send for review again
+            </Button>
+          )}
         </div>
       </div>
       <div className="space-y-2 p-3">
-        {history.length ? history.map((item) => (
-          <div key={item.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs">
-            <Badge variant={item.action === "rejected" ? "destructive" : item.action === "approved" ? "default" : "secondary"} className="capitalize">{item.action}</Badge>
-            <span className="font-medium">{item.actor_name || "System"}</span>
-            <span className="text-muted-foreground">{moment(item.created_at).format("DD MMM YYYY, h:mm A")}</span>
-            {item.comment && <span className="w-full text-muted-foreground">{item.comment}</span>}
-          </div>
-        )) : <p className="text-xs text-muted-foreground">No review activity yet.</p>}
+        {history.length ? (
+          history.map((item) => (
+            <div
+              key={item.id}
+              className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs"
+            >
+              <Badge
+                variant={
+                  item.action === "rejected"
+                    ? "destructive"
+                    : item.action === "approved"
+                      ? "default"
+                      : "secondary"
+                }
+                className="capitalize"
+              >
+                {item.action}
+              </Badge>
+              <span className="font-medium">{item.actor_name || "System"}</span>
+              <span className="text-muted-foreground">
+                {moment(item.created_at).format("DD MMM YYYY, h:mm A")}
+              </span>
+              {item.comment && (
+                <span className="w-full text-muted-foreground">
+                  {item.comment}
+                </span>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            No review activity yet.
+          </p>
+        )}
       </div>
 
-      <Dialog open={detailsOpen} onOpenChange={(open) => !detailsLoading && setDetailsOpen(open)}>
+      <Dialog
+        open={detailsOpen}
+        onOpenChange={(open) => !detailsLoading && setDetailsOpen(open)}
+      >
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-4xl">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <DialogTitle className="text-sm font-semibold">Review machine details</DialogTitle>
-            <p className="text-xs text-muted-foreground">Confirm the submitted customer and machine information before making a decision.</p>
+            <DialogTitle className="text-sm font-semibold">
+              Review machine details
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Confirm the submitted customer and machine information before
+              making a decision.
+            </p>
           </DialogHeader>
           <ScrollArea className="max-h-[calc(100dvh-132px)]">
             <div className="space-y-4 p-3.5">
               {detailsLoading ? (
-                <div className="flex h-40 items-center justify-center"><Spinner /></div>
+                <div className="flex h-40 items-center justify-center">
+                  <Spinner />
+                </div>
               ) : reviewDetails ? (
                 <>
-                  <ReviewFieldGroup title="Customer details" values={reviewDetails.customer} />
+                  <ReviewFieldGroup
+                    title="Customer details"
+                    values={reviewDetails.customer}
+                  />
                   <ReviewMachineDetails machine={reviewDetails.machine} />
                   {reviewDetails.installments.length > 0 && (
-                    <ReviewInstallments installments={reviewDetails.installments} />
+                    <ReviewInstallments
+                      installments={reviewDetails.installments}
+                    />
                   )}
                   <div className="flex justify-end gap-2 border-t pt-3">
-                    <Button variant="outline" className="h-9 rounded-lg" onClick={() => setDetailsOpen(false)}>Close</Button>
-                    {canReview && <>
-                      <Button variant="destructive" className="h-9 rounded-lg" onClick={() => { setDetailsOpen(false); setAction("rejected"); }}>Reject</Button>
-                      <Button className="h-9 rounded-lg" onClick={() => { setDetailsOpen(false); setAction("approved"); }}>Approve</Button>
-                    </>}
+                    <Button
+                      variant="outline"
+                      className="h-9 rounded-lg"
+                      onClick={() => setDetailsOpen(false)}
+                    >
+                      Close
+                    </Button>
+                    {canReview && (
+                      <>
+                        <Button
+                          variant="destructive"
+                          className="h-9 rounded-lg"
+                          onClick={() => {
+                            setDetailsOpen(false);
+                            setAction("rejected");
+                          }}
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          className="h-9 rounded-lg"
+                          onClick={() => {
+                            setDetailsOpen(false);
+                            setAction("approved");
+                          }}
+                        >
+                          Approve
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </>
               ) : null}
@@ -727,17 +833,48 @@ const MachineReviewPanel = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!action} onOpenChange={(open) => !open && !saving && setAction(null)}>
+      <Dialog
+        open={!!action}
+        onOpenChange={(open) => !open && !saving && setAction(null)}
+      >
         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
-            <DialogTitle className="text-sm font-semibold capitalize">{action === "resubmit" ? "Send for review again" : `${action} machine`}</DialogTitle>
-            <p className="text-xs text-muted-foreground">{action === "rejected" ? "Explain what the employee needs to correct." : "Add an optional comment for the machine record."}</p>
+            <DialogTitle className="text-sm font-semibold capitalize">
+              {action === "resubmit"
+                ? "Send for review again"
+                : `${action} machine`}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              {action === "rejected"
+                ? "Explain what the employee needs to correct."
+                : "Add an optional comment for the machine record."}
+            </p>
           </DialogHeader>
           <div className="p-3.5">
-            <Textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add comment" className="min-h-24 rounded-lg" />
+            <Textarea
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              placeholder="Add comment"
+              className="min-h-24 rounded-lg"
+            />
             <div className="mt-3 flex justify-end gap-2">
-              <Button variant="outline" className="h-9 rounded-lg" disabled={saving} onClick={() => setAction(null)}>Cancel</Button>
-              <Button className="h-9 rounded-lg" variant={action === "rejected" ? "destructive" : "default"} disabled={saving} onClick={submit}>{saving && <Spinner className="mr-2 h-4 w-4" />}{action === "resubmit" ? "Send for review" : action}</Button>
+              <Button
+                variant="outline"
+                className="h-9 rounded-lg"
+                disabled={saving}
+                onClick={() => setAction(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="h-9 rounded-lg"
+                variant={action === "rejected" ? "destructive" : "default"}
+                disabled={saving}
+                onClick={submit}
+              >
+                {saving && <Spinner className="mr-2 h-4 w-4" />}
+                {action === "resubmit" ? "Send for review" : action}
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -746,21 +883,40 @@ const MachineReviewPanel = ({
   );
 };
 
-const ReviewFieldGroup = ({ title, values }: { title: string; values: Record<string, unknown> }) => (
+const ReviewFieldGroup = ({
+  title,
+  values,
+}: {
+  title: string;
+  values: Record<string, unknown>;
+}) => (
   <section>
-    <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
+    <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+      {title}
+    </h3>
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {Object.entries(values).map(([key, value]) => (
-        <div key={key} className="min-w-0 rounded-lg border bg-muted/20 px-2.5 py-2">
-          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{key.replaceAll("_", " ")}</p>
-          <p className="mt-0.5 break-words text-xs text-foreground">{formatReviewValue(value)}</p>
+        <div
+          key={key}
+          className="min-w-0 rounded-lg border bg-muted/20 px-2.5 py-2"
+        >
+          <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            {key.replaceAll("_", " ")}
+          </p>
+          <p className="mt-0.5 break-words text-xs text-foreground">
+            {formatReviewValue(value)}
+          </p>
         </div>
       ))}
     </div>
   </section>
 );
 
-const ReviewMachineDetails = ({ machine }: { machine: Record<string, unknown> }) => {
+const ReviewMachineDetails = ({
+  machine,
+}: {
+  machine: Record<string, unknown>;
+}) => {
   const isPartsSale = machine.type === "Parts";
   const parts = Array.isArray(machine.parts_information)
     ? machine.parts_information.filter(
@@ -769,7 +925,9 @@ const ReviewMachineDetails = ({ machine }: { machine: Record<string, unknown> })
       )
     : [];
   const machineValues = Object.fromEntries(
-    Object.entries(machine).filter(([key]) => key !== "type" && key !== "parts_information"),
+    Object.entries(machine).filter(
+      ([key]) => key !== "type" && key !== "parts_information",
+    ),
   );
 
   if (!isPartsSale) {
@@ -778,7 +936,9 @@ const ReviewMachineDetails = ({ machine }: { machine: Record<string, unknown> })
 
   return (
     <section>
-      <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Parts details</h3>
+      <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+        Parts details
+      </h3>
       {parts.length > 0 ? (
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {parts.map((part, index) => (
@@ -787,8 +947,12 @@ const ReviewMachineDetails = ({ machine }: { machine: Record<string, unknown> })
               <div className="space-y-1.5">
                 {Object.entries(part).map(([key, value]) => (
                   <div key={key} className="flex justify-between gap-2 text-xs">
-                    <span className="text-muted-foreground">{key.replaceAll("_", " ")}</span>
-                    <span className="max-w-[130px] truncate text-right font-medium">{formatReviewValue(value)}</span>
+                    <span className="text-muted-foreground">
+                      {key.replaceAll("_", " ")}
+                    </span>
+                    <span className="max-w-[130px] truncate text-right font-medium">
+                      {formatReviewValue(value)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -796,14 +960,23 @@ const ReviewMachineDetails = ({ machine }: { machine: Record<string, unknown> })
           ))}
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">No parts information available.</p>
+        <p className="text-xs text-muted-foreground">
+          No parts information available.
+        </p>
       )}
       <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {Object.entries(machineValues).map(([key, value]) => (
-          <div key={key} className="min-w-0 rounded-lg border bg-muted/20 px-2.5 py-2">
-            <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{key.replaceAll("_", " ")}</p>
+          <div
+            key={key}
+            className="min-w-0 rounded-lg border bg-muted/20 px-2.5 py-2"
+          >
+            <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              {key.replaceAll("_", " ")}
+            </p>
             <p className="mt-0.5 break-words text-xs text-foreground">
-              {key === "contract_date" && value ? moment(value as string).format("YYYY-MM-DD") : formatReviewValue(value)}
+              {key === "contract_date" && value
+                ? moment(value as string).format("YYYY-MM-DD")
+                : formatReviewValue(value)}
             </p>
           </div>
         ))}
@@ -812,28 +985,49 @@ const ReviewMachineDetails = ({ machine }: { machine: Record<string, unknown> })
   );
 };
 
-const ReviewInstallments = ({ installments }: { installments: Record<string, unknown>[] }) => (
+const ReviewInstallments = ({
+  installments,
+}: {
+  installments: Record<string, unknown>[];
+}) => (
   <section>
-    <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Installments</h3>
+    <h3 className="mb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+      Installments
+    </h3>
     <div className="space-y-2">
       {installments.map((installment, index) => (
-        <div key={String(installment.id || index)} className="rounded-lg border bg-muted/20 p-2.5">
+        <div
+          key={String(installment.id || index)}
+          className="rounded-lg border bg-muted/20 p-2.5"
+        >
           <p className="mb-2 text-xs font-semibold">Installment {index + 1}</p>
           <div className="grid gap-3 sm:grid-cols-[112px_minmax(0,1fr)]">
             <div className="flex min-h-24 items-center justify-center overflow-hidden rounded-lg border bg-background">
               <MyImgZooming
-                img={typeof installment.image === "string" ? installment.image : null}
+                img={
+                  typeof installment.image === "string"
+                    ? installment.image
+                    : null
+                }
                 compact
                 className="max-h-24"
               />
             </div>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(installment).filter(([key]) => !["image", "created_at"].includes(key)).map(([key, value]) => (
-              <div key={key} className="min-w-0">
-                <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">{key.replaceAll("_", " ")}</p>
-                <p className="break-words text-xs text-foreground">{key === "date" && value ? moment(value as string).format("YYYY-MM-DD") : formatReviewValue(value)}</p>
-              </div>
-            ))}
+              {Object.entries(installment)
+                .filter(([key]) => !["image", "created_at"].includes(key))
+                .map(([key, value]) => (
+                  <div key={key} className="min-w-0">
+                    <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                      {key.replaceAll("_", " ")}
+                    </p>
+                    <p className="break-words text-xs text-foreground">
+                      {key === "date" && value
+                        ? moment(value as string).format("YYYY-MM-DD")
+                        : formatReviewValue(value)}
+                    </p>
+                  </div>
+                ))}
             </div>
           </div>
         </div>
@@ -873,26 +1067,38 @@ const InstallmentSheet = ({
   onDeleteData: (id: number) => void;
 }) => {
   const pendingCount = data.filter((item) => item.pending).length;
-  const totalAmount = data.reduce((total, item) => total + Number(item.amount || 0), 0);
+  const totalAmount = data.reduce(
+    (total, item) => total + Number(item.amount || 0),
+    0,
+  );
 
   return (
     <Sheet open={visible} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent
-        className="flex h-[100dvh] w-full flex-col overflow-hidden border-l bg-background p-0 sm:max-w-2xl"
-      >
+      <SheetContent className="flex h-[100dvh] w-full flex-col overflow-hidden border-l bg-background p-0 sm:max-w-2xl">
         <SheetHeader className="border-b bg-muted/35 px-5 py-4 text-left">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <SheetTitle className="text-base font-semibold tracking-tight">Installment schedule</SheetTitle>
-              <p className="mt-0.5 text-xs text-muted-foreground">Cheque commitments and their current clearance status.</p>
+              <SheetTitle className="text-base font-semibold tracking-tight">
+                Installment schedule
+              </SheetTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Cheque commitments and their current clearance status.
+              </p>
             </div>
-            <Badge variant={pendingCount ? "destructive" : "secondary"} className="rounded-full px-2.5 py-1 text-[11px]">
+            <Badge
+              variant={pendingCount ? "destructive" : "secondary"}
+              className="rounded-full px-2.5 py-1 text-[11px]"
+            >
               {pendingCount ? `${pendingCount} pending` : "All cleared"}
             </Badge>
           </div>
           <div className="mt-3 flex items-center justify-between rounded-xl border bg-background/70 px-3 py-2">
-            <span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Total scheduled</span>
-            <span className="text-sm font-semibold tabular-nums"><CurrencyFormatter amount={totalAmount} /></span>
+            <span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Total scheduled
+            </span>
+            <span className="text-sm font-semibold tabular-nums">
+              <CurrencyFormatter amount={totalAmount} />
+            </span>
           </div>
         </SheetHeader>
 
@@ -912,7 +1118,9 @@ const InstallmentSheet = ({
               <div className="flex h-52 flex-col items-center justify-center rounded-xl border border-dashed bg-muted/15 text-center">
                 <Calendar className="mb-2 h-5 w-5 text-muted-foreground" />
                 <p className="text-sm font-medium">No installments</p>
-                <p className="mt-1 text-xs text-muted-foreground">Installment cheques will appear here.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Installment cheques will appear here.
+                </p>
               </div>
             )}
           </div>
@@ -933,70 +1141,89 @@ const InstallmentRow = ({
   updateData: (id: number, val: boolean) => void;
   onDeleteData: (id: number) => void;
 }) => {
-    const { isAdmin, userID } = useUserDetail();
-    const [loading, setLoading] = useState(false);
-    const [deleteLoading, setDeleteLoading] = useState(false);
+  const { isAdmin, userID } = useUserDetail();
+  const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-    async function handlePaid(id: number) {
-      if (!id || !userID) return;
-      setLoading(true);
+  async function handlePaid(id: number) {
+    if (!id || !userID) return;
+    setLoading(true);
 
-      try {
-        await axios.put(`/${userID}/reminders/${id}`, {
-          pending: false,
-        });
-        updateData(id, false);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      await axios.put(`/${userID}/reminders/${id}`, {
+        pending: false,
+      });
+      updateData(id, false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!id || !userID) return;
+    setDeleteLoading(true);
+
+    if (item.image) {
+      DeleteFromStorage(item.image);
     }
 
-    async function handleDelete(id: number) {
-      if (!id || !userID) return;
-      setDeleteLoading(true);
-
-      if (item.image) {
-        DeleteFromStorage(item.image);
-      }
-
-      try {
-        await axios.delete(`/${userID}/reminders/${id}`);
-        onDeleteData(id);
-      } finally {
-        setDeleteLoading(false);
-      }
+    try {
+      await axios.delete(`/${userID}/reminders/${id}`);
+      onDeleteData(id);
+    } finally {
+      setDeleteLoading(false);
     }
+  }
 
-    return (
-      <div className="rounded-xl border bg-card p-3 shadow-sm transition-all hover:border-primary/25 hover:shadow-md">
-        <div className="flex gap-3">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${item.pending ? "bg-amber-500/10 text-amber-700" : "bg-emerald-500/10 text-emerald-700"}`}>
-            {String(index).padStart(2, "0")}
+  return (
+    <div className="rounded-xl border bg-card p-3 shadow-sm transition-all hover:border-primary/25 hover:shadow-md">
+      <div className="flex gap-3">
+        <div
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold ${item.pending ? "bg-amber-500/10 text-amber-700" : "bg-emerald-500/10 text-emerald-700"}`}
+        >
+          {String(index).padStart(2, "0")}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold">Installment {index}</p>
+              <Badge
+                variant={item.pending ? "outline" : "secondary"}
+                className={
+                  item.pending
+                    ? "border-amber-500/40 bg-amber-500/10 text-amber-700"
+                    : "bg-emerald-500/10 text-emerald-700"
+                }
+              >
+                {item.pending ? "Pending" : "Cleared"}
+              </Badge>
+            </div>
+            <span className="text-sm font-semibold tabular-nums">
+              <CurrencyFormatter amount={item.amount} />
+            </span>
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold">Installment {index}</p>
-                <Badge variant={item.pending ? "outline" : "secondary"} className={item.pending ? "border-amber-500/40 bg-amber-500/10 text-amber-700" : "bg-emerald-500/10 text-emerald-700"}>
-                  {item.pending ? "Pending" : "Cleared"}
-                </Badge>
-              </div>
-              <span className="text-sm font-semibold tabular-nums"><CurrencyFormatter amount={item.amount} /></span>
+          <div className="mt-2 grid gap-2 text-xs sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+            <div className="rounded-lg bg-muted/55 px-2.5 py-2">
+              <span className="block text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Due date
+              </span>
+              <span className="mt-0.5 block font-medium">
+                {moment(item.date).format("YYYY-MM-DD")}
+              </span>
             </div>
-            <div className="mt-2 grid gap-2 text-xs sm:grid-cols-[1fr_1fr_auto] sm:items-center">
-              <div className="rounded-lg bg-muted/55 px-2.5 py-2">
-                <span className="block text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Due date</span>
-                <span className="mt-0.5 block font-medium">{moment(item.date).format("YYYY-MM-DD")}</span>
-              </div>
-              <div className="rounded-lg bg-muted/55 px-2.5 py-2">
-                <span className="block text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Cheque no.</span>
-                <span className="mt-0.5 block truncate font-medium">{item.cheque_number || "Not provided"}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2 sm:justify-end">
-                <MyImgZooming img={item.image} compact />
-              </div>
+            <div className="rounded-lg bg-muted/55 px-2.5 py-2">
+              <span className="block text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Cheque no.
+              </span>
+              <span className="mt-0.5 block truncate font-medium">
+                {item.cheque_number || "Not provided"}
+              </span>
             </div>
-            <div className="mt-3 flex flex-wrap justify-end gap-2 border-t pt-2.5">
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              <MyImgZooming img={item.image} compact />
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap justify-end gap-2 border-t pt-2.5">
             {isAdmin && item?.pending && (
               <Button
                 size="sm"
@@ -1022,11 +1249,11 @@ const InstallmentRow = ({
                 Delete
               </Button>
             )}
-            </div>
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
 };
 
 export const MyImg = ({ img }: { img: string | null }) => {

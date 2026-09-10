@@ -131,7 +131,7 @@ export default function RecentQuotations({
         {quotations.length ? (
           <div className="mt-3 flex min-h-0 flex-1 flex-col rounded-md border border-slate-200/80 bg-background/80">
             <PageTable
-            download={false}
+              download={false}
               columns={columns}
               data={quotations}
               disableInput

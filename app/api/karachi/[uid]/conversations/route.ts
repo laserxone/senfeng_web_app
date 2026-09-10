@@ -1,4 +1,1 @@
-export {
-  GET,
-  POST,
-} from "@/app/api/lahore/[uid]/conversations/route";
+export { GET, POST } from "@/app/api/lahore/[uid]/conversations/route";

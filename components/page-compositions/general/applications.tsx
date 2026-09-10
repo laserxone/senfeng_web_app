@@ -78,12 +78,10 @@ const applications = [
 ];
 
 export default function ApplicationsPage() {
-  const router = useRouter();
   const { base_route, designation, isAdmin } = useUserDetail();
   const { pendingApprovals } = usePendingApplicationApprovals();
-  const { pending: pendingMachineApprovals } = useMachineApproval();
-  const totalPendingApprovals =
-    pendingApprovals.total + pendingMachineApprovals?.length;
+  const router = useRouter();
+  const totalPendingApprovals = pendingApprovals.total;
 
   const approvalCount = (path: string) => {
     if (path.endsWith("/loan")) return pendingApprovals.loan;
@@ -117,11 +115,10 @@ export default function ApplicationsPage() {
               onClick={() => router.push(`/${base_route}${item.path}`)}
               className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
             >
-          
-                <span className="absolute top-3 right-3 ">
-                  <NotificationBadge count={count}/>
-                </span>
-             
+              <span className="absolute top-3 right-3 ">
+                <NotificationBadge count={count} />
+              </span>
+
               <div
                 className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl ${item.color}`}
               >
@@ -133,29 +130,35 @@ export default function ApplicationsPage() {
             </button>
           );
         })}
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => router.push(`/${base_route}/applications/machines`)}
-            className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
-          >
-          
-              <span className="absolute top-3 right-3">
-                <NotificationBadge count={pendingMachineApprovals.length}/>
-              </span>
-          
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-              <ClipboardCheck size={34} />
-            </div>
-            <h3 className="font-semibold text-slate-900">
-              Pending approval machines
-            </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Machines awaiting your approval
-            </p>
-          </button>
-        )}
+        {isAdmin && <RenderMachineApproval />}
       </div>
     </div>
   );
 }
+
+const RenderMachineApproval = () => {
+  const router = useRouter();
+  const { pending: pendingMachineApprovals } = useMachineApproval();
+  const { base_route } = useUserDetail();
+  return (
+    <button
+      type="button"
+      onClick={() => router.push(`/${base_route}/applications/machines`)}
+      className="group relative rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+    >
+      <span className="absolute top-3 right-3">
+        <NotificationBadge count={pendingMachineApprovals.length} />
+      </span>
+
+      <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+        <ClipboardCheck size={34} />
+      </div>
+      <h3 className="font-semibold text-slate-900">
+        Pending approval machines
+      </h3>
+      <p className="mt-2 text-sm text-slate-500">
+        Machines awaiting your approval
+      </p>
+    </button>
+  );
+};

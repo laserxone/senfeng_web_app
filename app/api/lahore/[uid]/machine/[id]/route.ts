@@ -80,8 +80,6 @@ export async function GET(
         );
       }
 
-
-
       const machine = machineResult.rows[0];
       const customerId = machine.customer_id;
       const sellBy = machine.sell_by;

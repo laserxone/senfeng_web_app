@@ -607,20 +607,20 @@ export type MachineProps = {
   owner?: string;
   user_name?: string;
   sale_id?: number;
-    shipment_title?: string[];
-    review_status?: "pending" | "approved" | "rejected";
-    reviewed_at?: string | null;
-    reviewed_by?: number | null;
-  };
+  shipment_title?: string[];
+  review_status?: "pending" | "approved" | "rejected";
+  reviewed_at?: string | null;
+  reviewed_by?: number | null;
+};
 
-  export type MachineReviewHistory = {
-    id: number;
-    action: "submitted" | "approved" | "rejected" | "resubmitted";
-    comment: string | null;
-    actor_id: number | null;
-    actor_name?: string | null;
-    created_at: string;
-  };
+export type MachineReviewHistory = {
+  id: number;
+  action: "submitted" | "approved" | "rejected" | "resubmitted";
+  comment: string | null;
+  actor_id: number | null;
+  actor_name?: string | null;
+  created_at: string;
+};
 
 export type InstallmentProps = {
   id: number;
@@ -637,9 +637,9 @@ export type MachineResponse = {
   unmatchedFields: string[];
   installments: InstallmentProps[];
   customer: MyCustomer;
-    editAllowed: boolean;
-    reviewHistory?: MachineReviewHistory[];
-  };
+  editAllowed: boolean;
+  reviewHistory?: MachineReviewHistory[];
+};
 
 export type CommissionProps = {
   id: number;

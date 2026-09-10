@@ -201,12 +201,12 @@ export default function MemberDetail({
         customer_data={
           data
             ? {
-              id: data?.id,
-              location: data?.location,
-              owner: data?.owner,
-              number: data?.number,
-              name: data?.name,
-            }
+                id: data?.id,
+                location: data?.location,
+                owner: data?.owner,
+                number: data?.number,
+                name: data?.name,
+              }
             : null
         }
         id={userID}
@@ -233,7 +233,7 @@ export default function MemberDetail({
     );
   }, [taskData, customer_id]);
 
-  console.log(feedback)
+  console.log(feedback);
 
   const RenderFeedbackTabs = useCallback(() => {
     return (
@@ -478,8 +478,9 @@ const ProfilePicture = ({
 
       <div
         onClick={onClick}
-        className={`bg-opacity-50 absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black transition-opacity duration-300 ${hover ? "opacity-100" : "opacity-0"
-          }`}
+        className={`bg-opacity-50 absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black transition-opacity duration-300 ${
+          hover ? "opacity-100" : "opacity-0"
+        }`}
       >
         <Wrench className="h-5 w-5 text-white" />
       </div>
@@ -623,7 +624,6 @@ function CustomersTab({
   onReturn?: (a: number, b?: string) => void;
   route: string;
 }) {
-
   const { base_route } = useUserDetail();
   const machineCount =
     data?.filter((item) => item.type === "Machine").length || 0;
@@ -675,14 +675,15 @@ function CustomersTab({
                       <span className="rounded-md border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold tracking-wide text-primary shadow-sm">
                         {machine.serial_no}
                       </span>
-                      {machine?.shipment_title && machine?.shipment_title?.length > 0 &&
-                        <span
-                          className="max-w-full truncate rounded-md border border-border bg-muted/60 px-2 py-0.5 text-xs font-medium text-muted-foreground"
-                          title={machine.shipment_title.join(", ")}
-                        >
-                          {machine.shipment_title.join(", ")}
-                        </span>
-                      }
+                      {machine?.shipment_title &&
+                        machine?.shipment_title?.length > 0 && (
+                          <span
+                            className="max-w-full truncate rounded-md border border-border bg-muted/60 px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                            title={machine.shipment_title.join(", ")}
+                          >
+                            {machine.shipment_title.join(", ")}
+                          </span>
+                        )}
                     </div>
                     {machine.cancelled_detail && (
                       <Badge
@@ -737,8 +738,8 @@ function CustomersTab({
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                        "en-GB",
-                      )
+                          "en-GB",
+                        )
                       : "N/A"
                   }
                 />
@@ -845,8 +846,8 @@ function CustomersTab({
                   value={
                     machine?.contract_date
                       ? new Date(machine.contract_date).toLocaleDateString(
-                        "en-GB",
-                      )
+                          "en-GB",
+                        )
                       : "N/A"
                   }
                 />
@@ -971,8 +972,8 @@ function FeedbackTab({
           moment(b?.created_at).valueOf() - moment(a?.created_at).valueOf(),
       ),
   );
-  console.log("data", data)
-  console.log("local", localData)
+  console.log("data", data);
+  console.log("local", localData);
 
   async function handleDelete(id: number) {
     setSelectedDelete(id);
@@ -1179,8 +1180,9 @@ const RenderTimeline = ({
       localData.push({
         id: `visit-${visit.id}`,
         title: `Visit by ${visit.user_name}`,
-        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${visit?.solution || "Nil"
-          } Note: ${visit.note}`,
+        description: `Problem: ${visit?.problem || "Nil"}, Solution: ${
+          visit?.solution || "Nil"
+        } Note: ${visit.note}`,
         time: visit.created_at,
       });
     });
@@ -1200,8 +1202,9 @@ const RenderTimeline = ({
           localData.push({
             id: `machine-${machine.id}`,
             title: `Sell Parts ${machine.serial_no}`,
-            description: `Power: ${machine.power || "Nil"}, Price: ${machine.price
-              }`,
+            description: `Power: ${machine.power || "Nil"}, Price: ${
+              machine.price
+            }`,
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
@@ -1211,22 +1214,27 @@ const RenderTimeline = ({
             localData.push({
               id: `payment-${payment.id}`,
               title: `Payment for Parts  ${machine.serial_no}`,
-              description: `Tx: ${payment.note}, Amount: ${payment.amount
-                }, Mode: ${payment.mode}, Received by: ${payment.received_by
-                }, Clearance Date: ${payment.clearance_date
+              description: `Tx: ${payment.note}, Amount: ${
+                payment.amount
+              }, Mode: ${payment.mode}, Received by: ${
+                payment.received_by
+              }, Clearance Date: ${
+                payment.clearance_date
                   ? moment(payment.clearance_date).format("YYYY-MM-DD")
                   : "Pending"
-                }`,
+              }`,
               time: payment.transaction_date,
             });
           });
         } else {
           localData.push({
             id: `machine-${machine.id}`,
-            title: `Sell Machine ${machine.serial_no} (${machine.source || "Nil"
-              })`,
-            description: `Power: ${machine.power || "Nil"}W, Price: ${machine.price
-              }, Order No: ${machine.order_no_arr?.join(", ")}`,
+            title: `Sell Machine ${machine.serial_no} (${
+              machine.source || "Nil"
+            })`,
+            description: `Power: ${machine.power || "Nil"}W, Price: ${
+              machine.price
+            }, Order No: ${machine.order_no_arr?.join(", ")}`,
             time: machine.contract_date
               ? machine.contract_date
               : machine.created_at,
@@ -1236,12 +1244,15 @@ const RenderTimeline = ({
             localData.push({
               id: `payment-${payment.id}`,
               title: `Payment for Machine ${machine.serial_no}`,
-              description: `Tx: ${payment.note}, Amount: $${payment.amount
-                }, Mode: ${payment.mode}, Received by: ${payment.received_by
-                }, Clearance Date: ${payment.clearance_date
+              description: `Tx: ${payment.note}, Amount: $${
+                payment.amount
+              }, Mode: ${payment.mode}, Received by: ${
+                payment.received_by
+              }, Clearance Date: ${
+                payment.clearance_date
                   ? moment(payment.clearance_date).format("YYYY-MM-DD")
                   : "Pending"
-                }`,
+              }`,
               time: payment.transaction_date,
             });
           });
@@ -1251,8 +1262,9 @@ const RenderTimeline = ({
       localData.push({
         id: `customer-${customerDetail.id}`,
         title: `Customer added`,
-        description: `Company ${customerDetail.name || "Nil"}, Owner: ${customerDetail.owner || "Nil"
-          }, Location: ${customerDetail.location}`,
+        description: `Company ${customerDetail.name || "Nil"}, Owner: ${
+          customerDetail.owner || "Nil"
+        }, Location: ${customerDetail.location}`,
         time: customerDetail.created_at,
       });
     }
@@ -1287,7 +1299,8 @@ const RenderTimeline = ({
                 {moment(item.time).format("YYYY-MM-DD")}
               </TimelineTime>
               <TimelineTitle
-                className={`${item.title.toLowerCase().includes("feedback")
+                className={`${
+                  item.title.toLowerCase().includes("feedback")
                     ? "text-orange-500"
                     : item.title.toLowerCase().includes("customer")
                       ? "text-blue-500"
@@ -1300,7 +1313,7 @@ const RenderTimeline = ({
                             : item.title.toLowerCase().includes("task")
                               ? "text-yellow-500"
                               : "text-black"
-                  }`}
+                }`}
               >
                 {item.title}
               </TimelineTitle>

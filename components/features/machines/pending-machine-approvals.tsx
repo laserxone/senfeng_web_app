@@ -35,7 +35,6 @@ export default function PendingMachineApprovals() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
         <div className="flex gap-4 items-center flex-wrap">
           <Link

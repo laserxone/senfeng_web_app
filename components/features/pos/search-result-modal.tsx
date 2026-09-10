@@ -155,10 +155,12 @@ const SearchResultModal = ({
         );
       },
       cell: ({ row }) => {
-        const pending = Number(row.original.total_paid || 0)
+        const pending = Number(row.original.total_paid || 0);
         return (
-          <div>{row.getValue("total")} {pending > 0 && `(${pending})`}</div>
-        )
+          <div>
+            {row.getValue("total")} {pending > 0 && `(${pending})`}
+          </div>
+        );
       },
     },
 

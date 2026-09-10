@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 import {
   X,
   Search,
@@ -12,24 +12,24 @@ import {
   ArrowDown,
   Trash2,
   Check,
-} from "lucide-react"
-import type { ChatMessageData } from "./types"
-import { formatTimestamp } from "./hooks"
+} from "lucide-react";
+import type { ChatMessageData } from "./types";
+import { formatTimestamp } from "./hooks";
 
 // ─── ChatForwardDialog ────────────────────────────────────────────────────────
 
 interface Conversation {
-  id: string
-  title: string
-  avatar?: string
+  id: string;
+  title: string;
+  avatar?: string;
 }
 
 interface ChatForwardDialogProps {
-  message: ChatMessageData
-  conversations: Conversation[]
-  onForward: (targetIds: string[]) => void
-  onCancel: () => void
-  className?: string
+  message: ChatMessageData;
+  conversations: Conversation[];
+  onForward: (targetIds: string[]) => void;
+  onCancel: () => void;
+  className?: string;
 }
 
 function ChatForwardDialog({
@@ -39,37 +39,51 @@ function ChatForwardDialog({
   onCancel,
   className,
 }: ChatForwardDialogProps) {
-  const [query, setQuery] = React.useState("")
-  const [selected, setSelected] = React.useState<Set<string>>(new Set())
+  const [query, setQuery] = React.useState("");
+  const [selected, setSelected] = React.useState<Set<string>>(new Set());
 
   const filtered = conversations.filter((c) =>
-    c.title.toLowerCase().includes(query.toLowerCase())
-  )
+    c.title.toLowerCase().includes(query.toLowerCase()),
+  );
 
   const toggle = (id: string) => {
     setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
-    <div className={cn("fixed inset-0 z-50 flex items-center justify-center bg-black/50", className)}>
+    <div
+      className={cn(
+        "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
+        className,
+      )}
+    >
       <div className="w-full max-w-sm overflow-hidden rounded-xl border border-[var(--chat-border-strong)] bg-[var(--chat-bg-sidebar)] shadow-[var(--chat-shadow-lg)]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--chat-border)] px-4 py-3">
-          <span className="text-[14px] font-semibold text-[var(--chat-text-primary)]">Forward message</span>
-          <button onClick={onCancel} className="text-[var(--chat-text-tertiary)] hover:text-[var(--chat-text-primary)]">
+          <span className="text-[14px] font-semibold text-[var(--chat-text-primary)]">
+            Forward message
+          </span>
+          <button
+            onClick={onCancel}
+            className="text-[var(--chat-text-tertiary)] hover:text-[var(--chat-text-primary)]"
+          >
             <X className="size-4" />
           </button>
         </div>
 
         {/* Preview */}
         <div className="border-b border-[var(--chat-border)] px-4 py-2">
-          <span className="text-[12px] font-semibold text-[var(--chat-text-secondary)]">{message.senderName}</span>
-          <p className="truncate text-[13px] text-[var(--chat-text-tertiary)]">{message.text}</p>
+          <span className="text-[12px] font-semibold text-[var(--chat-text-secondary)]">
+            {message.senderName}
+          </span>
+          <p className="truncate text-[13px] text-[var(--chat-text-tertiary)]">
+            {message.text}
+          </p>
         </div>
 
         {/* Search */}
@@ -94,21 +108,30 @@ function ChatForwardDialog({
               onClick={() => toggle(c.id)}
               className={cn(
                 "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                selected.has(c.id) ? "bg-[var(--chat-accent-soft)]" : "hover:bg-[var(--chat-accent-soft)]"
+                selected.has(c.id)
+                  ? "bg-[var(--chat-accent-soft)]"
+                  : "hover:bg-[var(--chat-accent-soft)]",
               )}
             >
               <div className="flex size-8 items-center justify-center rounded-full bg-[var(--chat-bubble-incoming)] text-[11px] font-semibold text-[var(--chat-text-secondary)]">
                 {c.title.charAt(0).toUpperCase()}
               </div>
-              <span className="flex-1 text-[14px] text-[var(--chat-text-primary)]">{c.title}</span>
-              {selected.has(c.id) && <Check className="size-4 text-[var(--chat-accent)]" />}
+              <span className="flex-1 text-[14px] text-[var(--chat-text-primary)]">
+                {c.title}
+              </span>
+              {selected.has(c.id) && (
+                <Check className="size-4 text-[var(--chat-accent)]" />
+              )}
             </button>
           ))}
         </div>
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-2 border-t border-[var(--chat-border)] px-4 py-3">
-          <button onClick={onCancel} className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[var(--chat-text-secondary)] hover:bg-[var(--chat-accent-soft)]">
+          <button
+            onClick={onCancel}
+            className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[var(--chat-text-secondary)] hover:bg-[var(--chat-accent-soft)]"
+          >
             Cancel
           </button>
           <button
@@ -121,16 +144,16 @@ function ChatForwardDialog({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── ChatEditComposer (inline edit mode) ──────────────────────────────────────
 
 interface ChatEditComposerProps {
-  message: ChatMessageData
-  onSave: (messageId: string, newText: string) => void
-  onCancel: () => void
-  className?: string
+  message: ChatMessageData;
+  onSave: (messageId: string, newText: string) => void;
+  onCancel: () => void;
+  className?: string;
 }
 
 function ChatEditComposer({
@@ -139,14 +162,19 @@ function ChatEditComposer({
   onCancel,
   className,
 }: ChatEditComposerProps) {
-  const [value, setValue] = React.useState(message.text || "")
+  const [value, setValue] = React.useState(message.text || "");
 
   return (
     <div className={cn("border-t border-[var(--chat-border)]", className)}>
       {/* Edit bar */}
       <div className="flex items-center gap-2 bg-amber-500/10 px-4 py-1.5">
-        <span className="text-[12px] font-semibold text-amber-500">Editing message</span>
-        <button onClick={onCancel} className="ml-auto text-[12px] text-[var(--chat-text-secondary)] hover:text-[var(--chat-text-primary)]">
+        <span className="text-[12px] font-semibold text-amber-500">
+          Editing message
+        </span>
+        <button
+          onClick={onCancel}
+          className="ml-auto text-[12px] text-[var(--chat-text-secondary)] hover:text-[var(--chat-text-primary)]"
+        >
           Cancel
         </button>
       </div>
@@ -155,8 +183,11 @@ function ChatEditComposer({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSave(message.id, value.trim()) }
-            if (e.key === "Escape") onCancel()
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              onSave(message.id, value.trim());
+            }
+            if (e.key === "Escape") onCancel();
           }}
           rows={1}
           autoFocus
@@ -171,14 +202,14 @@ function ChatEditComposer({
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── ChatDeletedMessage (placeholder) ─────────────────────────────────────────
 
 interface ChatDeletedMessageProps {
-  deletedBy?: string
-  className?: string
+  deletedBy?: string;
+  className?: string;
 }
 
 function ChatDeletedMessage({ deletedBy, className }: ChatDeletedMessageProps) {
@@ -186,20 +217,22 @@ function ChatDeletedMessage({ deletedBy, className }: ChatDeletedMessageProps) {
     <div className={cn("my-2 flex justify-center", className)}>
       <span className="rounded-lg bg-[var(--chat-bg-sidebar)] px-3 py-1.5 text-[13px] italic text-[var(--chat-text-tertiary)]">
         <Trash2 className="mr-1.5 inline size-3" />
-        {deletedBy ? `${deletedBy} deleted this message` : "This message was deleted"}
+        {deletedBy
+          ? `${deletedBy} deleted this message`
+          : "This message was deleted"}
       </span>
     </div>
-  )
+  );
 }
 
 // ─── ChatPinnedPanel ──────────────────────────────────────────────────────────
 
 interface ChatPinnedPanelProps {
-  pinnedMessages: ChatMessageData[]
-  onUnpin: (messageId: string) => void
-  onJumpTo: (messageId: string) => void
-  onClose: () => void
-  className?: string
+  pinnedMessages: ChatMessageData[];
+  onUnpin: (messageId: string) => void;
+  onJumpTo: (messageId: string) => void;
+  onClose: () => void;
+  className?: string;
 }
 
 function ChatPinnedPanel({
@@ -210,7 +243,12 @@ function ChatPinnedPanel({
   className,
 }: ChatPinnedPanelProps) {
   return (
-    <div className={cn("flex h-full w-80 flex-col border-l border-[var(--chat-border-strong)] bg-[var(--chat-bg-sidebar)]", className)}>
+    <div
+      className={cn(
+        "flex h-full w-80 flex-col border-l border-[var(--chat-border-strong)] bg-[var(--chat-bg-sidebar)]",
+        className,
+      )}
+    >
       <div className="flex items-center justify-between border-b border-[var(--chat-border)] px-4 py-3">
         <div className="flex items-center gap-2">
           <Pin className="size-4 text-[var(--chat-orange)]" />
@@ -218,7 +256,10 @@ function ChatPinnedPanel({
             Pinned Messages ({pinnedMessages.length})
           </span>
         </div>
-        <button onClick={onClose} className="text-[var(--chat-text-tertiary)] hover:text-[var(--chat-text-primary)]">
+        <button
+          onClick={onClose}
+          className="text-[var(--chat-text-tertiary)] hover:text-[var(--chat-text-primary)]"
+        >
           <X className="size-4" />
         </button>
       </div>
@@ -229,17 +270,27 @@ function ChatPinnedPanel({
             className="border-b border-[var(--chat-border)] px-4 py-3 transition-colors hover:bg-[var(--chat-accent-soft)]"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-semibold text-[var(--chat-text-secondary)]">{msg.senderName}</span>
+              <span className="text-[12px] font-semibold text-[var(--chat-text-secondary)]">
+                {msg.senderName}
+              </span>
               <span className="text-[10px] text-[var(--chat-text-tertiary)]">
                 {formatTimestamp(new Date(msg.timestamp))}
               </span>
             </div>
-            <p className="mt-0.5 line-clamp-2 text-[13px] text-[var(--chat-text-primary)]">{msg.text}</p>
+            <p className="mt-0.5 line-clamp-2 text-[13px] text-[var(--chat-text-primary)]">
+              {msg.text}
+            </p>
             <div className="mt-1.5 flex items-center gap-2">
-              <button onClick={() => onJumpTo(msg.id)} className="text-[11px] text-[var(--chat-accent)] hover:underline">
+              <button
+                onClick={() => onJumpTo(msg.id)}
+                className="text-[11px] text-[var(--chat-accent)] hover:underline"
+              >
                 Jump to message
               </button>
-              <button onClick={() => onUnpin(msg.id)} className="text-[11px] text-[var(--chat-text-tertiary)] hover:text-[var(--chat-red)]">
+              <button
+                onClick={() => onUnpin(msg.id)}
+                className="text-[11px] text-[var(--chat-text-tertiary)] hover:text-[var(--chat-red)]"
+              >
                 Unpin
               </button>
             </div>
@@ -252,27 +303,27 @@ function ChatPinnedPanel({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // ─── ChatNestedThread ─────────────────────────────────────────────────────────
 
 interface ThreadedMessage extends ChatMessageData {
-  parentId: string | null
-  children: ThreadedMessage[]
-  depth: number
-  votes?: number
-  userVote?: "up" | "down" | null
-  isCollapsed?: boolean
+  parentId: string | null;
+  children: ThreadedMessage[];
+  depth: number;
+  votes?: number;
+  userVote?: "up" | "down" | null;
+  isCollapsed?: boolean;
 }
 
 interface ChatNestedThreadProps {
-  messages: ThreadedMessage[]
-  maxDepth?: number
-  onReply?: (parentId: string) => void
-  onVote?: (messageId: string, direction: "up" | "down") => void
-  showVotes?: boolean
-  className?: string
+  messages: ThreadedMessage[];
+  maxDepth?: number;
+  onReply?: (parentId: string) => void;
+  onVote?: (messageId: string, direction: "up" | "down") => void;
+  showVotes?: boolean;
+  className?: string;
 }
 
 function ChatNestedThread({
@@ -296,7 +347,7 @@ function ChatNestedThread({
         />
       ))}
     </div>
-  )
+  );
 }
 
 function ThreadMessage({
@@ -306,14 +357,16 @@ function ThreadMessage({
   onVote,
   showVotes,
 }: {
-  message: ThreadedMessage
-  maxDepth: number
-  onReply?: (parentId: string) => void
-  onVote?: (messageId: string, direction: "up" | "down") => void
-  showVotes: boolean
+  message: ThreadedMessage;
+  maxDepth: number;
+  onReply?: (parentId: string) => void;
+  onVote?: (messageId: string, direction: "up" | "down") => void;
+  showVotes: boolean;
 }) {
-  const [collapsed, setCollapsed] = React.useState(message.isCollapsed ?? false)
-  const atMaxDepth = message.depth >= maxDepth
+  const [collapsed, setCollapsed] = React.useState(
+    message.isCollapsed ?? false,
+  );
+  const atMaxDepth = message.depth >= maxDepth;
 
   return (
     <div style={{ paddingLeft: Math.min(message.depth, maxDepth) * 24 }}>
@@ -328,7 +381,10 @@ function ThreadMessage({
           <div className="flex shrink-0 flex-col items-center gap-0.5">
             <button
               onClick={() => onVote?.(message.id, "up")}
-              className={cn("size-5 rounded text-[var(--chat-text-tertiary)] hover:text-[var(--chat-accent)]", message.userVote === "up" && "text-[var(--chat-accent)]")}
+              className={cn(
+                "size-5 rounded text-[var(--chat-text-tertiary)] hover:text-[var(--chat-accent)]",
+                message.userVote === "up" && "text-[var(--chat-accent)]",
+              )}
             >
               <ArrowUp className="size-3.5 mx-auto" />
             </button>
@@ -337,7 +393,10 @@ function ThreadMessage({
             </span>
             <button
               onClick={() => onVote?.(message.id, "down")}
-              className={cn("size-5 rounded text-[var(--chat-text-tertiary)] hover:text-[var(--chat-red)]", message.userVote === "down" && "text-[var(--chat-red)]")}
+              className={cn(
+                "size-5 rounded text-[var(--chat-text-tertiary)] hover:text-[var(--chat-red)]",
+                message.userVote === "down" && "text-[var(--chat-red)]",
+              )}
             >
               <ArrowDown className="size-3.5 mx-auto" />
             </button>
@@ -347,15 +406,22 @@ function ThreadMessage({
         {/* Content */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-[var(--chat-text-primary)]">{message.senderName}</span>
+            <span className="text-[13px] font-semibold text-[var(--chat-text-primary)]">
+              {message.senderName}
+            </span>
             <span className="text-[11px] text-[var(--chat-text-tertiary)]">
               {formatTimestamp(new Date(message.timestamp))}
             </span>
           </div>
-          <p className="text-[14px] leading-relaxed text-[var(--chat-text-primary)]">{message.text}</p>
+          <p className="text-[14px] leading-relaxed text-[var(--chat-text-primary)]">
+            {message.text}
+          </p>
           <div className="mt-1 flex items-center gap-3">
             {!atMaxDepth && (
-              <button onClick={() => onReply?.(message.id)} className="text-[11px] font-medium text-[var(--chat-text-secondary)] hover:text-[var(--chat-accent)]">
+              <button
+                onClick={() => onReply?.(message.id)}
+                className="text-[11px] font-medium text-[var(--chat-text-secondary)] hover:text-[var(--chat-accent)]"
+              >
                 Reply
               </button>
             )}
@@ -364,8 +430,13 @@ function ThreadMessage({
                 onClick={() => setCollapsed(!collapsed)}
                 className="flex items-center gap-0.5 text-[11px] font-medium text-[var(--chat-text-secondary)] hover:text-[var(--chat-text-primary)]"
               >
-                {collapsed ? <ChevronRight className="size-3" /> : <ChevronDown className="size-3" />}
-                {message.children.length} {message.children.length === 1 ? "reply" : "replies"}
+                {collapsed ? (
+                  <ChevronRight className="size-3" />
+                ) : (
+                  <ChevronDown className="size-3" />
+                )}
+                {message.children.length}{" "}
+                {message.children.length === 1 ? "reply" : "replies"}
               </button>
             )}
           </div>
@@ -394,53 +465,68 @@ function ThreadMessage({
         </button>
       )}
     </div>
-  )
+  );
 }
 
 // ─── ChatSearch ───────────────────────────────────────────────────────────────
 
 interface SearchResult {
-  messageId: string
-  conversationId?: string
-  conversationName?: string
-  senderName: string
-  snippet: string
-  timestamp: Date | number
+  messageId: string;
+  conversationId?: string;
+  conversationName?: string;
+  senderName: string;
+  snippet: string;
+  timestamp: Date | number;
 }
 
 interface ChatSearchProps {
-  onSearch: (query: string) => SearchResult[] | Promise<SearchResult[]>
-  onSelect: (result: SearchResult) => void
-  onClose: () => void
-  className?: string
+  onSearch: (query: string) => SearchResult[] | Promise<SearchResult[]>;
+  onSelect: (result: SearchResult) => void;
+  onClose: () => void;
+  className?: string;
 }
 
-function ChatSearch({ onSearch, onSelect, onClose, className }: ChatSearchProps) {
-  const [query, setQuery] = React.useState("")
-  const [results, setResults] = React.useState<SearchResult[]>([])
-  const inputRef = React.useRef<HTMLInputElement>(null)
+function ChatSearch({
+  onSearch,
+  onSelect,
+  onClose,
+  className,
+}: ChatSearchProps) {
+  const [query, setQuery] = React.useState("");
+  const [results, setResults] = React.useState<SearchResult[]>([]);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    inputRef.current?.focus();
+  }, []);
 
   React.useEffect(() => {
-    if (!query.trim()) { setResults([]); return }
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
     const timeout = setTimeout(async () => {
-      const r = await onSearch(query)
-      setResults(r)
-    }, 200)
-    return () => clearTimeout(timeout)
-  }, [query, onSearch])
+      const r = await onSearch(query);
+      setResults(r);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [query, onSearch]);
 
   React.useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose() }
-    document.addEventListener("keydown", handler)
-    return () => document.removeEventListener("keydown", handler)
-  }, [onClose])
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
 
   return (
-    <div className={cn("fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/50", className)}>
+    <div
+      className={cn(
+        "fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/50",
+        className,
+      )}
+    >
       <div className="w-full max-w-lg overflow-hidden rounded-xl border border-[var(--chat-border-strong)] bg-[var(--chat-bg-sidebar)] shadow-[var(--chat-shadow-lg)]">
         {/* Search input */}
         <div className="flex items-center gap-3 border-b border-[var(--chat-border)] px-4 py-3">
@@ -453,7 +539,9 @@ function ChatSearch({ onSearch, onSelect, onClose, className }: ChatSearchProps)
             placeholder="Search messages..."
             className="flex-1 bg-transparent text-[15px] text-[var(--chat-text-primary)] placeholder:text-[var(--chat-text-tertiary)] outline-none"
           />
-          <kbd className="rounded border border-[var(--chat-border)] px-1.5 py-0.5 text-[10px] text-[var(--chat-text-tertiary)]">ESC</kbd>
+          <kbd className="rounded border border-[var(--chat-border)] px-1.5 py-0.5 text-[10px] text-[var(--chat-text-tertiary)]">
+            ESC
+          </kbd>
         </div>
 
         {/* Results */}
@@ -461,19 +549,28 @@ function ChatSearch({ onSearch, onSelect, onClose, className }: ChatSearchProps)
           {results.map((r) => (
             <button
               key={r.messageId}
-              onClick={() => { onSelect(r); onClose() }}
+              onClick={() => {
+                onSelect(r);
+                onClose();
+              }}
               className="flex w-full flex-col gap-0.5 border-b border-[var(--chat-border)] px-4 py-2.5 text-left transition-colors hover:bg-[var(--chat-accent-soft)]"
             >
               <div className="flex items-center gap-2">
-                <span className="text-[13px] font-semibold text-[var(--chat-text-primary)]">{r.senderName}</span>
+                <span className="text-[13px] font-semibold text-[var(--chat-text-primary)]">
+                  {r.senderName}
+                </span>
                 {r.conversationName && (
-                  <span className="text-[11px] text-[var(--chat-text-tertiary)]">in {r.conversationName}</span>
+                  <span className="text-[11px] text-[var(--chat-text-tertiary)]">
+                    in {r.conversationName}
+                  </span>
                 )}
                 <span className="ml-auto text-[11px] text-[var(--chat-text-tertiary)]">
                   {formatTimestamp(new Date(r.timestamp))}
                 </span>
               </div>
-              <p className="truncate text-[13px] text-[var(--chat-text-secondary)]">{r.snippet}</p>
+              <p className="truncate text-[13px] text-[var(--chat-text-secondary)]">
+                {r.snippet}
+              </p>
             </button>
           ))}
           {query.trim() && results.length === 0 && (
@@ -484,7 +581,7 @@ function ChatSearch({ onSearch, onSelect, onClose, className }: ChatSearchProps)
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
@@ -496,7 +593,7 @@ export {
   ChatPinnedPanel,
   ChatNestedThread,
   ChatSearch,
-}
+};
 export type {
   Conversation,
   ChatForwardDialogProps,
@@ -507,4 +604,4 @@ export type {
   ChatNestedThreadProps,
   SearchResult,
   ChatSearchProps,
-}
+};

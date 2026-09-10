@@ -147,7 +147,9 @@ export default function AppSidebar({ office }: { office: string }) {
                                   <span className="text-[14px]">
                                     {subItem.title}{" "}
                                     {subItem.title === "Machine Delivery" && (
-                                      <NotificationBadge count={pendingDelivery} />
+                                      <NotificationBadge
+                                        count={pendingDelivery}
+                                      />
                                     )}{" "}
                                     {subItem.title === "Due Payment" && (
                                       <NotificationBadge count={pending} />

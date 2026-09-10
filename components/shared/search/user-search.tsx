@@ -62,7 +62,7 @@ export function UserSearch({
   const [city, setCity] = React.useState("lahore");
   const [showInactive, setShowInactive] = React.useState(false);
   const { userID, designation } = useUserDetail();
-  const {state : OfficeState} = React.useContext(OfficeContext)!
+  const { state: OfficeState } = React.useContext(OfficeContext)!;
 
   React.useEffect(() => {
     async function fetchData() {
@@ -135,7 +135,7 @@ export function UserSearch({
       return item?.data?.active;
     });
 
-    console.log(city)
+  console.log(city);
   return (
     <>
       <Button

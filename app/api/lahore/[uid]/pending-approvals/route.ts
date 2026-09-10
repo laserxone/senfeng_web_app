@@ -9,7 +9,10 @@ export async function GET(
   const approverId = Number(uid);
 
   if (!Number.isInteger(approverId)) {
-    return NextResponse.json({ message: "A valid user ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { message: "A valid user ID is required" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -62,6 +65,9 @@ export async function GET(
     });
   } catch (error) {
     console.error("Pending approval count error:", error);
-    return NextResponse.json({ message: "Unable to fetch pending approvals" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Unable to fetch pending approvals" },
+      { status: 500 },
+    );
   }
 }

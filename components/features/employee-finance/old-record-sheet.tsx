@@ -263,25 +263,23 @@ const OldRecordSheet = ({
                 <AppCalendarRange date={rangeDate} onChange={setRangeDate} />
               </div>
 
-             
-                <Select onValueChange={setFilterValue} value={filterValue}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Filter by user" />
-                  </SelectTrigger>
+              <Select onValueChange={setFilterValue} value={filterValue}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filter by user" />
+                </SelectTrigger>
 
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Filter</SelectLabel>
-                      <SelectItem value={"All"}>All</SelectItem>
-                      {uniqueUserNames.map((item, idx) => (
-                        <SelectItem key={idx} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-             
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Filter</SelectLabel>
+                    <SelectItem value={"All"}>All</SelectItem>
+                    {uniqueUserNames.map((item, idx) => (
+                      <SelectItem key={idx} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
 
               <div className="space-y-2">
                 <FieldLabel>Select user</FieldLabel>

@@ -283,7 +283,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
     "Dealer",
   ];
 
-  if(!id || !userID) return null
+  if (!id || !userID) return null;
   return (
     <div className="flex w-full justify-center pb-4">
       <div className="w-full space-y-5">
@@ -466,52 +466,44 @@ export default function DetailComponent({ id }: { id: string | null }) {
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-               
               />
               <DocumentCard
                 type={"father_cnic"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                
               />
               <DocumentCard
                 type={"police"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-               
               />
               <DocumentCard
                 type={"education"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-               
               />
               <DocumentCard
                 type={"resume"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                
               />
               <DocumentCard
                 type={"appointment_letter"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                
               />
               <DocumentCard
                 type={"contract"}
                 docsData={docsData}
                 employeeId={id}
                 fetchData={fetchData}
-                
               />
               <DocumentCardOther
-                
                 otherDocs={otherDocs}
                 employeeId={id}
                 fetchData={fetchData}
@@ -525,12 +517,10 @@ export default function DetailComponent({ id }: { id: string | null }) {
 }
 
 const DocumentCardOther = ({
-  
   otherDocs,
   employeeId,
   fetchData,
 }: {
- 
   otherDocs: string[];
   employeeId: string | null;
   fetchData: () => Promise<void>;
@@ -548,7 +538,6 @@ const DocumentCardOther = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { state: OfficeState } = useContext(OfficeContext)!;
   const [open, setOpen] = useState(false);
-  
 
   useEffect(() => {
     async function loadFiles() {
@@ -731,7 +720,6 @@ const DocumentCard = ({
   const [fileName, setFileName] = useState<string | undefined>("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { state: OfficeState } = useContext(OfficeContext)!;
-  
 
   useEffect(() => {
     if (docsData?.[type as keyof typeof docsData]) {
@@ -859,13 +847,13 @@ const DocumentCard = ({
 
 const RenderEachFile = ({
   file,
- 
+
   otherDocs,
   employeeId,
   fetchData,
 }: {
   file: any;
- 
+
   otherDocs: string[];
   employeeId: string | null;
   fetchData: () => Promise<void>;
