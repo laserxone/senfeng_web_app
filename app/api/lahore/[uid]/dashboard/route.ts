@@ -959,6 +959,7 @@ async function getAdminDashboardData(office: string) {
 
   const recentSalesQuery = `
     SELECT 
+        s.id,
         s.price,
         s.contract_date,
         u.name AS seller_name,

@@ -1046,6 +1046,7 @@ export type AdminDashboardRecentSales = {
   seller_dp: string;
   seller_email: string;
   seller_name: string;
+  id : string | number
 };
 
 export type MachinesSoldThisMonthData = {

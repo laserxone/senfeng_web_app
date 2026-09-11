@@ -22,7 +22,7 @@ export type PendingMachineApproval = {
 export function useMachineApproval() {
   const [pending, setPending] = useState<PendingMachineApproval[]>([]);
 
-  const { userID } = useUserDetail();
+  const { userID, isAdmin } = useUserDetail();
 
   const fetchData = async () => {
     const response = await axios.get(`/${userID}/machine/approval`);
@@ -30,7 +30,7 @@ export function useMachineApproval() {
   };
 
   useEffect(() => {
-    if (!userID) return;
+    if (!userID || !isAdmin) return;
     fetchData();
 
     const unsub = onSnapshot(doc(db, "machine", "approval"), () => {

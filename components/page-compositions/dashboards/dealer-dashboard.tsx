@@ -95,12 +95,7 @@ export default function DealerDashboard({
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Hi, Welcome back 👋
-        </h2>
-      </div>
-      <div className="flex flex-row flex-wrap justify-between gap-4">
+      <div className="flex flex-row flex-wrap justify-between gap-4 pt-2">
         <Card className="w-full sm:w-auto sm:min-w-[350px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">

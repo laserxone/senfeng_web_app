@@ -1,9 +1,9 @@
 "use client";
+import ExecutiveCommandCenter from "@/components/features/dashboards/executive-command-center";
 import { AreaStats } from "@/components/shared/charts/area_stats/page";
 import { BarStats } from "@/components/shared/charts/bar_stats/page";
 import { Stats } from "@/components/shared/charts/pie_stats/page";
 import { Sale } from "@/components/shared/charts/sales/page";
-import SalesTeamProgressChart from "@/components/shared/charts/sales_progress/page";
 import CustomerMap from "@/components/features/customers/components/customer-map";
 import RecentQuotations from "@/components/features/sales/recent-quotations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,12 +151,7 @@ export default function SuperadminDashboard() {
 
   return (
     <div className="flex flex-1 flex-col space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:p-5">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Hi, Welcome back 👋
-        </h2>
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 pt-2">
         <MiniStatsCard
           title="Payments"
           value={formatCurrency(data?.total_payment_this_month ?? 0)}
@@ -261,14 +256,7 @@ export default function SuperadminDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          {loading ? (
-            <Skeleton className="h-64" />
-          ) : (
-            <SalesTeamProgressChart passingData={data?.team_progress || []} />
-          )}
-        </div>
+      <div className="hidden grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="min-h-0 xl:h-[505px]">
           {loading ? (
             <Skeleton className="h-full" />
@@ -277,60 +265,76 @@ export default function SuperadminDashboard() {
           )}
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4">
-          {loading ? (
-            <Skeleton className="h-64" />
-          ) : (
-            <BarStats data={data?.machines_sold_last_3_months || []} />
-          )}
-        </div>
-        <div className="col-span-4 md:col-span-3">
-          {loading ? (
-            <Skeleton className="h-64" />
-          ) : (
-            <Sale data={data?.recent_sales || []} />
-          )}
-        </div>
-        <div className="col-span-4">
-          {loading ? (
-            <Skeleton className="h-64" />
-          ) : (
-            <AreaStats data={data?.feedback_status_last_6_months || []} />
-          )}
-        </div>
-        <div className="col-span-4 md:col-span-3">
-          {loading ? (
-            <Skeleton className="h-64" />
-          ) : (
-            <Stats industryData={data?.industry_count || []} />
-          )}
-        </div>
-      </div>
-      {loading ? (
-        <Skeleton className="h-64" />
-      ) : (
-        <Card>
-          <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
-            <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-              <CardTitle>Task status</CardTitle>
-              <Separator className="my-2" />
-              <ScrollArea className="h-[500px] pr-3">
-                {userTaskData.map((user) => (
-                  <div key={user.assigned_user_id} className="mb-10">
-                    <h2 className="mb-4 text-xl font-bold">
-                      {user.assigned_user_name}
-                    </h2>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      {renderTaskCard(user.yesterdayTasks, "🕒 Yesterday")}
-                      {renderTaskCard(user.todayTasks, "📅 Today")}
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
+      {false && (
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="col-span-4">
+              {loading ? (
+                <Skeleton className="h-64" />
+              ) : (
+                <BarStats data={data?.machines_sold_last_3_months || []} />
+              )}
             </div>
-          </CardHeader>
-        </Card>
+            <div className="col-span-4 md:col-span-3">
+              {loading ? (
+                <Skeleton className="h-64" />
+              ) : (
+                <Sale data={data?.recent_sales || []} />
+              )}
+            </div>
+            <div className="col-span-4">
+              {loading ? (
+                <Skeleton className="h-64" />
+              ) : (
+                <AreaStats data={data?.feedback_status_last_6_months || []} />
+              )}
+            </div>
+            <div className="col-span-4 md:col-span-3">
+              {loading ? (
+                <Skeleton className="h-64" />
+              ) : (
+                <Stats industryData={data?.industry_count || []} />
+              )}
+            </div>
+          </div>
+          {loading ? (
+            <Skeleton className="h-64" />
+          ) : (
+            <Card>
+              <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
+                <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
+                  <CardTitle>Task status</CardTitle>
+                  <Separator className="my-2" />
+                  <ScrollArea className="h-[500px] pr-3">
+                    {userTaskData.map((user) => (
+                      <div key={user.assigned_user_id} className="mb-10">
+                        <h2 className="mb-4 text-xl font-bold">
+                          {user.assigned_user_name}
+                        </h2>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                          {renderTaskCard(user.yesterdayTasks, "🕒 Yesterday")}
+                          {renderTaskCard(user.todayTasks, "📅 Today")}
+                        </div>
+                      </div>
+                    ))}
+                  </ScrollArea>
+                </div>
+              </CardHeader>
+            </Card>
+          )}
+        </>
+      )}
+      {loading ? (
+        <Skeleton className="h-[640px]" />
+      ) : (
+        <ExecutiveCommandCenter
+          team={data?.team_progress || []}
+          tasks={userTaskData}
+          feedback={data?.feedback_status_last_6_months || []}
+          industries={data?.industry_count || []}
+          recentSales={data?.recent_sales || []}
+          recentQuotations={data?.recentQuotations || []}
+        />
       )}
 
       <div className="mb-5">
