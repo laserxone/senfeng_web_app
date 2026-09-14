@@ -1,11 +1,3 @@
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { MachineProps } from "@/lib/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Pencil, Plus, Trash } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,14 +11,20 @@ import {
 import {
   Field,
   FieldError,
-  FieldGroup,
   FieldLabel,
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { MachineProps } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Pencil } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,8 +59,6 @@ const EditMachine = ({
 }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [orderNumbers, setOrderNumbers] = useState([""]);
-  const [orderNumberError, setOrderNumberError] = useState("");
   const { userID } = useUserDetail();
 
   const form = useForm<FormValues>({
@@ -194,8 +190,8 @@ const EditMachine = ({
           </div>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-          <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+        <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <div className="space-y-3 p-3.5 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
               {/* Machine Details */}
               <FieldSet className="gap-3 rounded-md border p-3">
@@ -411,12 +407,12 @@ const EditMachine = ({
                 )}
               </FieldSet>
             </div>
-          </ScrollArea>
-          {/* Submit */}
-          <Button className="w-full" type="submit" disabled={loading}>
-            {loading && <Spinner />} Submit
-          </Button>
-        </form>
+            {/* Submit */}
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading && <Spinner />} Submit
+            </Button>
+          </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

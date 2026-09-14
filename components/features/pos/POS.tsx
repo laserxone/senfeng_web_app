@@ -1176,7 +1176,7 @@ export default function POS() {
                       invoiceItems.length === 0 || !selectedCustomer?.id
                     }
                     icon={ReceiptText}
-                    title="Print Invoice"
+                    title="Issue Invoice"
                     description="Create issued invoice"
                     tone="primary"
                     loading={loading}
