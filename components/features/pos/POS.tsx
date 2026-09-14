@@ -1,7 +1,4 @@
 "use client";
-import axios from "@/lib/axios";
-import { ChangeEvent, useCallback, useEffect, useState } from "react";
-import { FaMinusCircle, FaPlus } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,18 +12,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import axios from "@/lib/axios";
+import {
+  ChangeEvent,
+  ComponentProps,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import { FaMinusCircle, FaPlus } from "react-icons/fa";
 import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
+import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
+import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
+import { UserSearch } from "@/components/shared/search/user-search";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import Spinner from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import { CustomerSearchWithData } from "@/components/features/customers/components/customer-search-with-data";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import Spinner from "@/components/ui/spinner";
-import { UserSearch } from "@/components/shared/search/user-search";
-import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
 import AddItemDialog from "./add-item-dialog";
 import AddPOSPayment from "./add-pos-payment";
 import DeleteInvoice from "./delete-invoice";
@@ -46,8 +52,19 @@ import {
 } from "@/lib/types";
 import Link from "next/link";
 import { toast } from "sonner";
-import OutwardModal from "./outward-modal";
 import LowStock from "./low-stock";
+import OutwardModal from "./outward-modal";
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  CreditCard,
+  FilePenLine,
+  FileText,
+  ReceiptText,
+  Search,
+  Send,
+  UserRoundCog,
+} from "lucide-react";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -66,6 +83,86 @@ export type SelectedUser = {
 };
 
 type PosDialog = "inward" | "outward" | "low-stock" | "order-stock";
+
+type PosActionTone =
+  "primary" | "proforma" | "utility" | "operations" | "inward" | "outward";
+
+const posActionToneClasses: Record<
+  PosActionTone,
+  { button: string; icon: string }
+> = {
+  primary: {
+    button:
+      "border-border bg-card text-foreground hover:border-primary/35 hover:bg-primary/[0.04]",
+    icon: "border-primary/20 bg-primary/10 text-primary",
+  },
+  proforma: {
+    button:
+      "border-border bg-card text-foreground hover:border-violet-400/45 hover:bg-violet-500/[0.045] dark:hover:border-violet-500/40",
+    icon: "border-violet-200 bg-violet-100 text-violet-700 dark:border-violet-800 dark:bg-violet-950/60 dark:text-violet-300",
+  },
+  utility: {
+    button:
+      "border-border bg-card text-foreground hover:border-foreground/20 hover:bg-muted/55",
+    icon: "border-border bg-muted text-muted-foreground",
+  },
+  operations: {
+    button:
+      "border-border bg-card text-foreground hover:border-fuchsia-400/45 hover:bg-fuchsia-500/[0.045] dark:hover:border-fuchsia-500/40",
+    icon: "border-fuchsia-200 bg-fuchsia-100 text-fuchsia-700 dark:border-fuchsia-800 dark:bg-fuchsia-950/60 dark:text-fuchsia-300",
+  },
+  inward: {
+    button:
+      "border-border bg-card text-foreground hover:border-emerald-400/45 hover:bg-emerald-500/[0.045] dark:hover:border-emerald-500/40",
+    icon: "border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
+  },
+  outward: {
+    button:
+      "border-border bg-card text-foreground hover:border-sky-400/45 hover:bg-sky-500/[0.045] dark:hover:border-sky-500/40",
+    icon: "border-sky-200 bg-sky-100 text-sky-700 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300",
+  },
+};
+
+type PosActionButtonProps = ComponentProps<typeof Button> & {
+  icon: typeof ReceiptText;
+  title: string;
+  description: string;
+  tone?: PosActionTone;
+  loading?: boolean;
+};
+
+function PosActionButton({
+  icon: Icon,
+  title,
+  description,
+  tone = "utility",
+  loading = false,
+  className = "",
+  ...props
+}: PosActionButtonProps) {
+  const styles = posActionToneClasses[tone];
+
+  return (
+    <Button
+      {...props}
+      title={description}
+      className={`group h-12 justify-start gap-2 rounded-lg border px-2.5 text-left shadow-none transition-colors duration-150 hover:shadow-sm disabled:opacity-55 ${styles.button} ${className}`}
+    >
+      <span
+        className={`flex size-7 shrink-0 items-center justify-center rounded-md border ${styles.icon}`}
+      >
+        {loading ? (
+          <Spinner />
+        ) : (
+          <Icon className="size-3.5" strokeWidth={2.2} />
+        )}
+      </span>
+      <span className="min-w-0 truncate text-xs font-semibold tracking-tight">
+        {title}
+      </span>
+    </Button>
+  );
+}
 
 export default function POS() {
   const [selectedCustomer, setSelectedCustomer] = useState<MyCustomer | null>(
@@ -92,6 +189,7 @@ export default function POS() {
   const [itemSearch, setItemSearch] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [pendingLoading, setPendingLoading] = useState(false);
+  const [pendingPILoading, setPendingPILoading] = useState(false);
   const [searchModal, setSearchModal] = useState(false);
   const [searchItemsResult, setSearchItemsResult] = useState<SearchItem[]>([]);
   const [selectedSearchItem, setSelectedSearchItem] =
@@ -99,6 +197,7 @@ export default function POS() {
   const [checked, setChecked] = useState(false);
   const [modal, setModal] = useState(false);
   const [reminder, setReminder] = useState<POSInvoiceReminder[]>([]);
+  const [proforma, setProforma] = useState<POSInvoiceReminder[]>([]);
   const [warranty, setWarranty] = useState(false);
   const [warrantyYear, setWarrantyYear] = useState(1);
   const { userID, designation, base_route } = useUserDetail();
@@ -161,6 +260,7 @@ export default function POS() {
   }, [debouncedUserId]);
 
   const handleUpdateInvoice = async () => {
+    const invoiceStatus = selectedSearchItem?.invoice_status ?? "issued";
     await handleInvoiceBackendData();
     const PDFData = {
       companyName: companyName,
@@ -175,6 +275,7 @@ export default function POS() {
       warrantyYear: warrantyYear,
       discount: `${discount}`,
       createdAt: createdAt,
+      invoiceStatus,
     };
     const pdfRes = await axios.post(
       `/${userID}/pos/pdf`,
@@ -196,6 +297,20 @@ export default function POS() {
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
     setTimeout(() => URL.revokeObjectURL(url), 600000);
+  };
+
+  const handleIssueInvoice = async () => {
+    if (!selectedSearchItem?.id) return;
+
+    try {
+      await axios.post(`/${userID}/pos/issue/${selectedSearchItem.id}`);
+      await fetchData();
+      setSelectedSearchItem(null);
+      setSearchItemsResult([]);
+      toast.success("Pro forma invoice issued successfully");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInvoiceBackendData = async () => {
@@ -221,9 +336,11 @@ export default function POS() {
     }
   };
 
-  const generatePDF = async () => {
+  const generatePDF = async (
+    invoiceStatus: "proforma" | "issued" = "issued",
+  ) => {
     try {
-      const invNumber = await handleUpdateStock();
+      const invNumber = await handleUpdateStock(invoiceStatus);
       const PDFData = {
         companyName: companyName,
         name: name,
@@ -237,6 +354,7 @@ export default function POS() {
         warranty: warranty,
         warrantyYear: warrantyYear,
         discount: `${discount}`,
+        invoiceStatus,
       };
       const pdfRes = await axios.post(
         `/${userID}/pos/pdf`,
@@ -259,7 +377,7 @@ export default function POS() {
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 600000);
       await fetchData();
-      if (checked) {
+      if (invoiceStatus === "issued" && checked) {
         setSelectedInvoice(invNumber?.returning_id);
       } else {
         setSelectedCustomer(null);
@@ -272,7 +390,9 @@ export default function POS() {
     }
   };
 
-  async function handleUpdateStock() {
+  async function handleUpdateStock(
+    invoiceStatus: "proforma" | "issued" = "issued",
+  ) {
     const modified = stock.filter((item) => item?.modified);
 
     try {
@@ -287,7 +407,9 @@ export default function POS() {
         selecteduser: selectedUser,
         customer_id: selectedCustomer ? selectedCustomer?.id : null,
         discount: discount || 0,
-        payment: selectedCustomer?.id ? checked : false,
+        payment:
+          invoiceStatus === "issued" && selectedCustomer?.id ? checked : false,
+        invoice_status: invoiceStatus,
       });
 
       return response.data;
@@ -303,9 +425,8 @@ export default function POS() {
       if (response.data.stock.length > 0) {
         setStock([...response.data.stock]);
       }
-      if (response.data?.reminders) {
-        setReminder(response.data.reminders);
-      }
+      setReminder(response.data?.reminders ?? []);
+      setProforma(response.data?.pi ?? []);
     } finally {
       setLoading(false);
     }
@@ -558,6 +679,39 @@ export default function POS() {
         })
         .finally(() => {
           setPendingLoading(false);
+          resolve();
+        });
+    });
+  }
+
+  async function handlePendingPIPayments() {
+    return new Promise<void>((resolve) => {
+      axios
+        .get(`/${userID}/pos/search?invoice_status=proforma`)
+        .then((response) => {
+          if (response.data.length > 0) {
+            const resultWithTotal = response.data.map(
+              (item: POSInvoiceReminder) => {
+                return {
+                  ...item,
+                };
+              },
+            );
+            setSearchModal(true);
+            setSearchItemsResult(resultWithTotal);
+            setTotal(
+              resultWithTotal.reduce(
+                (sum: any, item: any) => sum + Number(item.final_amount || 0),
+                0,
+              ),
+            );
+          }
+        })
+        .catch((e) => {
+          console.log(e);
+        })
+        .finally(() => {
+          setPendingPILoading(false);
           resolve();
         });
     });
@@ -931,6 +1085,30 @@ export default function POS() {
                 </div>
               )}
             </div>
+
+            <div
+              className="flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-background px-3 py-2 transition hover:bg-muted/40"
+              onClick={() => {
+                setPendingPILoading(true);
+                handlePendingPIPayments();
+              }}
+            >
+              <div>
+                <Label className="cursor-pointer text-sm font-bold">
+                  Open PI Invoices
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Open PI invoices records
+                </p>
+              </div>
+              <div className="shrink-0">
+                {pendingPILoading ? (
+                  <Spinner />
+                ) : (
+                  <NotificationBadge count={proforma.length} />
+                )}
+              </div>
+            </div>
           </section>
 
           <section className="rounded-md border bg-muted/10 p-3">
@@ -940,66 +1118,120 @@ export default function POS() {
                 Print, search and manage stock movement from one place.
               </p>
             </div>
-            <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {selectedSearchItem ? (
-                <Button
-                  onClick={() => {
-                    setLoading(true);
-                    handleUpdateInvoice();
-                  }}
-                  disabled={invoiceItems.length === 0}
-                  className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
-                >
-                  Update Invoice
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => {
-                    if (selectedUser?.id) {
+                selectedSearchItem.invoice_status === "proforma" ? (
+                  <>
+                    <PosActionButton
+                      onClick={() => {
+                        setLoading(true);
+                        handleUpdateInvoice();
+                      }}
+                      disabled={invoiceItems.length === 0 || loading}
+                      icon={FilePenLine}
+                      title="Update PI"
+                      description="Revise reserved items"
+                      tone="proforma"
+                      loading={loading}
+                    />
+                    <PosActionButton
+                      onClick={() => {
+                        setLoading(true);
+                        handleIssueInvoice();
+                      }}
+                      disabled={loading}
+                      icon={Send}
+                      title="Issue Invoice"
+                      description="Confirm for customer"
+                      tone="primary"
+                      loading={loading}
+                    />
+                  </>
+                ) : (
+                  <PosActionButton
+                    onClick={() => {
                       setLoading(true);
-                      generatePDF();
-                    } else {
-                      setModal(true);
+                      handleUpdateInvoice();
+                    }}
+                    disabled={invoiceItems.length === 0}
+                    icon={FilePenLine}
+                    title="Update Invoice"
+                    description="Revise invoice items"
+                    tone="utility"
+                    loading={loading}
+                  />
+                )
+              ) : (
+                <>
+                  <PosActionButton
+                    onClick={() => {
+                      if (selectedUser?.id) {
+                        setLoading(true);
+                        generatePDF();
+                      } else {
+                        setModal(true);
+                      }
+                    }}
+                    disabled={
+                      invoiceItems.length === 0 || !selectedCustomer?.id
                     }
-                  }}
-                  disabled={invoiceItems.length === 0 || !selectedCustomer?.id}
-                  className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
-                >
-                  Print Invoice
-                </Button>
+                    icon={ReceiptText}
+                    title="Print Invoice"
+                    description="Create issued invoice"
+                    tone="primary"
+                    loading={loading}
+                  />
+                  <PosActionButton
+                    onClick={() => {
+                      setLoading(true);
+                      generatePDF("proforma");
+                    }}
+                    disabled={
+                      invoiceItems.length === 0 || !selectedCustomer?.id
+                    }
+                    icon={FileText}
+                    title="Create PI"
+                    description="Reserve stock for quote"
+                    tone="proforma"
+                    loading={loading}
+                  />
+                </>
               )}
 
-              <Button
+              <PosActionButton
                 onClick={() => {
                   setSearchInvoice(!searchInvocie);
                 }}
-                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
-              >
-                Search Invoice
-              </Button>
+                icon={Search}
+                title="Search Invoice"
+                description="Find saved invoices"
+                tone="utility"
+              />
 
-              <Button
-                variant="outline"
+              <PosActionButton
                 onClick={handleEngineerItems}
-                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
-              >
-                {engineerLoading && <Spinner />}{" "}
-                <div className="break-words"> Engineer issued items</div>
-              </Button>
+                icon={UserRoundCog}
+                title="Engineer Items"
+                description="Track issued stock"
+                tone="operations"
+                loading={engineerLoading}
+              />
 
-              <Button
+              <PosActionButton
                 onClick={handleInward}
-                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
-              >
-                <div className="break-words">Inward Gatepass</div>
-              </Button>
+                icon={ArrowDownToLine}
+                title="Inward Gatepass"
+                description="Record stock received"
+                tone="inward"
+              />
 
-              <Button
+              <PosActionButton
                 onClick={handleOutward}
-                className="h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal"
-              >
-                <div className="break-words">Outward Gatepass</div>
-              </Button>
+                icon={ArrowUpFromLine}
+                title="Outward Gatepass"
+                description="Release issued stock"
+                tone="outward"
+              />
 
               <LowStock
                 handleOrderStock={handleOrderStock}
@@ -1012,20 +1244,25 @@ export default function POS() {
                 }
               />
 
-              {selectedSearchItem && selectedSearchItem?.id && (
-                <Link
-                  href={`/${base_route}/pos/${selectedSearchItem?.id}`}
-                  target="_blank"
-                >
-                  <Button className="h-16 w-full rounded-md text-center text-xs font-semibold text-wrap whitespace-normal">
-                    <div>Payment Record</div>
-                  </Button>
-                </Link>
-              )}
+              {selectedSearchItem?.invoice_status === "issued" &&
+                selectedSearchItem.id && (
+                  <Link
+                    href={`/${base_route}/pos/${selectedSearchItem?.id}`}
+                    target="_blank"
+                  >
+                    <PosActionButton
+                      className="w-full"
+                      icon={CreditCard}
+                      title="Payment Record"
+                      description="View received payments"
+                      tone="primary"
+                    />
+                  </Link>
+                )}
 
               <DeleteInvoice
                 item={selectedSearchItem}
-                onRefresh={() => handleReset()}
+                onRefresh={async () => handleReset()}
               />
             </div>
           </section>

@@ -25,9 +25,16 @@ export async function GET(req: NextRequest) {
   FROM savedinvoices si
   LEFT JOIN customer_parts cp ON cp.part_id = si.id
   WHERE si.owner_paid IS FALSE
+    AND si.invoice_status = 'issued'
   GROUP BY si.id
 `;
       const resultQry = await pool.query(query);
+      const proformaResult = await pool.query(`
+        SELECT *
+        FROM savedinvoices
+        WHERE invoice_status = 'proforma'
+        ORDER BY created_at DESC
+      `);
 
       const invoices = resultQry.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
@@ -63,6 +70,7 @@ export async function GET(req: NextRequest) {
                 item.payment === false,
             )
             .filter((item) => item?.status !== "Paid"),
+          pi: proformaResult.rows,
         },
         { status: 200 },
       );
@@ -126,6 +134,7 @@ export async function PUT(req: NextRequest) {
       selecteduser,
       customer_id,
       discount,
+      invoice_status = "issued",
     } = await req.json();
 
     let returning_id = null;
@@ -156,8 +165,8 @@ export async function PUT(req: NextRequest) {
       generatedInvoiceNumber = `${moment().format("YYYYMMDD")}-${invoicenumber}`;
       const result = await pool.query(
         `INSERT INTO savedinvoices 
-            (name, company, phone, address, manager, invoicenumber, fields, payment, customer_id, discount) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            (name, company, phone, address, manager, invoicenumber, fields, payment, customer_id, discount, invoice_status) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING id`,
         [
           name,
@@ -170,6 +179,7 @@ export async function PUT(req: NextRequest) {
           payment,
           customer_id,
           discount,
+          invoice_status,
         ],
       );
       returning_id = result.rows[0].id;

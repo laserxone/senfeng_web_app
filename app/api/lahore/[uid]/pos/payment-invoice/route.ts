@@ -12,6 +12,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { part_id } = data;
+    const invoiceResult = await pool.query(
+      `SELECT id FROM savedinvoices
+       WHERE id = $1 AND invoice_status = 'issued'`,
+      [part_id],
+    );
+
+    if (!invoiceResult.rowCount) {
+      return NextResponse.json(
+        { message: "Payments can only be added to issued invoices" },
+        { status: 409 },
+      );
+    }
+
     const fields = Object.keys(data);
     const values = Object.values(data);
     const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
@@ -22,11 +36,10 @@ export async function POST(req: NextRequest) {
     `;
 
     await pool.query(query, values);
-    const { part_id } = data;
     await pool.query(
       `UPDATE savedinvoices SET 
                 payment = $1
-             WHERE id = $2`,
+             WHERE id = $2 AND invoice_status = 'issued'`,
       [true, part_id],
     );
 

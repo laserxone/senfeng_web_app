@@ -166,7 +166,7 @@ export default function ViewableInvoice({
                   <p className="text-[11px] font-semibold text-[#7F7F7F]">
                     {field.label}
                   </p>
-                  <div className="min-h-8 rounded-md border border-[#E5E7EB] bg-[#dce4f1] px-2 py-1 text-xs font-semibold text-black">
+                  <div className="h-8 rounded-md border border-[#E5E7EB] bg-[#dce4f1] px-2 text-xs font-semibold text-black flex items-center">
                     {field.value || "-"}
                   </div>
                 </div>

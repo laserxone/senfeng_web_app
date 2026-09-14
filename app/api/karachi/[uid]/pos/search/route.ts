@@ -5,6 +5,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{}> },
 ) {
+  const invoiceStatus = req.nextUrl.searchParams.get("invoice_status");
+
   try {
     const query = `
   SELECT
@@ -24,12 +26,13 @@ export async function GET(
   LEFT JOIN customer_parts_karachi cp ON cp.part_id = si.id
   LEFT JOIN customer c
     ON c.id = si.customer_id
-LEFT JOIN users u
+  LEFT JOIN users u
     ON u.id = c.ownership
+  WHERE ($1::varchar IS NULL OR si.invoice_status = $1)
   GROUP BY si.id, u.name, c.location
 ORDER BY created_at DESC
 `;
-    const result = await pool.query(query);
+    const result = await pool.query(query, [invoiceStatus]);
 
     const invoices = result.rows.map((invoice) => {
       const itemsTotal = Array.isArray(invoice.fields)

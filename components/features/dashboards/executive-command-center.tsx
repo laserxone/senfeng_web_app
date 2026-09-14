@@ -127,59 +127,59 @@ export default function ExecutiveCommandCenter({
               </span>
             </div>
             <ScrollArea className="min-h-0 flex-1">
-            <div className="divide-y divide-border/60">
-              {teamRows.length ? (
-                teamRows.map((member, index) => (
-                  <div
-                    key={member.id}
-                    className="grid gap-3 px-4 py-3.5 sm:grid-cols-[minmax(190px,1.4fr)_minmax(105px,.7fr)_auto] sm:items-center"
-                  >
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
-                        {index + 1}
-                      </span>
-                      <Avatar className="size-8">
-                        <AvatarFallback >
-                          {initials(member.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold">
-                          {member.name}
+              <div className="divide-y divide-border/60">
+                {teamRows.length ? (
+                  teamRows.map((member, index) => (
+                    <div
+                      key={member.id}
+                      className="grid gap-3 px-4 py-3.5 sm:grid-cols-[minmax(190px,1.4fr)_minmax(105px,.7fr)_auto] sm:items-center"
+                    >
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground">
+                          {index + 1}
+                        </span>
+                        <Avatar className="size-8">
+                          <AvatarFallback>
+                            {initials(member.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold">
+                            {member.name}
+                          </p>
+                          <p className="truncate text-[11px] text-muted-foreground">
+                            {member.total_visits} visits
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[11px]">
+                          <span className="text-muted-foreground">
+                            Target pace
+                          </span>
+                          <span className="font-bold">
+                            {member.salesProgress}%
+                          </span>
+                        </div>
+                        <Progress
+                          value={member.salesProgress}
+                          className="h-1.5 [&>div]:bg-gradient-to-r [&>div]:from-violet-500 [&>div]:to-indigo-500"
+                        />
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <p className="text-xs font-bold">
+                          {formatCurrency(member.sales)}
                         </p>
-                        <p className="truncate text-[11px] text-muted-foreground">
-                          {member.total_visits} visits
+                        <p className="text-[10px] text-muted-foreground">
+                          of {formatCurrency(member.monthly_target)}
                         </p>
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[11px]">
-                        <span className="text-muted-foreground">
-                          Target pace
-                        </span>
-                        <span className="font-bold">
-                          {member.salesProgress}%
-                        </span>
-                      </div>
-                      <Progress
-                        value={member.salesProgress}
-                        className="h-1.5 [&>div]:bg-gradient-to-r [&>div]:from-violet-500 [&>div]:to-indigo-500"
-                      />
-                    </div>
-                    <div className="text-left sm:text-right">
-                      <p className="text-xs font-bold">
-                        {formatCurrency(member.sales)}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        of {formatCurrency(member.monthly_target)}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <EmptyState label="No team performance data available yet." />
-              )}
-            </div>
+                  ))
+                ) : (
+                  <EmptyState label="No team performance data available yet." />
+                )}
+              </div>
             </ScrollArea>
           </CardContent>
         </Card>
@@ -207,36 +207,59 @@ export default function ExecutiveCommandCenter({
                 </p>
               </div>
               <TooltipProvider>
-              <div className="mb-1 flex flex-1 gap-1.5">
-                {feedback.slice(-6).map((item) => {
-                  const monthTotal =
-                    Number(item.satisfactory) + Number(item.unsatisfactory);
-                  return (
-                    <Tooltip key={item.month}>
-                      <TooltipTrigger asChild>
-                        <button type="button" className="flex flex-1 cursor-help flex-col gap-1 rounded-md outline-none transition hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring">
-                          <div className="flex h-14 items-end overflow-hidden rounded-md bg-rose-500/10">
-                            <div
-                              className="w-full rounded-md bg-emerald-500 transition-all"
-                              style={{
-                                height: `${percentage(Number(item.satisfactory), monthTotal)}%`,
-                              }}
-                            />
+                <div className="mb-1 flex flex-1 gap-1.5">
+                  {feedback.slice(-6).map((item) => {
+                    const monthTotal =
+                      Number(item.satisfactory) + Number(item.unsatisfactory);
+                    return (
+                      <Tooltip key={item.month}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex flex-1 cursor-help flex-col gap-1 rounded-md outline-none transition hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <div className="flex h-14 items-end overflow-hidden rounded-md bg-rose-500/10">
+                              <div
+                                className="w-full rounded-md bg-emerald-500 transition-all"
+                                style={{
+                                  height: `${percentage(Number(item.satisfactory), monthTotal)}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-center text-[9px] text-muted-foreground">
+                              {item.month.slice(0, 3)}
+                            </span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          sideOffset={8}
+                          arrowColor="bg-popover fill-popover"
+                          className="block min-w-40 rounded-xl border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-lg"
+                        >
+                          <p className="mb-2 border-b border-border pb-2 text-[11px] font-semibold text-muted-foreground">
+                            {item.month}
+                          </p>
+                          <div className="flex items-center justify-between gap-5">
+                            <span className="text-emerald-600 dark:text-emerald-400">
+                              Satisfactory
+                            </span>
+                            <span className="font-bold">
+                              {Number(item.satisfactory) || 0}
+                            </span>
                           </div>
-                          <span className="text-center text-[9px] text-muted-foreground">
-                            {item.month.slice(0, 3)}
-                          </span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent sideOffset={8} arrowColor="bg-popover fill-popover" className="block min-w-40 rounded-xl border border-border bg-popover px-3 py-2.5 text-popover-foreground shadow-lg">
-                        <p className="mb-2 border-b border-border pb-2 text-[11px] font-semibold text-muted-foreground">{item.month}</p>
-                        <div className="flex items-center justify-between gap-5"><span className="text-emerald-600 dark:text-emerald-400">Satisfactory</span><span className="font-bold">{Number(item.satisfactory) || 0}</span></div>
-                        <div className="mt-1 flex items-center justify-between gap-5"><span className="text-rose-600 dark:text-rose-400">Not satisfactory</span><span className="font-bold">{Number(item.unsatisfactory) || 0}</span></div>
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
+                          <div className="mt-1 flex items-center justify-between gap-5">
+                            <span className="text-rose-600 dark:text-rose-400">
+                              Not satisfactory
+                            </span>
+                            <span className="font-bold">
+                              {Number(item.unsatisfactory) || 0}
+                            </span>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
               </TooltipProvider>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-2 border-t pt-3">
@@ -409,9 +432,12 @@ function EmptyState({ label }: { label: string }) {
 }
 
 function RecentDeals({ sales }: { sales: AdminDashboardRecentSales[] }) {
-  const {base_route} = useUserDetail()
+  const { base_route } = useUserDetail();
   return (
-    <Card data-slot="latest-deals" className="h-[500px] overflow-hidden border-border/70 shadow-sm">
+    <Card
+      data-slot="latest-deals"
+      className="h-[500px] overflow-hidden border-border/70 shadow-sm"
+    >
       <CardContent className="flex h-full flex-col p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -430,39 +456,41 @@ function RecentDeals({ sales }: { sales: AdminDashboardRecentSales[] }) {
           </span>
         </div>
         <ScrollArea className="mt-3 min-h-0 flex-1">
-        <div className="divide-y divide-border/60">
-          {sales.slice(0, 5).map((sale, index) => (
-            <div
-              key={`${sale.customer_id}-${index}`}
-              className="flex items-center gap-2.5 py-2.5"
-            >
-              <div className="grid size-7 shrink-0 place-items-center rounded-lg bg-muted text-[9px] font-bold text-muted-foreground">
-                {initials(sale.seller_name)}
+          <div className="divide-y divide-border/60">
+            {sales.slice(0, 5).map((sale, index) => (
+              <div
+                key={`${sale.customer_id}-${index}`}
+                className="flex items-center gap-2.5 py-2.5"
+              >
+                <div className="grid size-7 shrink-0 place-items-center rounded-lg bg-muted text-[9px] font-bold text-muted-foreground">
+                  {initials(sale.seller_name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/${base_route}/member/${sale.customer_id}/${sale.id}`}
+                  >
+                    <p className="truncate text-xs font-semibold">
+                      {sale.customer_name || sale.customer_owner || "Customer"}
+                    </p>
+                  </Link>
+                  <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                    Closed by {sale.seller_name}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold">
+                    {formatCurrency(sale.price)}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">
+                    {new Date(sale.contract_date).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <Link href={`/${base_route}/member/${sale.customer_id}/${sale.id}`}>
-                <p className="truncate text-xs font-semibold">
-                  {sale.customer_name || sale.customer_owner || "Customer"}
-                </p>
-                </Link>
-                <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                  Closed by {sale.seller_name}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-bold">
-                  {formatCurrency(sale.price)}
-                </p>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">
-                  {new Date(sale.contract_date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         </ScrollArea>
         {!sales.length && (
           <p className="py-8 text-center text-xs text-muted-foreground">
@@ -474,8 +502,52 @@ function RecentDeals({ sales }: { sales: AdminDashboardRecentSales[] }) {
   );
 }
 
-function CustomerMix({ industries, totalCustomers, maxIndustryCount }: { industries: { customer_count: string; industry: string }[]; totalCustomers: number; maxIndustryCount: number }) {
-  return <Card className="h-full border-border/70 shadow-sm"><CardContent className="p-4"><div className="flex items-center gap-2.5"><div className="grid size-9 place-items-center rounded-xl bg-blue-500/10 text-blue-700"><Factory className="size-4" /></div><div><p className="text-sm font-semibold">Customer mix</p><p className="text-[11px] text-muted-foreground">{totalCustomers.toLocaleString()} customers across industries</p></div></div><div className="mt-4 space-y-3">{industries.map((item) => <div key={item.industry}><div className="flex justify-between gap-2 text-[11px]"><span className="truncate text-muted-foreground">{item.industry}</span><span className="font-semibold">{item.customer_count}</span></div><div className="mt-1.5 h-1.5 rounded-full bg-muted"><div className="h-full rounded-full bg-blue-500" style={{ width: `${percentage(Number(item.customer_count), maxIndustryCount)}%` }} /></div></div>)}</div></CardContent></Card>;
+function CustomerMix({
+  industries,
+  totalCustomers,
+  maxIndustryCount,
+}: {
+  industries: { customer_count: string; industry: string }[];
+  totalCustomers: number;
+  maxIndustryCount: number;
+}) {
+  return (
+    <Card className="h-full border-border/70 shadow-sm">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2.5">
+          <div className="grid size-9 place-items-center rounded-xl bg-blue-500/10 text-blue-700">
+            <Factory className="size-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Customer mix</p>
+            <p className="text-[11px] text-muted-foreground">
+              {totalCustomers.toLocaleString()} customers across industries
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 space-y-3">
+          {industries.map((item) => (
+            <div key={item.industry}>
+              <div className="flex justify-between gap-2 text-[11px]">
+                <span className="truncate text-muted-foreground">
+                  {item.industry}
+                </span>
+                <span className="font-semibold">{item.customer_count}</span>
+              </div>
+              <div className="mt-1.5 h-1.5 rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-blue-500"
+                  style={{
+                    width: `${percentage(Number(item.customer_count), maxIndustryCount)}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function TaskDetailPanel({ tasks }: { tasks: AdminTeamTasks[] }) {

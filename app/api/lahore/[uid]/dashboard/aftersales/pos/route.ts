@@ -29,6 +29,7 @@ LEFT JOIN customer c
 LEFT JOIN users u
     ON u.id = c.ownership
 WHERE si.owner_paid IS FALSE
+  AND si.invoice_status = 'issued'
 GROUP BY si.id, u.name, c.location
 ORDER BY created_at DESC
 `;

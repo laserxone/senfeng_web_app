@@ -12,9 +12,10 @@ export async function POST(req: NextRequest) {
     const trimmedNumber = number.trim();
 
     const paymentQuery = `
-            SELECT id, part_id, note 
-            FROM customer_parts_karachi 
-            WHERE note = $1
+            SELECT cp.id, cp.part_id, cp.note
+            FROM customer_parts_karachi cp
+            INNER JOIN savedinvoices_karachi si ON si.id = cp.part_id
+            WHERE cp.note = $1 AND si.invoice_status = 'issued'
         `;
     const paymentResult = await pool.query(paymentQuery, [trimmedNumber]);
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const saleQuery = `
             SELECT * FROM savedinvoices_karachi 
-            WHERE id = ANY($1)
+            WHERE id = ANY($1) AND invoice_status = 'issued'
             LIMIT 1
         `;
     const saleResult = await pool.query(saleQuery, [partIds]);

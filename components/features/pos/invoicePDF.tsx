@@ -24,6 +24,7 @@ type InvoicePDFProps = {
   discount: string | number;
   selectedUser?: any;
   createdAt?: Date | string;
+  invoiceStatus?: "proforma" | "issued" | "cancelled";
 };
 const InvoicePDF = ({
   companyName,
@@ -39,6 +40,7 @@ const InvoicePDF = ({
   selectedUser,
   discount,
   createdAt,
+  invoiceStatus = "issued",
 }: InvoicePDFProps) => {
   const parsed = Number(discount);
   const localDiscount = Number.isFinite(parsed) ? Math.floor(parsed) : 0;
@@ -51,7 +53,7 @@ const InvoicePDF = ({
           width: "100%",
         }}
       >
-        <Header />
+        <Header invoiceStatus={invoiceStatus} />
         <View
           style={{
             padding: "5px",
@@ -673,7 +675,11 @@ const CompanyDetails = ({ createdAt }: { createdAt?: Date | string }) => {
   );
 };
 
-const Header = () => {
+const Header = ({
+  invoiceStatus,
+}: {
+  invoiceStatus: "proforma" | "issued" | "cancelled";
+}) => {
   return (
     <View
       style={{
@@ -694,7 +700,7 @@ const Header = () => {
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           marginRight: 70,
-          width: "150px",
+          width: invoiceStatus === "proforma" ? "190px" : "150px",
           height: "30px",
           display: "flex",
           alignItems: "center",
@@ -703,12 +709,12 @@ const Header = () => {
       >
         <Text
           style={{
-            fontSize: "15px",
+            fontSize: invoiceStatus === "proforma" ? "12px" : "15px",
             fontFamily: "Helvetica-Bold",
             color: "white",
           }}
         >
-          INVOICE
+          {invoiceStatus === "proforma" ? "PRO FORMA INVOICE" : "INVOICE"}
         </Text>
       </View>
     </View>

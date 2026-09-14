@@ -77,6 +77,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const invoiceResult = await pool.query(
+      `SELECT id FROM savedinvoices
+       WHERE id = $1 AND invoice_status = 'issued'`,
+      [data.savedinvoice_id],
+    );
+
+    if (!invoiceResult.rowCount) {
+      return NextResponse.json(
+        {
+          message: "Outward gatepasses can only be created for issued invoices",
+        },
+        { status: 409 },
+      );
+    }
+
     const fields = Object.keys(data);
     const values = Object.values(data);
     const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
@@ -117,6 +132,7 @@ export async function GET() {
       FROM savedinvoices s
       LEFT JOIN outward_gatepass o
         ON o.savedinvoice_id = s.id
+      WHERE s.invoice_status = 'issued'
         ORDER BY s.created_at DESC
     `);
     return NextResponse.json(res.rows);

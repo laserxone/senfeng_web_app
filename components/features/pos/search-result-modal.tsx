@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ArrowUpDown } from "lucide-react";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
 import useUserDetail from "@/hooks/use-user-detail";
@@ -17,6 +17,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
+
+type InvoiceStatusFilter = "all" | "proforma" | "issued" | "cancelled";
 
 type PageTableRef = {
   handleClear: () => void;
@@ -38,6 +40,25 @@ const SearchResultModal = ({
   total: number;
 }) => {
   const { base_route } = useUserDetail();
+  const [invoiceStatusFilter, setInvoiceStatusFilter] =
+    useState<InvoiceStatusFilter>("all");
+
+  const filteredData = useMemo(
+    () =>
+      invoiceStatusFilter === "all"
+        ? data
+        : data.filter((item) => item.invoice_status === invoiceStatusFilter),
+    [data, invoiceStatusFilter],
+  );
+
+  const filteredTotal = useMemo(
+    () =>
+      filteredData.reduce(
+        (sum, item) => sum + Number(item.total || item.final_amount || 0),
+        0,
+      ),
+    [filteredData],
+  );
 
   const columns: ColumnDef<SearchItem>[] = [
     {
@@ -75,6 +96,36 @@ const SearchResultModal = ({
         );
       },
       cell: ({ row }) => <div>{row.getValue("invoicenumber")}</div>,
+    },
+    {
+      accessorKey: "invoice_status",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Document Status
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const invoiceStatus = row.original.invoice_status || "issued";
+        const statusClasses = {
+          proforma: "bg-amber-100 text-amber-800",
+          issued: "bg-emerald-100 text-emerald-800",
+          cancelled: "bg-rose-100 text-rose-800",
+        };
+
+        return (
+          <span
+            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold capitalize ${statusClasses[invoiceStatus]}`}
+          >
+            {invoiceStatus === "proforma" ? "Pro Forma" : invoiceStatus}
+          </span>
+        );
+      },
     },
 
     {
@@ -213,16 +264,35 @@ const SearchResultModal = ({
           <DialogTitle>Select Invoice</DialogTitle>
         </DialogHeader>
 
-        <PageTable columns={columns} data={data}>
+        <PageTable columns={columns} data={filteredData}>
           <div className="flex flex-1 flex-wrap items-center justify-between gap-2">
-            <div className="flex gap-4" />
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["all", "All"],
+                  // ["proforma", "Pro Forma"],
+                  // ["issued", "Issued"],
+                ] as const
+              ).map(([value, label]) => (
+                <Button
+                  key={value}
+                  size="sm"
+                  variant={
+                    invoiceStatusFilter === value ? "default" : "outline"
+                  }
+                  onClick={() => setInvoiceStatusFilter(value)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
 
             <div className="flex w-full max-w-xs items-center justify-between border-b border-gray-300 p-2 dark:border-gray-700">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Total Amount
               </span>
               <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                {formatCurrency(total || 0)}
+                {formatCurrency(filteredTotal)}
               </span>
             </div>
           </div>

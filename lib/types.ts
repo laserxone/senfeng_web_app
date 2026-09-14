@@ -922,6 +922,7 @@ export type POSInvoiceReminder = {
   items_total: number;
   final_amount: number;
 
+  invoice_status: "proforma" | "issued" | "cancelled";
   status: string;
   outward_gatepass?: POSInvoiceReminder;
   location?: string;
@@ -1046,7 +1047,7 @@ export type AdminDashboardRecentSales = {
   seller_dp: string;
   seller_email: string;
   seller_name: string;
-  id : string | number
+  id: string | number;
 };
 
 export type MachinesSoldThisMonthData = {

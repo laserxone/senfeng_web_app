@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { List, Search, Table2 } from "lucide-react";
+import { AlertTriangle, List, Search, Table2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import "./Button.css";
 // import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
@@ -16,6 +16,7 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import RenderStockItems from "./render-stock-items";
 import RenderStockItemsOtherView from "./render-stock-items-other-view";
+import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
 
 export default function LowStock({
   stock,
@@ -72,10 +73,35 @@ export default function LowStock({
   return (
     <>
       <Button
+        type="button"
         onClick={() => onOpenChange(true)}
-        className={`h-16 rounded-md text-center text-xs font-semibold text-wrap whitespace-normal ${lowStockStatus ? "blinking-button" : ""}`}
+        title="Review items below threshold"
+        className={`group relative h-12 justify-start gap-2 rounded-lg border px-2.5 text-left shadow-none transition-colors duration-150 hover:shadow-sm ${
+          lowStockStatus
+            ? "border-amber-300 bg-card text-foreground hover:border-amber-400 hover:bg-amber-500/[0.045] dark:border-amber-800 dark:hover:border-amber-600"
+            : "border-border bg-card text-foreground hover:border-foreground/20 hover:bg-muted/55"
+        }`}
       >
-        <div className="break-words">Low Stock</div>
+        {lowStockStatus && (
+          <span className="absolute right-2 top-2 size-1.5 rounded-full bg-amber-500" />
+        )}
+        <div className="relative flex items-center gap-2">
+          <span
+            className={`flex size-7 shrink-0 items-center justify-center rounded-md border ${
+              lowStockStatus
+                ? "border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                : "border-border bg-muted text-muted-foreground"
+            }`}
+          >
+            <AlertTriangle className="size-3.5" strokeWidth={2.2} />
+          </span>
+          <span className="min-w-0 truncate text-xs font-semibold tracking-tight">
+            Low Stock
+          </span>
+          <span className="shrink-0">
+            <NotificationBadge count={stock.length} />
+          </span>
+        </div>
       </Button>
 
       <Dialog open={open} onOpenChange={onOpenChange}>

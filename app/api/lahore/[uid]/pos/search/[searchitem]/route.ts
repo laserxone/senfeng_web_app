@@ -9,6 +9,7 @@ export async function GET(
   const { searchitem } = await params;
   const searchParams = req.nextUrl.searchParams;
   const pending = searchParams.get("pending");
+  const invoiceStatus = searchParams.get("invoice_status");
 
   try {
     if (searchitem !== "null") {
@@ -33,22 +34,24 @@ export async function GET(
     ON c.id = si.customer_id
   LEFT JOIN users u
     ON u.id = c.ownership
-  WHERE
-    si.name ILIKE $1 OR
-    si.company ILIKE $1 OR
-    si.phone ILIKE $1 OR
-    si.invoicenumber ILIKE $1 OR
-    EXISTS (
-      SELECT 1
-      FROM jsonb_array_elements(COALESCE(si.fields, '[]'::jsonb)) AS elem
-      WHERE elem->>'name' ILIKE $1
-        OR elem->>'description' ILIKE $1
+  WHERE (
+      si.name ILIKE $1 OR
+      si.company ILIKE $1 OR
+      si.phone ILIKE $1 OR
+      si.invoicenumber ILIKE $1 OR
+      EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(COALESCE(si.fields, '[]'::jsonb)) AS elem
+        WHERE elem->>'name' ILIKE $1
+          OR elem->>'description' ILIKE $1
+      )
     )
+    AND ($2::varchar IS NULL OR si.invoice_status = $2)
   GROUP BY si.id, u.name, c.location
   ORDER BY si.created_at DESC
 `;
 
-      const values = [`%${searchitem}%`];
+      const values = [`%${searchitem}%`, invoiceStatus];
       const result = await pool.query(query, values);
       const invoices = result.rows.map((invoice) => {
         const itemsTotal = Array.isArray(invoice.fields)
@@ -100,6 +103,7 @@ LEFT JOIN customer c
 LEFT JOIN users u
     ON u.id = c.ownership
 WHERE si.owner_paid IS FALSE
+  AND si.invoice_status = 'issued'
 GROUP BY si.id, u.name, c.location
 ORDER BY created_at DESC
 `;

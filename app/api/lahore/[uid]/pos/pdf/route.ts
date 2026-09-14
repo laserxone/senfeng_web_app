@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       warrantyYear: data.warrantyYear,
       discount: data.discount,
       createdAt: data.createdAt,
+      invoiceStatus: data.invoiceStatus ?? data.invoice_status ?? "issued",
     }) as React.ReactElement<DocumentProps>;
 
     const pdfBuffer = await renderToBuffer(deliveryDocument);

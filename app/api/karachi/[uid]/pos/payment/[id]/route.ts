@@ -9,12 +9,19 @@ export async function PUT(
   const { payment } = await req.json();
 
   try {
-    await pool.query(
+    const updateResult = await pool.query(
       `UPDATE savedinvoices_karachi SET 
                 payment = $1
-             WHERE id = $2`,
+             WHERE id = $2 AND invoice_status = 'issued'`,
       [payment, id],
     );
+
+    if (!updateResult.rowCount) {
+      return NextResponse.json(
+        { message: "Payment records are only available for issued invoices" },
+        { status: 409 },
+      );
+    }
 
     return NextResponse.json(
       { message: "Invoice updated successfully" },
@@ -34,9 +41,17 @@ export async function GET(
 
   try {
     const query = await pool.query(
-      `SELECT * FROM savedinvoices_karachi WHERE id = $1`,
+      `SELECT * FROM savedinvoices_karachi WHERE id = $1 AND invoice_status = 'issued'`,
       [id],
     );
+
+    if (!query.rowCount) {
+      return NextResponse.json(
+        { message: "Payment records are only available for issued invoices" },
+        { status: 404 },
+      );
+    }
+
     const paymentQuery = await pool.query(
       `SELECT * FROM customer_parts_karachi WHERE part_id = $1`,
       [id],
