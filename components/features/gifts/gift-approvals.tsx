@@ -160,7 +160,7 @@ export default function RenderGiftApprovals() {
         </DialogContent>
       </Dialog>
       <Dialog open={!!action} onOpenChange={(open) => !open && setAction(null)}>
-        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-md">
+         <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-3xl">
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-pink-500/15 bg-pink-500/10 text-pink-600">
