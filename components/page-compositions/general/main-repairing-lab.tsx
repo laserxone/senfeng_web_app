@@ -59,6 +59,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import LabTaskPayments from "@/components/features/lab/lab-task-payments";
 
 export default function MainRepairingLab() {
   const [data, setData] = useState<RepairingProps[]>([]);
@@ -535,7 +536,6 @@ const AssignTasksModal = ({
                 !form.deliver_date ||
                 !form.user_id ||
                 !form.customer_id ||
-                !form.charges ||
                 !form.remarks ||
                 loading
               }
@@ -719,6 +719,16 @@ function RepairTaskDetailSheet({
               label="Charges"
               value={task.charges || "—"}
             />
+            <RepairDetail
+              icon={Wrench}
+              label="Priority"
+              value={task.priority || "normal"}
+            />
+            <RepairDetail
+              icon={CircleDollarSign}
+              label="Remaining balance"
+              value={`Rs. ${Number(task.remaining_balance || 0).toLocaleString()}`}
+            />
           </div>
 
           <section className="rounded-xl border bg-card p-4 shadow-xs">
@@ -738,6 +748,48 @@ function RepairTaskDetailSheet({
               {task.remarks_other || "No engineer remarks provided."}
             </p>
           </section>
+
+          {task.parts_receiving_id && (
+            <section className="rounded-xl border bg-primary/5 p-4">
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                Received part
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <RepairDetail
+                  icon={Wrench}
+                  label="Part"
+                  value={task.received_part_name || "—"}
+                />
+                <RepairDetail
+                  icon={Wrench}
+                  label="Model / quantity"
+                  value={`${task.received_part_model || "—"} · ${task.received_part_qty ?? "—"}`}
+                />
+                <RepairDetail
+                  icon={CalendarDays}
+                  label="Received"
+                  value={formatRepairDate(task.receiving_date || "")}
+                />
+              <RepairDetail
+                icon={UserRound}
+                label="Warranty"
+                value={task.received_part_warranty_status || "Unknown"}
+              />
+              </div>
+              {task.received_part_problem && (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {task.received_part_problem}
+                </p>
+              )}
+            </section>
+          )}
+
+          <LabTaskPayments
+            labTaskId={task.id}
+            charges={task.charges}
+            approvedTotal={task.approved_payment_total}
+            remainingBalance={task.remaining_balance}
+          />
         </div>
       </SheetContent>
     </Sheet>

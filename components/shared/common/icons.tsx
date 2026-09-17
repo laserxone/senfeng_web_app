@@ -24,6 +24,7 @@ import {
   Moon,
   MoreVertical,
   Package,
+  PackageCheck,
   Pizza,
   Plus,
   Settings,
@@ -116,6 +117,7 @@ export const Icons = {
   performance: Zap,
   khata: Scroll,
   lists: ListCheck,
+  partsReceiving: PackageCheck,
   gitHub: ({ ...props }) => (
     <svg
       aria-hidden="true"

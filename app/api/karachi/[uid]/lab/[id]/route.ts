@@ -38,6 +38,55 @@ export async function PUT(
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
+    if (
+      updates.priority &&
+      !["normal", "urgent", "critical"].includes(updates.priority)
+    ) {
+      return NextResponse.json(
+        { message: "Invalid priority" },
+        { status: 400 },
+      );
+    }
+
+    if (updates.parts_receiving_id !== undefined) {
+      const task = await pool.query(
+        "SELECT customer_id FROM lab_tasks WHERE id = $1 AND managing_office = 'karachi'",
+        [id],
+      );
+      if (!task.rows[0]) {
+        return NextResponse.json(
+          { message: "Lab task not found" },
+          { status: 404 },
+        );
+      }
+
+      if (updates.parts_receiving_id !== null) {
+        const receipt = await pool.query(
+          `SELECT customer_id
+           FROM parts_receiving
+           WHERE id = $1 AND managing_office = 'karachi'`,
+          [updates.parts_receiving_id],
+        );
+        if (!receipt.rows[0]) {
+          return NextResponse.json(
+            { message: "Parts receipt not found" },
+            { status: 404 },
+          );
+        }
+
+        const customerId = updates.customer_id ?? task.rows[0].customer_id;
+        if (Number(receipt.rows[0].customer_id) !== Number(customerId)) {
+          return NextResponse.json(
+            {
+              message:
+                "Lab task customer must match the selected parts receipt",
+            },
+            { status: 400 },
+          );
+        }
+      }
+    }
+
     const fields: string[] = [];
     const values = [];
 
@@ -57,9 +106,9 @@ export async function PUT(
 
     values.push(id);
     const query = `
-          UPDATE lab_tasks
+          UPDATE lab_tasks 
           SET ${fields.join(", ")}
-          WHERE id = $${values.length}
+          WHERE id = $${values.length} AND managing_office = 'karachi'
           RETURNING *
       `;
 

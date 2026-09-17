@@ -40,10 +40,14 @@ export function CustomerMachines({
   value,
   onReturn,
   customer_id,
+  allowManualEntry = false,
+  onManualEntry,
 }: {
   value: number | null;
   onReturn: (val: number) => void;
   customer_id: string | number | null;
+  allowManualEntry?: boolean;
+  onManualEntry?: () => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const [data, setData] = React.useState<DataTypes[]>([]);
@@ -179,6 +183,20 @@ export function CustomerMachines({
                   />
                 </CommandItem>
               ))}
+              {allowManualEntry && (
+                <CommandItem
+                  value="other machine manual entry"
+                  onSelect={() => {
+                    onManualEntry?.();
+                    setOpen(false);
+                  }}
+                >
+                  Other machine
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    Enter manually
+                  </span>
+                </CommandItem>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>

@@ -310,6 +310,96 @@ export type Payment = {
   part_id?: number;
 };
 
+export type PartsReceiving = {
+  id: number;
+  customer_id: number;
+  sale_id: number | null;
+
+  manual_machine_order_no: string | null;
+  manual_machine_serial: string | null;
+  manual_machine_model: string | null;
+
+  part_name: string;
+  part_model: string | null;
+  part_qty: number;
+  part_problem: string | null;
+
+  normal: boolean;
+  damaged: boolean;
+  incomplete: boolean;
+  accessories: boolean;
+  overheated: boolean;
+  non_repairable: boolean;
+  physically_broken: boolean;
+  water_damage: boolean;
+  previously_repaired: boolean;
+  other_condition: string | null;
+
+  part_serial: string | null;
+  part_img: string | null;
+  warranty_status: string;
+  part_accessories: string | null;
+
+  delivery_method: string | null;
+  received_by_id: number | null;
+
+  receiving_date: string;
+  expected_return: string | null;
+  created_at: string;
+  managing_office: string;
+  is_trade_in: boolean;
+};
+
+export type PartTradeIn = {
+  id: number;
+  parts_receiving_id: number;
+  part_name: string;
+  part_model: string;
+  part_qty: number;
+  part_serial: string | null;
+  part_img: string | null;
+  warranty_status: string;
+  part_accessories: string | null;
+  delivered_by: string;
+  delivery_date: string;
+  remarks: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChinaPart = {
+  id: number;
+  parts_receiving_id: number;
+  send_to_china: boolean;
+  sent_to_china_at: string | null;
+  received_from_china_at: string | null;
+  managing_office: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LabTaskPayment = {
+  id: number;
+  lab_task_id: number;
+
+  amount: number;
+  mode: string;
+  note: string;
+  received_by: string;
+
+  transaction_date: string;
+  clearance_date: string | null;
+
+  image: string | null;
+  remarks: string | null;
+  cheque_id: string | null;
+
+  status: "pending" | "approved" | "rejected";
+  comment: string | null;
+  payment_lock: boolean;
+  created_at: string;
+};
+
 export type FinanceProps = {
   machine_id: number;
   total_generated: string;
@@ -372,6 +462,8 @@ export type RepairingProps = {
   id: number;
   customer_id: number;
   user_id: number;
+  parts_receiving_id: number | null;
+  priority: string;
 
   assign_date: string;
   deliver_date: string;
@@ -388,6 +480,17 @@ export type RepairingProps = {
   user_name: string;
   customer_name: string;
   owner_name: string;
+
+  received_part_name?: string | null;
+  received_part_model?: string | null;
+  received_part_qty?: number | null;
+  received_part_problem?: string | null;
+  received_part_img?: string | null;
+  received_part_warranty?: boolean | null;
+  received_part_warranty_status?: string | null;
+  receiving_date?: string | null;
+  approved_payment_total?: number | string;
+  remaining_balance?: number | string;
 };
 
 export type AssignForm = {
@@ -395,6 +498,8 @@ export type AssignForm = {
   deliver_date: Date | undefined;
   user_id: null | number;
   customer_id: null | number;
+  parts_receiving_id?: null | number;
+  priority?: string;
   charges: number;
   remarks: string;
 };

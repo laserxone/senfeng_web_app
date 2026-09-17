@@ -14,6 +14,59 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    data.managing_office = "lahore";
+
+    if (
+      data.priority &&
+      !["normal", "urgent", "critical"].includes(data.priority)
+    ) {
+      return NextResponse.json(
+        { message: "Invalid priority" },
+        { status: 400 },
+      );
+    }
+
+    if (data.parts_receiving_id) {
+      const receipt = await pool.query(
+        `SELECT id, customer_id
+         FROM parts_receiving
+         WHERE id = $1 AND managing_office = 'lahore'`,
+        [data.parts_receiving_id],
+      );
+
+      if (!receipt.rows[0]) {
+        return NextResponse.json(
+          { message: "Parts receipt not found" },
+          { status: 404 },
+        );
+      }
+
+      if (Number(receipt.rows[0].customer_id) !== Number(data.customer_id)) {
+        return NextResponse.json(
+          {
+            message: "Lab task customer must match the selected parts receipt",
+          },
+          { status: 400 },
+        );
+      }
+
+      const activeTask = await pool.query(
+        `SELECT id
+         FROM lab_tasks
+         WHERE parts_receiving_id = $1
+           AND managing_office = 'lahore'
+           AND COALESCE(status, 'pending') <> 'completed'
+         LIMIT 1`,
+        [data.parts_receiving_id],
+      );
+      if (activeTask.rows[0]) {
+        return NextResponse.json(
+          { message: "This parts receipt already has an active lab task" },
+          { status: 409 },
+        );
+      }
+    }
+
     const fields = Object.keys(data);
     const values = Object.values(data);
     const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
@@ -62,11 +115,29 @@ export async function GET(
     lt.*,
     u.name AS user_name,
     c.name AS customer_name,
-    o.name AS owner_name
+    o.name AS owner_name,
+    pr.part_name AS received_part_name,
+    pr.part_model AS received_part_model,
+    pr.part_qty AS received_part_qty,
+    pr.part_problem AS received_part_problem,
+    pr.part_img AS received_part_img,
+    pr.warranty_status AS received_part_warranty_status,
+    pr.receiving_date,
+    COALESCE(payment_totals.approved_payment_total, 0) AS approved_payment_total,
+    GREATEST(
+      COALESCE(lt.charges::numeric, 0) - COALESCE(payment_totals.approved_payment_total, 0),
+      0
+    ) AS remaining_balance
 FROM lab_tasks lt
 LEFT JOIN users u ON u.id = lt.user_id
 LEFT JOIN customer c ON c.id = lt.customer_id
 LEFT JOIN users o ON o.id = c.ownership
+LEFT JOIN parts_receiving pr ON pr.id = lt.parts_receiving_id
+LEFT JOIN LATERAL (
+  SELECT COALESCE(SUM(amount) FILTER (WHERE status = 'approved'), 0) AS approved_payment_total
+  FROM lab_task_payments
+  WHERE lab_task_id = lt.id
+) payment_totals ON TRUE
 WHERE lt.managing_office = 'lahore'
   `;
 

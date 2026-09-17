@@ -60,6 +60,7 @@ import {
   CreditCard,
   FilePenLine,
   FileText,
+  PackageCheck,
   ReceiptText,
   Search,
   Send,
@@ -1224,6 +1225,16 @@ export default function POS() {
                 description="Record stock received"
                 tone="inward"
               />
+
+              <Link href={`/${base_route}/parts-receiving`}>
+                <PosActionButton
+                  className="w-full"
+                  icon={PackageCheck}
+                  title="Parts Receiving"
+                  description="Receive customer parts for lab repair"
+                  tone="inward"
+                />
+              </Link>
 
               <PosActionButton
                 onClick={handleOutward}

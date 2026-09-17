@@ -215,6 +215,13 @@ export const OwnerSidebarItems = [
   },
 
   {
+    title: "Machines Available",
+    url: "/machines-available",
+    icon: "inventory",
+    shortcut: ["m", "a", "c"],
+    items: [],
+  },
+  {
     title: "POS & Orders",
     icon: "pos",
     isActive: ["pos", "orders"],
@@ -252,6 +259,7 @@ export const OwnerSidebarItems = [
       "delivery/delivered",
       "delivery/due-payments",
       "lists",
+      "parts-receiving",
     ],
     items: [
       {
@@ -278,6 +286,12 @@ export const OwnerSidebarItems = [
         title: "Delivered Orders",
         url: "/delivery/delivered",
         shortcut: ["d", "e", "l"],
+      },
+      {
+        title: "Parts Receiving",
+        url: "/parts-receiving",
+        icon: "partsReceiving",
+        shortcut: ["p", "r", "c"],
       },
     ],
   },
@@ -765,6 +779,12 @@ export const StoreNavItem = [
     title: "Delivery",
     url: "#",
     icon: "truck",
+    isActive: [
+      "delivery/machinedelivery",
+      "delivery/otherdelivery",
+      "delivery/delivered",
+      "parts-receiving",
+    ],
 
     items: [
       {
@@ -783,6 +803,12 @@ export const StoreNavItem = [
         title: "Delivered",
         shortcut: ["d", "e", "l"],
         url: "/delivery/delivered",
+      },
+      {
+        title: "Parts Receiving",
+        url: "/parts-receiving",
+        icon: "partsReceiving",
+        shortcut: ["p", "r", "c"],
       },
     ],
   },
