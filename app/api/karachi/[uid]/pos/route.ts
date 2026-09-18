@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
   FROM savedinvoices_karachi si
   LEFT JOIN customer_parts_karachi cp ON cp.part_id = si.id
-  WHERE si.invoice_status = 'issued'
+  WHERE si.owner_paid IS FALSE
+    AND si.invoice_status = 'issued'
   GROUP BY si.id
 `;
       const resultQry = await pool.query(query);
@@ -46,7 +47,8 @@ export async function GET(req: NextRequest) {
         const finalAmount = itemsTotal - discount;
         const totalPaid = Number(invoice.total_paid ?? 0);
         let status = "NA";
-        if (totalPaid === 0) status = "Pending";
+        if (itemsTotal === 0) status = "Paid";
+        else if (totalPaid === 0) status = "Pending";
         else if (finalAmount - totalPaid !== 0) status = "Partial";
         else status = "Paid";
         return {
@@ -61,7 +63,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           stock: result.rows,
-          reminders: invoices.filter((item) => item?.status !== "Paid"),
+          reminders: invoices
+            .filter(
+              (item) =>
+                moment(item.created_at).isSameOrAfter("2025-12-01") ||
+                item.payment === false,
+            )
+            .filter((item) => item?.status !== "Paid"),
           pi: proformaResult.rows,
         },
         { status: 200 },
