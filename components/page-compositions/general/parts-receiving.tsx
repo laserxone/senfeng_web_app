@@ -44,7 +44,9 @@ import { OfficeContext } from "@/store/context/OfficeContext";
 import { ColumnDef } from "@tanstack/react-table";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  ArrowUpDown,
   ClipboardPlus,
+  FileText,
   PackageCheck,
   Send,
   Wrench,
@@ -54,6 +56,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type ReceiptRow = PartsReceiving & {
   china_part_id: number | null;
@@ -231,10 +234,7 @@ const receivePartSchema = z
       }
     }
 
-    if (
-      data.warranty_status !== "in_warranty" &&
-      data.estimated_expenses < 1
-    ) {
+    if (data.warranty_status !== "in_warranty" && data.estimated_expenses < 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["estimated_expenses"],
@@ -293,7 +293,24 @@ export default function PartsReceivingPage() {
   const [staffFilter, setStaffFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<ReceiptRow | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
+  const [pdfReceiptId, setPdfReceiptId] = useState<number | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const receiptId = searchParams.get("pr");
+
+  const selectedReceiptDetail = useMemo(
+    () => rows.find((item) => String(item.id) === receiptId) ?? null,
+    [receiptId, rows],
+  );
+
+  function updateReceiptParam(id?: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (id) params.set("pr", String(id));
+    else params.delete("pr");
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
 
   async function refresh(): Promise<ReceiptRow[]> {
     if (!userID) return [];
@@ -321,18 +338,15 @@ export default function PartsReceivingPage() {
       const task = item.lab_tasks?.[0];
       if (priorityFilter !== "all" && task?.priority !== priorityFilter)
         return false;
-      if (
-        warrantyFilter !== "all" &&
-        item.warranty_status !== warrantyFilter
-      )
+      if (warrantyFilter !== "all" && item.warranty_status !== warrantyFilter)
         return false;
       if (staffFilter !== "all" && String(task?.user_id) !== staffFilter)
         return false;
       if (dateFilter === "overdue") {
         return Boolean(
           hasActiveTask &&
-            item.expected_return &&
-            new Date(item.expected_return) < new Date(),
+          item.expected_return &&
+          new Date(item.expected_return) < new Date(),
         );
       }
       if (dateFilter === "next_7_days") {
@@ -355,10 +369,15 @@ export default function PartsReceivingPage() {
           rows
             .flatMap((receipt) => receipt.lab_tasks ?? [])
             .filter(
-              (task): task is typeof task & { user_id: number; user_name: string } =>
+              (
+                task,
+              ): task is typeof task & { user_id: number; user_name: string } =>
                 Boolean(task.user_id && task.user_name),
             )
-            .map((task) => [task.user_id, { id: task.user_id, name: task.user_name }]),
+            .map((task) => [
+              task.user_id,
+              { id: task.user_id, name: task.user_name },
+            ]),
         ).values(),
       ),
     [rows],
@@ -390,34 +409,222 @@ export default function PartsReceivingPage() {
     };
   }, [rows]);
 
+  const openReceiptPdf = async (receipt: ReceiptRow) => {
+    if (pdfReceiptId !== null) return;
+    setPdfReceiptId(receipt.id);
+    const labTask = receipt.lab_tasks?.[0];
+    try {
+      const response = await axios.post(
+        `/${userID}/parts-receiving/pdf`,
+        {
+          data: {
+            receiptId: receipt.id,
+            receiptNumber: receipt.receipt_number,
+            customerName: receipt.customer_name,
+            customerContact: Array.isArray(receipt.customer_contact)
+              ? receipt.customer_contact.join(", ")
+              : receipt.customer_contact || "",
+            customerLocation: receipt.customer_location || "",
+            machine:
+              receipt.linked_sale_serial ||
+              receipt.manual_machine_serial ||
+              receipt.manual_machine_order_no ||
+              "Manual machine",
+            machineModel:
+              receipt.linked_sale_power || receipt.manual_machine_model || "",
+            partName: receipt.part_name,
+            partModel: receipt.part_model || "",
+            partQty: receipt.part_qty,
+            partSerial: receipt.part_serial || "",
+            warrantyStatus: formatWarranty(receipt.warranty_status),
+            conditions: conditionLabels(receipt),
+            accessories: receipt.part_accessories || "None recorded",
+            problem: receipt.part_problem || "No problem description recorded.",
+            deliveredBy: receipt.delivery_method || "",
+            receivedBy: receipt.received_by_id
+              ? `Staff #${receipt.received_by_id}`
+              : "",
+            receivingDate: receipt.receiving_date,
+            assignedTo: labTask?.user_name || "Unassigned",
+            priority: labTask?.priority || "Normal",
+            expectedReturn: receipt.expected_return,
+            estimatedExpenses: labTask?.charges,
+          },
+        },
+        { office, responseType: "blob" },
+      );
+      const url = URL.createObjectURL(response.data);
+      window.open(url, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(url), 600000);
+    } catch {
+      toast.error("Unable to prepare the parts receiving note PDF");
+    } finally {
+      setPdfReceiptId(null);
+    }
+  };
+
+  const sortableHeader =
+    (title: string) =>
+    ({
+      column,
+    }: {
+      column: {
+        getIsSorted: () => false | "asc" | "desc";
+        toggleSorting: (descending?: boolean) => void;
+      };
+    }) => (
+      <Button
+        variant="ghost"
+        className="h-8 px-0 text-[11px] font-bold tracking-wide text-slate-700 uppercase hover:bg-transparent dark:text-zinc-200"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        {title}
+        <ArrowUpDown className="ml-2 size-3.5" />
+      </Button>
+    );
+
   const columns: ColumnDef<ReceiptRow>[] = [
     {
       id: "receipt",
-      header: "Part receipt ID",
-      accessorFn: (item) => `PRN-${item.id}`,
-      cell: ({ row }) => <span className="font-semibold">PRN-{row.original.id}</span>,
+      header: sortableHeader("Part receipt ID"),
+      accessorFn: (item) => item.receipt_number,
+      size: 130,
+      cell: ({ row }) => (
+        <span className="font-semibold">{row.original.receipt_number}</span>
+      ),
     },
     {
       id: "customer",
-      header: "Company / Customer",
-      accessorFn: (item) => `${item.customer_name} ${item.customer_location ?? ""}`,
-      cell: ({ row }) => <div><p className="font-medium">{row.original.customer_name}</p><p className="text-[11px] text-muted-foreground">{row.original.customer_location || "—"}</p></div>,
+      header: sortableHeader("Company / Customer"),
+      accessorFn: (item) =>
+        `${item.customer_name} ${item.customer_location ?? ""}`,
+      size: 190,
+      cell: ({ row }) => (
+        <div className="min-w-0">
+          <p className="font-medium break-words">
+            {row.original.customer_name}
+          </p>
+          <p className="text-[11px] break-words text-muted-foreground">
+            {row.original.customer_location || "—"}
+          </p>
+        </div>
+      ),
     },
     {
       id: "part",
-      header: "Part name & no.",
+      header: sortableHeader("Part name & no."),
       accessorFn: (item) => `${item.part_name} ${item.part_model ?? ""}`,
-      cell: ({ row }) => <div><p className="font-medium">{row.original.part_name}</p><p className="text-[11px] text-muted-foreground">{row.original.part_model || "No model"}</p></div>,
+      size: 180,
+      cell: ({ row }) => (
+        <div className="min-w-0">
+          <p className="font-medium break-words">{row.original.part_name}</p>
+          <p className="text-[11px] break-words text-muted-foreground">
+            {row.original.part_model || "No model"}
+          </p>
+        </div>
+      ),
     },
-    { id: "condition", header: "Condition", accessorFn: (item) => conditionLabels(item).join(", "), cell: ({ row }) => <div className="flex flex-wrap gap-1">{conditionLabels(row.original).map((label) => <ConditionBadge key={label} value={label} />)}</div> },
-    { accessorKey: "warranty_status", header: "Warranty", cell: ({ row }) => <StatusBadge value={formatWarranty(row.original.warranty_status)} /> },
-    { id: "priority", header: "Priority", accessorFn: (item) => item.lab_tasks?.[0]?.priority ?? "", cell: ({ row }) => <StatusBadge value={row.original.lab_tasks?.[0]?.priority || "—"} /> },
-    { id: "status", header: "Status", accessorFn: receiptStatus, cell: ({ row }) => <StatusBadge value={receiptStatus(row.original)} /> },
-    { id: "assigned", header: "Assigned to", accessorFn: (item) => item.lab_tasks?.[0]?.user_name ?? "", cell: ({ row }) => row.original.lab_tasks?.[0]?.user_name || "—" },
-    { id: "expected_return", header: "Expected return", accessorFn: (item) => item.expected_return ?? "", cell: ({ row }) => row.original.expected_return ? moment(row.original.expected_return).format("DD MMM YYYY") : "—" },
-    { id: "charges", header: "Charges", accessorFn: (item) => item.lab_tasks?.[0]?.charges ?? "", cell: ({ row }) => <span>Rs. {Number(row.original.lab_tasks?.[0]?.charges ?? 0).toLocaleString()}</span> },
-    { id: "total_paid", header: "Total paid", accessorFn: () => "", cell: () => <span className="text-muted-foreground">—</span> },
-    { id: "actions", header: "Actions", cell: ({ row }) => <Button size="sm" variant="outline" className="h-8 rounded-lg" onClick={(event) => { event.stopPropagation(); setSelected(row.original); setDetailOpen(true); }}>View</Button> },
+    {
+      id: "condition",
+      header: sortableHeader("Condition"),
+      accessorFn: (item) => conditionLabels(item).join(", "),
+      size: 240,
+      cell: ({ row }) => (
+        <div className="flex min-w-0 flex-wrap gap-1">
+          {conditionLabels(row.original).map((label) => (
+            <ConditionBadge key={label} value={label} />
+          ))}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "warranty_status",
+      header: sortableHeader("Warranty"),
+      size: 135,
+      cell: ({ row }) => (
+        <StatusBadge value={formatWarranty(row.original.warranty_status)} />
+      ),
+    },
+    {
+      id: "priority",
+      header: sortableHeader("Priority"),
+      accessorFn: (item) => item.lab_tasks?.[0]?.priority ?? "",
+      size: 110,
+      cell: ({ row }) => (
+        <StatusBadge value={row.original.lab_tasks?.[0]?.priority || "—"} />
+      ),
+    },
+    {
+      id: "status",
+      header: sortableHeader("Status"),
+      accessorFn: receiptStatus,
+      size: 125,
+      cell: ({ row }) => <StatusBadge value={receiptStatus(row.original)} />,
+    },
+    {
+      id: "assigned",
+      header: sortableHeader("Assigned to"),
+      accessorFn: (item) => item.lab_tasks?.[0]?.user_name ?? "",
+      size: 145,
+      cell: ({ row }) => (
+        <span className="break-words">
+          {row.original.lab_tasks?.[0]?.user_name || "—"}
+        </span>
+      ),
+    },
+    {
+      id: "expected_return",
+      header: sortableHeader("Expected return"),
+      accessorFn: (item) => item.expected_return ?? "",
+      size: 135,
+      cell: ({ row }) =>
+        row.original.expected_return
+          ? moment(row.original.expected_return).format("DD MMM YYYY")
+          : "—",
+    },
+    {
+      id: "charges",
+      header: sortableHeader("Charges"),
+      accessorFn: (item) => item.lab_tasks?.[0]?.charges ?? "",
+      size: 110,
+      cell: ({ row }) => (
+        <span>
+          Rs.{" "}
+          {Number(row.original.lab_tasks?.[0]?.charges ?? 0).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      id: "total_paid",
+      header: sortableHeader("Total paid"),
+      accessorFn: () => "",
+      size: 110,
+      cell: () => <span className="text-muted-foreground">—</span>,
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      size: 110,
+      cell: ({ row }) => (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 rounded-lg px-2.5 bg-destructive text-white"
+          disabled={pdfReceiptId !== null}
+          onClick={(event) => {
+            event.stopPropagation();
+            openReceiptPdf(row.original);
+          }}
+        >
+          {pdfReceiptId === row.original.id ? (
+            <Spinner className="size-3.5" />
+          ) : (
+            <FileText className="size-3.5" />
+          )}
+          <span className="sr-only">Open PDF</span>
+        </Button>
+      ),
+    },
   ];
 
   return (
@@ -432,135 +639,103 @@ export default function PartsReceivingPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Total Parts in System" value={summary.total} tone="blue" />
-        <SummaryCard label="Pending Repairs" value={summary.pending} tone="orange" />
-        <SummaryCard label="Currently in China" value={summary.china} tone="blue" />
-        <SummaryCard label="Overdue Returns" value={summary.overdue} tone="red" />
+        <SummaryCard
+          label="Total Parts in System"
+          value={summary.total}
+          tone="blue"
+        />
+        <SummaryCard
+          label="Pending Repairs"
+          value={summary.pending}
+          tone="orange"
+        />
+        <SummaryCard
+          label="Currently in China"
+          value={summary.china}
+          tone="blue"
+        />
+        <SummaryCard
+          label="Overdue Returns"
+          value={summary.overdue}
+          tone="red"
+        />
       </div>
       <div className="flex flex-wrap gap-2 rounded-xl border bg-card p-2.5 shadow-sm">
-        <Button onClick={() => { setSelected(null); setDialogOpen(true); }}><ClipboardPlus className="mr-2 size-4" />Receive Part</Button>
+        <Button
+          onClick={() => {
+            setSelected(null);
+            setDialogOpen(true);
+          }}
+        >
+          <ClipboardPlus className="mr-2 size-4" />
+          Receive Part
+        </Button>
         <SummaryPill label="Traded Parts" value={summary.traded} />
         <SummaryPill label="Parts to China" value={summary.chinaPending} />
         <SummaryPill label="Parts from China" value={summary.chinaReceived} />
         <SummaryPill label="Parts to Repair" value={summary.pending} />
         <SummaryPill label="Repaired Parts" value={summary.repaired} />
       </div>
-      <PageTable columns={columns} data={filteredRows} loading={loading} defaultPageSize={25} pageSizeOptions={[25, 50, 100]} download={false} tableWidth="min-w-[1320px]">
-        <div className="w-40"><FormSelect value={priorityFilter} onValueChange={setPriorityFilter} options={[{ value: "all", label: "Priority: All" }, { value: "normal", label: "Normal" }, { value: "urgent", label: "Urgent" }, { value: "critical", label: "Critical" }]} /></div>
-        <div className="w-40"><FormSelect value={warrantyFilter} onValueChange={setWarrantyFilter} options={[{ value: "all", label: "Warranty: All" }, { value: "in_warranty", label: "In warranty" }, { value: "out_of_warranty", label: "Out of warranty" }, { value: "unknown", label: "Unknown" }]} /></div>
-        <div className="w-40"><FormSelect value={dateFilter} onValueChange={setDateFilter} options={[{ value: "all", label: "Date: All" }, { value: "overdue", label: "Overdue returns" }, { value: "next_7_days", label: "Next 7 days" }]} /></div>
-        <div className="w-40"><FormSelect value={staffFilter} onValueChange={setStaffFilter} options={[{ value: "all", label: "Assigned: All" }, ...staffOptions.map((task) => ({ value: String(task.id), label: task.name }))]} /></div>
-      </PageTable>
-
-      {/* Replaced by PageTable above.
-      <div className="rounded-2xl border bg-card shadow-sm">
-        <div className="flex flex-col gap-2 border-b p-3.5 sm:flex-row sm:items-center">
-          <div className="relative max-w-md flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="h-9 rounded-lg pl-9"
-              placeholder="Search part, customer, model or serial"
-            />
-          </div>
-          <div className="w-full sm:w-52">
-            <FormSelect
-            value={receiptFilter}
-              onValueChange={setReceiptFilter}
-              options={[
-                { value: "all", label: "All receipts" },
-                { value: "not_sent", label: "Not sent to lab" },
-                { value: "in_lab", label: "Active in lab" },
-                {
-                  value: "china_pending",
-                  label: "Pending to send to China",
-                },
-              ]}
-            />
-          </div>
+      <PageTable
+        columns={columns}
+        data={filteredRows}
+        loading={loading}
+        tableWidth="min-w-[1800px]"
+        onRowClick={(receipt, event) => {
+          if ((event.target as HTMLElement).closest("button, a, input, select"))
+            return;
+          updateReceiptParam(receipt.id);
+        }}
+      >
+        <div className="w-40">
+          <FormSelect
+            value={priorityFilter}
+            onValueChange={setPriorityFilter}
+            options={[
+              { value: "all", label: "Priority: All" },
+              { value: "normal", label: "Normal" },
+              { value: "urgent", label: "Urgent" },
+              { value: "critical", label: "Critical" },
+            ]}
+          />
         </div>
-        <ScrollArea className="max-h-[calc(100dvh-260px)]">
-          <table className="w-full min-w-[860px] text-sm">
-            <thead className="sticky top-0 bg-muted/60 text-left text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-              <tr>
-                <th className="p-3">Receipt</th>
-                <th className="p-3">Customer</th>
-                <th className="p-3">Part</th>
-                <th className="p-3">Condition</th>
-                <th className="p-3">Received</th>
-                <th className="p-3">Lab</th>
-                <th className="p-3">China</th>
-                <th className="p-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.map((item) => {
-                const activeTask = item.lab_tasks?.find(
-                  (task) => task.status !== "completed",
-                );
-                return (
-                  <tr key={item.id} className="border-t hover:bg-muted/30">
-                    <td className="p-3 font-medium">#{item.id}</td>
-                    <td className="p-3">
-                      <p>{item.customer_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.customer_location || "—"}
-                      </p>
-                    </td>
-                    <td className="p-3">
-                      <p className="font-medium">{item.part_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.part_model || "No model"} · Qty {item.part_qty}
-                      </p>
-                    </td>
-                    <td className="p-3 text-xs">
-                      {conditionLabels(item).join(", ") || "Not marked"}
-                    </td>
-                    <td className="p-3 text-xs">
-                      {moment(item.receiving_date).format("DD MMM YYYY")}
-                    </td>
-                    <td className="p-3 text-xs">
-                      {activeTask ? `Active #${activeTask.id}` : "Not sent"}
-                    </td>
-                    <td className="p-3 text-xs">{chinaStatus(item)}</td>
-                    <td className="p-3 text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 rounded-lg"
-                        onClick={() => {
-                          setSelected(item);
-                          setDetailOpen(true);
-                        }}
-                      >
-                        View
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {!loading && !filteredRows.length && (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="p-10 text-center text-muted-foreground"
-                  >
-                    No parts receipts found.
-                  </td>
-                </tr>
-              )}
-              {loading && (
-                <tr>
-                  <td colSpan={8} className="p-10 text-center">
-                    <Spinner className="mx-auto" />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </ScrollArea>
-      </div> */}
+        <div className="w-40">
+          <FormSelect
+            value={warrantyFilter}
+            onValueChange={setWarrantyFilter}
+            options={[
+              { value: "all", label: "Warranty: All" },
+              { value: "in_warranty", label: "In warranty" },
+              { value: "out_of_warranty", label: "Out of warranty" },
+              { value: "unknown", label: "Unknown" },
+            ]}
+          />
+        </div>
+        <div className="w-40">
+          <FormSelect
+            value={dateFilter}
+            onValueChange={setDateFilter}
+            options={[
+              { value: "all", label: "Date: All" },
+              { value: "overdue", label: "Overdue returns" },
+              { value: "next_7_days", label: "Next 7 days" },
+            ]}
+          />
+        </div>
+        <div className="w-40">
+          <FormSelect
+            value={staffFilter}
+            onValueChange={setStaffFilter}
+            options={[
+              { value: "all", label: "Assigned: All" },
+              ...staffOptions.map((task) => ({
+                value: String(task.id),
+                label: task.name,
+              })),
+            ]}
+          />
+        </div>
+      </PageTable>
 
       <ReceiptDialog
         open={dialogOpen}
@@ -569,16 +744,21 @@ export default function PartsReceivingPage() {
         onSaved={refresh}
       />
       <ReceiptDetailDialog
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-        receipt={selected}
+        open={Boolean(selectedReceiptDetail)}
+        onOpenChange={(open) => {
+          if (!open) updateReceiptParam();
+        }}
+        receipt={selectedReceiptDetail}
         onEdit={() => {
-          setDetailOpen(false);
+          setSelected(selectedReceiptDetail);
+          updateReceiptParam();
           setDialogOpen(true);
         }}
         onLabCreated={async () => {
           const updatedRows = await refresh();
-          const updatedReceipt = updatedRows.find((item) => item.id === selected?.id);
+          const updatedReceipt = updatedRows.find(
+            (item) => item.id === selectedReceiptDetail?.id,
+          );
           if (updatedReceipt) setSelected(updatedReceipt);
         }}
       />
@@ -657,26 +837,64 @@ function StatusBadge({ value }: { value: string }) {
           : normalized.includes("sent") || normalized.includes("to repair")
             ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
             : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300";
-  return <Badge variant="outline" className={`whitespace-nowrap text-[10px] ${color}`}>{value}</Badge>;
+  return (
+    <Badge
+      variant="outline"
+      className={`whitespace-nowrap text-[10px] ${color}`}
+    >
+      {value}
+    </Badge>
+  );
 }
 
 function ConditionBadge({ value }: { value: string }) {
   const normalized = value.toLowerCase();
-  const color = normalized === "normal"
-    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-    : normalized.includes("incomplete") || normalized.includes("overheated")
-      ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
-      : "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300";
-  return <Badge variant="outline" className={`text-[10px] ${color}`}>{value}</Badge>;
+  const color =
+    normalized === "normal"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+      : normalized.includes("incomplete") || normalized.includes("overheated")
+        ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+        : "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300";
+  return (
+    <Badge
+      variant="outline"
+      className={`max-w-full whitespace-normal break-words text-[10px] leading-4 ${color}`}
+    >
+      {value}
+    </Badge>
+  );
 }
 
-function SummaryCard({ label, value, tone }: { label: string; value: number; tone: "blue" | "orange" | "red" }) {
-  const color = tone === "red" ? "text-destructive" : tone === "orange" ? "text-orange-600" : "text-primary";
-  return <div className="rounded-xl border bg-card p-3.5 shadow-sm"><p className="text-xs font-semibold text-muted-foreground">{label}</p><p className={`mt-1 text-2xl font-bold ${color}`}>{value}</p></div>;
+function SummaryCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "blue" | "orange" | "red";
+}) {
+  const color =
+    tone === "red"
+      ? "text-destructive"
+      : tone === "orange"
+        ? "text-orange-600"
+        : "text-primary";
+  return (
+    <div className="rounded-xl border bg-card p-3.5 shadow-sm">
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-2xl font-bold ${color}`}>{value}</p>
+    </div>
+  );
 }
 
 function SummaryPill({ label, value }: { label: string; value: number }) {
-  return <div className="flex h-9 items-center gap-2 rounded-lg border bg-muted/20 px-3 text-xs font-medium"><span>{label}</span><Badge variant="secondary">{value}</Badge></div>;
+  return (
+    <div className="flex h-9 items-center gap-2 rounded-lg border bg-muted/20 px-3 text-xs font-medium">
+      <span>{label}</span>
+      <Badge variant="secondary">{value}</Badge>
+    </div>
+  );
 }
 
 function chinaStatus(receipt: ReceiptRow) {
@@ -734,7 +952,7 @@ function ReceiptDialog({
     setPhone(
       Array.isArray(receipt?.customer_contact)
         ? receipt.customer_contact.join(", ")
-        : receipt?.customer_contact ?? "",
+        : (receipt?.customer_contact ?? ""),
     );
     setSalesperson(receipt ? "Existing customer" : "");
     setReceivedById(initialReceivedById);
@@ -836,12 +1054,8 @@ function ReceiptDialog({
         manual_machine_order_no: form.sale_id
           ? null
           : form.manual_machine_order_no,
-        manual_machine_serial: form.sale_id
-          ? null
-          : form.manual_machine_serial,
-        manual_machine_model: form.sale_id
-          ? null
-          : form.manual_machine_model,
+        manual_machine_serial: form.sale_id ? null : form.manual_machine_serial,
+        manual_machine_model: form.sale_id ? null : form.manual_machine_model,
         part_serial: partSerial,
         overheated: Boolean(extraConditions.overheated),
         non_repairable: Boolean(extraConditions.non_repairable),
@@ -1080,7 +1294,7 @@ function ReceivePartFormLayout({
               <div>
                 <p className="text-muted-foreground">Receiving Note No.</p>
                 <p className="font-semibold">
-                  {receipt ? `PRN-${receipt.id}` : "PRN-NEW"}
+                  {receipt ? receipt.receipt_number : "Generated on receipt"}
                 </p>
               </div>
               <div>
@@ -1167,10 +1381,7 @@ function ReceivePartFormLayout({
                       <Input
                         value={form.manual_machine_order_no}
                         onChange={(event) =>
-                          update(
-                            "manual_machine_order_no",
-                            event.target.value,
-                          )
+                          update("manual_machine_order_no", event.target.value)
                         }
                       />
                     </Field>
@@ -1375,9 +1586,7 @@ function ReceivePartFormLayout({
                 <Field label="Delivered by">
                   <FormSelect
                     value={form.delivery_method}
-                    onValueChange={(value) =>
-                      update("delivery_method", value)
-                    }
+                    onValueChange={(value) => update("delivery_method", value)}
                     placeholder="Select delivery method"
                     options={[
                       { value: "Self Handover", label: "Self Handover" },
@@ -1414,9 +1623,11 @@ function ReceivePartFormLayout({
                   <AppCalendar
                     date={form.expected_return}
                     onChange={(value) => update("expected_return", value)}
-                    max={new Date(
-                      new Date().setFullYear(new Date().getFullYear() + 5),
-                    )}
+                    max={
+                      new Date(
+                        new Date().setFullYear(new Date().getFullYear() + 5),
+                      )
+                    }
                   />
                 </Field>
                 <Field label="Estimated expenses (PKR)">
@@ -1521,7 +1732,8 @@ function ReceiptDetailDialog({
   onEdit: () => void;
   onLabCreated: () => Promise<void>;
 }) {
-  const { userID } = useUserDetail();
+  const { userID, isAdmin, base_route } = useUserDetail();
+  const router = useRouter();
   const { state: officeState } = useContext(OfficeContext)!;
   const [labDialog, setLabDialog] = useState(false);
   const [chinaDialog, setChinaDialog] = useState(false);
@@ -1545,12 +1757,17 @@ function ReceiptDetailDialog({
       }
     }
     loadTradeDetails();
-  }, [open, receipt?.id, receipt?.trade_in_id, tradeDialog, userID, officeState.value.data]);
+  }, [
+    open,
+    receipt?.id,
+    receipt?.trade_in_id,
+    tradeDialog,
+    userID,
+    officeState.value.data,
+  ]);
 
   if (!receipt) return null;
-  const activeTask = receipt.lab_tasks?.find(
-    (task) => task.status !== "completed",
-  );
+  const activeTask = receipt.lab_tasks?.[0];
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -1562,7 +1779,7 @@ function ReceiptDetailDialog({
               </span>
               <div className="min-w-0 flex-1">
                 <SheetTitle className="text-sm font-semibold">
-                  Part Receipt #{receipt.id}
+                  Part Receipt #{receipt.receipt_number}
                 </SheetTitle>
                 <SheetDescription className="text-xs">
                   {receipt.customer_name} · {receipt.part_name}
@@ -1572,79 +1789,271 @@ function ReceiptDetailDialog({
             </div>
           </SheetHeader>
           <div className="flex flex-wrap gap-1.5 border-b px-4 py-2">
-            <Button size="sm" variant="outline" className="h-8 rounded-md px-2.5 text-xs" onClick={onEdit}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 rounded-md px-2.5 text-xs"
+              onClick={onEdit}
+            >
               Edit Receipt
             </Button>
-            <Button size="sm" className="h-8 rounded-md px-2.5 text-xs" disabled={Boolean(activeTask)} onClick={() => setLabDialog(true)}>
-              {activeTask ? `Active Lab Task #${activeTask.id}` : <><Send className="mr-2 size-4" />Send to Lab</>}
-            </Button>
-            <Button size="sm" variant="outline" className="h-8 rounded-md px-2.5 text-xs" onClick={() => setChinaDialog(true)}>
+            {isAdmin && (
+              <Button
+                size="sm"
+                className="h-8 rounded-md px-2.5 text-xs"
+                onClick={() => {
+                  if (activeTask) {
+                    router.push(
+                      `/${base_route}/repairandmaintenance?r=${activeTask.id}`,
+                    );
+                    return;
+                  }
+                  setLabDialog(true);
+                }}
+              >
+                {activeTask ? (
+                  `Lab Task #${activeTask.id}`
+                ) : (
+                  <>
+                    <Send className="mr-2 size-4" />
+                    Send to Lab
+                  </>
+                )}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 rounded-md px-2.5 text-xs"
+              onClick={() => setChinaDialog(true)}
+            >
               Manage China
             </Button>
             {receipt.is_trade_in && (
-              <Button size="sm" variant="outline" className="h-8 rounded-md px-2.5 text-xs" onClick={() => setTradeDialog(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 rounded-md px-2.5 text-xs"
+                onClick={() => setTradeDialog(true)}
+              >
                 {receipt.trade_in_id ? "Edit Trade Part" : "Trade Part"}
               </Button>
             )}
           </div>
           <div className="space-y-3 p-4">
-              <DetailSection title="Customer Information">
-                <div className="grid grid-cols-3 gap-x-3 gap-y-2">
-                  <Detail label="Customer" value={receipt.customer_name} />
-                  <Detail label="Phone" value={Array.isArray(receipt.customer_contact) ? receipt.customer_contact.join(", ") : receipt.customer_contact || "—"} />
-                  <Detail label="City" value={receipt.customer_location || "—"} />
-                  <Detail label="Machine" value={receipt.linked_sale_serial || receipt.manual_machine_serial || "Manual machine"} />
-                  <Detail label="Machine model" value={receipt.linked_sale_power || receipt.manual_machine_model || "—"} />
-                  <Detail label="Machine source" value={receipt.linked_sale_source || "—"} />
+            <DetailSection title="Customer Information">
+              <div className="grid grid-cols-3 gap-x-3 gap-y-2">
+                <Detail label="Customer" value={receipt.customer_name} />
+                <Detail
+                  label="Phone"
+                  value={
+                    Array.isArray(receipt.customer_contact)
+                      ? receipt.customer_contact.join(", ")
+                      : receipt.customer_contact || "—"
+                  }
+                />
+                <Detail label="City" value={receipt.customer_location || "—"} />
+                <Detail
+                  label="Machine"
+                  value={
+                    receipt.linked_sale_serial ||
+                    receipt.manual_machine_serial ||
+                    "Manual machine"
+                  }
+                />
+                <Detail
+                  label="Machine model"
+                  value={
+                    receipt.linked_sale_power ||
+                    receipt.manual_machine_model ||
+                    "—"
+                  }
+                />
+                <Detail
+                  label="Machine source"
+                  value={receipt.linked_sale_source || "—"}
+                />
+              </div>
+            </DetailSection>
+            <DetailSection title="Part & Fault Description">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                <Detail
+                  label="Part"
+                  value={`${receipt.part_name}${receipt.part_model ? ` · ${receipt.part_model}` : ""}`}
+                />
+                <Detail label="Quantity" value={String(receipt.part_qty)} />
+                <Detail
+                  label="Part serial"
+                  value={receipt.part_serial || "—"}
+                />
+                <Detail
+                  label="Warranty"
+                  value={formatWarranty(receipt.warranty_status)}
+                />
+                <Detail
+                  label="Condition"
+                  value={conditionLabels(receipt).join(", ") || "Not marked"}
+                />
+                <Detail
+                  label="Accessories"
+                  value={receipt.part_accessories || "—"}
+                />
+              </div>
+              <div className="mt-3">
+                <Detail
+                  label="Fault description"
+                  value={receipt.part_problem || "—"}
+                />
+              </div>
+              {receipt.part_img && (
+                <div className="mt-3">
+                  <p className="mb-2 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    Attachment
+                  </p>
+                  <MyImgZooming
+                    img={receipt.part_img}
+                    className="h-24 rounded-lg border"
+                  />
                 </div>
-              </DetailSection>
-              <DetailSection title="Part & Fault Description">
-                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                  <Detail label="Part" value={`${receipt.part_name}${receipt.part_model ? ` · ${receipt.part_model}` : ""}`} />
-                  <Detail label="Quantity" value={String(receipt.part_qty)} />
-                  <Detail label="Part serial" value={receipt.part_serial || "—"} />
-                  <Detail label="Warranty" value={formatWarranty(receipt.warranty_status)} />
-                  <Detail label="Condition" value={conditionLabels(receipt).join(", ") || "Not marked"} />
-                  <Detail label="Accessories" value={receipt.part_accessories || "—"} />
-                </div>
-                <div className="mt-3"><Detail label="Fault description" value={receipt.part_problem || "—"} /></div>
-                {receipt.part_img && <div className="mt-3"><p className="mb-2 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Attachment</p><MyImgZooming img={receipt.part_img} className="h-24 rounded-lg border" /></div>}
-              </DetailSection>
-              <DetailSection title="Logistics & Assignment">
-                <div className="grid grid-cols-3 gap-x-3 gap-y-2">
-                  <Detail label="Delivered by" value={receipt.delivery_method || "—"} />
-                  <Detail label="Received by" value={receipt.received_by_id ? `Staff #${receipt.received_by_id}` : "—"} />
-                  <Detail label="Assigned to" value={activeTask?.user_name || "—"} />
-                  <Detail label="Priority" value={activeTask?.priority || "—"} />
-                  <Detail label="Receiving date" value={moment(receipt.receiving_date).format("DD MMM YYYY")} />
-                  <Detail label="Expected return" value={receipt.expected_return ? moment(receipt.expected_return).format("DD MMM YYYY") : "—"} />
-                </div>
-              </DetailSection>
-              <DetailSection title="Cost, Repair & Tracking">
-                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                  <Detail label="Repair status" value={receiptStatus(receipt)} />
-                  <Detail label="Charges" value={`Rs. ${Number(activeTask?.charges ?? 0).toLocaleString()}`} />
-                  <Detail label="China status" value={chinaStatus(receipt)} />
-                  {receipt.send_to_china && <Detail label="Sent to China" value={receipt.sent_to_china_at ? moment(receipt.sent_to_china_at).format("DD MMM YYYY") : "Awaiting dispatch"} />}
-                  {receipt.received_from_china_at && <Detail label="Received from China" value={moment(receipt.received_from_china_at).format("DD MMM YYYY")} />}
-                  {receipt.is_trade_in && <Detail label="Trade-in" value={receipt.trade_in_id ? "Trade part sent" : "Pending trade part"} />}
-                </div>
-              </DetailSection>
-              {(tradeDetails || receipt.trade_in_id) && (
-                <DetailSection title="Trade Part Sent to Customer">
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-                    <Detail label="Part" value={`${tradeDetails?.part_name || receipt.trade_in_part_name || "—"}${tradeDetails?.part_model || receipt.trade_in_part_model ? ` · ${tradeDetails?.part_model || receipt.trade_in_part_model}` : ""}`} />
-                    <Detail label="Quantity" value={String(tradeDetails?.part_qty ?? receipt.trade_in_part_qty ?? "—")} />
-                    <Detail label="Part serial" value={tradeDetails?.part_serial || receipt.trade_in_part_serial || "—"} />
-                    <Detail label="Warranty" value={formatWarranty(tradeDetails?.warranty_status || receipt.trade_in_warranty_status || "unknown")} />
-                    <Detail label="Delivered by" value={tradeDetails?.delivered_by || receipt.trade_in_delivered_by || "—"} />
-                    <Detail label="Delivery date" value={tradeDetails?.delivery_date || receipt.trade_in_delivery_date ? moment(tradeDetails?.delivery_date || receipt.trade_in_delivery_date).format("DD MMM YYYY") : "—"} />
-                  </div>
-                  {(tradeDetails?.remarks || receipt.trade_in_remarks) && <div className="mt-3"><Detail label="Remarks" value={tradeDetails?.remarks || receipt.trade_in_remarks || "—"} /></div>}
-                </DetailSection>
               )}
+            </DetailSection>
+            <DetailSection title="Logistics & Assignment">
+              <div className="grid grid-cols-3 gap-x-3 gap-y-2">
+                <Detail
+                  label="Delivered by"
+                  value={receipt.delivery_method || "—"}
+                />
+                <Detail
+                  label="Received by"
+                  value={
+                    receipt.received_by_id
+                      ? `Staff #${receipt.received_by_id}`
+                      : "—"
+                  }
+                />
+                <Detail
+                  label="Assigned to"
+                  value={activeTask?.user_name || "—"}
+                />
+                <Detail label="Priority" value={activeTask?.priority || "—"} />
+                <Detail
+                  label="Receiving date"
+                  value={moment(receipt.receiving_date).format("DD MMM YYYY")}
+                />
+                <Detail
+                  label="Expected return"
+                  value={
+                    receipt.expected_return
+                      ? moment(receipt.expected_return).format("DD MMM YYYY")
+                      : "—"
+                  }
+                />
+              </div>
+            </DetailSection>
+            <DetailSection title="Cost, Repair & Tracking">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                <Detail label="Repair status" value={receiptStatus(receipt)} />
+                <Detail
+                  label="Charges"
+                  value={`Rs. ${Number(activeTask?.charges ?? 0).toLocaleString()}`}
+                />
+                <Detail label="China status" value={chinaStatus(receipt)} />
+                {receipt.send_to_china && (
+                  <Detail
+                    label="Sent to China"
+                    value={
+                      receipt.sent_to_china_at
+                        ? moment(receipt.sent_to_china_at).format("DD MMM YYYY")
+                        : "Awaiting dispatch"
+                    }
+                  />
+                )}
+                {receipt.received_from_china_at && (
+                  <Detail
+                    label="Received from China"
+                    value={moment(receipt.received_from_china_at).format(
+                      "DD MMM YYYY",
+                    )}
+                  />
+                )}
+                {receipt.is_trade_in && (
+                  <Detail
+                    label="Trade-in"
+                    value={
+                      receipt.trade_in_id
+                        ? "Trade part sent"
+                        : "Pending trade part"
+                    }
+                  />
+                )}
+              </div>
+            </DetailSection>
+            {(tradeDetails || receipt.trade_in_id) && (
+              <DetailSection title="Trade Part Sent to Customer">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  <Detail
+                    label="Part"
+                    value={`${tradeDetails?.part_name || receipt.trade_in_part_name || "—"}${tradeDetails?.part_model || receipt.trade_in_part_model ? ` · ${tradeDetails?.part_model || receipt.trade_in_part_model}` : ""}`}
+                  />
+                  <Detail
+                    label="Quantity"
+                    value={String(
+                      tradeDetails?.part_qty ??
+                        receipt.trade_in_part_qty ??
+                        "—",
+                    )}
+                  />
+                  <Detail
+                    label="Part serial"
+                    value={
+                      tradeDetails?.part_serial ||
+                      receipt.trade_in_part_serial ||
+                      "—"
+                    }
+                  />
+                  <Detail
+                    label="Warranty"
+                    value={formatWarranty(
+                      tradeDetails?.warranty_status ||
+                        receipt.trade_in_warranty_status ||
+                        "unknown",
+                    )}
+                  />
+                  <Detail
+                    label="Delivered by"
+                    value={
+                      tradeDetails?.delivered_by ||
+                      receipt.trade_in_delivered_by ||
+                      "—"
+                    }
+                  />
+                  <Detail
+                    label="Delivery date"
+                    value={
+                      tradeDetails?.delivery_date ||
+                      receipt.trade_in_delivery_date
+                        ? moment(
+                            tradeDetails?.delivery_date ||
+                              receipt.trade_in_delivery_date,
+                          ).format("DD MMM YYYY")
+                        : "—"
+                    }
+                  />
+                </div>
+                {(tradeDetails?.remarks || receipt.trade_in_remarks) && (
+                  <div className="mt-3">
+                    <Detail
+                      label="Remarks"
+                      value={
+                        tradeDetails?.remarks || receipt.trade_in_remarks || "—"
+                      }
+                    />
+                  </div>
+                )}
+              </DetailSection>
+            )}
 
-              {/* Previous flat detail layout retained temporarily for reference.
+            {/* Previous flat detail layout retained temporarily for reference.
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <Detail label="Customer" value={receipt.customer_name} />
                 <Detail label="City" value={receipt.customer_location || "—"} />
@@ -1807,9 +2216,11 @@ function ChinaPartDialog({
         `/${userID}/parts-receiving/${receipt.id}/china`,
         {
           send_to_china: sendToChina,
-          sent_to_china_at: sendToChina ? sentAt?.toISOString() ?? null : null,
+          sent_to_china_at: sendToChina
+            ? (sentAt?.toISOString() ?? null)
+            : null,
           received_from_china_at: sendToChina
-            ? receivedAt?.toISOString() ?? null
+            ? (receivedAt?.toISOString() ?? null)
             : null,
         },
         { office: `/${officeState.value.data || "lahore"}` },
@@ -1818,7 +2229,9 @@ function ChinaPartDialog({
       await onSaved();
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Unable to update China tracking");
+      toast.error(
+        error?.response?.data?.message || "Unable to update China tracking",
+      );
     } finally {
       setSaving(false);
     }
@@ -1862,7 +2275,8 @@ function ChinaPartDialog({
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Current status: {chinaStatus({
+              Current status:{" "}
+              {chinaStatus({
                 ...receipt,
                 send_to_china: sendToChina,
                 sent_to_china_at: sentAt?.toISOString() ?? null,
@@ -1870,10 +2284,18 @@ function ChinaPartDialog({
               })}
             </p>
             <div className="flex justify-end gap-2 border-t pt-3">
-              <Button variant="outline" className="h-9 rounded-lg" onClick={() => onOpenChange(false)}>
+              <Button
+                variant="outline"
+                className="h-9 rounded-lg"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button className="h-9 rounded-lg" disabled={saving} onClick={save}>
+              <Button
+                className="h-9 rounded-lg"
+                disabled={saving}
+                onClick={save}
+              >
                 {saving && <Spinner />} Save Tracking
               </Button>
             </div>
@@ -1922,7 +2344,9 @@ function TradeInDialog({
           },
         );
       } catch (error: any) {
-        toast.error(error?.response?.data?.message || "Unable to load trade part");
+        toast.error(
+          error?.response?.data?.message || "Unable to load trade part",
+        );
       }
     }
     if (userID) load();
@@ -1964,7 +2388,9 @@ function TradeInDialog({
       await onSaved();
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Unable to save trade part");
+      toast.error(
+        error?.response?.data?.message || "Unable to save trade part",
+      );
     } finally {
       setSaving(false);
     }
@@ -1979,9 +2405,12 @@ function TradeInDialog({
               <PackageCheck className="size-4" />
             </span>
             <div>
-              <DialogTitle className="text-sm font-semibold">Trade Part</DialogTitle>
+              <DialogTitle className="text-sm font-semibold">
+                Trade Part
+              </DialogTitle>
               <DialogDescription className="text-xs">
-                Send a replacement part to {receipt.customer_name}. Machine and customer remain linked to receipt #{receipt.id}.
+                Send a replacement part to {receipt.customer_name}. Machine and
+                customer remain linked to receipt #{receipt.id}.
               </DialogDescription>
             </div>
           </div>
@@ -1989,23 +2418,110 @@ function TradeInDialog({
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
           <div className="space-y-4 p-3.5">
             <div className="grid gap-3 rounded-lg border bg-muted/20 p-3 text-sm sm:grid-cols-2">
-              <div><p className="text-xs text-muted-foreground">Customer</p><p>{receipt.customer_name}</p></div>
-              <div><p className="text-xs text-muted-foreground">Machine</p><p>{receipt.linked_sale_serial || receipt.manual_machine_serial || "Manual machine"}</p></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Customer</p>
+                <p>{receipt.customer_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Machine</p>
+                <p>
+                  {receipt.linked_sale_serial ||
+                    receipt.manual_machine_serial ||
+                    "Manual machine"}
+                </p>
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Part name / description"><Input value={trade.part_name ?? ""} onChange={(event) => update("part_name", event.target.value)} /></Field>
-              <Field label="Part no. / model"><Input value={trade.part_model ?? ""} onChange={(event) => update("part_model", event.target.value)} /></Field>
-              <Field label="Quantity"><Input type="number" min="1" value={trade.part_qty ?? 1} onChange={(event) => update("part_qty", Number(event.target.value))} /></Field>
-              <Field label="Serial number" required={false}><Input value={trade.part_serial ?? ""} onChange={(event) => update("part_serial", event.target.value)} /></Field>
-              <Field label="Warranty status"><FormSelect value={trade.warranty_status ?? "unknown"} onValueChange={(value) => update("warranty_status", value)} options={[{ value: "unknown", label: "Unknown" }, { value: "in_warranty", label: "In warranty" }, { value: "out_of_warranty", label: "Out of warranty" }]} /></Field>
-              <Field label="Delivered by"><FormSelect value={trade.delivered_by ?? ""} onValueChange={(value) => update("delivered_by", value)} placeholder="Select delivery method" options={[{ value: "Self Handover", label: "Self Handover" }, { value: "Courier", label: "Courier" }, { value: "Via Engineer", label: "Via Engineer" }]} /></Field>
-              <Field label="Delivery date"><AppCalendar date={dateValue(trade.delivery_date ?? null)} onChange={(value) => update("delivery_date", value?.toISOString() ?? "")} /></Field>
-              <Field label="Photos / attachments" required={false}><Input type="file" accept="image/*,.pdf" onChange={selectImage} /></Field>
-              <Field label="Remarks" required={false}><Textarea value={trade.remarks ?? ""} onChange={(event) => update("remarks", event.target.value)} /></Field>
+              <Field label="Part name / description">
+                <Input
+                  value={trade.part_name ?? ""}
+                  onChange={(event) => update("part_name", event.target.value)}
+                />
+              </Field>
+              <Field label="Part no. / model">
+                <Input
+                  value={trade.part_model ?? ""}
+                  onChange={(event) => update("part_model", event.target.value)}
+                />
+              </Field>
+              <Field label="Quantity">
+                <Input
+                  type="number"
+                  min="1"
+                  value={trade.part_qty ?? 1}
+                  onChange={(event) =>
+                    update("part_qty", Number(event.target.value))
+                  }
+                />
+              </Field>
+              <Field label="Serial number" required={false}>
+                <Input
+                  value={trade.part_serial ?? ""}
+                  onChange={(event) =>
+                    update("part_serial", event.target.value)
+                  }
+                />
+              </Field>
+              <Field label="Warranty status">
+                <FormSelect
+                  value={trade.warranty_status ?? "unknown"}
+                  onValueChange={(value) => update("warranty_status", value)}
+                  options={[
+                    { value: "unknown", label: "Unknown" },
+                    { value: "in_warranty", label: "In warranty" },
+                    { value: "out_of_warranty", label: "Out of warranty" },
+                  ]}
+                />
+              </Field>
+              <Field label="Delivered by">
+                <FormSelect
+                  value={trade.delivered_by ?? ""}
+                  onValueChange={(value) => update("delivered_by", value)}
+                  placeholder="Select delivery method"
+                  options={[
+                    { value: "Self Handover", label: "Self Handover" },
+                    { value: "Courier", label: "Courier" },
+                    { value: "Via Engineer", label: "Via Engineer" },
+                  ]}
+                />
+              </Field>
+              <Field label="Delivery date">
+                <AppCalendar
+                  date={dateValue(trade.delivery_date ?? null)}
+                  onChange={(value) =>
+                    update("delivery_date", value?.toISOString() ?? "")
+                  }
+                />
+              </Field>
+              <Field label="Photos / attachments" required={false}>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={selectImage}
+                />
+              </Field>
+              <Field label="Remarks" required={false}>
+                <Textarea
+                  value={trade.remarks ?? ""}
+                  onChange={(event) => update("remarks", event.target.value)}
+                />
+              </Field>
             </div>
             <div className="flex justify-end gap-2 border-t pt-3">
-              <Button variant="outline" className="h-9 rounded-lg" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button className="h-9 rounded-lg" disabled={saving} onClick={save}>{saving && <Spinner />} Save Trade Part</Button>
+              <Button
+                variant="outline"
+                className="h-9 rounded-lg"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="h-9 rounded-lg"
+                disabled={saving}
+                onClick={save}
+              >
+                {saving && <Spinner />} Save Trade Part
+              </Button>
             </div>
           </div>
         </ScrollArea>
@@ -2180,7 +2696,9 @@ function Detail({ label, value }: { label: string; value: string }) {
       <p className="text-[9px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
         {label}
       </p>
-      <p className="mt-0.5 break-words text-xs font-semibold leading-4 text-foreground">{value || "—"}</p>
+      <p className="mt-0.5 break-words text-xs font-semibold leading-4 text-foreground">
+        {value || "—"}
+      </p>
     </div>
   );
 }

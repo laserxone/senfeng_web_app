@@ -1,4 +1,6 @@
 import pool from "@/config/db";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextResponse } from "next/server";
 
 type Office = "lahore" | "karachi";
@@ -324,7 +326,17 @@ export function createPartsReceivingHandlers(office: Office) {
           values,
         );
 
-        const receipt = result.rows[0];
+        const receiptNumberResult = await client.query(
+          `UPDATE parts_receiving
+           SET receipt_number = TO_CHAR(
+             created_at AT TIME ZONE 'Asia/Karachi',
+             'YYYYMM'
+           ) || id::TEXT
+           WHERE id = $1
+           RETURNING *`,
+          [result.rows[0].id],
+        );
+        const receipt = receiptNumberResult.rows[0];
         if (sendToChina) {
           await client.query(
             `INSERT INTO china_parts (
@@ -353,6 +365,14 @@ export function createPartsReceivingHandlers(office: Office) {
         );
 
         await client.query("COMMIT");
+
+        void sendNotificationToOwner(
+          `Parts receipt #${receipt.receipt_number}: ${data.part_name}${data.part_model ? ` (${data.part_model})` : ""} received. Lab task #${taskResult.rows[0].id} is assigned to user #${assignedTo}.`,
+          `parts-receiving?pr=${receipt.id}`,
+          office,
+          NOTIFICATION_TYPES.parts_received.category,
+          NOTIFICATION_TYPES.parts_received.title,
+        );
 
         return NextResponse.json(
           { ...receipt, lab_task: taskResult.rows[0] },

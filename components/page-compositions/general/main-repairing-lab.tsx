@@ -770,11 +770,11 @@ function RepairTaskDetailSheet({
                   label="Received"
                   value={formatRepairDate(task.receiving_date || "")}
                 />
-              <RepairDetail
-                icon={UserRound}
-                label="Warranty"
-                value={task.received_part_warranty_status || "Unknown"}
-              />
+                <RepairDetail
+                  icon={UserRound}
+                  label="Warranty"
+                  value={task.received_part_warranty_status || "Unknown"}
+                />
               </div>
               {task.received_part_problem && (
                 <p className="mt-3 text-sm text-muted-foreground">

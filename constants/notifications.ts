@@ -109,6 +109,10 @@ export const NOTIFICATION_TYPES = {
     title: "Repairing Task Updated",
     category: NOTIFICATION_CATEGORIES.ENGINEERING,
   },
+  parts_received: {
+    title: "Part Received",
+    category: NOTIFICATION_CATEGORIES.ENGINEERING,
+  },
 
   // Dynamic category notifications
   customer_added: {

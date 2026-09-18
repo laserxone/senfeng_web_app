@@ -312,6 +312,7 @@ export type Payment = {
 
 export type PartsReceiving = {
   id: number;
+  receipt_number: string;
   customer_id: number;
   sale_id: number | null;
 
