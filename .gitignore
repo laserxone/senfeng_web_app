@@ -41,6 +41,7 @@ next-env.d.ts
 
 /scripts/listApiRoutes.js
 /scripts/listAxiosRoutes.js
+/scripts/revoke-all-firebase-sessions.mjs
 
 
 certificates

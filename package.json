@@ -10,7 +10,8 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "firebase:logout-all": "node --env-file=.env scripts/revoke-all-firebase-sessions.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

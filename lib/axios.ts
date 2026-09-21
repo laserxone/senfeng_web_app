@@ -1,6 +1,7 @@
 import axiosInstance from "axios";
 import { BASE_URL } from "@/constants/data";
 import { toast } from "sonner";
+import { auth } from "@/config/firebase";
 
 declare module "axios" {
   interface AxiosRequestConfig {
@@ -30,7 +31,7 @@ const axios = axiosInstance.create({
   baseURL: BASE_URL,
 });
 
-axios.interceptors.request.use((config) => {
+axios.interceptors.request.use(async (config) => {
   const requestUrl = config.url || "";
 
   const isUserDetailRequest =
@@ -44,6 +45,11 @@ axios.interceptors.request.use((config) => {
   config.headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
   config.headers["Pragma"] = "no-cache";
   config.headers["Expires"] = "0";
+
+  const firebaseUser = auth.currentUser;
+  if (firebaseUser && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${await firebaseUser.getIdToken()}`;
+  }
 
   if (config.cancelKey) {
     pendingRequests.get(config.cancelKey)?.abort();
