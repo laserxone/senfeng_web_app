@@ -1,14 +1,5 @@
-import axios from "@/lib/axios";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Package, Trash2 } from "lucide-react";
-import moment from "moment";
-import { useContext, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
-import ChequeCredit from "./cheque-credit";
+import { InventorySearch } from "@/components/shared/search/inventory-select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -28,9 +19,27 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { ChequeProp } from "@/lib/types";
+import axios from "@/lib/axios";
 import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { ChequeProp, StockProps } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Package } from "lucide-react";
+import moment from "moment";
+import { useContext, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
+import ChequeCredit from "./cheque-credit";
+
+type NewPart = {
+  inventory_id: number | null;
+  name: string;
+  model: string;
+  power: string;
+  serial_no: string;
+};
 
 const formSchema = z.object({
   serial_no: z.string().min(1, { message: "Name is required." }),
@@ -58,11 +67,12 @@ const AddParts = ({
   const [value, setValue] = useState<string>();
   const [total, setTotal] = useState<ChequeProp[]>([]);
   const { state: OfficeState } = useContext(OfficeContext)!;
-  const [newParts, setNewParts] = useState([
-    { name: "", model: "", power: "", serial_no: "" },
+  const [newParts, setNewParts] = useState<NewPart[]>([
+    { inventory_id: null, name: "", model: "", power: "", serial_no: "" },
   ]);
   const [errors, setErrors] = useState<any>({});
   const [open, setOpen] = useState(false);
+  const [stock, setStock] = useState<StockProps[]>([])
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -87,7 +97,8 @@ const AddParts = ({
       let partErrors: any = {};
 
       Object.entries(part).forEach(([key, value]) => {
-        if (!value.trim()) {
+        if (key === "inventory_id") return;
+        if (!String(value)?.trim()) {
           partErrors[key] =
             `${key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")} is required`;
         }
@@ -139,7 +150,13 @@ const AddParts = ({
         price: values.totalPrice,
         contract_date: values.contractDate,
         cnic: values.cnic,
-        parts_information: newParts,
+        parts_information: newParts.map((part) => ({
+          inventory_id: part.inventory_id ?? null,
+          name: part.name,
+          model: part.model,
+          power: part.power,
+          serial_no: part.serial_no,
+        })),
       })
       .then(async (response) => {
         if (response.data?.sale_id) {
@@ -148,11 +165,10 @@ const AddParts = ({
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
-                const name = `${
-                  OfficeState.value.data
-                }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                  .valueOf()
-                  .toString()}_${idx}.png`;
+                const name = `${OfficeState.value.data
+                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                    .valueOf()
+                    .toString()}_${idx}.png`;
                 const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
@@ -179,7 +195,9 @@ const AddParts = ({
   function handleClose(val: boolean) {
     form.reset();
     setOpen(false);
-    setNewParts([{ name: "", model: "", power: "", serial_no: "" }]);
+    setNewParts([
+      { inventory_id: null, name: "", model: "", power: "", serial_no: "" },
+    ]);
   }
 
   function generatePlaceholder(key: string) {
@@ -197,6 +215,14 @@ const AddParts = ({
     }
   }
 
+  useEffect(() => {
+    if (!user_id || !open) return;
+
+    axios
+      .get(`/${user_id}/available-parts`)
+      .then((response: { data: StockProps[] }) => setStock(response.data));
+  }, [user_id, open]);
+
   return (
     <>
       <Button
@@ -210,9 +236,8 @@ const AddParts = ({
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
-          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${
-            cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
-          }`}
+          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
+            }`}
         >
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -233,9 +258,8 @@ const AddParts = ({
           <div className="flex w-full flex-1">
             <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
               <div
-                className={`flex gap-6 ${
-                  cheque ? "flex-row" : "flex-col"
-                } w-full`}
+                className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
+                  } w-full`}
               >
                 <div
                   className={`${cheque ? "w-1/2" : "w-full"} space-y-2 p-3.5`}
@@ -288,36 +312,62 @@ const AddParts = ({
                             </Button> */}
                             </div>
 
-                            {Object.entries(item).map(([key, val]) => (
-                              <Field key={key}>
-                                <FieldLabel>
-                                  {key.charAt(0).toUpperCase() +
-                                    key.slice(1).replace("_", " ")}
-                                </FieldLabel>
+                            <Field>
+                              <FieldLabel>Select Inventory Part</FieldLabel>
+                              <InventorySearch
+                              showQty
+                                data={stock}
+                                value={item.inventory_id ?? null}
+                                onReturn={(part) => {
+                                  setNewParts((prev) => {
+                                    const updated = [...prev];
+                                    updated[index] = {
+                                      inventory_id:
+                                        typeof part.id === "number" ? part.id : null,
+                                      name: part.name ?? "",
+                                      model: part.model ?? "",
+                                      power: part.power ?? "",
+                                      serial_no: part.serial_no ?? "",
+                                    };
+                                    return updated;
+                                  });
+                                }} />
 
-                                <Input
-                                  value={val}
-                                  onChange={(e) => {
-                                    const value = e.target.value;
-                                    setNewParts((prev) => {
-                                      const updated = [...prev];
-                                      updated[index] = {
-                                        ...updated[index],
-                                        [key]: value.toUpperCase(),
-                                      };
-                                      return updated;
-                                    });
-                                  }}
-                                  placeholder={`Example: ${generatePlaceholder(key)}`}
-                                />
+                            </Field>
 
-                                {errors[index]?.[key] && (
-                                  <FieldError
-                                    errors={[{ message: errors[index][key] }]}
+                            {Object.entries(item)
+                              .filter(([key]) => key !== "inventory_id")
+                              .map(([key, val]) => (
+                                <Field key={key}>
+                                  <FieldLabel>
+                                    {key.charAt(0).toUpperCase() +
+                                      key.slice(1).replace("_", " ")}
+                                  </FieldLabel>
+
+                                  <Input
+                                    value={val ?? ""}
+                                    disabled={item.inventory_id !== null}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      setNewParts((prev) => {
+                                        const updated = [...prev];
+                                        updated[index] = {
+                                          ...updated[index],
+                                          [key]: value.toUpperCase(),
+                                        };
+                                        return updated;
+                                      });
+                                    }}
+                                    placeholder={`Example: ${generatePlaceholder(key)}`}
                                   />
-                                )}
-                              </Field>
-                            ))}
+
+                                  {errors[index]?.[key] && (
+                                    <FieldError
+                                      errors={[{ message: errors[index][key] }]}
+                                    />
+                                  )}
+                                </Field>
+                              ))}
                           </div>
                         ))}
                       </div>
@@ -327,7 +377,7 @@ const AddParts = ({
                         e.preventDefault();
                         setNewParts([
                           ...newParts,
-                          { name: "", model: "", power: "", serial_no: "" },
+                          { inventory_id: null, name: "", model: "", power: "", serial_no: "" },
                         ]);
                       }}
                       type="button"

@@ -125,9 +125,6 @@ export default function RenderGiftApprovals() {
                 <DialogTitle className="text-sm font-semibold text-foreground">
                   Gift Application Details
                 </DialogTitle>
-                <DialogDescription className="truncate text-xs text-muted-foreground">
-                  {selected?.reason}
-                </DialogDescription>
               </div>
             </div>
           </DialogHeader>
@@ -171,13 +168,18 @@ export default function RenderGiftApprovals() {
                   {action === "approved" ? "Approve" : "Reject"} Gift
                   Application
                 </DialogTitle>
-                <DialogDescription className="truncate text-xs text-muted-foreground">
-                  {selected?.reason}
-                </DialogDescription>
               </div>
             </div>
           </DialogHeader>
           <div className="space-y-3 p-3.5">
+            <Field>
+              <FieldLabel className="text-[11px] font-semibold uppercase text-muted-foreground">
+                Reason
+              </FieldLabel>
+              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
+                {selected?.reason || "No reason provided."}
+              </p>
+            </Field>
             <Field>
               <FieldLabel className="text-[11px] font-semibold uppercase text-muted-foreground">
                 Comments {action === "rejected" ? "(required)" : "(optional)"}

@@ -4,11 +4,13 @@ import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
+import type { PoolClient } from "pg";
 
 export const createMachineHandler = (office: "lahore" | "karachi") =>
   async function POST(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const inventory = searchParams.get("inventory");
+    let client: PoolClient | undefined;
 
     try {
       const data = await req.json();
@@ -20,6 +22,9 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
         );
       }
 
+      client = await pool.connect();
+      await client.query("BEGIN");
+
       const fields = Object.keys(data);
       const values = Object.values(data);
       const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
@@ -30,9 +35,9 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
         RETURNING *
     `;
 
-      const result = await pool.query(query, values);
+      const result = await client.query(query, values);
       if (data?.customer_id) {
-        await pool.query(`UPDATE customer SET member = TRUE WHERE id = $1`, [
+        await client.query(`UPDATE customer SET member = TRUE WHERE id = $1`, [
           data.customer_id,
         ]);
       }
@@ -51,7 +56,7 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
 
       if (inventory) {
         const inventoryId = Number(inventory);
-        await pool.query(
+        await client.query(
           `UPDATE order_items 
                 SET 
                 booked = TRUE, 
@@ -70,10 +75,36 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
         );
       }
 
+      const partInventoryIds = Array.isArray(data.parts_information)
+        ? data.parts_information
+            .map((part: { inventory_id?: unknown }) =>
+              Number(part.inventory_id),
+            )
+            .filter((id: number) => Number.isInteger(id) && id > 0)
+        : [];
+
+      if (partInventoryIds.length > 0) {
+        const inventoryTable =
+          office === "karachi" ? "inventory_karachi" : "inventory";
+        for (const inventoryId of partInventoryIds) {
+          const inventoryResult = await client.query(
+            `UPDATE ${inventoryTable}
+             SET qty = qty - 1
+             WHERE id = $1 AND qty > 0
+             RETURNING id`,
+            [inventoryId],
+          );
+
+          if (inventoryResult.rowCount !== 1) {
+            throw new Error(`Inventory item ${inventoryId} is out of stock`);
+          }
+        }
+      }
+
       const machine = result.rows?.[0] ?? null;
 
       if (machine) {
-        await pool.query(
+        await client.query(
           `INSERT INTO machine_review_history (sale_id, action, actor_id)
          VALUES ($1, 'submitted', $2)`,
           [machine.id, data.sell_by || null],
@@ -90,16 +121,23 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
           "Machine needs approval",
         );
       }
+      await client.query("COMMIT");
       return NextResponse.json(
         { message: "Inserted successfully", sale_id: result.rows[0].id },
         { status: 201 },
       );
     } catch (error) {
+      await client?.query("ROLLBACK");
       console.error("Error inserting data: ", error);
       return NextResponse.json(
-        { message: "Error adding customer" },
+        {
+          message:
+            error instanceof Error ? error.message : "Error adding customer",
+        },
         { status: 500 },
       );
+    } finally {
+      client?.release();
     }
   };
 

@@ -10,6 +10,13 @@ export async function POST(
   const { uid } = await params;
 
   try {
+    if (!Array.isArray(items) || items.some((item) => !item.inventory_id)) {
+      return NextResponse.json(
+        { message: "Every inward item must be selected from inventory" },
+        { status: 400 },
+      );
+    }
+
     // Insert gatepass
     const gatepassid = await pool.query(
       `INSERT INTO inward_gatepass (from_by, vehicle_no, driver_name, manager, received_by, user_id, items)
@@ -28,17 +35,10 @@ export async function POST(
     // Update inventory
     if (items && items.length > 0) {
       for (const item of items) {
-        if (item.inventory_id) {
-          await pool.query(
-            `UPDATE inventory SET qty = qty + $1 WHERE id = $2`,
-            [item.qty, item.inventory_id],
-          );
-        } else {
-          await pool.query(
-            `INSERT INTO inventory (name, qty, unit, remarks) VALUES ($1, $2, $3, $4)`,
-            [item.name, item.qty, item.unit, item.remarks],
-          );
-        }
+        await pool.query(
+          `UPDATE inventory SET qty = qty + $1 WHERE id = $2`,
+          [item.qty, item.inventory_id],
+        );
       }
     }
 

@@ -10,18 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { StockProps } from "@/lib/types";
 import { FileText, PackageCheck, Plus, Trash2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 type EmptyType = {
   name: string;
   qty: string;
   unit?: string;
-  isExisting: boolean;
   inventory_id: null | number;
   remarks: string;
 };
@@ -30,7 +29,6 @@ const emptyItem: EmptyType = {
   qty: "",
   unit: "",
   remarks: "",
-  isExisting: true,
   inventory_id: null,
 };
 
@@ -53,6 +51,10 @@ const InwardModal = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (items.some((item) => !item.inventory_id)) {
+      toast.error("Select an inventory item for every row.");
+      return;
+    }
     setLoading(true);
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -119,23 +121,9 @@ const InwardModal = ({
     field: string,
     value: string | boolean | number,
   ) => {
-    if (field === "isExisting") {
-      const copy = [...items];
-      copy[index] = {
-        ...copy[index],
-        [field as string]: value,
-        name: "",
-        qty: "",
-        remarks: "",
-        unit: "",
-        inventory_id: null,
-      };
-      setItems(copy);
-    } else {
-      const copy = [...items];
-      copy[index] = { ...copy[index], [field]: value };
-      setItems(copy);
-    }
+    const copy = [...items];
+    copy[index] = { ...copy[index], [field]: value };
+    setItems(copy);
   };
 
   const addItem = () => setItems([...items, emptyItem]);
@@ -277,9 +265,7 @@ const InwardModal = ({
                             Item #{index + 1}
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            {item.isExisting
-                              ? "Select from stock inventory"
-                              : "Enter a new item manually"}
+                            Select an existing inventory item to increase stock.
                           </p>
                         </div>
                       </div>
@@ -295,58 +281,26 @@ const InwardModal = ({
                       </Button>
                     </div>
 
-                    <div className="mb-3 flex items-center justify-between rounded-md border bg-background px-3 py-2">
-                      <div>
-                        <Label className="text-xs font-bold">
-                          {item.isExisting ? "Existing Item" : "New Item"}
-                        </Label>
-                        <p className="text-[11px] text-muted-foreground">
-                          Toggle source for this item row
-                        </p>
-                      </div>
-                      <Switch
-                        checked={item.isExisting}
-                        onCheckedChange={(val) => {
-                          handleItemChange(index, "isExisting", val);
-                        }}
-                      />
-                    </div>
-
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                      {item.isExisting ? (
-                        <div className="xl:col-span-2">
-                          <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                            Inventory
-                          </Label>
-                          <InventorySearch
-                            value={item.inventory_id}
-                            data={stock}
-                            onReturn={(val) => {
-                              const copy = [...items];
-                              copy[index] = {
-                                ...copy[index],
-                                inventory_id: Number(val.id),
-                                name: val.name ?? "",
-                                unit: val.unit,
-                              };
-                              setItems(copy);
-                            }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="xl:col-span-2">
-                          <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                            Name
-                          </Label>
-                          <Input
-                            className="h-8 rounded-md text-sm"
-                            value={item.name}
-                            onChange={(e) =>
-                              handleItemChange(index, "name", e.target.value)
-                            }
-                          />
-                        </div>
-                      )}
+                      <div className="xl:col-span-2">
+                        <Label className="mb-1 block text-xs font-semibold text-muted-foreground">
+                          Inventory
+                        </Label>
+                        <InventorySearch
+                          value={item.inventory_id}
+                          data={stock}
+                          onReturn={(val) => {
+                            const copy = [...items];
+                            copy[index] = {
+                              ...copy[index],
+                              inventory_id: Number(val.id),
+                              name: val.name ?? "",
+                              unit: val.unit,
+                            };
+                            setItems(copy);
+                          }}
+                        />
+                      </div>
 
                       <div>
                         <Label className="mb-1 block text-xs font-semibold text-muted-foreground">

@@ -986,6 +986,9 @@ export type StockProps = {
   unit?: string;
   buying?: string;
   modified?: boolean;
+  model ?: string
+  power ?: string
+  serial_no ?: string
 };
 
 export type InvoiceItem = {

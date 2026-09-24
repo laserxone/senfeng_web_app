@@ -7,6 +7,45 @@ import admin from "@/lib/firebaseAdmin";
 import { generateLog } from "@/lib/generateLog";
 import { deleteObject, ref } from "firebase/storage";
 import { NextRequest, NextResponse } from "next/server";
+import type { PoolClient } from "pg";
+
+type Office = "lahore" | "karachi";
+
+function getPartInventoryIds(partsInformation: unknown) {
+  let parts = partsInformation;
+
+  if (typeof parts === "string") {
+    try {
+      parts = JSON.parse(parts);
+    } catch {
+      return [];
+    }
+  }
+
+  if (!Array.isArray(parts)) return [];
+
+  return parts
+    .map((part) => Number(part?.inventory_id))
+    .filter((inventoryId) => Number.isInteger(inventoryId) && inventoryId > 0);
+}
+
+async function restorePartsInventory(
+  client: PoolClient,
+  office: Office,
+  type: unknown,
+  partsInformation: unknown,
+) {
+  if (String(type).toLowerCase() !== "parts") return;
+
+  const inventoryTable =
+    office === "karachi" ? "inventory_karachi" : "inventory";
+  for (const inventoryId of getPartInventoryIds(partsInformation)) {
+    await client.query(
+      `UPDATE ${inventoryTable} SET qty = qty + 1 WHERE id = $1`,
+      [inventoryId],
+    );
+  }
+}
 
 export async function GET(
   req: NextRequest,
@@ -503,7 +542,8 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
+export async function deleteMachine(
+  office: Office,
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -517,6 +557,37 @@ export async function DELETE(
 
   try {
     await client.query("BEGIN");
+
+    const saleResult = await client.query(
+      `SELECT customer_id, type, parts_information, contract_images_png, other_images_png, machine_nameplate_images, final_handover_images, installation_report, handshake_images
+       FROM sale
+       WHERE id = $1
+       FOR UPDATE`,
+      [id],
+    );
+
+    if (saleResult.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return NextResponse.json(
+        { message: "Machine not found" },
+        { status: 404 },
+      );
+    }
+
+    const saleRow = saleResult.rows[0];
+    const cancelledResult = await client.query(
+      `SELECT id FROM cancelled_machine WHERE machine_id = $1 LIMIT 1`,
+      [id],
+    );
+
+    if (cancelledResult.rowCount === 0) {
+      await restorePartsInventory(
+        client,
+        office,
+        saleRow.type,
+        saleRow.parts_information,
+      );
+    }
 
     await client.query(
       `UPDATE order_items
@@ -553,15 +624,9 @@ export async function DELETE(
 
     await client.query(`DELETE FROM payment WHERE machine_id = $1`, [id]);
 
-    const saleResult = await client.query(
-      `SELECT customer_id, contract_images_png, other_images_png, machine_nameplate_images, final_handover_images, installation_report, handshake_images FROM sale WHERE id = $1`,
-      [id],
-    );
-
     let customer_id = null;
 
     if (saleResult.rows.length > 0) {
-      const saleRow = saleResult.rows[0];
       customer_id = saleRow?.customer_id;
 
       const imageFields = [
@@ -628,4 +693,11 @@ export async function DELETE(
   } finally {
     client.release();
   }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  return deleteMachine("lahore", req, context);
 }

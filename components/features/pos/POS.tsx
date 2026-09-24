@@ -34,6 +34,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import AddItemDialog from "./add-item-dialog";
+import { AddInventoryDialog } from "./add-inventory-dialog";
 import AddPOSPayment from "./add-pos-payment";
 import DeleteInvoice from "./delete-invoice";
 import EngineerModal from "./engineer-modal";
@@ -1225,6 +1226,8 @@ export default function POS() {
                 description="Record stock received"
                 tone="inward"
               />
+
+              <AddInventoryDialog onSaved={fetchData} />
 
               <Link href={`/${base_route}/parts-receiving`}>
                 <PosActionButton
