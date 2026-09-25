@@ -386,7 +386,7 @@ export default function Page() {
         onClose={setFilterVisible}
         onReturn={async (val) => {
           setLoading(true);
-          await fetchData(val.start, val.end, userID);
+          await fetchData(val.start, val.end, val.user);
         }}
       />
     </div>
