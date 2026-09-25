@@ -379,12 +379,41 @@ const CreateOrderDialog = ({
                                 : "Name"}{" "}
                             <RequiredStar />
                           </Label>
-                          <Input
-                            value={item[field]}
-                            onChange={(event) =>
-                              handleItemChange(index, field, event.target.value)
-                            }
-                          />
+                          {field === "name" || field === "machine_model" ? (
+                            <Select
+                              value={item[field]}
+                              onValueChange={(value) =>
+                                handleItemChange(index, field, value)
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue
+                                  placeholder={`Select ${field === "name" ? "part" : "model"}`}
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(field === "name"
+                                  ? ["Laser Source", "Laser Head", "Chiller"]
+                                  : ["Raycus", "Dehaha"]
+                                ).map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              value={item[field]}
+                              onChange={(event) =>
+                                handleItemChange(
+                                  index,
+                                  field,
+                                  event.target.value,
+                                )
+                              }
+                            />
+                          )}
                           {errors[index]?.[field] && (
                             <p className="mt-1 text-sm text-red-600">
                               {errors[index][field]}

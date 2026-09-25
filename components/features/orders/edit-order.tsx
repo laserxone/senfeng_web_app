@@ -284,12 +284,25 @@ const EditOrderDialog = ({
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>Name</Label>
-                          <Input
+                          <Select
                             value={items.name}
-                            onChange={(e) =>
-                              handleItemChange("name", e.target.value)
+                            onValueChange={(value) =>
+                              handleItemChange("name", value)
                             }
-                          />
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select part" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["Laser Source", "Laser Head", "Chiller"].map(
+                                (option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ),
+                              )}
+                            </SelectContent>
+                          </Select>
                           {errors?.name && (
                             <p className="mt-1 text-sm text-red-600">
                               {errors.name}
@@ -317,33 +330,32 @@ const EditOrderDialog = ({
                           )}
                         </div>
                         <div>
-                          <Label>Price</Label>
-                          <Input
-                            type="number"
-                            value={items.price}
-                            onChange={(e) => {
-                              if (!isNaN(Number(e.target.value))) {
-                                handleItemChange(
-                                  "price",
-                                  parseInt(e.target.value),
-                                );
-                              }
-                            }}
-                          />
+                          <Label>Model</Label>
+                          <Select
+                            value={items.machine_model}
+                            onValueChange={(value) =>
+                              handleItemChange("machine_model", value)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select model" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["Raycus", "Dehaha"].map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
-                          <Label>Buying Price</Label>
+                          <Label>Power</Label>
                           <Input
-                            type="number"
-                            value={items.buying_price}
-                            onChange={(e) => {
-                              if (!isNaN(Number(e.target.value))) {
-                                handleItemChange(
-                                  "buying_price",
-                                  parseInt(e.target.value),
-                                );
-                              }
-                            }}
+                            value={items.machine_power}
+                            onChange={(e) =>
+                              handleItemChange("machine_power", e.target.value)
+                            }
                           />
                         </div>
                         <div>

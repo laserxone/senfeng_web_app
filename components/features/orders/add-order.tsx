@@ -441,12 +441,25 @@ const AddOrderDialog = ({
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <Label>Name</Label>
-                            <Input
+                            <Select
                               value={item.name}
-                              onChange={(e) =>
-                                handleItemChange(index, "name", e.target.value)
+                              onValueChange={(value) =>
+                                handleItemChange(index, "name", value)
                               }
-                            />
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select part" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {["Laser Source", "Laser Head", "Chiller"].map(
+                                  (option) => (
+                                    <SelectItem key={option} value={option}>
+                                      {option}
+                                    </SelectItem>
+                                  ),
+                                )}
+                              </SelectContent>
+                            </Select>
                             {errors[index]?.name && (
                               <p className="mt-1 text-sm text-red-600">
                                 {errors[index].name}
@@ -475,35 +488,36 @@ const AddOrderDialog = ({
                             )}
                           </div>
                           <div>
-                            <Label>Price</Label>
-                            <Input
-                              type="number"
-                              value={item.price}
-                              onChange={(e) => {
-                                if (!isNaN(Number(e.target.value))) {
-                                  handleItemChange(
-                                    index,
-                                    "price",
-                                    parseInt(e.target.value),
-                                  );
-                                }
-                              }}
-                            />
+                            <Label>Model</Label>
+                            <Select
+                              value={item.machine_model}
+                              onValueChange={(value) =>
+                                handleItemChange(index, "machine_model", value)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select model" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {["Raycus", "Dehaha"].map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div>
-                            <Label>Buying Price</Label>
+                            <Label>Power</Label>
                             <Input
-                              type="number"
-                              value={item.buying_price}
-                              onChange={(e) => {
-                                if (!isNaN(Number(e.target.value))) {
-                                  handleItemChange(
-                                    index,
-                                    "buying_price",
-                                    parseInt(e.target.value),
-                                  );
-                                }
-                              }}
+                              value={item.machine_power}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  index,
+                                  "machine_power",
+                                  e.target.value,
+                                )
+                              }
                             />
                           </div>
                           <div>
