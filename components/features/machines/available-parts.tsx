@@ -20,10 +20,13 @@ import { cn } from "@/lib/utils";
 export type AvailablePart = {
   id: number;
   name: string;
-  serial_no: string | null;
-  power: string | null;
-  model: string | null;
-  qty: number;
+  machine_serial: string | null;
+  machine_power: string | null;
+  machine_model: string | null;
+  order_id: number;
+  location: string | null;
+  order_title: string | null;
+  available_qty: number;
 };
 
 export function AvailableParts({
@@ -59,27 +62,29 @@ export function AvailableParts({
           setOpen((current) => !current);
         }}
       >
-        {selected ? `${selected.name} (${selected.qty} available)` : "Select inventory part..."}
+        {selected
+          ? `${selected.name} - ${selected.machine_model ?? ""} - ${selected.machine_power ?? ""}`
+          : "Select part..."}
         <ChevronsUpDown className="opacity-50" />
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-          <CommandInput placeholder="Search inventory parts..." className="h-9" />
+          <CommandInput placeholder="Search parts..." className="h-9" />
           <CommandList>
-            <CommandEmpty>No in-stock part found.</CommandEmpty>
+            <CommandEmpty>No part found.</CommandEmpty>
             <CommandGroup>
               {data.map((part) => (
                 <CommandItem
                   key={part.id}
-                  value={`${part.name} ${part.model ?? ""} ${part.serial_no ?? ""}`}
+                  value={`${part.name} ${part.machine_model ?? ""} ${part.machine_power ?? ""}`}
                   onSelect={() => {
                     onReturn(part);
                     setOpen(false);
                   }}
                 >
-                  <span>{part.name}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {part.qty} available
+                  <span>
+                    {part.name} - {part.machine_model ?? "—"} -{" "}
+                    {part.machine_power ?? "—"}
                   </span>
                   <Check
                     className={cn(

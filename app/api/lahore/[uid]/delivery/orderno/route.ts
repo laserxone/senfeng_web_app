@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const queryResult = await pool.query(`
-  SELECT id, machine_serial
+  SELECT id, machine_serial, is_machine
   FROM order_items
   WHERE LOWER(location) = 'lahore'
   ORDER BY machine_serial ASC

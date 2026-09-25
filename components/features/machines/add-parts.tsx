@@ -1,5 +1,4 @@
 import AppCalendar from "@/components/features/calendar/app-calendar";
-import { InventorySearch } from "@/components/shared/search/inventory-select";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -21,20 +20,21 @@ import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "@/lib/axios";
 import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
-import { ChequeProp, StockProps } from "@/lib/types";
+import { ChequeProp } from "@/lib/types";
 import { UploadImage } from "@/lib/uploadFunction";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Package } from "lucide-react";
 import moment from "moment";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AvailableParts } from "./available-parts";
 import ChequeCredit from "./cheque-credit";
 
 type NewPart = {
-  inventory_id: number | null;
+  order_item_id: number | null;
   name: string;
   model: string;
   power: string;
@@ -49,7 +49,6 @@ const formSchema = z.object({
   speedMoneyNote: z.string().optional(),
   totalPrice: z.coerce.number<number>({ error: "Price is required" }),
   cnic: z.string().optional(),
-  order_item: z.number().nullable().optional(),
 });
 
 const AddParts = ({
@@ -68,11 +67,10 @@ const AddParts = ({
   const [total, setTotal] = useState<ChequeProp[]>([]);
   const { state: OfficeState } = useContext(OfficeContext)!;
   const [newParts, setNewParts] = useState<NewPart[]>([
-    { inventory_id: null, name: "", model: "", power: "", serial_no: "" },
+    { order_item_id: null, name: "", model: "", power: "", serial_no: "" },
   ]);
   const [errors, setErrors] = useState<any>({});
   const [open, setOpen] = useState(false);
-  const [stock, setStock] = useState<StockProps[]>([])
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -84,7 +82,6 @@ const AddParts = ({
       speedMoneyNote: "",
       totalPrice: 0,
       cnic: "",
-      order_item: null,
     },
   });
 
@@ -97,7 +94,7 @@ const AddParts = ({
       let partErrors: any = {};
 
       Object.entries(part).forEach(([key, value]) => {
-        if (key === "inventory_id") return;
+        if (key === "order_item_id") return;
         if (!String(value)?.trim()) {
           partErrors[key] =
             `${key.charAt(0).toUpperCase() + key.slice(1).replace("_", " ")} is required`;
@@ -135,7 +132,14 @@ const AddParts = ({
 
     setErrors({});
     setLoading(true);
-    let baseLink = `/${user_id}/machine?cheque=${cheque}`;
+    const orderItemIds = Array.from(
+      new Set(
+        newParts
+          .map((part) => part.order_item_id)
+          .filter((id): id is number => typeof id === "number" && id > 0),
+      ),
+    );
+    const baseLink = `/${user_id}/machine?cheque=${cheque}&order_item_ids=${orderItemIds.join(",")}`;
 
     axios
       .post(baseLink, {
@@ -151,7 +155,6 @@ const AddParts = ({
         contract_date: values.contractDate,
         cnic: values.cnic,
         parts_information: newParts.map((part) => ({
-          inventory_id: part.inventory_id ?? null,
           name: part.name,
           model: part.model,
           power: part.power,
@@ -165,10 +168,11 @@ const AddParts = ({
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
-                const name = `${OfficeState.value.data
-                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                    .valueOf()
-                    .toString()}_${idx}.png`;
+                const name = `${
+                  OfficeState.value.data
+                }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                  .valueOf()
+                  .toString()}_${idx}.png`;
                 const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
@@ -196,7 +200,7 @@ const AddParts = ({
     form.reset();
     setOpen(false);
     setNewParts([
-      { inventory_id: null, name: "", model: "", power: "", serial_no: "" },
+      { order_item_id: null, name: "", model: "", power: "", serial_no: "" },
     ]);
   }
 
@@ -215,14 +219,6 @@ const AddParts = ({
     }
   }
 
-  useEffect(() => {
-    if (!user_id || !open) return;
-
-    axios
-      .get(`/${user_id}/available-parts`)
-      .then((response: { data: StockProps[] }) => setStock(response.data));
-  }, [user_id, open]);
-
   return (
     <>
       <Button
@@ -236,8 +232,9 @@ const AddParts = ({
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
-          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
-            }`}
+          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${
+            cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
+          }`}
         >
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -258,8 +255,9 @@ const AddParts = ({
           <div className="flex w-full flex-1">
             <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
               <div
-                className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
-                  } w-full`}
+                className={`flex gap-6 ${
+                  cheque ? "flex-row" : "flex-col"
+                } w-full`}
               >
                 <div
                   className={`${cheque ? "w-1/2" : "w-full"} space-y-2 p-3.5`}
@@ -313,30 +311,30 @@ const AddParts = ({
                             </div>
 
                             <Field>
-                              <FieldLabel>Select Inventory Part</FieldLabel>
-                              <InventorySearch
-                              showQty
-                                data={stock}
-                                value={item.inventory_id ?? null}
+                              <FieldLabel>Select Part</FieldLabel>
+                              <AvailableParts
+                                value={item.order_item_id ?? null}
                                 onReturn={(part) => {
                                   setNewParts((prev) => {
                                     const updated = [...prev];
                                     updated[index] = {
-                                      inventory_id:
-                                        typeof part.id === "number" ? part.id : null,
+                                      order_item_id:
+                                        typeof part.id === "number"
+                                          ? part.id
+                                          : null,
                                       name: part.name ?? "",
-                                      model: part.model ?? "",
-                                      power: part.power ?? "",
-                                      serial_no: part.serial_no ?? "",
+                                      model: part.machine_model ?? "",
+                                      power: part.machine_power ?? "",
+                                      serial_no: part.machine_serial ?? "",
                                     };
                                     return updated;
                                   });
-                                }} />
-
+                                }}
+                              />
                             </Field>
 
                             {Object.entries(item)
-                              .filter(([key]) => key !== "inventory_id")
+                              .filter(([key]) => key !== "order_item_id")
                               .map(([key, val]) => (
                                 <Field key={key}>
                                   <FieldLabel>
@@ -346,7 +344,7 @@ const AddParts = ({
 
                                   <Input
                                     value={val ?? ""}
-                                    disabled={item.inventory_id !== null}
+                                    disabled={item.order_item_id !== null}
                                     onChange={(e) => {
                                       const value = e.target.value;
                                       setNewParts((prev) => {
@@ -377,7 +375,7 @@ const AddParts = ({
                         e.preventDefault();
                         setNewParts([
                           ...newParts,
-                          { inventory_id: null, name: "", model: "", power: "", serial_no: "" },
+                          { order_item_id: null, name: "", model: "", power: "", serial_no: "" },
                         ]);
                       }}
                       type="button"

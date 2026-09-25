@@ -27,7 +27,15 @@ import { CustomerSearchWithData } from "@/components/features/customers/componen
 import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
 import { UserSearch } from "@/components/shared/search/user-search";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -59,6 +67,8 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   CreditCard,
+  Download,
+  ExternalLink,
   FilePenLine,
   FileText,
   PackageCheck,
@@ -220,6 +230,16 @@ export default function POS() {
   const [outwardModal, setOutwardModal] = useState(false);
   const [lowStockModal, setLowStockModal] = useState(false);
   const [total, setTotal] = useState(0);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [pdfPreparing, setPdfPreparing] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfFileName, setPdfFileName] = useState("invoice.pdf");
+
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [pdfUrl]);
 
   const updatePosDialogQuery = useCallback((dialog?: PosDialog) => {
     const url = new URL(window.location.href);
@@ -263,42 +283,60 @@ export default function POS() {
 
   const handleUpdateInvoice = async () => {
     const invoiceStatus = selectedSearchItem?.invoice_status ?? "issued";
-    await handleInvoiceBackendData();
-    const PDFData = {
-      companyName: companyName,
-      name: name,
-      phoneNumber: phoneNumber,
-      address: address,
-      manager: manager,
-      nextInvoice: nextInvoice,
-      invoiceItems: invoiceItems,
-      totalAmount: totalAmount,
-      warranty: warranty,
-      warrantyYear: warrantyYear,
-      discount: `${discount}`,
-      createdAt: createdAt,
-      invoiceStatus,
-    };
-    const pdfRes = await axios.post(
-      `/${userID}/pos/pdf`,
-      {
-        data: PDFData,
-      },
-      {
-        responseType: "blob",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      await handleInvoiceBackendData();
+      await preparePdf(
+        {
+          companyName,
+          name,
+          phoneNumber,
+          address,
+          manager,
+          nextInvoice,
+          invoiceItems,
+          totalAmount,
+          warranty,
+          warrantyYear,
+          discount: `${discount}`,
+          createdAt,
+          invoiceStatus,
         },
-      },
-    );
+        nextInvoice,
+      );
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      toast.error("Unable to prepare invoice PDF");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const blob = new Blob([pdfRes.data], {
-      type: "application/pdf",
-    });
+  const preparePdf = async (data: object, invoiceNumber: string) => {
+    setPdfDialogOpen(true);
+    setPdfPreparing(true);
+    setPdfUrl(null);
+    setPdfFileName(`${invoiceNumber || "invoice"}.pdf`);
 
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 600000);
+    try {
+      const pdfRes = await axios.post(
+        `/${userID}/pos/pdf`,
+        { data },
+        {
+          responseType: "blob",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+      setPdfUrl(
+        URL.createObjectURL(
+          new Blob([pdfRes.data], { type: "application/pdf" }),
+        ),
+      );
+    } catch (error) {
+      setPdfDialogOpen(false);
+      throw error;
+    } finally {
+      setPdfPreparing(false);
+    }
   };
 
   const handleIssueInvoice = async () => {
@@ -358,26 +396,7 @@ export default function POS() {
         discount: `${discount}`,
         invoiceStatus,
       };
-      const pdfRes = await axios.post(
-        `/${userID}/pos/pdf`,
-        {
-          data: PDFData,
-        },
-        {
-          responseType: "blob",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      const blob = new Blob([pdfRes.data], {
-        type: "application/pdf",
-      });
-
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => URL.revokeObjectURL(url), 600000);
+      await preparePdf(PDFData, invNumber.nextinvoice);
       await fetchData();
       if (invoiceStatus === "issued" && checked) {
         setSelectedInvoice(invNumber?.returning_id);
@@ -385,7 +404,6 @@ export default function POS() {
         setSelectedCustomer(null);
         setChecked(false);
       }
-      setTimeout(() => URL.revokeObjectURL(url), 600000);
     } catch (error) {
       console.log(error);
       setLoading(false);
@@ -1384,6 +1402,70 @@ export default function POS() {
         }}
         customer_id={selectedCustomer ? selectedCustomer?.id : null}
       />
+
+      <Dialog
+        open={pdfDialogOpen}
+        onOpenChange={(open) => {
+          setPdfDialogOpen(open);
+          if (!open) setPdfUrl(null);
+        }}
+      >
+        <DialogContent className="max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground sm:max-w-[420px]">
+          <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/10 text-primary">
+                <FileText className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <DialogTitle className="text-sm font-semibold text-foreground">
+                  Invoice PDF
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  {pdfPreparing
+                    ? "Preparing your invoice document."
+                    : "Choose whether to view or save the invoice."}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="max-h-[calc(100dvh-132px)]">
+            <div className="space-y-3 p-3.5">
+              {pdfPreparing ? (
+                <div className="flex min-h-20 items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Spinner /> Preparing PDF…
+                </div>
+              ) : (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Button
+                    className="h-9 rounded-lg"
+                    disabled={!pdfUrl}
+                    onClick={() => pdfUrl && window.open(pdfUrl, "_blank")}
+                  >
+                    <ExternalLink className="size-4" /> Open PDF
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-9 rounded-lg"
+                    disabled={!pdfUrl}
+                    onClick={() => {
+                      if (!pdfUrl) return;
+                      const link = document.createElement("a");
+                      link.href = pdfUrl;
+                      link.download = pdfFileName;
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                    }}
+                  >
+                    <Download className="size-4" /> Download PDF
+                  </Button>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       <AddPOSPayment
         visible={!!selectedInvoice}

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import {
@@ -35,12 +35,14 @@ const AddOrderDialog = ({
   user_id,
   onRefresh,
   id,
+  partsOnly = false,
 }: {
   visible: boolean;
   onClose: (val: boolean) => void;
   onRefresh: () => Promise<void>;
   user_id: number | string;
   id?: number | null;
+  partsOnly?: boolean;
 }) => {
   const [items, setItems] = useState<InventoryItem[]>([
     {
@@ -50,7 +52,7 @@ const AddOrderDialog = ({
       buying_price: 0,
       threshold: 0,
       new_order: 0,
-      is_machine: true,
+      is_machine: !partsOnly,
       machine_serial: "",
       machine_model: "",
       machine_source: "",
@@ -63,24 +65,8 @@ const AddOrderDialog = ({
   ]);
   const [errors, setErrors] = useState<InventoryErrors>([]);
   const [loading, setLoading] = useState(false);
-  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
-
+  const [existingInventory] = useState<StockProps[]>([]);
   const [manualModes, setManualModes] = useState<boolean[]>([false]);
-
-  useEffect(() => {
-    if (visible && user_id) {
-      fetchPOSInventory();
-    }
-  }, [visible, user_id]);
-
-  async function fetchPOSInventory() {
-    axios.get(`/${user_id}/pos`).then((response) => {
-      if (response.data.stock.length > 0) {
-        let resultedData = [...response.data.stock];
-        setExistingInventory([...resultedData]);
-      }
-    });
-  }
 
   const handleItemChange = <K extends keyof InventoryItem>(
     index: number,
@@ -126,7 +112,7 @@ const AddOrderDialog = ({
         buying_price: 0,
         threshold: 0,
         new_order: 0,
-        is_machine: true,
+        is_machine: !partsOnly,
         machine_serial: "",
         machine_model: "",
         machine_source: "",
@@ -174,16 +160,14 @@ const AddOrderDialog = ({
         itemErrors.qty = "Quantity is required and must be greater than 0";
       }
 
-      if (item.isExisting) {
-        // inventory_id required for existing items
-        if (!item.inventory_id) {
-          itemErrors.inventory_id = "Please select an existing inventory item";
-        }
-      } else {
-        if (!item.is_machine)
-          if (!item.name || item.name.trim() === "") {
-            itemErrors.name = "Name is required for new items";
-          }
+      if (!item.is_machine) {
+        if (!item.name.trim()) itemErrors.name = "Part name is required";
+        if (!item.machine_serial.trim())
+          itemErrors.machine_serial = "Serial number is required";
+        if (!item.machine_model.trim())
+          itemErrors.machine_model = "Model is required";
+        if (!item.machine_power.trim())
+          itemErrors.machine_power = "Power is required";
       }
 
       // if machine, all machine fields required
@@ -290,7 +274,7 @@ const AddOrderDialog = ({
         buying_price: 0,
         threshold: 0,
         new_order: 0,
-        is_machine: true,
+        is_machine: !partsOnly,
         machine_serial: "",
         machine_model: "",
         machine_source: "",
@@ -361,27 +345,19 @@ const AddOrderDialog = ({
                   </Button>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={item.isExisting}
-                    onCheckedChange={(val) =>
-                      handleItemChange(index, "isExisting", val)
-                    }
-                  />
-                  <Label>
-                    {item.isExisting ? "Existing Item" : "New Item"}
-                  </Label>
-                </div>
-
-                <div className="mt-2 flex items-center gap-2">
-                  <Switch
-                    checked={item.is_machine}
-                    onCheckedChange={(val) =>
-                      handleItemChange(index, "is_machine", val)
-                    }
-                  />
-                  <Label>Is Machine?</Label>
-                </div>
+                {!partsOnly && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <Switch
+                      checked={item.is_machine}
+                      onCheckedChange={(val) =>
+                        handleItemChange(index, "is_machine", val)
+                      }
+                    />
+                    <Label>
+                      {item.is_machine ? "Is Machine?" : "Is Part?"}
+                    </Label>
+                  </div>
+                )}
 
                 <div className="mt-2 flex items-center gap-2">
                   <Switch

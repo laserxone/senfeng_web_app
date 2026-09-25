@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { RequiredStar } from "@/components/shared/common/RequiredStar";
 import {
@@ -27,6 +27,7 @@ import axios from "@/lib/axios";
 import { InventoryItem, OrderItem, StockProps } from "@/lib/types";
 import { InventorySearch } from "@/components/shared/search/inventory-select";
 import MachineModels from "@/components/features/machines/machine-models";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>;
 
@@ -36,13 +37,19 @@ const EditOrderDialog = ({
   onRefresh,
   id,
   item,
+  partsOnly = false,
 }: {
   visible: boolean;
   onClose: (val: boolean) => void;
   onRefresh: () => Promise<void>;
   id?: number | null;
   item: OrderItem | null;
+  partsOnly?: boolean;
 }) => {
+  const { state: officeState } = useContext(OfficeContext)!;
+  const officeName = officeState.value.data || "Lahore";
+  const officeLocation =
+    officeName.charAt(0).toUpperCase() + officeName.slice(1).toLowerCase();
   const [items, setItems] = useState<InventoryItem>({
     name: "",
     qty: 1,
@@ -77,35 +84,19 @@ const EditOrderDialog = ({
         machine_source: item.machine_source,
         machine_power: item.machine_power,
         status: item.status,
-        isExisting: item.inventory_id ? true : false,
-        inventory_id: item.inventory_id,
-        location: item.location,
+        isExisting: false,
+        inventory_id: null,
+        location: partsOnly ? officeLocation : item.location,
         show: item.show,
       });
     }
-  }, [item]);
+  }, [item, officeLocation, partsOnly]);
 
   const [errors, setErrors] = useState<InventoryErrors>();
   const [loading, setLoading] = useState(false);
-  const [existingInventory, setExistingInventory] = useState<StockProps[]>([]);
-
+  const [existingInventory] = useState<StockProps[]>([]);
   const { userID } = useUserDetail() as { userID: string };
   const [manual, setManual] = useState(true);
-
-  useEffect(() => {
-    if (visible && userID) {
-      fetchPOSInventory();
-    }
-  }, [visible, userID]);
-
-  async function fetchPOSInventory() {
-    axios.get(`/${userID}/pos`).then((response) => {
-      if (response.data.stock.length > 0) {
-        let resultedData = [...response.data.stock];
-        setExistingInventory([...resultedData]);
-      }
-    });
-  }
 
   const handleItemChange = <K extends keyof InventoryItem>(
     field: K,
@@ -123,16 +114,14 @@ const EditOrderDialog = ({
       itemErrors.qty = "Quantity is required and must be greater than 0";
     }
 
-    if (items.isExisting) {
-      // inventory_id required for existing items
-      if (!items.inventory_id) {
-        itemErrors.inventory_id = "Please select an existing inventory item";
-      }
-    } else {
-      if (!items.is_machine)
-        if (!items.name || items.name.trim() === "") {
-          itemErrors.name = "Name is required for new items";
-        }
+    if (!items.is_machine) {
+      if (!items.name.trim()) itemErrors.name = "Part name is required";
+      if (!items.machine_serial.trim())
+        itemErrors.machine_serial = "Serial number is required";
+      if (!items.machine_model.trim())
+        itemErrors.machine_model = "Model is required";
+      if (!items.machine_power.trim())
+        itemErrors.machine_power = "Power is required";
     }
 
     // if machine, all machine fields required
@@ -162,7 +151,7 @@ const EditOrderDialog = ({
       try {
         const response = await axios.put(
           `/${userID}/neworder/orderitem/${id}`,
-          items,
+          { ...items, location: partsOnly ? officeLocation : items.location },
         );
         await onRefresh();
         handleClose(false);
@@ -218,31 +207,25 @@ const EditOrderDialog = ({
         <ScrollArea className="max-h-[calc(100dvh-132px)]">
           <div className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase">
             <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
-              <div>
-                <Label>
-                  Location <RequiredStar />
-                </Label>
-                <Select
-                  value={items.location}
-                  onValueChange={(val) => handleItemChange("location", val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Lahore">Lahore</SelectItem>
-                    <SelectItem value="Karachi">Karachi</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={items.isExisting}
-                  onCheckedChange={(val) => handleItemChange("isExisting", val)}
-                />
-                <Label>{items.isExisting ? "Existing Item" : "New Item"}</Label>
-              </div>
-
+              {!partsOnly && (
+                <div>
+                  <Label>
+                    Location <RequiredStar />
+                  </Label>
+                  <Select
+                    value={items.location}
+                    onValueChange={(val) => handleItemChange("location", val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Lahore">Lahore</SelectItem>
+                      <SelectItem value="Karachi">Karachi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               {items.isExisting ? (
                 <>
                   <div>
@@ -397,15 +380,19 @@ const EditOrderDialog = ({
                     </>
                   )}
 
-                  <div className="mt-2 flex items-center gap-2">
-                    <Switch
-                      checked={items.is_machine}
-                      onCheckedChange={(val) =>
-                        handleItemChange("is_machine", val)
-                      }
-                    />
-                    <Label>Is Machine?</Label>
-                  </div>
+                  {!partsOnly && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <Switch
+                        checked={items.is_machine}
+                        onCheckedChange={(val) =>
+                          handleItemChange("is_machine", val)
+                        }
+                      />
+                      <Label>
+                        {items.is_machine ? "Is Machine?" : "Is Part?"}
+                      </Label>
+                    </div>
+                  )}
 
                   <div className="mt-2 flex items-center gap-2">
                     <Switch

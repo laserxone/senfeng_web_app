@@ -36,17 +36,30 @@ const BookOrderDialog = ({
 
   const handleSubmit = async () => {
     if (!customer?.id) return;
+    if (!item) return;
+
+    const isPart = !item.is_machine;
     setLoading(true);
     try {
       const response = await axios.post(`/${userID}/machine?inventory=${id}`, {
         customer_id: customer?.id,
-        type: "Machine",
-        serial_no: item?.machine_model,
-        power: item?.machine_power,
-        source: item?.machine_source,
+        type: isPart ? "Parts" : "Machine",
+        serial_no: isPart ? item.machine_serial : item.machine_model,
+        power: item.machine_power,
+        source: isPart ? undefined : item.machine_source,
         sell_by: customer?.ownership,
-        order_no_arr: [item?.machine_serial],
+        order_no_arr: [item.machine_serial],
         commission: true,
+        ...(isPart && {
+          parts_information: [
+            {
+              name: item.name,
+              serial_no: item.machine_serial,
+              model: item.machine_model,
+              power: item.machine_power,
+            },
+          ],
+        }),
       });
       await onRefresh();
       handleClose();
@@ -70,10 +83,11 @@ const BookOrderDialog = ({
             </span>
             <div className="min-w-0">
               <DialogTitle className="text-sm font-semibold text-foreground">
-                Book Machine for Customer
+                Book {item?.is_machine ? "Machine" : "Parts"} for Customer
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Select the customer who will receive this machine booking.
+                Select the customer who will receive this{" "}
+                {item?.is_machine ? "machine" : "parts"} booking.
               </DialogDescription>
             </div>
           </div>

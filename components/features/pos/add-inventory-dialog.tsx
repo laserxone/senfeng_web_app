@@ -23,8 +23,6 @@ import { toast } from "sonner";
 type InventoryDraft = {
   name: string;
   serial_no: string;
-  model: string;
-  power: string;
   unit: string;
   chinese_name: string;
   price: string;
@@ -35,8 +33,6 @@ type InventoryDraft = {
 const emptyItem = (): InventoryDraft => ({
   name: "",
   serial_no: "",
-  model: "",
-  power: "",
   unit: "",
   chinese_name: "",
   price: "",
@@ -173,8 +169,6 @@ export function AddInventoryDialog({
                       [
                         "name",
                         "serial_no",
-                        "model",
-                        "power",
                         "unit",
                         "chinese_name",
                         "price",

@@ -11,9 +11,13 @@ export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
+  const isAdmin = searchParams.get("isAdmin") === "true";
+  const officeLocation = getDefaultLocation(req);
 
   try {
-    let query = `
+    let query = "";
+    if (isAdmin) {
+      query = `
   SELECT 
     o.*, 
     u.id AS user_id, 
@@ -36,8 +40,35 @@ export async function GET(req: NextRequest) {
   FROM orders o
   LEFT JOIN users u ON o.user_id = u.id
 `;
+    } else {
+      query = `
+  SELECT
+    o.*,
+    u.id AS user_id,
+    u.name AS user_name,
+    u.email AS user_email,
+    COALESCE((
+      SELECT json_agg(ordered_oi ORDER BY ordered_oi.name DESC)
+      FROM (
+        SELECT oi.*, c.name AS customer_name, c.owner AS customer_owner,
+          b.name AS booked_by_name
+        FROM order_items oi
+        LEFT JOIN customer c ON c.id = oi.customer_id
+        LEFT JOIN users b ON b.id = oi.booked_by
+        WHERE oi.order_id = o.id AND oi.is_machine IS FALSE
+          AND LOWER(oi.location) = LOWER($1)
+      ) AS ordered_oi
+    ), '[]') AS order_items
+  FROM orders o
+  LEFT JOIN users u ON o.user_id = u.id
+  WHERE EXISTS (
+    SELECT 1 FROM order_items oi
+    WHERE oi.order_id = o.id AND oi.is_machine IS FALSE
+      AND LOWER(oi.location) = LOWER($1)
+  )`;
+    }
 
-    const queryParams = [];
+    const queryParams = isAdmin ? [] : [officeLocation];
 
     if (
       start_date &&
@@ -47,7 +78,8 @@ export async function GET(req: NextRequest) {
       start_date !== "undefined" &&
       end_date !== "undefined"
     ) {
-      query += ` WHERE o.created_at BETWEEN $1 AND $2`;
+      const dateStartIndex = queryParams.length + 1;
+      query += `${isAdmin ? " WHERE" : " AND"} o.created_at BETWEEN $${dateStartIndex} AND $${dateStartIndex + 1}`;
       queryParams.push(start_date, end_date);
     }
 

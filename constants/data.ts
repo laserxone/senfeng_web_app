@@ -776,6 +776,14 @@ export const StoreNavItem = [
     items: [],
   },
   {
+    title: "Parts Orders",
+    url: "/parts-orders",
+    icon: "partsReceiving",
+    shortcut: ["p", "o"],
+
+    items: [],
+  },
+  {
     title: "Delivery",
     url: "#",
     icon: "truck",

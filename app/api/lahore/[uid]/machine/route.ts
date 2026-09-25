@@ -10,6 +10,14 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
   async function POST(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const inventory = searchParams.get("inventory");
+    const orderItemIds = Array.from(
+      new Set(
+        (searchParams.get("order_item_ids") || "")
+          .split(",")
+          .map(Number)
+          .filter((id) => Number.isInteger(id) && id > 0),
+      ),
+    );
     let client: PoolClient | undefined;
 
     try {
@@ -75,29 +83,24 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
         );
       }
 
-      const partInventoryIds = Array.isArray(data.parts_information)
-        ? data.parts_information
-            .map((part: { inventory_id?: unknown }) =>
-              Number(part.inventory_id),
-            )
-            .filter((id: number) => Number.isInteger(id) && id > 0)
-        : [];
+      if (orderItemIds.length > 0) {
+        const bookedParts = await client.query(
+          `UPDATE order_items
+           SET booked = TRUE, booking_date = $1, machine_id = $2,
+             booked_by = $3, customer_id = $4
+           WHERE id = ANY($5::int[]) AND is_machine IS FALSE AND booked IS FALSE
+           RETURNING id`,
+          [
+            new Date(),
+            result.rows[0].id,
+            data.sell_by,
+            data.customer_id,
+            orderItemIds,
+          ],
+        );
 
-      if (partInventoryIds.length > 0) {
-        const inventoryTable =
-          office === "karachi" ? "inventory_karachi" : "inventory";
-        for (const inventoryId of partInventoryIds) {
-          const inventoryResult = await client.query(
-            `UPDATE ${inventoryTable}
-             SET qty = qty - 1
-             WHERE id = $1 AND qty > 0
-             RETURNING id`,
-            [inventoryId],
-          );
-
-          if (inventoryResult.rowCount !== 1) {
-            throw new Error(`Inventory item ${inventoryId} is out of stock`);
-          }
+        if (bookedParts.rowCount !== orderItemIds.length) {
+          throw new Error("One or more selected parts are no longer available");
         }
       }
 

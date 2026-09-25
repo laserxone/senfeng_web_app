@@ -18,24 +18,22 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useDebounce } from "@/hooks/use-debounce";
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { MyCustomer } from "@/lib/types";
-import { cn } from "@/lib/utils";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { useDebounce } from "@/hooks/use-debounce";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { cn } from "@/lib/utils";
 
 type OrderNoTypes = {
   id: number;
   machine_serial: string;
   search: string;
   label: string;
+  is_machine: boolean
 };
 
 export function SelectOrderNo({
