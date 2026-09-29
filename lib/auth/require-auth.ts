@@ -3,12 +3,9 @@ import type { DecodedIdToken } from "firebase-admin/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 type AuthResult =
-  | { ok: true; token: DecodedIdToken }
-  | { ok: false; response: NextResponse };
+  { ok: true; token: DecodedIdToken } | { ok: false; response: NextResponse };
 
-export async function requireAuth(
-  request: NextRequest,
-): Promise<AuthResult> {
+export async function requireAuth(request: NextRequest): Promise<AuthResult> {
   const authorization = request.headers.get("authorization");
   const idToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
 

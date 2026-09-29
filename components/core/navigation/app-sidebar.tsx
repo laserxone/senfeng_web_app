@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { Icons } from "@/components/shared/common/icons";
-import { auth } from "@/config/firebase";
+import { logout } from "@/lib/auth/logout";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -46,7 +46,6 @@ import { useMachineApproval } from "@/hooks/use-machine-approval";
 import { useMachineDelivery } from "@/hooks/use-machine-delivery";
 import { usePendingApplicationApprovals } from "@/hooks/use-pending-application-approvals";
 import { OfficeContext } from "@/store/context/OfficeContext";
-import { signOut } from "firebase/auth";
 import { ChevronRight, ChevronsUpDown, CreditCard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -273,13 +272,7 @@ export default function AppSidebar({ office }: { office: string }) {
                     </DropdownMenuItem>
                   </Link>
                 </DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => {
-                    signOut(auth);
-                    // localStorage.removeItem("user_email");
-                    // router.replace("/login");
-                  }}
-                >
+                <DropdownMenuItem onClick={logout}>
                   <LogOut />
                   Log out
                 </DropdownMenuItem>

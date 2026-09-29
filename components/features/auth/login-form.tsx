@@ -17,6 +17,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import Spinner from "@/components/ui/spinner";
+import { LOCAL_AUTH_EMAIL } from "@/lib/auth/local-auth-config";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -41,6 +42,33 @@ export function LoginForm() {
   async function handleEmailLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
+
+    if (email.toLowerCase() === LOCAL_AUTH_EMAIL) {
+      try {
+        const response = await fetch("/api/auth/local-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ email, password }),
+        });
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.message);
+
+        sessionStorage.setItem("local_auth_email", result.email);
+        toast.success("Login successful");
+        window.location.assign("/");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Error logging in",
+        );
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
     await signInWithEmailAndPassword(auth, email, password)
       .then(() => {
         toast.success("Login successful");

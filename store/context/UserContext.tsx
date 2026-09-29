@@ -17,6 +17,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { toast } from "sonner";
 import { User } from "firebase/auth";
 import { NavItems } from "@/lib/types";
+import { LOCAL_AUTH_EMAIL } from "@/lib/auth/local-auth-config";
 
 export interface AppUser {
   id: number;
@@ -93,17 +94,45 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    const loadUser = async (email: string, fbUser?: User | null) => {
+      const res = await axios.get(`/userdetail/${email}`);
+      const userData = res.data;
+
+      if (userData?.designation) {
+        setAuthData({ ...userData, ...fbUser });
+        return true;
+      }
+
+      return false;
+    };
+
+    const localEmail = sessionStorage.getItem("local_auth_email");
+    if (localEmail?.toLowerCase() === LOCAL_AUTH_EMAIL) {
+      setLoading(true);
+      loadUser(localEmail)
+        .then((userExists) => {
+          if (!userExists) {
+            sessionStorage.removeItem("local_auth_email");
+            router.replace("/login");
+          }
+        })
+        .catch(() => {
+          sessionStorage.removeItem("local_auth_email");
+          router.replace("/login");
+        })
+        .finally(() => setLoading(false));
+
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       const email = fbUser?.email ?? null;
       // const email = "aqib.mahmoodlums@gmail.com"
       setLoading(true);
       try {
         if (email) {
-          const res = await axios.get(`/userdetail/${email}`);
-          const userData = res.data;
-          if (userData?.designation) {
-            setAuthData({ ...userData, ...fbUser });
-          } else {
+          const userExists = await loadUser(email, fbUser);
+          if (!userExists) {
             toast.error("User does not exist in the system");
             signOut(auth);
           }

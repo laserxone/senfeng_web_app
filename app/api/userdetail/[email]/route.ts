@@ -21,16 +21,24 @@ import {
 } from "@/constants/data";
 import admin from "@/lib/firebaseAdmin";
 import { requireAuth } from "@/lib/auth/require-auth";
+import { LOCAL_AUTH_EMAIL } from "@/lib/auth/local-auth-config";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ email: string }> },
 ) {
-  const authResult = await requireAuth(req);
-  if (!authResult.ok) return authResult.response;
-
   const { email } = await params;
+  const isLocalAuthUser = email.toLowerCase() === LOCAL_AUTH_EMAIL;
+
+  if (!isLocalAuthUser) {
+    const authResult = await requireAuth(req);
+    if (!authResult.ok) return authResult.response;
+
+    if (authResult.token.email?.toLowerCase() !== email.toLowerCase()) {
+      return NextResponse.json({ message: "Access denied." }, { status: 403 });
+    }
+  }
   const referrer = req.headers.get("referer");
   let city = "";
 

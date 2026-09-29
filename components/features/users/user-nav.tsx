@@ -10,10 +10,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { auth } from "@/config/firebase";
+import { logout } from "@/lib/auth/logout";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import useUserDetail from "@/hooks/use-user-detail";
-import { signOut } from "firebase/auth";
 import { ChevronDown, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 export function UserNav() {
@@ -85,11 +84,7 @@ export function UserNav() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="gap-2 rounded-lg text-red-600 focus:text-red-600"
-            onClick={() => {
-              signOut(auth);
-              // localStorage.removeItem('user_email');
-              // router.replace("/login")
-            }}
+            onClick={logout}
           >
             <LogOut className="h-4 w-4" />
             Log out
