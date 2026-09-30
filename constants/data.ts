@@ -5092,6 +5092,10 @@ export const CountriesList = [
 // export const BASE_URL = "http://localhost:3001/api"
 export const BASE_URL = "/api";
 
+export const ORDER_PART_TYPES = ["Laser Source", "Laser Head", "Chiller", "Air Compressor", "AVR"];
+
+export const ORDER_PART_MODELS = ["Raycus", "Max", "Dehaha", "SENFENG"];
+
 export const Colors = {
   button: "#1d76a4",
 };

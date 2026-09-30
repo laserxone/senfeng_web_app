@@ -26,6 +26,7 @@ import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { InventoryItem } from "@/lib/types";
 import MachineModels from "@/components/features/machines/machine-models";
+import { ORDER_PART_MODELS, ORDER_PART_TYPES } from "@/constants/data";
 import { OfficeContext } from "@/store/context/OfficeContext";
 
 type OrderItem = Omit<InventoryItem, "isExisting" | "inventory_id"> & {
@@ -393,8 +394,8 @@ const CreateOrderDialog = ({
                               </SelectTrigger>
                               <SelectContent>
                                 {(field === "name"
-                                  ? ["Laser Source", "Laser Head", "Chiller"]
-                                  : ["Raycus", "Dehaha"]
+                                  ? ORDER_PART_TYPES
+                                  : ORDER_PART_MODELS
                                 ).map((option) => (
                                   <SelectItem key={option} value={option}>
                                     {option}

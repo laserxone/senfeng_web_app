@@ -26,6 +26,7 @@ import axios from "@/lib/axios";
 import { InventoryItem, StockProps } from "@/lib/types";
 import { InventorySearch } from "@/components/shared/search/inventory-select";
 import MachineModels from "@/components/features/machines/machine-models";
+import { ORDER_PART_MODELS, ORDER_PART_TYPES } from "@/constants/data";
 
 type InventoryErrors = Partial<Record<keyof InventoryItem, string>>[];
 
@@ -451,13 +452,11 @@ const AddOrderDialog = ({
                                 <SelectValue placeholder="Select part" />
                               </SelectTrigger>
                               <SelectContent>
-                                {["Laser Source", "Laser Head", "Chiller"].map(
-                                  (option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
-                                  ),
-                                )}
+                                {ORDER_PART_TYPES.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             {errors[index]?.name && (
@@ -499,7 +498,7 @@ const AddOrderDialog = ({
                                 <SelectValue placeholder="Select model" />
                               </SelectTrigger>
                               <SelectContent>
-                                {["Raycus", "Dehaha"].map((option) => (
+                                {ORDER_PART_MODELS.map((option) => (
                                   <SelectItem key={option} value={option}>
                                     {option}
                                   </SelectItem>
