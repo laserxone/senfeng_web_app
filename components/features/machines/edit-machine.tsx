@@ -40,6 +40,7 @@ const formSchema = z.object({
   note: z.string().optional(),
   totalPrice: z.coerce.number<number>({ error: "Price is required" }),
   cnic: z.string().optional(),
+  orderNo: z.string(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -59,7 +60,8 @@ const EditMachine = ({
 }) => {
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { userID } = useUserDetail();
+  const { userID, office } = useUserDetail();
+  const isKarachi = office.toLowerCase() === "karachi";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -74,6 +76,7 @@ const EditMachine = ({
       note: "",
       totalPrice: 0,
       cnic: "",
+      orderNo: "",
     },
   });
 
@@ -92,33 +95,15 @@ const EditMachine = ({
         note: data?.note || "",
         totalPrice: Number(data?.price || 0),
         cnic: data?.cnic || "",
+        orderNo: data?.order_no_arr?.[0] || "",
       });
       if (data?.speed_money) {
         setIsSpeedMoney(true);
       }
-      // if (data?.order_no_arr && data?.order_no_arr.length > 0) {
-      //   setOrderNumbers([...data.order_no_arr]);
-      // }
     }
   }, [data, form, visible]);
 
   function onSubmit(values: FormValues) {
-    // const cleanedOrderNumbers = orderNumbers.filter(
-    //   (num) => num?.trim() !== ""
-    // );
-
-    // if (cleanedOrderNumbers.length === 0) {
-    //   setOrderNumberError("At least one order number is required.");
-    //   return;
-    // } else if (cleanedOrderNumbers.some((num) => num.length !== 9)) {
-    //   setOrderNumberError(
-    //     "Order number wrong format. Each must be 9 characters."
-    //   );
-    //   return;
-    // } else {
-    //   setOrderNumberError("");
-    // }
-
     setLoading(true);
     axios
       .put(`/${userID}/machine/${machine_id}`, {
@@ -130,7 +115,13 @@ const EditMachine = ({
         power: values.power,
         source: values.source,
         note: values.note,
-        // order_no_arr: cleanedOrderNumbers,
+        ...(isKarachi
+          ? {
+              order_no_arr: values.orderNo.trim()
+                ? [values.orderNo.trim()]
+                : [],
+            }
+          : {}),
         price: values.totalPrice,
         contract_date: values.contractDate,
         cnic: values.cnic,
@@ -151,25 +142,6 @@ const EditMachine = ({
     form.reset();
     onClose(val);
   }
-
-  // const addNumberField = () => {
-  //   setOrderNumbers((prevState) => [...prevState, ""]);
-  // };
-
-  // const removeNumberField = (index: number) => {
-  //   setOrderNumbers((prevState) => prevState.filter((_, ind) => ind !== index));
-  // };
-
-  // const handleNumberChange = (index: number, value: string) => {
-  //   if (orderNumberError) {
-  //     setOrderNumberError("");
-  //   }
-  //   setOrderNumbers((prevState) => {
-  //     const newState = [...prevState];
-  //     newState[index] = value;
-  //     return newState;
-  //   });
-  // };
 
   return (
     <Dialog open={visible} onOpenChange={handleClose}>
@@ -259,38 +231,21 @@ const EditMachine = ({
                   )}
                 />
 
-                {/* <Field>
-                  <FieldLabel>Order No</FieldLabel>
-                  {orderNumbers.map((num, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input
-                        className="flex-1"
-                        placeholder="202501011"
-                        value={num}
-                        onChange={(e) => handleNumberChange(index, e.target.value)}
-                      />
-                      {index > 0 && (
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => removeNumberField(index)}
-                        >
-                          <Trash size={14} />
-                        </Button>
-                      )}
-                      {index === orderNumbers.length - 1 && (
-                        <Button size="icon" onClick={addNumberField}>
-                          <Plus size={14} />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {orderNumberError && (
-                    <Label className="text-red-700 dark:text-red-300 text-sm">
-                      {orderNumberError}
-                    </Label>
-                  )}
-                </Field> */}
+                {isKarachi && (
+                  <Controller
+                    name="orderNo"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Order No</FieldLabel>
+                        <Input placeholder="Enter order number" {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                )}
               </FieldSet>
 
               {/* Contract Details */}

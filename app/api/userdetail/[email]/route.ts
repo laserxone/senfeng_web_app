@@ -6,6 +6,7 @@ import {
   Commission,
   complaintItem,
   dealerNavItems,
+  DeliveryNavItem,
   employeeNavItems,
   EngineersPerformance,
   FinanceItem,
@@ -94,6 +95,7 @@ export async function GET(
       if (user.designation == "Store Manager") {
         base_route = `${branchOffice}/store`;
         nav_items = [...StoreNavItem];
+        nav_items.push(DeliveryNavItem as any);
         nav_items.push(BackupNavItem);
       } else if (user.designation === "Dealer") {
         nav_items = [...dealerNavItems];
@@ -146,6 +148,15 @@ export async function GET(
       }
       if (user?.reimbursement_approval) {
         nav_items.push(ReimbursementApproval);
+      }
+      if (user.machine_delivery && user.designation !== "Store Manager") {
+        nav_items.push({
+          ...DeliveryNavItem,
+          isActive: ["delivery/machinedelivery", "delivery/delivered"],
+          items: DeliveryNavItem.items.filter((item) =>
+            ["Machine Delivery", "Delivered"].includes(item.title),
+          ),
+        });
       }
       if (user.designation == "Engineer") {
         base_route = `${branchOffice}/engineer`;

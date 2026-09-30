@@ -750,6 +750,41 @@ export const branchNavItem = {
   group: "finance",
 };
 
+export const DeliveryNavItem = {
+  title: "Delivery",
+  url: "#",
+  icon: "truck",
+  isActive: [
+    "delivery/machinedelivery",
+    "delivery/otherdelivery",
+    "delivery/delivered",
+    "parts-receiving",
+  ],
+  items: [
+    {
+      title: "Machine Delivery",
+      url: "/delivery/machinedelivery",
+      shortcut: ["m", "d", "e"],
+    },
+    {
+      title: "Other Delivery",
+      url: "/delivery/otherdelivery",
+      shortcut: ["o", "d", "e"],
+    },
+    {
+      title: "Delivered",
+      shortcut: ["d", "e", "l"],
+      url: "/delivery/delivered",
+    },
+    {
+      title: "Parts Receiving",
+      url: "/parts-receiving",
+      icon: "partsReceiving",
+      shortcut: ["p", "r", "c"],
+    },
+  ],
+};
+
 export const StoreNavItem = [
   {
     title: "Dashboard",
@@ -782,43 +817,6 @@ export const StoreNavItem = [
     shortcut: ["p", "o"],
 
     items: [],
-  },
-  {
-    title: "Delivery",
-    url: "#",
-    icon: "truck",
-    isActive: [
-      "delivery/machinedelivery",
-      "delivery/otherdelivery",
-      "delivery/delivered",
-      "parts-receiving",
-    ],
-
-    items: [
-      {
-        title: "Machine Delivery",
-        url: "/delivery/machinedelivery",
-
-        shortcut: ["m", "d", "e"],
-      },
-      {
-        title: "Other Delivery",
-        url: "/delivery/otherdelivery",
-
-        shortcut: ["o", "d", "e"],
-      },
-      {
-        title: "Delivered",
-        shortcut: ["d", "e", "l"],
-        url: "/delivery/delivered",
-      },
-      {
-        title: "Parts Receiving",
-        url: "/parts-receiving",
-        icon: "partsReceiving",
-        shortcut: ["p", "r", "c"],
-      },
-    ],
   },
   {
     title: "Applications",

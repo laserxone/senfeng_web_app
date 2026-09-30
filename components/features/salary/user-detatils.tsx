@@ -110,6 +110,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
     reimbursement_approval: false,
     team_attendance_marking: false,
     list_page: false,
+    machine_delivery: false,
   });
 
   const [docsData, setDocsData] = useState({
@@ -167,6 +168,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
             reimbursement_approval: apiData?.reimbursement_approval,
             team_attendance_marking: apiData?.team_attendance_marking,
             list_page: apiData?.list_page ?? false,
+            machine_delivery: apiData?.machine_delivery ?? false,
           });
           setForm({
             basic_salary: apiData?.basic_salary || 0,
@@ -263,6 +265,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
         reimbursement_approval: checks?.reimbursement_approval,
         team_attendance_marking: checks?.team_attendance_marking,
         list_page: checks?.list_page,
+        machine_delivery: checks?.machine_delivery,
       })
       .then(() => {
         toast.success("Information updated");
