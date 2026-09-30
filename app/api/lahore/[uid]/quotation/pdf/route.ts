@@ -28,34 +28,39 @@ export async function POST(request: Request) {
     let finalPdfBytes: Uint8Array = new Uint8Array(generatedPdfBuffer);
 
     if (data?.original_pdf) {
-      const firebasePdfResponse = await fetch(data.original_pdf);
+      try {
+        const firebasePdfResponse = await fetch(data.original_pdf);
 
-      if (!firebasePdfResponse.ok) {
-        throw new Error("Failed to fetch original PDF");
+        if (!firebasePdfResponse.ok) {
+          throw new Error("Failed to fetch original PDF");
+        }
+
+        const firebasePdfBytes = await firebasePdfResponse.arrayBuffer();
+        const mergedPdf = await PDFDocument.create();
+        const generatedPdfDoc = await PDFDocument.load(generatedPdfBuffer);
+        const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes);
+
+        const generatedPages = await mergedPdf.copyPages(
+          generatedPdfDoc,
+          generatedPdfDoc.getPageIndices(),
+        );
+
+        generatedPages.forEach((page) => mergedPdf.addPage(page));
+
+        const firebasePages = await mergedPdf.copyPages(
+          firebasePdfDoc,
+          firebasePdfDoc.getPageIndices(),
+        );
+
+        firebasePages.forEach((page) => mergedPdf.addPage(page));
+
+        finalPdfBytes = await mergedPdf.save();
+      } catch (error) {
+        console.warn(
+          "Machine attachment could not be merged as a PDF; returning the quotation PDF only:",
+          error,
+        );
       }
-
-      const firebasePdfBytes = await firebasePdfResponse.arrayBuffer();
-
-      const mergedPdf = await PDFDocument.create();
-
-      const generatedPdfDoc = await PDFDocument.load(generatedPdfBuffer);
-      const firebasePdfDoc = await PDFDocument.load(firebasePdfBytes);
-
-      const generatedPages = await mergedPdf.copyPages(
-        generatedPdfDoc,
-        generatedPdfDoc.getPageIndices(),
-      );
-
-      generatedPages.forEach((page) => mergedPdf.addPage(page));
-
-      const firebasePages = await mergedPdf.copyPages(
-        firebasePdfDoc,
-        firebasePdfDoc.getPageIndices(),
-      );
-
-      firebasePages.forEach((page) => mergedPdf.addPage(page));
-
-      finalPdfBytes = await mergedPdf.save();
     }
 
     const fileName = getQuotationFileName(data);
