@@ -807,6 +807,9 @@ export type CommissionOwnerProps = {
   machine_name: string;
   order_no_arr?: string[];
   total_amount: number;
+  contract_date?: string | null;
+  last_payment_date?: string | null;
+  payment_days?: number | null;
   is_approved: boolean | null;
   commission_issued: boolean;
   commission_amount?: number | null;

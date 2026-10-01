@@ -135,6 +135,7 @@ const OwnerView = () => {
     | "machine_name"
     | "order_no_arr"
     | "total_amount"
+    | "payment_days"
     | "images"
     | "commission_amount"
     | "note"
@@ -233,6 +234,14 @@ const OwnerView = () => {
     }
     if (key === "order_no_arr") return item.order_no_arr?.join(", ") ?? "";
     return item[key] ?? "";
+  }
+
+  function hasInvalidContractDate(item: CommissionOwnerProps) {
+    return Boolean(
+      item.contract_date &&
+        item.last_payment_date &&
+        moment(item.contract_date).isAfter(item.last_payment_date, "day"),
+    );
   }
 
   function sortGroupData(month: string, items: CommissionOwnerProps[]) {
@@ -375,6 +384,15 @@ const OwnerView = () => {
         </TableCell>
         <TableCell className="min-w-[110px] whitespace-nowrap">
           {item.total_amount}
+        </TableCell>
+        <TableCell className="min-w-[150px] whitespace-nowrap">
+          {!item.contract_date || !item.last_payment_date ? (
+            "—"
+          ) : hasInvalidContractDate(item) ? (
+            <span className="text-destructive">Wrong contract date set</span>
+          ) : (
+            `${item.payment_days} ${item.payment_days === 1 ? "day" : "days"}`
+          )}
         </TableCell>
         <TableCell className="min-w-[100px]">
           <Button
@@ -571,7 +589,7 @@ const OwnerView = () => {
                         className={`w-full  ${state === 'expanded' ? "max-w-[calc(100dvw-310px)]" : "max-w-[calc(100dvw-100px)]"}  overflow-x-auto`}
                       > */}
                       <div
-                        className={`custom-scrollbar rounded-lg border ${
+                        className={`custom-scrollbar max-h-[500px] overflow-y-auto rounded-lg border ${
                           !isMobile && state === "expanded"
                             ? "xl:max-w-[calc(100dvw-330px)]"
                             : "xl:max-w-[calc(100dvw-130px)]"
@@ -681,6 +699,19 @@ const OwnerView = () => {
                                 }
                               >
                                 Price
+                              </SortableTableHead>
+                              <SortableTableHead
+                                className="min-w-[150px]"
+                                direction={
+                                  sort?.key === "payment_days"
+                                    ? sort.direction
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  toggleSort(month, "payment_days")
+                                }
+                              >
+                                Days
                               </SortableTableHead>
                               <SortableTableHead
                                 className="min-w-[100px]"
@@ -903,20 +934,47 @@ const OtherView = () => {
       }
     }
 
-    async function handleApplyCommissionAgain(id: number | undefined) {
-      if (!id) return;
+    async function handleApplyCommissionAgain(item: CommissionMachineItemProps) {
+      const commissionId = item.commission?.id;
+
+      if (item.customer.profile_completion < 100) {
+        toast.error(
+          "Data incomplete in customer record, kindly enter all data in this customer",
+        );
+        return;
+      }
+      if (item.percentage_completion < 100) {
+        toast.error(
+          "Data incomplete in machine record, kindly enter all data in this machine",
+        );
+        return;
+      }
+      if (!commissionId || !item.id) return;
+
+      let totalPrice = item.price;
+
+      if (item.speed_money_amount && Number(item.speed_money_amount) > 0) {
+        totalPrice = Number(item.price) - Number(item.speed_money_amount);
+      }
+
       setLoading(true);
 
       try {
         await axios
-          .put(`/${userID}/commission/${id}`, {
+          .put(`/${userID}/commission/${commissionId}`, {
             is_requested: true,
             is_approved: null,
             request_date: new Date(),
+            approval_date: null,
+            owner_note: null,
+            commission_amount: null,
+            total_amount: totalPrice,
+            note: note,
+            lead_id: item.first_machine ? item.customer.lead : null,
           })
           .then(async () => {
             await axios
-              .put(`/${userID}/machine/${id}`, {
+              .put(`/${userID}/machine/${item.id}`, {
                 payment_lock: true,
               })
               .then(async () => {
@@ -1053,7 +1111,7 @@ const OtherView = () => {
                           <Button
                             variant="outline"
                             onClick={() =>
-                              handleApplyCommissionAgain(item.commission?.id)
+                              handleApplyCommissionAgain(item)
                             }
                           >
                             Apply again

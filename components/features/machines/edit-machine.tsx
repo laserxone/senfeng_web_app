@@ -20,7 +20,7 @@ import axios from "@/lib/axios";
 import { MachineProps } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { OfficeContext } from "@/store/context/OfficeContext";
 
 const formSchema = z.object({
   machineModel: z.string().min(1, { message: "Machine model is required." }),
@@ -61,7 +62,8 @@ const EditMachine = ({
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const { userID, office } = useUserDetail();
-  const isKarachi = office.toLowerCase() === "karachi";
+  const {state : OfficeState} = useContext(OfficeContext)!
+  const isKarachi = OfficeState.value.data?.toLowerCase() === "karachi";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
