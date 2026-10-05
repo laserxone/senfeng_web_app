@@ -34,6 +34,7 @@ import { UserSearch } from "@/components/shared/search/user-search";
 import axios from "@/lib/axios";
 import { format, setMonth } from "date-fns";
 import moment from "moment";
+import momentT from "moment-timezone";
 
 import AccountsPdf from "@/components/features/salary/accountsPdf";
 import CommissionRecord from "@/components/features/salary/commission-salary";
@@ -97,6 +98,11 @@ type LocalUserAttendance = {
   time_in: null | string;
   time_out: null | string;
 };
+
+// Attendance rules are defined using Pakistan's local business time, regardless
+// of the timezone configured in the browser viewing the salary record.
+const ATTENDANCE_TIMEZONE = "Asia/Karachi";
+
 const SalaryComponent = ({
   onSelectedId,
 }: {
@@ -497,7 +503,11 @@ const SalaryComponent = ({
     let sundays = [];
 
     // Generate all days in the selected month
-    let startDate = moment(`${year}-${month}-01`);
+    let startDate = momentT.tz(
+      `${year}-${month}-01`,
+      "YYYY-M-D",
+      ATTENDANCE_TIMEZONE,
+    );
     let endDate = moment(startDate).endOf("month");
 
     for (
@@ -523,18 +533,22 @@ const SalaryComponent = ({
       let record = records.find(
         (r) =>
           r.time_in &&
-          moment(new Date(r.time_in)).format("YYYY-MM-DD") ===
-            moment(day.date).format("YYYY-MM-DD"),
+          momentT(r.time_in).tz(ATTENDANCE_TIMEZONE).format("YYYY-MM-DD") ===
+            day.date,
       );
 
       if (record && record.time_in) {
-        const checkIn = moment(new Date(record.time_in));
+        const checkIn = momentT(record.time_in).tz(ATTENDANCE_TIMEZONE);
         const checkOut = record?.time_out
-          ? moment(new Date(record.time_out))
+          ? momentT(record.time_out).tz(ATTENDANCE_TIMEZONE)
           : null;
 
         let isLate = checkIn.isAfter(
-          moment(day.date + " 10:10", "YYYY-MM-DD HH:mm"),
+          momentT.tz(
+            `${day.date} 10:10`,
+            "YYYY-MM-DD HH:mm",
+            ATTENDANCE_TIMEZONE,
+          ),
         );
 
         return {

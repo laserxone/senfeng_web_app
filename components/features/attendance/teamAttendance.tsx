@@ -30,7 +30,6 @@ import { GetProfileImage } from "@/lib/getProfileImage";
 import { UserAttendanceRecord } from "@/lib/types";
 import { MapProvider } from "@/providers/map-provider";
 import { GoogleMap, Marker } from "@react-google-maps/api";
-import moment from "moment";
 import momentT from "moment-timezone";
 import { useTheme } from "next-themes";
 import { columns } from "./AttendanceColumns";
@@ -85,9 +84,12 @@ export default function TeamAttendance() {
                 : "Absent";
 
               if (item?.time_in) {
-                const checkInTime = new Date(item.time_in);
-                const threshold = new Date(item.time_in);
-                threshold.setHours(10, 10, 0, 0);
+                const checkInTime = momentT(item.time_in).tz(TIMEZONE);
+                const threshold = momentT.tz(
+                  `${checkInTime.format("YYYY-MM-DD")} 10:10`,
+                  "YYYY-MM-DD HH:mm",
+                  TIMEZONE,
+                );
 
                 if (checkInTime > threshold) {
                   status = "Late";
@@ -122,15 +124,15 @@ export default function TeamAttendance() {
     start: string,
     end: string,
   ) {
-    const start_date = moment(start);
-    const end_date = moment(end);
+    const start_date = momentT(start).tz(TIMEZONE);
+    const end_date = momentT(end).tz(TIMEZONE);
 
     const uniqueUsers = Array.from(
       new Set(rawData.map((item) => item.user_email)),
     );
 
     const datesInMonth: string[] = [];
-    let current = moment(start_date);
+    let current = start_date.clone();
     while (current.isSameOrBefore(end_date)) {
       datesInMonth.push(current.format("YYYY-MM-DD"));
       current.add(1, "day");
@@ -150,7 +152,7 @@ export default function TeamAttendance() {
         const match = rawData.find(
           (item) =>
             item.user_email === user &&
-            moment(item.date).format("YYYY-MM-DD") === date,
+            momentT(item.date).tz(TIMEZONE).format("YYYY-MM-DD") === date,
         );
 
         finalData.push({
@@ -171,11 +173,8 @@ export default function TeamAttendance() {
       });
     });
 
-    finalData.sort(
-      (a: any, b: any) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-    const today = moment().format("YYYY-MM-DD");
+    finalData.sort((a: any, b: any) => b.date.localeCompare(a.date));
+    const today = momentT.tz(TIMEZONE).format("YYYY-MM-DD");
 
     const filteredData = finalData.filter((item: any) => item.date <= today);
 
@@ -409,7 +408,7 @@ export const AttendanceDetail = ({
                 label="Date"
                 value={
                   detail?.date
-                    ? moment(detail.date).format("YYYY-MM-DD")
+                    ? momentT(detail.date).tz(TIMEZONE).format("YYYY-MM-DD")
                     : "N/A"
                 }
               />
@@ -443,7 +442,7 @@ export const AttendanceDetail = ({
                             </h3>
                             <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
                               {entry.time
-                                ? moment(entry.time).format(
+                                ? momentT(entry.time).tz(TIMEZONE).format(
                                     "YYYY-MM-DD hh:mm A",
                                   )
                                 : "No time recorded"}

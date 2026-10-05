@@ -2,7 +2,8 @@ import { UserAttendanceRecord } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
-import moment from "moment";
+import { TIMEZONE } from "@/constants/data";
+import momentT from "moment-timezone";
 
 export const columns: ColumnDef<UserAttendanceRecord>[] = [
   {
@@ -22,7 +23,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
     cell: ({ row }) => (
       <div>
         {row.getValue("date")
-          ? moment(new Date(row.getValue("date"))).format("YYYY-MM-DD")
+          ? momentT(row.getValue("date")).tz(TIMEZONE).format("YYYY-MM-DD")
           : ""}
       </div>
     ),
@@ -60,7 +61,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
     cell: ({ row }) => (
       <div className="ml-2">
         {row.getValue("time_in")
-          ? moment(new Date(row.getValue("time_in"))).format("hh:mm A")
+          ? momentT(row.getValue("time_in")).tz(TIMEZONE).format("hh:mm A")
           : ""}
       </div>
     ),
@@ -82,10 +83,7 @@ export const columns: ColumnDef<UserAttendanceRecord>[] = [
     cell: ({ row }) => (
       <div className="ml-2">
         {row.getValue("time_out")
-          ? new Date(row.getValue("time_out")).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+          ? momentT(row.getValue("time_out")).tz(TIMEZONE).format("hh:mm A")
           : ""}
       </div>
     ),

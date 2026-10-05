@@ -10,7 +10,8 @@ import Spinner from "@/components/ui/spinner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import useUserDetail from "@/hooks/use-user-detail";
 import { UserAttendanceRecord } from "@/lib/types";
-import moment from "moment";
+import { TIMEZONE } from "@/constants/data";
+import momentT from "moment-timezone";
 import RenderMarkAttendance from "./attendance-marking";
 import { columns } from "./AttendanceColumns";
 import { AttendanceDetail } from "./teamAttendance";
@@ -59,8 +60,18 @@ export default function Attendance({
           resetLoading={resetLoading}
           onResetPress={async () => {
             setResetLoading(true);
-            const startDate = moment().startOf("month").toISOString();
-            const endDate = moment().endOf("month").toISOString();
+            const startDate = momentT
+              .tz(TIMEZONE)
+              .startOf("month")
+              .startOf("day")
+              .utc()
+              .toISOString();
+            const endDate = momentT
+              .tz(TIMEZONE)
+              .endOf("month")
+              .endOf("day")
+              .utc()
+              .toISOString();
             await onRefresh?.(startDate, endDate);
             setResetLoading(false);
           }}
