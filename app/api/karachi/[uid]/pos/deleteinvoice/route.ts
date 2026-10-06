@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import deleteImageByPath from "@/lib/delete-image-by-path";
+import { reverseOfficeFund } from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     await client.query("BEGIN");
 
     const partsQuery = await client.query(
-      `SELECT id, image FROM customer_parts_karachi WHERE part_id = $1`,
+      `SELECT id, image FROM customer_parts_karachi WHERE part_id = $1 FOR UPDATE`,
       [inv_id],
     );
 
@@ -35,6 +36,14 @@ export async function POST(req: NextRequest) {
           );
         }
       }
+    }
+
+    for (const part of parts) {
+      await reverseOfficeFund(client, {
+        office: "karachi",
+        sourceType: "pos_payment",
+        sourceId: Number(part.id),
+      });
     }
 
     await client.query(

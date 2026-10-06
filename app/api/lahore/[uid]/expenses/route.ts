@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { debitOfficeFund, withOfficeFundTransaction } from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -19,9 +20,21 @@ export async function POST(req: NextRequest) {
     const query = `
         INSERT INTO branchexpenses (${fields.join(", ")})
         VALUES (${placeholders})
+        RETURNING id, amount, mode
     `;
 
-    await pool.query(query, values);
+    await withOfficeFundTransaction(pool, async (client) => {
+      const submittedBy = Number(data.submitted_by);
+      const expense = (await client.query(query, values)).rows[0];
+      await debitOfficeFund(client, {
+        office: "lahore",
+        sourceType: "office_expense",
+        sourceId: Number(expense.id),
+        mode: expense.mode,
+        amount: expense.amount,
+        actorId: submittedBy,
+      });
+    });
 
     console.log("data inserted successfully");
     return NextResponse.json(

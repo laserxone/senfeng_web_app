@@ -1,5 +1,6 @@
 import pool from "@/config/db";
 import DeleteStorageBackend from "@/lib/delete-storage-backend";
+import { reverseOfficeFund, withOfficeFundTransaction } from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
@@ -12,13 +13,21 @@ export async function DELETE(
   }
 
   try {
-    const imageQuery = await pool.query(
-      `SELECT image FROM branchexpenses WHERE id = $1`,
-      [id],
-    );
-    const image = imageQuery.rows?.[0]?.image ?? null;
+    const image = await withOfficeFundTransaction(pool, async (client) => {
+      const expense = await client.query(
+        `SELECT image FROM branchexpenses WHERE id = $1 FOR UPDATE`,
+        [id],
+      );
+      if (!expense.rowCount) return null;
+      await client.query(`DELETE FROM branchexpenses WHERE id = $1`, [id]);
+      await reverseOfficeFund(client, {
+        office: "lahore",
+        sourceType: "office_expense",
+        sourceId: Number(id),
+      });
+      return expense.rows[0].image ?? null;
+    });
     await DeleteStorageBackend(image);
-    await pool.query(`DELETE FROM branchexpenses WHERE id = $1`, [id]);
     return NextResponse.json(
       { message: "Branch expense delete" },
       { status: 200 },

@@ -77,6 +77,7 @@ import {
   Send,
   UserRoundCog,
 } from "lucide-react";
+import OfficeFundBalance from "../employee-finance/office-fund-balance";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -767,6 +768,12 @@ export default function POS() {
     updatePosDialogQuery("order-stock");
   }
 
+  const RefreshedFunds = useCallback(() => {
+      return (
+        <OfficeFundBalance  />
+      )
+    }, [stock])
+
   return loading ? (
     <div className="flex min-h-[320px] w-full items-center justify-center">
       <div className="flex items-center gap-3 rounded-md border bg-card px-5 py-4 shadow-sm ring-1 ring-border/30">
@@ -794,6 +801,7 @@ export default function POS() {
               Invoice {nextInvoice}
             </div>
           </div>
+          <RefreshedFunds />
           <section className="rounded-md border bg-muted/10 p-3">
             <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>

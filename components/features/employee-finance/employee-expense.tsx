@@ -1,8 +1,9 @@
 "use client";
 import {
   ArrowUpDown,
-  CalendarDays,
+  Banknote,
   ImageIcon,
+  Landmark,
   Plus,
   ReceiptText,
   Trash2,
@@ -13,9 +14,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useContext, useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 import AppCalendar from "@/components/features/calendar/app-calendar";
+import OfficeFundBalance from "@/components/features/employee-finance/office-fund-balance";
 import FilterSheet from "@/components/features/users/filter-sheet";
 import ConfirmationDialog from "@/components/shared/dialogs/alert-dialog";
 import PageTable from "@/components/shared/tables/app-table";
@@ -208,6 +217,7 @@ const ExpensePdfDocument = ({ data }: { data: OfficeExpenseProps[] }) => (
 export default function EmployeeBranchExpenses() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
+  const [modeFilter, setModeFilter] = useState<"all" | "cash" | "bank">("all");
   const [data, setData] = useState<OfficeExpenseProps[]>([]);
   const [imageURL, setImageURL] = useState<OfficeExpenseProps | null>(null);
   const [visible, setVisible] = useState(false);
@@ -321,6 +331,23 @@ export default function EmployeeBranchExpenses() {
     },
 
     {
+      accessorKey: "mode",
+      filterFn: "includesString",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Mode
+            <ArrowUpDown />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div>{row.getValue("mode")}</div>,
+    },
+
+    {
       accessorKey: "submitted_by_name",
       filterFn: "includesString",
       header: ({ column }) => {
@@ -359,9 +386,36 @@ export default function EmployeeBranchExpenses() {
     }
   }
 
-  const total = data.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const visibleData =
+    modeFilter === "all"
+      ? data
+      : data.filter((item) => item.mode?.toLowerCase() === modeFilter);
+  const total = visibleData.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0,
+  );
+
+  const totalCash = visibleData.filter((item) => item.mode?.toLowerCase() === "cash").reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0,
+  )
+
+  const totalBank = visibleData.filter((item) => item.mode?.toLowerCase() === "bank").reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0,
+  )
+
+  const RefreshedFunds = useCallback(() => {
+    return (
+      <OfficeFundBalance total={data.reduce(
+        (sum, item) => sum + Number(item.amount || 0),
+        0,
+      )} />
+    )
+  }, [data])
 
   return (
+
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
@@ -386,6 +440,24 @@ export default function EmployeeBranchExpenses() {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* <ExpenseExport data={data} /> */}
+            <Select
+              value={modeFilter}
+              onValueChange={(value: "all" | "cash" | "bank") =>
+                setModeFilter(value)
+              }
+            >
+              <SelectTrigger
+                className="w-32"
+                aria-label="Filter expenses by mode"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="bank">Bank</SelectItem>
+              </SelectContent>
+            </Select>
             {branch_expenses_write_access && (
               <Button onClick={() => setVisibleAdd(true)} className="gap-2">
                 <Plus className="size-4" />
@@ -397,7 +469,7 @@ export default function EmployeeBranchExpenses() {
 
         <div className="grid border-t bg-muted/20 sm:grid-cols-3 sm:divide-x">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
-            <WalletCards className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <WalletCards className="size-4 text-violet-600 dark:text-violet-400" />
             <div className="flex min-w-0 items-baseline gap-2">
               <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
                 Total
@@ -408,21 +480,21 @@ export default function EmployeeBranchExpenses() {
             </div>
           </div>
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
-            <ReceiptText className="size-4 text-violet-600 dark:text-violet-400" />
+            <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
             <div className="flex items-baseline gap-2">
               <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                Entries
+                Cash
               </span>
-              <span className="text-sm font-bold">{data.length}</span>
+              <span className="text-sm font-bold">PKR {formatCurrency(totalCash)}</span>
             </div>
           </div>
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
-            <CalendarDays className="size-4 text-amber-600 dark:text-amber-400" />
+            <Landmark className="size-4 text-sky-600 dark:text-sky-400" />
             <div className="flex items-baseline gap-2">
               <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                Period
+                Bank
               </span>
-              <span className="text-sm font-bold">Monthly</span>
+              <span className="text-sm font-bold">PKR {formatCurrency(totalBank)}</span>
             </div>
           </div>
         </div>
@@ -436,11 +508,13 @@ export default function EmployeeBranchExpenses() {
         onPressCancel={() => setShowConfirmation(false)}
         loading={deleteLoading}
       />
+
+      <RefreshedFunds />
       <section className="min-w-0 overflow-hidden rounded-2xl border bg-card p-3 shadow-sm sm:p-4">
         <PageTable
           loading={loading}
           columns={columns}
-          data={data}
+          data={visibleData}
           onRowClick={(val, e) => {
             setImageURL(val);
             setVisible(true);
@@ -451,6 +525,7 @@ export default function EmployeeBranchExpenses() {
           resetLoading={resetLoading}
           onResetPress={async () => {
             setResetLoading(true);
+            setModeFilter("all");
             const startDate = momentT
               .tz(TIMEZONE)
               .startOf("month")
@@ -508,6 +583,7 @@ export default function EmployeeBranchExpenses() {
         date={imageURL?.date}
       />
     </div>
+
   );
 }
 type ImageSheetProps = {
@@ -606,7 +682,8 @@ const ImageSheet = ({
 
 const formSchema = z.object({
   note: z.string().min(1, { message: "TID is required." }),
-  amount: z.coerce.number<number>().min(0, "Amount is required"),
+  amount: z.coerce.number<number>().positive("Amount must be greater than zero"),
+  mode: z.enum(["Cash", "Bank"], { message: "Select Cash or Bank." }),
   date: z.date({ error: "Date is required." }),
   image: z.string().min(1, { message: "Image is required." }),
 });
@@ -632,6 +709,7 @@ export const AddExpensesDialog = ({
     defaultValues: {
       note: "",
       amount: 0,
+      mode: undefined,
       date: undefined,
       image: "",
     },
@@ -684,7 +762,7 @@ export const AddExpensesDialog = ({
                 Add New Office Expense
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
-                Record amount, date, note, and receipt attachment.
+                Record amount, mode, date, note, and receipt attachment.
               </DialogDescription>
             </div>
           </div>
@@ -726,6 +804,28 @@ export const AddExpensesDialog = ({
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel>Amount</FieldLabel>
                         <Input placeholder="Enter amount" {...field} />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+
+                  <Controller
+                    name="mode"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel>Mode</FieldLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="h-9 rounded-lg">
+                            <SelectValue placeholder="Select mode" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cash">Cash</SelectItem>
+                            <SelectItem value="Bank">Bank</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
                         )}

@@ -1,4 +1,5 @@
 import pool from "@/config/db";
+import { creditOfficeFund, withOfficeFundTransaction } from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -13,35 +14,46 @@ export async function POST(req: NextRequest) {
     }
 
     const { part_id } = data;
-    const invoiceResult = await pool.query(
-      `SELECT id FROM savedinvoices
-       WHERE id = $1 AND invoice_status = 'issued'`,
-      [part_id],
-    );
+    const fields = Object.keys(data);
+    const values = Object.values(data);
+    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
 
-    if (!invoiceResult.rowCount) {
+    const added = await withOfficeFundTransaction(pool, async (client) => {
+      const invoiceResult = await client.query(
+        `SELECT id FROM savedinvoices
+         WHERE id = $1 AND invoice_status = 'issued' FOR UPDATE`,
+        [part_id],
+      );
+      if (!invoiceResult.rowCount) return false;
+
+      const query = `
+        INSERT INTO customer_parts (${fields.join(", ")})
+        VALUES (${placeholders})
+        RETURNING id, amount, mode, part_id
+      `;
+      const payment = (await client.query(query, values)).rows[0];
+      await creditOfficeFund(client, {
+        office: "lahore",
+        sourceType: "pos_payment",
+        sourceId: Number(payment.id),
+        invoiceId: Number(payment.part_id),
+        mode: payment.mode,
+        amount: payment.amount,
+      });
+      await client.query(
+        `UPDATE savedinvoices SET payment = $1
+         WHERE id = $2 AND invoice_status = 'issued'`,
+        [true, part_id],
+      );
+      return true;
+    });
+
+    if (!added) {
       return NextResponse.json(
         { message: "Payments can only be added to issued invoices" },
         { status: 409 },
       );
     }
-
-    const fields = Object.keys(data);
-    const values = Object.values(data);
-    const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
-
-    const query = `
-        INSERT INTO customer_parts (${fields.join(", ")})
-        VALUES (${placeholders})
-    `;
-
-    await pool.query(query, values);
-    await pool.query(
-      `UPDATE savedinvoices SET 
-                payment = $1
-             WHERE id = $2 AND invoice_status = 'issued'`,
-      [true, part_id],
-    );
 
     return NextResponse.json(
       {
@@ -65,6 +77,23 @@ export async function PUT(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
+    }
+
+    if (["amount", "mode", "part_id"].some((field) => updates[field] !== undefined)) {
+      const tracked = await pool.query(
+        `SELECT EXISTS (
+           SELECT 1 FROM office_fund_movements
+           WHERE office = $1 AND source_type = 'pos_payment'
+             AND source_id = $2 AND kind = 'pos_payment_added'
+         ) AS tracked`,
+        ["lahore", id],
+      );
+      if (tracked.rows[0]?.tracked) {
+        return NextResponse.json(
+          { message: "A tracked payment's amount, mode or invoice cannot be edited; remove and re-add the payment." },
+          { status: 409 },
+        );
+      }
     }
 
     const fields: string[] = [];

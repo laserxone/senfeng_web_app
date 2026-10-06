@@ -554,6 +554,7 @@ export type ComplaintProps = {
 export type OfficeExpenseProps = {
   id: number;
   amount: string;
+  mode: "Cash" | "Bank" | null;
   created_at: string;
   image: string;
   note: string;
