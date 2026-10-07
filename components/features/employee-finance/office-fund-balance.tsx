@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { Banknote, Landmark, WalletCards } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 
 type Balances = { cash: string; bank: string };
 
@@ -14,13 +14,13 @@ const amountFormatter = new Intl.NumberFormat("en-PK", {
 });
 
 export default function OfficeFundBalance({
-  children,
+
   total,
 }: {
-  children?: ReactNode;
+
   total?: number;
 }) {
-  const { userID } = useUserDetail();
+  const { userID, isAdmin } = useUserDetail();
   const [balances, setBalances] = useState<Balances | null>(null);
   const [failed, setFailed] = useState(false);
   const loading = !balances && !failed;
@@ -49,9 +49,12 @@ export default function OfficeFundBalance({
     return `PKR ${amountFormatter.format(Number(amount))}`;
   };
 
+  const showValues = (isAdmin ? 2 : 1) + (total === undefined ? 0 : 1);
+  const grid = `sm:grid-cols-${showValues}`
+
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
-      <div className={`grid gap-3 ${total !== undefined ? "sm:grid-cols-3" : "sm:grid-cols-2"} `}>
+      <div className={`grid gap-3 ${grid} `}>
         {total !== undefined && <Card size="sm">
           <CardContent className="flex items-center gap-3">
             <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
@@ -80,7 +83,8 @@ export default function OfficeFundBalance({
             </div>
           </CardContent>
         </Card>
-        <Card size="sm">
+
+        {isAdmin && <Card size="sm">
           <CardContent className="flex items-center gap-3">
             <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
               <Landmark className="size-5" />
@@ -94,9 +98,8 @@ export default function OfficeFundBalance({
               </p>
             </div>
           </CardContent>
-        </Card>
+        </Card>}
       </div>
-      {children}
     </div>
   );
 }
