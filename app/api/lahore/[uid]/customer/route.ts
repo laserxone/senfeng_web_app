@@ -167,7 +167,8 @@ export async function GET(
       c.customer_group,
       c.created_at, 
       c.member,
-
+      c.lead,
+       COALESCE(ul.name, '') AS lead_name,
       COALESCE(u.name, '') AS ownership_name,
       COALESCE(u.dp, '') AS ownership_name_dp,
 
@@ -202,6 +203,7 @@ export async function GET(
 
     LEFT JOIN users u 
       ON c.ownership = u.id
+      LEFT JOIN users ul ON c.lead = ul.id
   `;
 
         if (member) {
@@ -225,7 +227,7 @@ export async function GET(
         }
 
         query += `
-    GROUP BY c.id, u.name, u.dp
+    GROUP BY c.id, u.name, u.dp, ul.name
   `;
 
         const result = await pool.query(query, queryParams);
@@ -235,9 +237,11 @@ export async function GET(
         let query = `
                 SELECT 
                 customer.*, 
-                users.name AS ownership_name
+                users.name AS ownership_name,
+                ul.name AS lead_name
                 FROM customer
                 LEFT JOIN users ON customer.ownership = users.id
+                LEFT JOIN users ul ON customer.lead = ul.id
                 
                 `;
         if (member && member === "true") {
@@ -302,7 +306,8 @@ export async function GET(
       c.created_at,
       c.lead,
       c.member,
-      COALESCE(u.name, '') AS ownership_name
+      COALESCE(u.name, '') AS ownership_name,
+      COALESCE(ul.name, '') AS lead_name
       ${
         machinesQuery
           ? `,
@@ -317,6 +322,7 @@ export async function GET(
       }
     FROM customer c
     LEFT JOIN users u ON c.ownership = u.id
+    LEFT JOIN users ul ON c.lead = ul.id
     ${
       machinesQuery
         ? `LEFT JOIN sale s ON c.id = s.customer_id
@@ -363,7 +369,7 @@ export async function GET(
       }
 
       query += `
-    GROUP BY c.id, u.name
+    GROUP BY c.id, u.name, ul.name
     ORDER BY c.name ASC
   `;
 

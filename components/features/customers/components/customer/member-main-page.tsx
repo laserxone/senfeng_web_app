@@ -134,6 +134,26 @@ export default function MemberMainPage({
       },
       cell: ({ row }) => <div>{row.getValue("ownership_name")}</div>,
     },
+     ...(isAdmin
+    ? [
+        {
+          accessorKey: "lead_name",
+          filterFn: "includesString",
+          header: ({ column }) => (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Lead By
+              <ArrowUpDown />
+            </Button>
+          ),
+          cell: ({ row }) => <div>{row.getValue("lead_name")}</div>,
+        } satisfies ColumnDef<MyCustomerResolved>,
+      ]
+    : []),
     {
       accessorKey: "number",
       filterFn: "includesString",
@@ -291,7 +311,7 @@ export default function MemberMainPage({
       additionalFilter == "duplicate"
         ? item.orignalNumber?.some((num) => numCount[num] > 1)
         : additionalFilter === "mycustomers"
-          ? item.ownership === userID || item.sell_by?.includes(Number(userID))
+          ? item.ownership === userID || item.sell_by?.includes(Number(userID)) || item?.lead === userID
           : true,
     )
     .filter((item) =>

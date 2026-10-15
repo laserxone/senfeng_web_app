@@ -182,6 +182,7 @@ export type MyCustomer = {
   location?: string;
   number?: string[];
   lead?: number | null;
+  lead_name ?:string
   ownership?: number;
   office?: string | null;
   ownership_name?: string | null;
@@ -215,6 +216,7 @@ export type MyCustomerResolved = {
   location?: string;
   number?: string;
   lead?: number | null;
+  lead_name ?: string
   ownership?: number;
   office?: string | null;
   ownership_name?: string | null;
