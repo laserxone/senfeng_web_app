@@ -1,6 +1,7 @@
 import pool from "@/config/db";
 import { storage } from "@/config/firebase";
 import { partFields, saleFields } from "@/constants/data";
+import { calculateCreditEndDate } from "@/lib/credit-terms";
 import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
@@ -480,6 +481,8 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; uid: string }> },
 ) {
+  const client = await pool.connect();
+  let transactionFinished = false;
   try {
     const data = await req.json();
     const { ...updates } = data;
@@ -487,6 +490,73 @@ export async function PUT(
 
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
+    }
+
+    await client.query("BEGIN");
+    const saleResult = await client.query(
+      `SELECT type, review_status, is_credit, credit_months, credit_start_date::text AS credit_start_date
+       FROM sale WHERE id = $1 FOR UPDATE`,
+      [id],
+    );
+    const sale = saleResult.rows[0];
+    if (!sale) {
+      return NextResponse.json({ message: "Machine not found" }, { status: 404 });
+    }
+
+    for (const field of ["review_status", "reviewed_by", "reviewed_at"]) {
+      if (field in updates) {
+        return NextResponse.json(
+          { message: "Review fields can only be changed through owner review" },
+          { status: 403 },
+        );
+      }
+    }
+
+    const creditFields = [
+      "is_credit",
+      "credit_months",
+      "credit_start_date",
+      "credit_end_date",
+    ];
+    if (creditFields.some((field) => field in updates)) {
+      if (sale.type !== "Machine" || sale.review_status === "approved") {
+        return NextResponse.json(
+          { message: "Credit terms cannot be changed for this machine" },
+          { status: 403 },
+        );
+      }
+      if ("credit_end_date" in updates) {
+        return NextResponse.json(
+          { message: "Credit end date is calculated automatically" },
+          { status: 400 },
+        );
+      }
+      const isCredit = updates.is_credit ?? sale.is_credit;
+      if (typeof isCredit !== "boolean") {
+        return NextResponse.json(
+          { message: "Invalid credit selection" },
+          { status: 400 },
+        );
+      }
+      updates.is_credit = isCredit;
+      if (isCredit) {
+        const startDate = updates.credit_start_date ?? sale.credit_start_date;
+        const months = updates.credit_months ?? sale.credit_months;
+        const endDate = calculateCreditEndDate(startDate, months);
+        if (!endDate) {
+          return NextResponse.json(
+            { message: "Enter a valid credit start date and a positive number of months" },
+            { status: 400 },
+          );
+        }
+        updates.credit_months = months;
+        updates.credit_start_date = startDate;
+        updates.credit_end_date = endDate;
+      } else {
+        updates.credit_months = null;
+        updates.credit_start_date = null;
+        updates.credit_end_date = null;
+      }
     }
 
     const fields: string[] = [];
@@ -514,7 +584,9 @@ export async function PUT(
           RETURNING *
       `;
 
-    const result = await pool.query(query, values);
+    const result = await client.query(query, values);
+    await client.query("COMMIT");
+    transactionFinished = true;
 
     try {
       const logMSG = generateLog(data, "Machine updated");
@@ -539,6 +611,10 @@ export async function PUT(
       { message: "Internal Server Error" },
       { status: 500 },
     );
+  }
+  finally {
+    if (!transactionFinished) await client.query("ROLLBACK");
+    client.release();
   }
 }
 

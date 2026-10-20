@@ -1,16 +1,4 @@
-import useUserDetail from "@/hooks/use-user-detail";
-import axios from "@/lib/axios";
-import { ChequeProp } from "@/lib/types";
-import { UploadImage } from "@/lib/uploadFunction";
-import { OfficeContext } from "@/store/context/OfficeContext";
-import { zodResolver } from "@hookform/resolvers/zod";
-import moment from "moment";
-import { useContext, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
 import AppCalendar from "@/components/features/calendar/app-calendar";
-import { AvailableMachines } from "./available-machines";
-import ChequeCredit from "./cheque-credit";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -31,9 +19,23 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Wrench } from "lucide-react";
+import useUserDetail from "@/hooks/use-user-detail";
+import axios from "@/lib/axios";
+import { calculateCreditEndDate } from "@/lib/credit-terms";
 import { TriggerFirebaseForChequeAlerts } from "@/lib/triggerFirebase";
+import { ChequeProp } from "@/lib/types";
+import { UploadImage } from "@/lib/uploadFunction";
+import { OfficeContext } from "@/store/context/OfficeContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { Plus, Wrench } from "lucide-react";
+import moment from "moment";
+import { useContext, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
+import { AvailableMachines } from "./available-machines";
+import ChequeCredit from "./cheque-credit";
 
 const AddMachine = ({
   customer_id,
@@ -64,6 +66,9 @@ const AddMachine = ({
       source: z.string().min(1, { message: "Source is required." }),
       contractDate: z.date({ error: "Contract date is required." }),
       isSpeedMoney: z.boolean(),
+      isCredit: z.boolean(),
+      creditMonths: z.coerce.number<number>().optional(),
+      creditStartDate: z.string().optional(),
       speedMoney: z.coerce.number<number>().optional(),
       speedMoneyNote: z.string().optional(),
       totalPrice: z.coerce.number<number>({ error: "Price is required" }),
@@ -82,7 +87,16 @@ const AddMachine = ({
         message: "Machine selection is required",
         path: ["order_item"],
       },
-    );
+    )
+    .superRefine((data, context) => {
+      if (!data.isCredit) return;
+      if (!Number.isSafeInteger(data.creditMonths) || !data.creditMonths || data.creditMonths < 1) {
+        context.addIssue({ code: "custom", path: ["creditMonths"], message: "Enter a positive number of months" });
+      }
+      if (!data.creditStartDate || !calculateCreditEndDate(data.creditStartDate, data.creditMonths ?? 0)) {
+        context.addIssue({ code: "custom", path: ["creditStartDate"], message: "Select a valid start date" });
+      }
+    });
 
   type FormValues = z.infer<typeof formSchema>;
 
@@ -94,6 +108,9 @@ const AddMachine = ({
       source: "",
       contractDate: undefined,
       isSpeedMoney: false,
+      isCredit: false,
+      creditMonths: undefined,
+      creditStartDate: "",
       speedMoney: 0,
       speedMoneyNote: "",
       totalPrice: 0,
@@ -102,6 +119,14 @@ const AddMachine = ({
       note: "",
     },
   });
+
+  const isCredit = useWatch({ control: form.control, name: "isCredit" });
+  const creditMonths = useWatch({ control: form.control, name: "creditMonths" });
+  const creditStartDate = useWatch({ control: form.control, name: "creditStartDate" });
+  const validCreditPeriod = Number.isSafeInteger(creditMonths) && (creditMonths ?? 0) > 0;
+  const creditEndDate = isCredit
+    ? calculateCreditEndDate(creditStartDate || "", creditMonths ?? 0)
+    : null;
 
   function onSubmit(values: FormValues) {
     if (
@@ -133,6 +158,9 @@ const AddMachine = ({
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
         speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
+        is_credit: values.isCredit,
+        credit_months: values.isCredit ? Number(values.creditMonths) : null,
+        credit_start_date: values.isCredit ? values.creditStartDate : null,
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
@@ -150,11 +178,10 @@ const AddMachine = ({
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
-                const name = `${
-                  OfficeState.value.data
-                }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                  .valueOf()
-                  .toString()}_${idx}.png`;
+                const name = `${OfficeState.value.data
+                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                    .valueOf()
+                    .toString()}_${idx}.png`;
                 const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
@@ -180,6 +207,8 @@ const AddMachine = ({
 
   function handleClose(val: boolean) {
     form.reset();
+    setCheque(false);
+    setIsSpeedMoney(false);
     setOpen(false);
     setSelectedMachine(null);
     setManual(false);
@@ -197,9 +226,8 @@ const AddMachine = ({
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
-          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${
-            cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
-          }`}
+          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
+            }`}
         >
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -220,9 +248,8 @@ const AddMachine = ({
           <div className="flex w-full flex-1">
             <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
               <div
-                className={`flex gap-6 ${
-                  cheque ? "flex-row" : "flex-col"
-                } w-full`}
+                className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
+                  } w-full`}
               >
                 <div
                   className={`${cheque ? "w-1/2" : "w-full"} space-y-2 p-3.5`}
@@ -448,7 +475,80 @@ const AddMachine = ({
                             />
                           </div>
                         </Field>
+                        <Controller
+                          name="isCredit"
+                          control={form.control}
+                          render={({ field }) => (
+                            <Field>
+                              <div className="flex items-center gap-3">
+                                <FieldLabel>Credit</FieldLabel>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={(checked) => {
+                                    field.onChange(checked === true);
+                                    if (checked !== true) {
+                                      form.setValue("creditMonths", 1);
+                                      form.setValue("creditStartDate", "");
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </Field>
+                          )}
+                        />
                       </div>
+
+                      {isCredit && (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Controller
+                            name="creditMonths"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Credit period (months)</FieldLabel>
+                                <Input
+                                  placeholder="Enter period"
+                                  value={field.value ?? ""}
+                                  onChange={(event) => {
+                                    const months = event.target.value === "" ? undefined : Number(event.target.value);
+                                    field.onChange(months);
+                                    if (!Number.isSafeInteger(months) || !months || months < 1) {
+                                      form.setValue("creditStartDate", "");
+                                    }
+                                  }}
+                                />
+                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                              </Field>
+                            )}
+                          />
+                          <Controller
+                            name="creditStartDate"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                              <Field data-invalid={fieldState.invalid}>
+                                <FieldLabel>Credit start date</FieldLabel>
+                                <AppCalendar
+                                  key={validCreditPeriod ? "active" : "inactive"}
+                                  date={field.value ? new Date(`${field.value}T00:00:00`) : undefined}
+                                  onChange={(date) => field.onChange(format(date, "yyyy-MM-dd"))}
+                                  max=""
+                                  disabled={!validCreditPeriod}
+                                />
+                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                              </Field>
+                            )}
+                          />
+                          <Field className="sm:col-span-2">
+                            <FieldLabel>Credit end date</FieldLabel>
+                            <Input
+                              className="h-9 rounded-lg"
+                              value={creditEndDate ? format(new Date(`${creditEndDate}T00:00:00`), "PPP") : ""}
+                              placeholder="Calculated automatically"
+                              readOnly
+                            />
+                          </Field>
+                        </div>
+                      )}
 
                       {isSpeedMoney && (
                         <>

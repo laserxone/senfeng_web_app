@@ -904,7 +904,9 @@ const ReviewFieldGroup = ({
             {key.replaceAll("_", " ")}
           </p>
           <p className="mt-0.5 break-words text-xs text-foreground">
-            {formatReviewValue(value)}
+            {key === "contract_date" && value
+                ? moment(value as string).format("YYYY-MM-DD")
+                : formatReviewValue(value)}
           </p>
         </div>
       ))}
@@ -926,12 +928,29 @@ const ReviewMachineDetails = ({
     : [];
   const machineValues = Object.fromEntries(
     Object.entries(machine).filter(
-      ([key]) => key !== "type" && key !== "parts_information",
+      ([key]) =>
+        key !== "type" &&
+        key !== "parts_information" &&
+        !["is_credit", "credit_months", "credit_start_date", "credit_end_date"].includes(key),
     ),
   );
 
   if (!isPartsSale) {
-    return <ReviewFieldGroup title="Machine details" values={machineValues} />;
+    return (
+      <div className="space-y-4">
+        <ReviewFieldGroup title="Machine details" values={machineValues} />
+        {machine.is_credit === true && (
+          <ReviewFieldGroup
+            title="Credit terms"
+            values={{
+              "Credit period": `${machine.credit_months} months`,
+              "Credit start date": String(machine.credit_start_date).slice(0, 10),
+              "Credit end date": String(machine.credit_end_date).slice(0, 10),
+            }}
+          />
+        )}
+      </div>
+    );
   }
 
   return (

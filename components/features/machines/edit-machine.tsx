@@ -21,14 +21,16 @@ import { MachineProps } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Spinner from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { calculateCreditEndDate } from "@/lib/credit-terms";
 import { OfficeContext } from "@/store/context/OfficeContext";
+import { format } from "date-fns";
 
 const formSchema = z.object({
   machineModel: z.string().min(1, { message: "Machine model is required." }),
@@ -36,12 +38,23 @@ const formSchema = z.object({
   source: z.string().min(1, { message: "Source is required." }),
   contractDate: z.date({ error: "Contract date is required." }),
   isSpeedMoney: z.boolean(),
+  isCredit: z.boolean(),
+  creditMonths: z.coerce.number<number>().optional(),
+  creditStartDate: z.string().optional(),
   speedMoney: z.coerce.number<number>().optional(),
   speedMoneyNote: z.string().optional(),
   note: z.string().optional(),
   totalPrice: z.coerce.number<number>({ error: "Price is required" }),
   cnic: z.string().optional(),
   orderNo: z.string(),
+}).superRefine((data, context) => {
+  if (!data.isCredit) return;
+  if (!Number.isSafeInteger(data.creditMonths) || !data.creditMonths || data.creditMonths < 1) {
+    context.addIssue({ code: "custom", path: ["creditMonths"], message: "Enter a positive number of months" });
+  }
+  if (!data.creditStartDate || !calculateCreditEndDate(data.creditStartDate, data.creditMonths ?? 0)) {
+    context.addIssue({ code: "custom", path: ["creditStartDate"], message: "Select a valid start date" });
+  }
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,7 +75,7 @@ const EditMachine = ({
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const { userID, office } = useUserDetail();
-  const {state : OfficeState} = useContext(OfficeContext)!
+  const { state: OfficeState } = useContext(OfficeContext)!
   const isKarachi = OfficeState.value.data?.toLowerCase() === "karachi";
 
   const form = useForm<FormValues>({
@@ -73,6 +86,9 @@ const EditMachine = ({
       source: "",
       contractDate: undefined,
       isSpeedMoney: false,
+      isCredit: false,
+      creditMonths: undefined,
+      creditStartDate: "",
       speedMoney: 0,
       speedMoneyNote: "",
       note: "",
@@ -81,6 +97,15 @@ const EditMachine = ({
       orderNo: "",
     },
   });
+
+  const canEditCredit = data?.review_status !== "approved";
+  const isCredit = useWatch({ control: form.control, name: "isCredit" });
+  const creditMonths = useWatch({ control: form.control, name: "creditMonths" });
+  const creditStartDate = useWatch({ control: form.control, name: "creditStartDate" });
+  const validCreditPeriod = Number.isSafeInteger(creditMonths) && (creditMonths ?? 0) > 0;
+  const creditEndDate = isCredit
+    ? calculateCreditEndDate(creditStartDate || "", creditMonths ?? 0)
+    : null;
 
   useEffect(() => {
     if (data) {
@@ -92,6 +117,9 @@ const EditMachine = ({
           ? new Date(data.contract_date)
           : undefined,
         isSpeedMoney: data?.speed_money,
+        isCredit: data?.is_credit ?? false,
+        creditMonths: data?.credit_months ?? undefined,
+        creditStartDate: data?.credit_start_date?.slice(0, 10) ?? "",
         speedMoney: Number(data?.speed_money_amount ?? 0),
         speedMoneyNote: data?.speed_money_note || "",
         note: data?.note || "",
@@ -113,16 +141,21 @@ const EditMachine = ({
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
         speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
+        ...(canEditCredit ? {
+          is_credit: values.isCredit,
+          credit_months: values.isCredit ? values.creditMonths : null,
+          credit_start_date: values.isCredit ? values.creditStartDate : null,
+        } : {}),
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
         note: values.note,
         ...(isKarachi
           ? {
-              order_no_arr: values.orderNo.trim()
-                ? [values.orderNo.trim()]
-                : [],
-            }
+            order_no_arr: values.orderNo.trim()
+              ? [values.orderNo.trim()]
+              : [],
+          }
           : {}),
         price: values.totalPrice,
         contract_date: values.contractDate,
@@ -330,6 +363,82 @@ const EditMachine = ({
                     </Field>
                   )}
                 />
+
+                {canEditCredit && (
+                  <Controller
+                    name="isCredit"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Field>
+                        <div className="flex items-center gap-3">
+                          <FieldLabel>Credit</FieldLabel>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked === true);
+                              if (checked !== true) {
+                                form.setValue("creditMonths", undefined);
+                                form.setValue("creditStartDate", "");
+                              }
+                            }}
+                          />
+                        </div>
+                      </Field>
+                    )}
+                  />
+                )}
+
+                {canEditCredit && isCredit && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Controller
+                      name="creditMonths"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Credit period (months)</FieldLabel>
+                          <Input
+                            placeholder="Enter period"
+                            value={field.value ?? ""}
+                            onChange={(event) => {
+                              const months = event.target.value === "" ? undefined : Number(event.target.value);
+                              field.onChange(months);
+                              if (!Number.isSafeInteger(months) || !months || months < 1) {
+                                form.setValue("creditStartDate", "");
+                              }
+                            }}
+                          />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      name="creditStartDate"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel>Credit start date</FieldLabel>
+                          <AppCalendar
+                            key={validCreditPeriod ? "active" : "inactive"}
+                            date={field.value ? new Date(`${field.value}T00:00:00`) : undefined}
+                            onChange={(date) => field.onChange(format(date, "yyyy-MM-dd"))}
+                            max=""
+                            disabled={!validCreditPeriod}
+                          />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                    <Field className="sm:col-span-2">
+                      <FieldLabel>Credit end date</FieldLabel>
+                      <Input
+                        className="h-9 rounded-lg"
+                        value={creditEndDate ? format(new Date(`${creditEndDate}T00:00:00`), "PPP") : ""}
+                        placeholder="Calculated automatically"
+                        readOnly
+                      />
+                    </Field>
+                  </div>
+                )}
 
                 {isSpeedMoney && (
                   <>

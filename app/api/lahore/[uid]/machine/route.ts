@@ -3,6 +3,7 @@ import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { addLog } from "@/lib/addLog";
 import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
+import { calculateCreditEndDate } from "@/lib/credit-terms";
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 
@@ -28,6 +29,37 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
           { message: "No data provided for insertion" },
           { status: 400 },
         );
+      }
+
+      if (data.type === "Machine") {
+        if (typeof data.is_credit !== "boolean") {
+          return NextResponse.json(
+            { message: "Credit selection is required" },
+            { status: 400 },
+          );
+        }
+        if (data.is_credit) {
+          const endDate = calculateCreditEndDate(
+            data.credit_start_date,
+            data.credit_months,
+          );
+          if (!endDate) {
+            return NextResponse.json(
+              { message: "Enter a valid credit start date and a positive number of months" },
+              { status: 400 },
+            );
+          }
+          data.credit_end_date = endDate;
+        } else {
+          data.credit_months = null;
+          data.credit_start_date = null;
+          data.credit_end_date = null;
+        }
+      } else {
+        data.is_credit = false;
+        data.credit_months = null;
+        data.credit_start_date = null;
+        data.credit_end_date = null;
       }
 
       client = await pool.connect();

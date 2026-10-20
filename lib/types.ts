@@ -718,6 +718,10 @@ export type MachineProps = {
   sale_id?: number;
   shipment_title?: string[];
   review_status?: "pending" | "approved" | "rejected";
+  is_credit?: boolean;
+  credit_months?: number | null;
+  credit_start_date?: string | null;
+  credit_end_date?: string | null;
   reviewed_at?: string | null;
   reviewed_by?: number | null;
 };

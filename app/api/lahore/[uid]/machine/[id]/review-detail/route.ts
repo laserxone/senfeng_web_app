@@ -41,6 +41,10 @@ export const createMachineReviewDetailHandler = (
            'serial_no', s.serial_no,
            'parts_information', s.parts_information,
            'contract_date', s.contract_date,
+           'is_credit', s.is_credit,
+           'credit_months', s.credit_months,
+           'credit_start_date', s.credit_start_date,
+           'credit_end_date', s.credit_end_date,
            'review_status', s.review_status
          ) AS machine,
          COALESCE(

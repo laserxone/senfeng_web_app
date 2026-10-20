@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
 
     query += `
   GROUP BY o.id, u.id
-  ORDER BY o.created_at DESC;
+  ORDER BY o.id DESC;
 `;
 
     const result = await pool.query(query, queryParams);

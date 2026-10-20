@@ -15,6 +15,7 @@ interface AppCalendarProps {
   min?: Date;
   max?: Date | "";
   required?: boolean;
+  disabled?: boolean;
 }
 const AppCalendar = ({
   date,
@@ -22,14 +23,16 @@ const AppCalendar = ({
   min = new Date("1900-01-01"),
   max = new Date(),
   required = false,
+  disabled = false,
 }: AppCalendarProps) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   return (
-    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+    <Popover open={isCalendarOpen && !disabled} onOpenChange={setIsCalendarOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
+          disabled={disabled}
           className={cn(
             "w-full pl-3 text-left font-normal",
             !date && "text-muted-foreground",
