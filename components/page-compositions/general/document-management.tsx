@@ -72,6 +72,7 @@ export default function DocumentManagement() {
   const [selectedFileForRename, setSelectedFileForRename] =
     useState<FileNode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadInProgressRef = useRef(false);
   const [uploadProgress, setUploadProgress] = useState<{
     file: string;
     progress: number;
@@ -362,50 +363,62 @@ export default function DocumentManagement() {
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (!files?.length || !selectedFolder) return;
-
-      const file = files[0];
-      setUploadProgress({ file: file.name, progress: 0 });
-      const type = getFileType(file.name);
-
-      let thumbnail: string | undefined = undefined;
-
-      if (type === "video") {
-        try {
-          const blob = await getVideoThumbnailFromFile(file);
-          if (blob) {
-            const thumbnailPath = `thumbnails/${file.name}`;
-            const { error } = await supabase.storage
-              .from("documents")
-              .upload(thumbnailPath, blob, {
-                contentType: "image/jpeg",
-              });
-            if (!error) {
-              thumbnail = thumbnailPath;
-            } else {
-              console.log("Thumbnail upload failed", error);
-            }
-          }
-        } catch (error) {
-          console.log("Thumbnail generation failed", error);
-        }
-      }
-
-      let res: { path?: string } = {};
-      try {
-        res = await uploadWithProgress(file, (p) =>
-          setUploadProgress({ file: file.name, progress: p }),
-        );
-      } catch (err) {
-        if (thumbnail) {
-          await supabase.storage.from("documents").remove([thumbnail]);
-        }
-        setUploadProgress(null);
+      if (uploadInProgressRef.current) {
+        e.target.value = "";
         return;
       }
 
-      if (res.path) {
-        try {
-          const response = await axios.post(`/${userID}/dms/document`, {
+      const file = files[0];
+      const unsupportedCharacters = [
+        ...new Set(file.name.match(/[^A-Za-z0-9_.'!,*&$@=;:+?() -]/g) ?? []),
+      ];
+      if (unsupportedCharacters.length > 0) {
+        toast.error(
+          `Rename the file before uploading and remove unsupported characters: ${unsupportedCharacters.map((character) => JSON.stringify(character)).join(", ")}. Use a regular hyphen (-) instead of a long dash.`,
+        );
+        e.target.value = "";
+        return;
+      }
+
+      uploadInProgressRef.current = true;
+      setUploadProgress({ file: file.name, progress: 0 });
+      const type = getFileType(file.name);
+      let thumbnail: string | undefined = undefined;
+      let uploadedPath: string | undefined;
+      let saved = false;
+      let stage: "upload" | "save" = "upload";
+
+      try {
+        if (type === "video") {
+          try {
+            const blob = await getVideoThumbnailFromFile(file);
+            if (blob) {
+              const thumbnailPath = `thumbnails/${file.name}`;
+              const { error } = await supabase.storage
+                .from("documents")
+                .upload(thumbnailPath, blob, { contentType: "image/jpeg" });
+              if (error) throw error;
+              thumbnail = thumbnailPath;
+            } else {
+              toast.error(
+                "Could not create a video thumbnail. The file upload will continue.",
+              );
+            }
+          } catch (error) {
+            toast.error(
+              `Could not create a video thumbnail: ${getUploadErrorMessage(error)}. The file upload will continue.`,
+            );
+          }
+        }
+
+        const res = await uploadWithProgress(file, (p) =>
+          setUploadProgress({ file: file.name, progress: p }),
+        );
+        uploadedPath = res.path;
+        stage = "save";
+        const response = await axios.post(
+          `/${userID}/dms/document`,
+          {
             added_by: name || email,
             path: res.path,
             folder_id:
@@ -413,45 +426,71 @@ export default function DocumentManagement() {
             type,
             size: file.size,
             thumbnail_path: thumbnail,
+          },
+          { timeout: 30000 },
+        );
+        saved = true;
+
+        const returningId = response.data?.id;
+        if (!returningId) {
+          const { data } = await axios.get(`/${userID}/dms/folder`, {
+            timeout: 30000,
           });
+          setFolderTree(data);
+        } else {
+          const newFile: FileNode = {
+            id: returningId,
+            name: file.name,
+            path: res.path,
+            folderId: selectedFolder.id,
+            type,
+            size: file.size,
+            createdAt: new Date().toISOString().split("T")[0],
+            addedBy: name,
+            thumbnail,
+          };
 
-          const returningId = response.data?.id;
-
-          if (!returningId) {
-            await fetchData();
-          } else {
-            const newFile: FileNode = {
-              id: returningId,
-              name: file.name,
-              path: res.path,
-              folderId: selectedFolder.id,
-              type,
-              size: file.size,
-              createdAt: new Date().toISOString().split("T")[0],
-              addedBy: name,
-              thumbnail,
-            };
-
-            const updateTree = (node: FolderNode): FolderNode => {
-              if (node.id === selectedFolder.id) {
-                return { ...node, files: [...node.files, newFile] };
-              }
-              return { ...node, children: node.children.map(updateTree) };
-            };
-            if (folderTree) setFolderTree(updateTree(folderTree));
-          }
-        } catch (error) {
-          console.log(error);
-          await supabase.storage
-            .from("documents")
-            .remove([res.path, ...(thumbnail ? [thumbnail] : [])]);
-        } finally {
-          setUploadProgress(null);
-          if (fileInputRef.current) fileInputRef.current.value = "";
+          const updateTree = (node: FolderNode): FolderNode => {
+            if (node.id === selectedFolder.id) {
+              return { ...node, files: [...node.files, newFile] };
+            }
+            return { ...node, children: node.children.map(updateTree) };
+          };
+          if (folderTree) setFolderTree(updateTree(folderTree));
         }
+        toast.success("File uploaded successfully.");
+      } catch (error) {
+        if (saved) {
+          toast.error(
+            `File uploaded, but the list could not refresh: ${getUploadErrorMessage(error)}. Reload the page to see it.`,
+          );
+        } else {
+          toast.error(
+            `${stage === "save" ? "Could not save the uploaded file" : "File upload failed"}: ${getUploadErrorMessage(error)}`,
+          );
+          const paths = [uploadedPath, thumbnail].filter(
+            (path): path is string => Boolean(path),
+          );
+          if (paths.length > 0) {
+            try {
+              const { error: cleanupError } = await supabase.storage
+                .from("documents")
+                .remove(paths);
+              if (cleanupError) throw cleanupError;
+            } catch (cleanupError) {
+              toast.error(
+                `Could not remove the incomplete upload: ${getUploadErrorMessage(cleanupError)}`,
+              );
+            }
+          }
+        }
+      } finally {
+        uploadInProgressRef.current = false;
+        setUploadProgress(null);
+        e.target.value = "";
       }
     },
-    [selectedFolder, folderTree],
+    [selectedFolder, folderTree, email, name, userID],
   );
 
   const officeFile = previewFile
@@ -472,7 +511,7 @@ export default function DocumentManagement() {
         <Button
           variant="ghost"
           onClick={() => fileInputRef.current?.click()}
-          disabled={!selectedFolder}
+          disabled={!selectedFolder || !!uploadProgress}
         >
           <Download className="mr-2 h-4 w-4" />
           Upload
@@ -664,6 +703,7 @@ export default function DocumentManagement() {
                         variant="outline"
                         size="sm"
                         onClick={() => fileInputRef.current?.click()}
+                        disabled={!!uploadProgress}
                       >
                         <Upload className="mr-2 h-4 w-4" />
                         Upload File
@@ -1310,6 +1350,23 @@ const getFileType = (path: string) => {
   return type;
 };
 
+function getUploadErrorMessage(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object") {
+    const value = error as {
+      message?: string;
+      response?: { data?: { message?: string; error?: string } };
+    };
+    return (
+      value.response?.data?.message ||
+      value.response?.data?.error ||
+      value.message ||
+      "An unexpected error occurred"
+    );
+  }
+  return "An unexpected error occurred";
+}
+
 async function uploadWithProgress(
   file: File,
   onProgress?: (progress: number) => void,
@@ -1318,9 +1375,10 @@ async function uploadWithProgress(
     const xhr = new XMLHttpRequest();
 
     const filePath = file.name;
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/documents/${filePath}`;
-
+    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/documents/${encodeURIComponent(filePath)}`;
+    console.log(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     xhr.open("POST", url, true);
+    xhr.timeout = 10 * 60 * 1000;
     xhr.setRequestHeader(
       "Authorization",
       `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
@@ -1339,15 +1397,26 @@ async function uploadWithProgress(
       }
     };
 
-    xhr.onload = async () => {
-      if (xhr.status === 200) {
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
         resolve({ path: filePath });
       } else {
-        reject(xhr.response);
+        let message = `Storage returned HTTP ${xhr.status}`;
+        try {
+          const response = JSON.parse(xhr.responseText);
+          message = response.message || response.error || message;
+        } catch {
+          if (xhr.responseText) message = xhr.responseText;
+        }
+        reject(new Error(message));
       }
     };
 
-    xhr.onerror = () => reject("Upload failed");
+    xhr.onerror = () =>
+      reject(new Error("Network error while uploading the file"));
+    xhr.onabort = () => reject(new Error("The upload was interrupted"));
+    xhr.ontimeout = () =>
+      reject(new Error("The upload timed out. Please try again"));
 
     xhr.send(file);
   });
@@ -1355,40 +1424,83 @@ async function uploadWithProgress(
 
 async function getVideoThumbnailFromFile(file: File): Promise<Blob | null> {
   const videoUrl = URL.createObjectURL(file);
-
   const video = document.createElement("video");
-  video.src = videoUrl;
   video.muted = true;
+  let canvas: HTMLCanvasElement | undefined;
 
-  await new Promise<void>((resolve) => {
-    video.onloadeddata = () => resolve();
-  });
+  const waitForVideo = (
+    eventName: "loadeddata" | "seeked",
+    start: () => void,
+  ) =>
+    new Promise<void>((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timeout);
+        video.removeEventListener(eventName, onSuccess);
+        video.removeEventListener("error", onError);
+      };
+      const onSuccess = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        reject(new Error("The video could not be read"));
+      };
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error("Video thumbnail generation timed out"));
+      }, 15000);
+      video.addEventListener(eventName, onSuccess);
+      video.addEventListener("error", onError);
+      try {
+        start();
+      } catch (error) {
+        cleanup();
+        reject(error);
+      }
+    });
 
-  video.currentTime = Math.min(1, video.duration || 1);
+  try {
+    await waitForVideo("loadeddata", () => {
+      video.src = videoUrl;
+      video.load();
+    });
 
-  await new Promise<void>((resolve) => {
-    video.onseeked = () => resolve();
-  });
+    await waitForVideo("seeked", () => {
+      video.currentTime = Math.min(1, video.duration || 1);
+    });
 
-  const canvas = document.createElement("canvas");
-  canvas.width = 200;
-  canvas.height = 200;
+    canvas = document.createElement("canvas");
+    canvas.width = 200;
+    canvas.height = 200;
 
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Could not create a video thumbnail");
 
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  const blob: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/jpeg", 0.7),
-  );
-
-  // ✅ cleanup (important)
-  URL.revokeObjectURL(videoUrl);
-  video.remove();
-  canvas.remove();
-
-  return blob;
+    return await new Promise<Blob | null>((resolve, reject) => {
+      const timeout = setTimeout(
+        () => reject(new Error("Video thumbnail generation timed out")),
+        15000,
+      );
+      canvas!.toBlob(
+        (blob) => {
+          clearTimeout(timeout);
+          resolve(blob);
+        },
+        "image/jpeg",
+        0.7,
+      );
+    });
+  } finally {
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(videoUrl);
+    video.remove();
+    canvas?.remove();
+  }
 }
 
 function findFolderById(node: FolderNode, id: string): FolderNode | null {
