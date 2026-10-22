@@ -117,12 +117,12 @@ export default function MachinesAvailablePage() {
 
   const columns = useMemo<ColumnDef<MachineGroup>[]>(
     () => [
-      {
-        accessorKey: "name",
-        header: ({ column }) => (
-          <SortableHeader column={column} label="Machine" />
-        ),
-      },
+      // {
+      //   accessorKey: "name",
+      //   header: ({ column }) => (
+      //     <SortableHeader column={column} label="Machine" />
+      //   ),
+      // },
       {
         accessorKey: "model",
         header: ({ column }) => (
