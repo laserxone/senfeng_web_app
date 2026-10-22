@@ -1,1 +1,1 @@
-export const LOCAL_AUTH_EMAIL = "m.adeelahsan@hotmail.com";
+export const LOCAL_AUTH_EMAIL = "";

@@ -48,3 +48,7 @@ certificates
 
 db_backup.backup
 db_backup.bak
+
+/enhancments
+
+backup.dump

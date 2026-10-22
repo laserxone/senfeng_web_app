@@ -1,36 +1,41 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
+export const createPosHandlers = (office: "lahore" | "karachi") => {
+  async function POST(
+    _req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) {
+    const { id } = await params;
 
-  try {
-    const result = await pool.query(
-      `UPDATE savedinvoices
-       SET invoice_status = 'issued'
-       WHERE id = $1 AND invoice_status = 'proforma'
-       RETURNING id, invoicenumber, invoice_status`,
-      [id],
-    );
+    try {
+      const result = await pool.query(
+        `UPDATE savedinvoices
+         SET invoice_status = 'issued'
+         WHERE id = $1 AND office = '${office}' AND invoice_status = 'proforma'
+         RETURNING id, invoicenumber, invoice_status`,
+        [id],
+      );
 
-    if (!result.rowCount) {
+      if (!result.rowCount) {
+        return NextResponse.json(
+          { message: "Only a pro forma invoice can be issued" },
+          { status: 409 },
+        );
+      }
+
+      return NextResponse.json(result.rows[0], { status: 200 });
+    } catch (error: any) {
+      console.error("Error issuing pro forma invoice:", error);
       return NextResponse.json(
-        { message: "Only a pro forma invoice can be issued" },
-        { status: 409 },
+        { message: error?.message || "Unable to issue invoice" },
+        { status: 500 },
       );
     }
-
-    return NextResponse.json(result.rows[0], { status: 200 });
-  } catch (error: any) {
-    console.error("Error issuing pro forma invoice:", error);
-    return NextResponse.json(
-      { message: error?.message || "Unable to issue invoice" },
-      { status: 500 },
-    );
   }
-}
+  return { POST };
+};
+
+export const { POST } = createPosHandlers("lahore");
 
 export const revalidate = 0;

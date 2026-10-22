@@ -581,8 +581,6 @@ export default function BackupPartsPage() {
         loading={loading}
         columns={columns}
         data={tableData}
-        defaultPageSize={50}
-        pageSizeOptions={[25, 50, 100, 200]}
         height="min-h-[calc(100dvh-360px)]"
         onRowClick={() => {}}
       >

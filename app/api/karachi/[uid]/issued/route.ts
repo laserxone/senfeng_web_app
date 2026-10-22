@@ -9,7 +9,7 @@ export async function GET(
 
   try {
     const result = await pool.query(
-      `SELECT * from issueditems_karachi WHERE user_id = $1 AND received IS FALSE`,
+      `SELECT * from issueditems WHERE user_id = $1 AND office = 'karachi' AND received IS FALSE`,
       [uid],
     );
 

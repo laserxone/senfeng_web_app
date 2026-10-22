@@ -161,7 +161,7 @@ export default function ProfilePage() {
         const fileList = Array.from(event.target.files);
         const name = `${OfficeState.value.data}/${userID}/profile/${UserState.value.data?.email}-dp.png`;
         const img = await UploadImage(URL.createObjectURL(fileList[0]), name);
-        const response = await axios.put(`/${userID}`, {
+        const response = await axios.put(`/${userID}/user/${userID}`, {
           dp: name,
         });
         if (UserState.value.data?.id) {
@@ -226,7 +226,7 @@ export default function ProfilePage() {
     const { password, confirmPassword, currentPassword, ...rest } = formData;
 
     try {
-      const response = await axios.put(`/${userID}`, {
+      const response = await axios.put(`/${userID}/user/${userID}`, {
         ...rest,
       });
       if (UserState.value.data?.id) {
@@ -572,7 +572,7 @@ const DocumentCard = ({
       const updatedData = {
         [type]: newFilePath,
       };
-      await axios.put(`/${userId}`, updatedData);
+      await axios.put(`/${userId}/user/${userId}`, updatedData);
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,
@@ -733,7 +733,7 @@ const DocumentCardOther = ({
         other_docs: [...updatedOtherDocs],
       };
 
-      await axios.put(`/${userId}`, updatedData);
+      await axios.put(`/${userId}/user/${userId}`, updatedData);
       if (UserState.value.data?.id) {
         setUser({
           ...UserState.value.data,

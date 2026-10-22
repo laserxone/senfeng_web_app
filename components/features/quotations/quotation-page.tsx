@@ -1,5 +1,7 @@
 "use client";
+import { QuotationForm } from "@/components/features/quotations/quotation-form";
 import AppTable from "@/components/shared/tables/app-table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,8 +11,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Heading from "@/components/ui/heading";
 import Spinner from "@/components/ui/spinner";
-import { QuotationForm } from "@/components/features/quotations/quotation-form";
 import useUserDetail from "@/hooks/use-user-detail";
 import axios from "@/lib/axios";
 import { QuotationData } from "@/lib/types";
@@ -25,7 +27,6 @@ import {
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import Heading from "@/components/ui/heading";
 import { QuotationFormEdit } from "./quotation-form-edit";
 
 export default function QuotationPage() {
@@ -96,172 +97,164 @@ export default function QuotationPage() {
     };
   }, [data]);
 
+  const sortableHeader = (title: string) => {
+    return function SortableHeader({
+      column,
+    }: {
+      column: {
+        getIsSorted: () => false | "asc" | "desc";
+        toggleSorting: (descending?: boolean) => void;
+      };
+    }) {
+      return (
+        <Button
+          variant="ghost"
+          className="h-8 px-0 text-[11px] font-bold tracking-wide text-slate-700 uppercase hover:bg-transparent dark:text-zinc-200"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          {title}
+          <ArrowUpDown className="ml-2 size-3.5" />
+        </Button>
+      );
+    };
+  };
+
   const columns: ColumnDef<QuotationData>[] = [
     {
       accessorKey: "date",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="ml-2">
-          {row.original.date
-            ? moment(new Date(row.original.date)).format("YYYY-MM-DD")
-            : "-"}
-        </div>
-      ),
+      header: sortableHeader("Quote Date"),
+
+      cell: ({ row }) =>
+        row.original.date
+          ? moment(row.original.date).format("DD MMM YYYY")
+          : "—",
     },
     {
       accessorKey: "customer_name",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Customer / Company
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+      header: sortableHeader("Customer / Company"),
+      cell: ({ row }) => (
+        <span className="font-medium break-words">
+          {row.original.customer_name || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div>{row.original.customer_name || "-"}</div>,
     },
     {
       accessorKey: "contact_person",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Contact Person
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+      header: sortableHeader("Contact person"),
+      cell: ({ row }) => (
+        <span className="break-words">
+          {row.original.contact_person || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div>{row.original.contact_person || "-"}</div>,
     },
     {
       accessorKey: "contact_number",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Contact Number
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+      header: sortableHeader("Contact number"),
+      cell: ({ row }) => (
+        <span className="break-words">
+          {row.original.contact_number || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div>{row.original.contact_number || "-"}</div>,
     },
     {
       accessorKey: "user_name",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: sortableHeader("Sales person"),
+      cell: ({ row }) => (
+        <Badge
+          variant="outline"
+          title={row.original.user_name || "Unassigned"}
+          className={`max-w-full text-[10px] ${row.original.user_name
+            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
+            : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+            }`}
         >
-          Sales Person
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+          <span className="min-w-0 truncate">
+            {row.original.user_name || "Unassigned"}
+          </span>
+        </Badge>
       ),
-      cell: ({ row }) => <div>{row.original.user_name || "-"}</div>,
     },
     {
       accessorKey: "machine_model",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Machine Model
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+      header: sortableHeader("Machine model"),
+      cell: ({ row }) => (
+        <span className="font-medium break-words">
+          {row.original.machine_model || "—"}
+        </span>
       ),
-      cell: ({ row }) => <div>{row.original.machine_model || "-"}</div>,
     },
     {
       accessorKey: "machine_power",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Power
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{row.original.machine_power || "-"}</div>,
+      header: sortableHeader("Power"),
+      cell: ({ row }) =>
+        row.original.machine_power ? (
+          <Badge
+            variant="outline"
+            title={row.original.machine_power}
+            className="max-w-full border-slate-200 bg-slate-50 text-[10px] text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          >
+            <span className="min-w-0 truncate">
+              {row.original.machine_power}
+            </span>
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       accessorKey: "price",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Price
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="font-medium">{row.original.price || "-"}</div>
-      ),
+      header: sortableHeader("Price"),
+      cell: ({ row }) =>
+        row.original.price ? (
+          <Badge
+            variant="outline"
+            title={row.original.price}
+            className="max-w-full border-emerald-200 bg-emerald-50 text-[10px] text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+          >
+            <span className="min-w-0 truncate">{row.original.price}</span>
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       accessorKey: "validity",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Validity
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{row.original.validity || "-"}</div>,
+      header: sortableHeader("Validity"),
+      cell: ({ row }) =>
+        row.original.validity ? (
+          <Badge
+            variant="outline"
+            title={row.original.validity}
+            className="max-w-full border-amber-200 bg-amber-50 text-[10px] text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+          >
+            <span className="min-w-0 truncate">{row.original.validity}</span>
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       accessorKey: "payment_terms",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Payment Terms
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
+      header: sortableHeader("Payment terms"),
       cell: ({ row }) => (
-        <div className="max-w-[220px] truncate">
-          {row.original.payment_terms || "-"}
+        <div className="max-w-full truncate" title={row.original.payment_terms}>
+          {row.original.payment_terms || "—"}
         </div>
       ),
     },
     {
       accessorKey: "delivery_time",
-      filterFn: "includesString",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Delivery Time
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{row.original.delivery_time || "-"}</div>,
+      header: sortableHeader("Delivery time"),
+      cell: ({ row }) =>
+        row.original.delivery_time ? (
+
+          <span>
+            {row.original.delivery_time}
+          </span>
+
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       id: "actions",
@@ -270,40 +263,44 @@ export default function QuotationPage() {
         const currentItem = row.original;
 
         return (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-1.5">
             <QuotationFormEdit
               id={currentItem.id}
               data={currentItem}
               onRefresh={fetchData}
             />
             <Button
-              size="icon"
+              size="sm"
               variant="outline"
-              disabled={downloadItem === currentItem?.id}
-              onClick={(e) => {
-                e.stopPropagation();
+              className="h-8 rounded-lg px-2.5"
+              aria-label="Download quotation"
+              disabled={downloadItem === currentItem.id}
+              onClick={(event) => {
+                event.stopPropagation();
                 handleDownloadQuotation(currentItem);
               }}
             >
-              {downloadItem === currentItem?.id ? (
-                <Spinner />
+              {downloadItem === currentItem.id ? (
+                <Spinner className="size-3.5" />
               ) : (
-                <Download className="h-4 w-4" />
+                <Download className="size-3.5" />
               )}
             </Button>
             <Button
-              size="icon"
-              variant="destructive"
-              disabled={deleteItem === currentItem?.id}
-              onClick={(e) => {
-                e.stopPropagation();
+              size="sm"
+              variant="outline"
+              className="h-8 rounded-lg bg-destructive px-2.5 text-white hover:bg-destructive/90 hover:text-white"
+              aria-label="Delete quotation"
+              disabled={deleteItem === currentItem.id}
+              onClick={(event) => {
+                event.stopPropagation();
                 handleDelete(currentItem);
               }}
             >
-              {deleteItem === currentItem?.id ? (
-                <Spinner />
+              {deleteItem === currentItem.id ? (
+                <Spinner className="size-3.5" />
               ) : (
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="size-3.5" />
               )}
             </Button>
           </div>
@@ -311,7 +308,6 @@ export default function QuotationPage() {
       },
     },
   ];
-
   async function handleDownloadQuotation(quotation: QuotationData) {
     if (!quotation?.id) return;
     setDownloadItem(quotation.id);

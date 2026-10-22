@@ -19,6 +19,14 @@ import { toast } from "sonner";
 import Spinner from "@/components/ui/spinner";
 import { LOCAL_AUTH_EMAIL } from "@/lib/auth/local-auth-config";
 
+function loginErrorMessage(error: unknown) {
+  const firebaseError = error as { code?: string; message?: string };
+  if (firebaseError?.code === "auth/user-disabled") {
+    return "Your account is disabled. Please contact an administrator.";
+  }
+  return firebaseError?.message || "Unable to log in. Please try again.";
+}
+
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +40,7 @@ export function LoginForm() {
         toast.success("Login successful");
       })
       .catch((err) => {
-        toast.error(err?.message || "Error login");
+        toast.error(loginErrorMessage(err));
       })
       .finally(() => {
         setLoading(false);
@@ -74,8 +82,7 @@ export function LoginForm() {
         toast.success("Login successful");
       })
       .catch((err) => {
-        console.log(err.message);
-        toast.error(err?.message || "Error login");
+        toast.error(loginErrorMessage(err));
       })
       .finally(() => {
         setLoading(false);

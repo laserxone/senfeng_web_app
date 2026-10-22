@@ -30,13 +30,12 @@ async function restorePartsInventory(
 ) {
   if (String(type).toLowerCase() !== "parts") return;
 
-  const inventoryTable =
-    office === "karachi" ? "inventory_karachi" : "inventory";
   for (const inventoryId of getPartInventoryIds(partsInformation)) {
-    await client.query(
-      `UPDATE ${inventoryTable} SET qty = qty + 1 WHERE id = $1`,
-      [inventoryId],
+    const updated = await client.query(
+      "UPDATE inventory SET qty = qty + 1 WHERE id = $1 AND office = $2",
+      [inventoryId, office],
     );
+    if (updated.rowCount !== 1) throw new Error(`Inventory ${inventoryId} does not belong to ${office}`);
   }
 }
 

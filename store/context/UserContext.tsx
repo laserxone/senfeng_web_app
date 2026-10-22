@@ -1,5 +1,9 @@
 "use client";
 
+import { auth } from "@/config/firebase";
+import axios from "@/lib/axios-new";
+import { NavItems } from "@/lib/types";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { usePathname } from "next/navigation";
 import { useRouter } from "nextjs-toploader/app";
 import {
@@ -9,15 +13,9 @@ import {
   useReducer,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { SET_User } from "../action/UserAction";
 import { myUserReducer } from "../reducer/UserReducer";
-import { auth } from "@/config/firebase";
-import axios from "@/lib/axios";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { toast } from "sonner";
-import { User } from "firebase/auth";
-import { NavItems } from "@/lib/types";
-import { LOCAL_AUTH_EMAIL } from "@/lib/auth/local-auth-config";
 
 export interface AppUser {
   id: number;
@@ -73,7 +71,7 @@ export interface UserContextType {
 
 export const UserContext = createContext<UserContextType>({
   state: { value: { data: null } },
-  setUser: () => {},
+  setUser: () => { },
   loading: false,
 });
 
@@ -94,8 +92,8 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const loadUser = async (email: string, fbUser?: User | null) => {
-      const res = await axios.get(`/userdetail/${email}`);
+    const loadUser = async (fbUser?: User | null) => {
+      const res = await axios.get(`/session`);
       const userData = res.data;
 
       if (userData?.designation) {
@@ -106,32 +104,13 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       return false;
     };
 
-    const localEmail = sessionStorage.getItem("local_auth_email");
-    if (localEmail?.toLowerCase() === LOCAL_AUTH_EMAIL) {
-      setLoading(true);
-      loadUser(localEmail)
-        .then((userExists) => {
-          if (!userExists) {
-            sessionStorage.removeItem("local_auth_email");
-            router.replace("/login");
-          }
-        })
-        .catch(() => {
-          sessionStorage.removeItem("local_auth_email");
-          router.replace("/login");
-        })
-        .finally(() => setLoading(false));
-
-      return;
-    }
 
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       const email = fbUser?.email ?? null;
-      // const email = "aqib.mahmoodlums@gmail.com"
       setLoading(true);
       try {
         if (email) {
-          const userExists = await loadUser(email, fbUser);
+          const userExists = await loadUser(fbUser);
           if (!userExists) {
             toast.error("User does not exist in the system");
             signOut(auth);

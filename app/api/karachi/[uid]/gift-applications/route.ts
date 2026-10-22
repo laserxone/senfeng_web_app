@@ -6,9 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 const selectApplications = (where = "", params: unknown[] = []) =>
   pool.query(
     `SELECT ga.*, u.name AS user_name, u.designation AS user_designation, ah.name AS hierarchy_name, c.name AS customer_name, c.owner AS customer_owner,
-    COALESCE((SELECT json_agg(json_build_object('id', i.id, 'name', i.name, 'qty', requested.qty, 'available_qty', i.qty) ORDER BY i.name) FROM jsonb_to_recordset(ga.inventory_items) AS requested(id integer, qty numeric) JOIN inventory_karachi i ON i.id = requested.id), '[]'::json) AS inventory_details,
+COALESCE((SELECT json_agg(json_build_object('id', i.id, 'name', i.name, 'qty', requested.qty, 'available_qty', i.qty) ORDER BY i.name) FROM jsonb_to_recordset(ga.inventory_items) AS requested(id integer, qty numeric) JOIN inventory i ON i.id = requested.id AND i.office = 'karachi'), '[]'::json) AS inventory_details,
     json_agg(json_build_object('id', gap.id, 'approver_id', gap.approver_id, 'approval_order', gap.approval_order, 'status', gap.status, 'comments', gap.comments, 'acted_at', gap.acted_at, 'approver_name', au.name, 'approver_designation', au.designation) ORDER BY gap.approval_order) FILTER (WHERE gap.id IS NOT NULL) AS approval_steps
-  FROM gift_applications ga JOIN users u ON ga.user_id = u.id LEFT JOIN customer c ON ga.customer_id = c.id LEFT JOIN approval_hierarchies ah ON ga.hierarchy_id = ah.id LEFT JOIN gift_approvals gap ON ga.id = gap.gift_application_id LEFT JOIN users au ON gap.approver_id = au.id ${where}
+  FROM gift_applications ga JOIN users u ON ga.user_id = u.id LEFT JOIN customer c ON ga.customer_id = c.id LEFT JOIN approval_hierarchies ah ON ga.hierarchy_id = ah.id LEFT JOIN gift_approvals gap ON ga.id = gap.gift_application_id LEFT JOIN users au ON gap.approver_id = au.id WHERE c.office = 'karachi' ${where}
   GROUP BY ga.id, u.name, u.designation, ah.name, c.name, c.owner ORDER BY ga.created_at DESC`,
     params,
   );
@@ -20,14 +20,14 @@ export async function GET(request: NextRequest) {
     const approverId = searchParams.get("approver_id");
     if (userId)
       return NextResponse.json(
-        (await selectApplications("WHERE ga.user_id = $1", [Number(userId)]))
+        (await selectApplications("AND ga.user_id = $1", [Number(userId)]))
           .rows,
       );
     if (approverId) {
       const id = Number(approverId);
       const rows = (
         await selectApplications(
-          "WHERE EXISTS (SELECT 1 FROM gift_approvals g WHERE g.gift_application_id = ga.id AND g.approver_id = $1)",
+          "AND EXISTS (SELECT 1 FROM gift_approvals g WHERE g.gift_application_id = ga.id AND g.approver_id = $1)",
           [id],
         )
       ).rows;
@@ -89,6 +89,13 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 },
       );
+    const customer = await client.query(
+      "SELECT id FROM customer WHERE id = $1 AND office = 'karachi'",
+      [customer_id],
+    );
+    if (!customer.rowCount) {
+      return NextResponse.json({ message: "Customer does not belong to this office" }, { status: 409 });
+    }
     const hierarchy = await client.query(
       "SELECT id FROM approval_hierarchies WHERE id = $1 AND hierarchy_type = 'gift'",
       [hierarchy_id],
@@ -125,7 +132,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     const stock = await client.query(
-      "SELECT id, qty FROM inventory_karachi WHERE id = ANY($1::int[])",
+      "SELECT id, qty FROM inventory WHERE id = ANY($1::int[]) AND office = 'karachi'",
       [requestedItems.map((item) => item.id)],
     );
     const available = new Map(

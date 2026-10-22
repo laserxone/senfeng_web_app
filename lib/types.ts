@@ -1047,13 +1047,6 @@ export type POSInvoiceReminder = {
   location?: string;
 };
 
-export type POSCustomer = {
-  id: number;
-  phone: string;
-  name: string;
-  address: string;
-  customer: string;
-};
 
 export type SearchItem = POSInvoiceReminder & {
   total: number;

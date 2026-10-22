@@ -21,9 +21,7 @@ const number = (value: unknown) =>
     ? Number(value)
     : Number.NaN;
 
-export const createInventoryItemsHandler = (
-  inventoryTable: "inventory" | "inventory_karachi",
-) =>
+export const createInventoryItemsHandler = (office: "lahore" | "karachi") =>
   async function POST(req: NextRequest) {
     let client: PoolClient | undefined;
 
@@ -72,8 +70,8 @@ export const createInventoryItemsHandler = (
       await client.query("BEGIN");
       for (const item of normalizedItems) {
         await client.query(
-          `INSERT INTO ${inventoryTable} (name, serial_no, model, power, unit, chinese_name, price, buying, remarks, qty)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0)`,
+          `INSERT INTO inventory (name, serial_no, model, power, unit, chinese_name, price, buying, remarks, qty, office)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0, $10)`,
           [
             item.name,
             item.serial_no,
@@ -84,6 +82,7 @@ export const createInventoryItemsHandler = (
             item.price,
             item.buying,
             item.remarks || null,
+            office,
           ],
         );
       }
@@ -102,4 +101,4 @@ export const createInventoryItemsHandler = (
     }
   };
 
-export const POST = createInventoryItemsHandler("inventory");
+export const POST = createInventoryItemsHandler("lahore");

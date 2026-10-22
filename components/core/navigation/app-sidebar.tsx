@@ -93,7 +93,7 @@ export default function AppSidebar({ office }: { office: string }) {
       </SidebarHeader>
 
       <SidebarContent className="overflow-x-hidden">
-        <ScrollArea>
+        <ScrollArea className="h-[calc(100dvh-150px)]">
           <SidebarGroup>
             <SidebarMenu>
               {nav_items.map((item, index) => {
@@ -281,7 +281,6 @@ export default function AppSidebar({ office }: { office: string }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }

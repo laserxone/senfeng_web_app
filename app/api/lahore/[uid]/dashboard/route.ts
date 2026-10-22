@@ -713,12 +713,12 @@ ORDER BY u.name ASC;
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
 FROM savedinvoices si
 LEFT JOIN customer_parts cp
-    ON cp.part_id = si.id
+    ON cp.part_id = si.id AND cp.office = si.office
 LEFT JOIN customer c
     ON c.id = si.customer_id
 LEFT JOIN users u
     ON u.id = c.ownership
-WHERE si.owner_paid IS FALSE
+WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
   AND si.invoice_status = 'issued'
 GROUP BY si.id, u.name
 ORDER BY created_at DESC
@@ -1240,12 +1240,12 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
 FROM savedinvoices si
 LEFT JOIN customer_parts cp
-    ON cp.part_id = si.id
+    ON cp.part_id = si.id AND cp.office = si.office
 LEFT JOIN customer c
     ON c.id = si.customer_id
 LEFT JOIN users u
     ON u.id = c.ownership
-WHERE si.owner_paid IS FALSE
+WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
   AND si.invoice_status = 'issued'
 GROUP BY si.id, u.name
 ORDER BY created_at DESC
@@ -1684,10 +1684,10 @@ async function getSalesData(
       'created_at', c.created_at
     ) AS customer
   FROM savedinvoices si
-  LEFT JOIN customer_parts cp ON cp.part_id = si.id
+  LEFT JOIN customer_parts cp ON cp.part_id = si.id AND cp.office = si.office
   LEFT JOIN customer c ON c.id = si.customer_id
   LEFT JOIN users u ON u.id = c.ownership
-  WHERE si.owner_paid IS FALSE
+  WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
     AND si.invoice_status = 'issued'
     AND c.ownership = $1
   GROUP BY si.id, u.name, c.id
@@ -2200,12 +2200,12 @@ async function getStoreData(uid: string) {
       COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
     FROM savedinvoices si
     LEFT JOIN customer_parts cp
-      ON cp.part_id = si.id
+      ON cp.part_id = si.id AND cp.office = si.office
     LEFT JOIN customer c
       ON c.id = si.customer_id
     LEFT JOIN users u
       ON u.id = c.ownership
-    WHERE si.owner_paid IS FALSE
+    WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
       AND si.invoice_status = 'issued'
     GROUP BY si.id, u.name, c.location
     ORDER BY si.created_at DESC
@@ -2266,7 +2266,7 @@ async function getStoreData(uid: string) {
       phone,
       address
     FROM savedinvoices
-    WHERE created_at BETWEEN $1 AND $2
+    WHERE office = 'lahore' AND created_at BETWEEN $1 AND $2
       AND invoice_status = 'issued'
     ORDER BY created_at DESC
   `;
@@ -2283,7 +2283,7 @@ async function getStoreData(uid: string) {
   const lowStockQuery = `
   SELECT *
   FROM inventory
-  WHERE threshold IS NOT NULL
+  WHERE office = 'lahore' AND threshold IS NOT NULL
     AND qty IS NOT NULL
     AND qty <= threshold
   ORDER BY name ASC

@@ -332,13 +332,9 @@ export async function GET(
           .then((paymentResult) => paymentResult.rows)
       : Promise.resolve([]);
 
-    const isKarachiRequest = req.nextUrl.pathname.startsWith("/api/karachi/");
-    const invoiceTable = isKarachiRequest
-      ? "savedinvoices_karachi"
-      : "savedinvoices";
-    const customerPartsTable = isKarachiRequest
-      ? "customer_parts_karachi"
-      : "customer_parts";
+    const posOffice = req.nextUrl.pathname.startsWith("/api/karachi/")
+      ? "karachi"
+      : "lahore";
     const posRowsPromise: Promise<POSSearchRow[]> = canSearchPOS
       ? pool
           .query<POSSearchRow>(
@@ -355,9 +351,9 @@ export async function GET(
                     CASE WHEN c.id IS NOT NULL THEN 'Customer: ' || COALESCE(NULLIF(c.name, ''), c.owner) END
                   ) AS description,
                   si.id AS invoice_id
-                FROM ${invoiceTable} si
+                FROM savedinvoices si
                 LEFT JOIN customer c ON c.id = si.customer_id
-                WHERE si.invoicenumber ILIKE $1
+                WHERE si.invoicenumber ILIKE $1 AND si.office = $2
                 ORDER BY si.created_at DESC NULLS LAST, si.id DESC
                 LIMIT 10
               ) AS invoice_results
@@ -377,8 +373,8 @@ export async function GET(
                     CASE WHEN c.id IS NOT NULL THEN 'Customer: ' || COALESCE(NULLIF(c.name, ''), c.owner) END
                   ) AS description,
                   si.id AS invoice_id
-                FROM ${customerPartsTable} cp
-                INNER JOIN ${invoiceTable} si ON si.id = cp.part_id
+                FROM customer_parts cp
+                INNER JOIN savedinvoices si ON si.id = cp.part_id AND si.office = cp.office
                 LEFT JOIN customer c ON c.id = si.customer_id
                 CROSS JOIN LATERAL (
                   SELECT cp.note AS title WHERE cp.note ILIKE $1
@@ -387,11 +383,12 @@ export async function GET(
                   UNION
                   SELECT cp.received_by AS title WHERE cp.received_by ILIKE $1
                 ) matches
+                WHERE cp.office = $2
                 ORDER BY cp.id DESC
                 LIMIT 10
               ) AS customer_part_results
             `,
-            [`%${q}%`],
+            [`%${q}%`, posOffice],
           )
           .then((posResult) => posResult.rows)
       : Promise.resolve([]);

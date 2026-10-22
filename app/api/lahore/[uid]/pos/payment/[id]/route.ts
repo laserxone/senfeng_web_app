@@ -1,104 +1,121 @@
 import pool from "@/config/db";
-import { reverseOfficeFund, withOfficeFundTransaction } from "@/lib/office-fund-helper";
+import {
+  reverseOfficeFund,
+  withOfficeFundTransaction,
+} from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-  const { payment } = await req.json();
+export const createPosHandlers = (office: "lahore" | "karachi") => {
+  async function PUT(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) {
+    const { id } = await params;
+    const { payment } = await req.json();
 
-  try {
-    const updateResult = await pool.query(
-      `UPDATE savedinvoices SET 
-                payment = $1
-             WHERE id = $2 AND invoice_status = 'issued'`,
-      [payment, id],
-    );
+    try {
+      const updateResult = await pool.query(
+        `UPDATE savedinvoices SET
+                  payment = $1
+               WHERE id = $2 AND office = '${office}' AND invoice_status = 'issued'`,
+        [payment, id],
+      );
 
-    if (!updateResult.rowCount) {
+      if (!updateResult.rowCount) {
+        return NextResponse.json(
+          { message: "Payment records are only available for issued invoices" },
+          { status: 409 },
+        );
+      }
+
       return NextResponse.json(
-        { message: "Payment records are only available for issued invoices" },
-        { status: 409 },
+        { message: "Invoice updated successfully" },
+        { status: 200 },
+      );
+    } catch (error) {
+      console.log(error);
+      return NextResponse.json(
+        { message: "Processing error" },
+        { status: 500 },
       );
     }
-
-    return NextResponse.json(
-      { message: "Invoice updated successfully" },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.log(error);
-    return NextResponse.json({ message: "Processing error" }, { status: 500 });
   }
-}
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
-
-  try {
-    const query = await pool.query(
-      `SELECT * FROM savedinvoices WHERE id = $1 AND invoice_status = 'issued'`,
-      [id],
-    );
-
-    if (!query.rowCount) {
-      return NextResponse.json(
-        { message: "Payment records are only available for issued invoices" },
-        { status: 404 },
-      );
-    }
-
-    const paymentQuery = await pool.query(
-      `SELECT * FROM customer_parts WHERE part_id = $1`,
-      [id],
-    );
-
-    return NextResponse.json(
-      { ...(query.rows[0] ?? null), payments: paymentQuery.rows },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.log(error);
-    return NextResponse.json({ message: "Processing error" }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
+  async function GET(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) {
     const { id } = await params;
 
-    if (!id) {
-      return NextResponse.json({ message: "ID is required" }, { status: 400 });
-    }
-    await withOfficeFundTransaction(pool, async (client) => {
-      const deleted = await client.query(
-        `DELETE FROM customer_parts WHERE id = $1 RETURNING id`,
+    try {
+      const query = await pool.query(
+        `SELECT * FROM savedinvoices WHERE id = $1 AND office = '${office}' AND invoice_status = 'issued'`,
         [id],
       );
-      if (deleted.rowCount) {
-        await reverseOfficeFund(client, {
-          office: "lahore",
-          sourceType: "pos_payment",
-          sourceId: Number(id),
-        });
-      }
-    });
 
-    return NextResponse.json({ message: "Payment Deleted" }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json(
-      { message: error.message || "Internal Server Error" },
-      { status: 500 },
-    );
+      if (!query.rowCount) {
+        return NextResponse.json(
+          { message: "Payment records are only available for issued invoices" },
+          { status: 404 },
+        );
+      }
+
+      const paymentQuery = await pool.query(
+        `SELECT * FROM customer_parts WHERE part_id = $1 AND office = '${office}'`,
+        [id],
+      );
+
+      return NextResponse.json(
+        { ...(query.rows[0] ?? null), payments: paymentQuery.rows },
+        { status: 200 },
+      );
+    } catch (error) {
+      console.log(error);
+      return NextResponse.json(
+        { message: "Processing error" },
+        { status: 500 },
+      );
+    }
   }
-}
+
+  async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> },
+  ) {
+    try {
+      const { id } = await params;
+
+      if (!id) {
+        return NextResponse.json(
+          { message: "ID is required" },
+          { status: 400 },
+        );
+      }
+      await withOfficeFundTransaction(pool, async (client) => {
+        const deleted = await client.query(
+          `DELETE FROM customer_parts WHERE id = $1 AND office = '${office}' RETURNING id`,
+          [id],
+        );
+        if (deleted.rowCount) {
+          await reverseOfficeFund(client, {
+            office: office,
+            sourceType: "pos_payment",
+            sourceId: Number(id),
+          });
+        }
+      });
+
+      return NextResponse.json({ message: "Payment Deleted" }, { status: 200 });
+    } catch (error: any) {
+      return NextResponse.json(
+        { message: error.message || "Internal Server Error" },
+        { status: 500 },
+      );
+    }
+  }
+  return { PUT, GET, DELETE };
+};
+
+export const { PUT, GET, DELETE } = createPosHandlers("lahore");
 
 export const revalidate = 0;

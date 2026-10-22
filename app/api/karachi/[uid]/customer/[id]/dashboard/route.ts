@@ -81,7 +81,7 @@ export async function GET(
   LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
              WHERE s.customer_id = $1 ORDER BY s.contract_date ASC
             `;
-      const partsQuery = `SELECT * FROM savedinvoices_karachi WHERE customer_id = $1 ORDER BY id ASC`;
+      const partsQuery = `SELECT * FROM savedinvoices WHERE customer_id = $1 AND office = 'karachi' ORDER BY id ASC`;
       const machinesResult = await pool.query(machinesQuery, [id]);
       const partsResult = await pool.query(partsQuery, [id]);
       let machines = machinesResult.rows;
@@ -187,7 +187,7 @@ export async function GET(
       );
 
       if (partsIds.length > 0) {
-        const paymentsQuery = `SELECT * FROM customer_parts_karachi WHERE part_id = ANY($1)`;
+        const paymentsQuery = `SELECT * FROM customer_parts WHERE part_id = ANY($1) AND office = 'karachi'`;
         const paymentsResult = await pool.query(paymentsQuery, [partsIds]);
         payments = paymentsResult.rows;
       }
@@ -294,7 +294,7 @@ export async function GET(
       });
 
       const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
-      const partsQuery = `SELECT * FROM savedinvoices_karachi WHERE customer_id = $1 ORDER BY id ASC`;
+      const partsQuery = `SELECT * FROM savedinvoices WHERE customer_id = $1 AND office = 'karachi' ORDER BY id ASC`;
       const machinesResult = await pool.query(machinesQuery, [id]);
       const partsResult = await pool.query(partsQuery, [id]);
       let machines = machinesResult.rows;
@@ -400,7 +400,7 @@ export async function GET(
       );
 
       if (partsIds.length > 0) {
-        const paymentsQuery = `SELECT * FROM customer_parts_karachi WHERE part_id = ANY($1)`;
+        const paymentsQuery = `SELECT * FROM customer_parts WHERE part_id = ANY($1) AND office = 'karachi'`;
         const paymentsResult = await pool.query(paymentsQuery, [partsIds]);
         payments = paymentsResult.rows;
       }

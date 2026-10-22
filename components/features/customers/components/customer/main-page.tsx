@@ -80,173 +80,125 @@ export default function CustomerMainPage({
     });
   }
 
-  const columns: ColumnDef<MyCustomer>[] = [
-  {
-    accessorKey: "owner",
-    filterFn: "includesString",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Owner
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div className="ml-2">{row.getValue("owner")}</div>,
-  },
-  {
-    accessorKey: "name",
-    filterFn: "includesString",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Company
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("name")}</div>,
-  },
-  {
-    accessorKey: "ownership_name",
-    filterFn: "includesString",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Assigned To
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("ownership_name")}</div>,
-  },
-
-  // Only include Lead By column for admins
-  ...(isAdmin
-    ? [
-        {
-          accessorKey: "lead_name",
-          filterFn: "includesString",
-          header: ({ column }) => (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Lead By
-              <ArrowUpDown />
-            </Button>
-          ),
-          cell: ({ row }) => <div>{row.getValue("lead_name")}</div>,
-        } satisfies ColumnDef<MyCustomer>,
-      ]
-    : []),
-
-  {
-    accessorKey: "number",
-    filterFn: "includesString",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Number
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("number")}</div>,
-  },
-  {
-    accessorKey: "industry",
-    filterFn: "includesString",
-    enableGlobalFilter: true,
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Industry
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("industry")}</div>,
-  },
-  {
-    accessorKey: "location",
-    filterFn: "includesString",
-    enableGlobalFilter: true,
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Location
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("location")}</div>,
-  },
-  {
-    accessorKey: "customer_group",
-    enableGlobalFilter: true,
-    filterFn: "includesString",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Group
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue("customer_group")}</div>,
-  },
-  {
-    accessorKey: "created_at",
-    filterFn: "includesString",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Added
-        <ArrowUpDown />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <div>
-        {moment(new Date(row.getValue("created_at"))).format("YYYY-MM-DD")}
-      </div>
-    ),
-  },
-  {
-    id: "actions",
-    header: "Action",
-    cell: ({ row }) => {
-      const currentItem = row.original;
-      const canDelete = isAdmin || customer_delete_access;
-
-      if (!canDelete) return null;
-
+  const sortableHeader = (title: string) => {
+    return function SortableHeader({
+      column,
+    }: {
+      column: {
+        getIsSorted: () => false | "asc" | "desc";
+        toggleSorting: (descending?: boolean) => void;
+      };
+    }) {
       return (
         <Button
           variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedCustomerId(currentItem?.id);
-            setShowConfirmation(true);
-          }}
+          className="h-8 px-0 text-[11px] font-bold tracking-wide text-slate-700 uppercase hover:bg-transparent dark:text-zinc-200"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <Trash2 className="h-5 w-5 text-red-500" size={16} />
+          {title}
+          <ArrowUpDown className="ml-2 size-3.5" />
         </Button>
       );
+    };
+  };
+
+  const columns: ColumnDef<MyCustomer>[] = [
+    {
+      id: "customer",
+      header: sortableHeader("Company / Customer"),
+      accessorFn: (item) => `${item.name || ""} ${item.owner || ""}`.trim(),
+      size: 200,
+      cell: ({ row }) => (
+        <div className="min-w-0">
+          <p className="font-medium break-words">{row.original.name || "—"}</p>
+          <p className="text-[11px] break-words text-muted-foreground">
+            {row.original.owner || "—"}
+          </p>
+        </div>
+      ),
     },
-  },
-];
+    {
+      accessorKey: "ownership_name",
+      header: sortableHeader("Assigned to"),
+      size: 150,
+      cell: ({ row }) => (
+        <span className="break-words">{row.original.ownership_name || "—"}</span>
+      ),
+    },
+    ...(isAdmin
+      ? [
+          {
+            accessorKey: "lead_name",
+            header: sortableHeader("Lead by"),
+            size: 145,
+            cell: ({ row }) => (
+              <span className="break-words">{row.original.lead_name || "—"}</span>
+            ),
+          } satisfies ColumnDef<MyCustomer>,
+        ]
+      : []),
+    {
+      id: "number",
+      header: sortableHeader("Number"),
+      accessorFn: (item) =>
+        Array.isArray(item.number) ? item.number.join(", ") : item.number || "",
+      size: 155,
+      cell: ({ row }) => (
+        <span className="break-words">{row.getValue<string>("number") || "—"}</span>
+      ),
+    },
+    {
+      accessorKey: "industry",
+      header: sortableHeader("Industry"),
+      size: 135,
+      cell: ({ row }) => <span>{row.original.industry || "—"}</span>,
+    },
+    {
+      accessorKey: "location",
+      header: sortableHeader("Location"),
+      size: 145,
+      cell: ({ row }) => <span>{row.original.location || "—"}</span>,
+    },
+    {
+      accessorKey: "customer_group",
+      header: sortableHeader("Group"),
+      size: 130,
+      cell: ({ row }) => <span>{row.original.customer_group || "—"}</span>,
+    },
+    {
+      accessorKey: "created_at",
+      header: sortableHeader("Added"),
+      size: 125,
+      cell: ({ row }) =>
+        row.original.created_at
+          ? moment(row.original.created_at).format("DD MMM YYYY")
+          : "—",
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      size: 90,
+      cell: ({ row }) => {
+        if (!(isAdmin || customer_delete_access)) return null;
+
+        return (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 rounded-lg px-2.5 text-destructive hover:text-destructive"
+            aria-label={`Delete ${row.original.name || row.original.owner || "customer"}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectedCustomerId(row.original.id);
+              setShowConfirmation(true);
+            }}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        );
+      },
+    },
+  ];
 
   function handleClear() {
     setAdditionalFilter("");
@@ -394,7 +346,6 @@ export default function CustomerMainPage({
 
         <PageTable
           download={true}
-          defaultPageSize={50}
           columns={columns}
           data={
             additionalFilter === "duplicate"

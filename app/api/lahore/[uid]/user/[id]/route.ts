@@ -1,7 +1,7 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(
+export async function handleUserPut(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -52,6 +52,13 @@ export async function PUT(
       { status: 500 },
     );
   }
+}
+
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  return handleUserPut(req, context);
 }
 
 export const revalidate = 0;

@@ -21,14 +21,14 @@ export async function GET(
         ''
       ) AS customer_location,
     COALESCE(SUM(cp.amount::numeric), 0) AS total_paid
-FROM savedinvoices_karachi si
-LEFT JOIN customer_parts_karachi cp
-    ON cp.part_id = si.id
+FROM savedinvoices si
+LEFT JOIN customer_parts cp
+    ON cp.part_id = si.id AND cp.office = si.office
 LEFT JOIN customer c
     ON c.id = si.customer_id
 LEFT JOIN users u
     ON u.id = c.ownership
-WHERE si.owner_paid IS FALSE
+WHERE si.office = 'karachi' AND si.owner_paid IS FALSE
 GROUP BY si.id, u.name, c.location
 ORDER BY created_at DESC
 `;
