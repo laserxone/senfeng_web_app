@@ -23,18 +23,19 @@ export function InventorySearch({
   onReturn,
   data,
   showQty = false,
+  disabled = false,
 }: {
   value: number | null;
   onReturn: (val: InventoryProp) => void;
   data: InventoryProp[];
   showQty?: boolean;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const selectedItem = data.find((item) => item.id === value);
   const itemName = (item: InventoryProp) => item.name ?? "Unnamed item";
   const itemSearchValue = (item: InventoryProp) =>
-    `${itemName(item)}${showQty ? ` available ${item.qty ?? 0}` : ""}`;
-
+    `${itemName(item)} ${item.serial_no ?? ""} ${item.id ?? ""}${showQty ? ` available ${item.qty ?? 0}` : ""}`;
 
   return (
     <>
@@ -42,6 +43,7 @@ export function InventorySearch({
         variant="outline"
         role="combobox"
         aria-expanded={open}
+        disabled={disabled}
         className="w-full justify-between"
         onClick={(e) => {
           e.preventDefault();
@@ -78,7 +80,14 @@ export function InventorySearch({
                     setOpen(false);
                   }}
                 >
-                  <span className="min-w-0 flex-1 truncate">{itemName(item)}</span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {itemName(item)}
+                    {item.serial_no && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        ({item.serial_no})
+                      </span>
+                    )}
+                  </span>
                   {showQty && (
                     <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
                       Available: {item.qty ?? 0}

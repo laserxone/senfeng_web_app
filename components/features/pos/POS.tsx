@@ -43,6 +43,7 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
 import AddItemDialog from "./add-item-dialog";
 import { AddInventoryDialog } from "./add-inventory-dialog";
+import { TransferStockAction } from "./transfer-stock-action";
 import AddPOSPayment from "./add-pos-payment";
 import DeleteInvoice from "./delete-invoice";
 import EngineerModal from "./engineer-modal";
@@ -769,10 +770,8 @@ export default function POS() {
   }
 
   const RefreshedFunds = useCallback(() => {
-      return (
-        <OfficeFundBalance  />
-      )
-    }, [stock])
+    return <OfficeFundBalance />;
+  }, [stock]);
 
   return loading ? (
     <div className="flex min-h-[320px] w-full items-center justify-center">
@@ -1254,6 +1253,8 @@ export default function POS() {
               />
 
               <AddInventoryDialog onSaved={fetchData} />
+
+              <TransferStockAction userID={userID} baseRoute={base_route} />
 
               <Link href={`/${base_route}/parts-receiving`}>
                 <PosActionButton

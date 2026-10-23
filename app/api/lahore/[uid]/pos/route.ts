@@ -16,7 +16,7 @@ export const createPosHandlers = (office: "lahore" | "karachi") => {
         return NextResponse.json(result.rows, { status: 200 });
       } else {
         const result = await pool.query(
-          `SELECT * FROM inventory WHERE office = '${office}' ORDER BY id ASC`,
+          `SELECT * FROM inventory WHERE LOWER(office) = '${office}' ORDER BY id ASC`,
         );
 
         const query = `
