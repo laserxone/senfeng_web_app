@@ -41,9 +41,8 @@ import { useDebounce } from "@/hooks/use-debounce";
 import useUserDetail from "@/hooks/use-user-detail";
 import "pdfjs-dist/build/pdf.worker.mjs";
 import "pdfjs-dist/legacy/web/pdf_viewer.css";
-import AddItemDialog from "./add-item-dialog";
 import { AddInventoryDialog } from "./add-inventory-dialog";
-import { TransferStockAction } from "./transfer-stock-action";
+import AddItemDialog from "./add-item-dialog";
 import AddPOSPayment from "./add-pos-payment";
 import DeleteInvoice from "./delete-invoice";
 import EngineerModal from "./engineer-modal";
@@ -51,6 +50,7 @@ import InwardModal from "./inward-modal";
 import OrderStockDialog from "./order-stock-dialog";
 import POSModal from "./pos-modal";
 import SearchResultModal from "./search-result-modal";
+import { TransferStockAction } from "./transfer-stock-action";
 import ViewableInvoice from "./viewable-invoice";
 
 import {
@@ -60,10 +60,6 @@ import {
   SearchItem,
   StockProps,
 } from "@/lib/types";
-import Link from "next/link";
-import { toast } from "sonner";
-import LowStock from "./low-stock";
-import OutwardModal from "./outward-modal";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -78,7 +74,11 @@ import {
   Send,
   UserRoundCog,
 } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
 import OfficeFundBalance from "../employee-finance/office-fund-balance";
+import LowStock from "./low-stock";
+import OutwardModal from "./outward-modal";
 
 // pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -214,7 +214,7 @@ export default function POS() {
   const [proforma, setProforma] = useState<POSInvoiceReminder[]>([]);
   const [warranty, setWarranty] = useState(false);
   const [warrantyYear, setWarrantyYear] = useState(1);
-  const { userID, designation, base_route } = useUserDetail();
+  const { userID, designation, base_route, isAdmin } = useUserDetail();
   const [selectedRadio, setSelectedRadio] = useState("customer");
   const [selectedUser, setSelectedUser] = useState<SelectedUser>({
     id: null,
@@ -497,13 +497,13 @@ export default function POS() {
       prevItems.map((item, index) =>
         index === i
           ? {
-              ...item,
-              [name]: name === "price" ? value : value,
-              total:
-                name === "price"
-                  ? Number(value) * Number(item.qty)
-                  : item.total,
-            }
+            ...item,
+            [name]: name === "price" ? value : value,
+            total:
+              name === "price"
+                ? Number(value) * Number(item.qty)
+                : item.total,
+          }
           : item,
       ),
     );
@@ -529,11 +529,11 @@ export default function POS() {
         return prevItems.map((eachItem) =>
           eachItem.id === item.id
             ? {
-                ...eachItem,
-                qty: Number(eachItem.qty) + 1,
-                total:
-                  Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
-              }
+              ...eachItem,
+              qty: Number(eachItem.qty) + 1,
+              total:
+                Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
+            }
             : eachItem,
         );
       } else {
@@ -558,11 +558,11 @@ export default function POS() {
         .map((eachItem) =>
           eachItem.id === item.id
             ? {
-                ...eachItem,
-                qty: Number(eachItem.qty) - 1,
-                total:
-                  Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
-              }
+              ...eachItem,
+              qty: Number(eachItem.qty) - 1,
+              total:
+                Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
+            }
             : eachItem,
         )
         .filter((eachItem) => Number(eachItem?.qty || 0) > 0),
@@ -1254,7 +1254,7 @@ export default function POS() {
 
               <AddInventoryDialog onSaved={fetchData} />
 
-              <TransferStockAction userID={userID} baseRoute={base_route} />
+              {isAdmin && <TransferStockAction userID={userID} baseRoute={base_route} />}
 
               <Link href={`/${base_route}/parts-receiving`}>
                 <PosActionButton
