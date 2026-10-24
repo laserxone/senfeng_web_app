@@ -61,7 +61,7 @@ export const createDealCancelHandler = (office: Office) =>
       await client.query("BEGIN");
 
       const saleResult = await client.query(
-        `SELECT customer_id, type, parts_information FROM sale WHERE id = $1 FOR UPDATE`,
+        `SELECT customer_id, type, parts_information, cancelled FROM sale WHERE id = $1 FOR UPDATE`,
         [id],
       );
       if (saleResult.rows.length === 0) {
@@ -72,11 +72,7 @@ export const createDealCancelHandler = (office: Office) =>
         );
       }
 
-      const existingCancellation = await client.query(
-        `SELECT id FROM cancelled_machine WHERE machine_id = $1 LIMIT 1`,
-        [id],
-      );
-      if (existingCancellation.rows.length > 0) {
+      if (saleResult.rows[0].cancelled) {
         await client.query("ROLLBACK");
         return NextResponse.json(
           { message: "Deal is already cancelled" },
@@ -85,8 +81,8 @@ export const createDealCancelHandler = (office: Office) =>
       }
 
       await client.query(
-        `INSERT INTO cancelled_machine (machine_id, reason) VALUES ($1, $2)`,
-        [id, reason],
+        `UPDATE sale SET cancelled = true, cancelled_reason = $1 WHERE id = $2`,
+        [reason, id],
       );
 
       await restorePartsInventory(

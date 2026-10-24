@@ -1666,11 +1666,7 @@ async function getSalesData(
   LEFT JOIN customer c ON c.id = s.customer_id
   WHERE s.sell_by = $1
     AND GREATEST(COALESCE(s.price::numeric, 0) - COALESCE(pt.total_paid, 0), 0) > 0
-    AND NOT EXISTS (
-      SELECT 1
-      FROM cancelled_machine cm
-      WHERE cm.machine_id = s.id
-    )
+    AND s.cancelled IS FALSE
   ORDER BY s.contract_date DESC
 `;
 
@@ -1721,11 +1717,7 @@ async function getSalesData(
   LEFT JOIN customer c ON c.id = s.customer_id
   WHERE s.sell_by = $1
     AND s.ready_for_delivery IS FALSE
-    AND NOT EXISTS (
-      SELECT 1
-      FROM cancelled_machine cm
-      WHERE cm.machine_id = s.id
-    )
+    AND s.cancelled IS FALSE
   ORDER BY s.contract_date DESC
 `;
 

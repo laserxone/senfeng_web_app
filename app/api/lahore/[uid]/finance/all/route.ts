@@ -38,11 +38,7 @@ async function getAllFinance(
     LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     
     WHERE c.office = $1
-    AND NOT EXISTS (
-        SELECT 1
-        FROM cancelled_machine cm
-        WHERE cm.machine_id = s.id
-    )
+    AND s.cancelled IS FALSE
 `;
 
       if (user) {
@@ -149,11 +145,7 @@ async function getAllFinance(
     LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     
     WHERE COALESCE(c.ownership, s.sell_by) = $1
-    AND NOT EXISTS (
-        SELECT 1
-        FROM cancelled_machine cm
-        WHERE cm.machine_id = s.id
-    )
+    AND s.cancelled IS FALSE
 `;
 
       const { rows: sales } = await pool.query(query, [user]);

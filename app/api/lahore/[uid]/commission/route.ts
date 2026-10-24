@@ -102,7 +102,7 @@ export const createCommissionHandlers = (office: Office) => {
       const salesResult = await pool.query(
         `
         SELECT * FROM sale s WHERE s.sell_by = $1
-        AND NOT EXISTS (SELECT 1 FROM cancelled_machine cm WHERE cm.machine_id = s.id)
+        AND s.cancelled IS FALSE
       `,
         [uid],
       );

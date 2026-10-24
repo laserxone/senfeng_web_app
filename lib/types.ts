@@ -706,9 +706,6 @@ export type MachineProps = {
   dispatch_information: MachineDispatchInformation;
   delivery_request_date: string;
   cancelled_detail: boolean;
-  cancelled_id: number | null;
-  cancelled_at: string | null;
-  cancelled_issued: string | null;
   cancelled_reason: string | null;
   payments: MachinePayment[];
   sell_by_name: string;

@@ -24,11 +24,7 @@ export const createMachineApprovalHandler = (office: "lahore" | "karachi") =>
          LEFT JOIN users owner_user ON owner_user.id = c.ownership
          WHERE s.review_status = 'pending'
            AND LOWER(sell_user.office) = $1
-           AND NOT EXISTS (
-             SELECT 1
-             FROM cancelled_machine cm
-             WHERE cm.machine_id = s.id
-           )`,
+            AND s.cancelled IS FALSE`,
         [office],
       );
 

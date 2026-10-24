@@ -1,6 +1,7 @@
 import pool from "@/config/db";
 import { partFields, profileFields, saleFields } from "@/constants/data";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { saleResponse } from "@/lib/sale-response";
 import { NextRequest, NextResponse } from "next/server";
 
 async function getCustomerDashboard(
@@ -51,11 +52,7 @@ async function getCustomerDashboard(
 
       const machinesQuery = `
             SELECT s.*, 
-         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
-         cm.id AS cancelled_id,
-         cm.created_at AS cancelled_at,
-         cm.issued AS cancelled_issued,
-         cm.reason AS cancelled_reason,
+         s.cancelled AS cancelled_detail,
          COALESCE(
       (
         SELECT ARRAY_AGG(
@@ -78,7 +75,6 @@ async function getCustomerDashboard(
       ARRAY[]::text[]
     ) AS shipment_title
   FROM sale s
-  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
              WHERE s.customer_id = $1 ORDER BY s.contract_date ASC
             `;
       const partsQuery = `SELECT * FROM savedinvoices WHERE customer_id = $1 AND office = '${office}' ORDER BY id ASC`;
@@ -197,7 +193,7 @@ async function getCustomerDashboard(
         payments: payments.filter((payment) => payment.part_id === part.id),
       }));
 
-      customer.machines = machines;
+      customer.machines = machines.map(saleResponse);
       customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
       customer.profile_completion = overallCompletion;
@@ -293,7 +289,7 @@ async function getCustomerDashboard(
         else missingFields.push(field);
       });
 
-      const machinesQuery = `SELECT * FROM sale WHERE customer_id = $1 ORDER BY contract_date ASC`;
+      const machinesQuery = `SELECT s.*, s.cancelled AS cancelled_detail FROM sale s WHERE s.customer_id = $1 ORDER BY s.contract_date ASC`;
       const partsQuery = `SELECT * FROM savedinvoices WHERE customer_id = $1 AND office = '${office}' ORDER BY id ASC`;
       const machinesResult = await pool.query(machinesQuery, [id]);
       const partsResult = await pool.query(partsQuery, [id]);
@@ -412,7 +408,7 @@ async function getCustomerDashboard(
         ),
       }));
 
-      customer.machines = machines;
+      customer.machines = machines.map(saleResponse);
       customer.bill_received = parseFloat(`${billReceived}`);
       customer.bill_total = parseFloat(billTotal);
       customer.profile_completion = overallCompletion;

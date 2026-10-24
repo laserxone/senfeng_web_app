@@ -40,11 +40,7 @@ async function getFinance(req: NextRequest, office: "lahore" | "karachi") {
     LEFT JOIN users sell_user ON sell_user.id = s.sell_by
     LEFT JOIN users ownership_user ON ownership_user.id = c.ownership
     WHERE s.contract_date BETWEEN $1 AND $2
-    AND NOT EXISTS (
-        SELECT 1
-        FROM cancelled_machine cm
-        WHERE cm.machine_id = s.id
-    ) ${whereClause}
+    AND s.cancelled IS FALSE ${whereClause}
   `;
 
     const { rows: sales } = await pool.query(query, queryParams);

@@ -29,11 +29,7 @@ LEFT JOIN users owner_user ON cu.ownership = owner_user.id
 LEFT JOIN commissions com ON com.sale_id = s.id
 WHERE u.office = '${office}'
 AND com.commission_issued IS DISTINCT FROM TRUE
-AND NOT EXISTS (
-  SELECT 1
-  FROM cancelled_machine cm
-  WHERE cm.machine_id = s.id
-)
+AND s.cancelled IS FALSE
 ORDER BY s.contract_date DESC;
     `);
 

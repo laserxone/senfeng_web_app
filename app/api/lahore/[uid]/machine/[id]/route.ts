@@ -6,6 +6,7 @@ import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import admin from "@/lib/firebaseAdmin";
 import { generateLog } from "@/lib/generateLog";
+import { saleResponse } from "@/lib/sale-response";
 import { deleteObject, ref } from "firebase/storage";
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
@@ -67,16 +68,7 @@ export async function GET(
    SELECT 
     s.*,
     co.commission_issued AS commission_issued,
-
-    CASE 
-      WHEN cm.id IS NOT NULL THEN TRUE 
-      ELSE FALSE 
-    END AS cancelled_detail,
-
-    cm.id AS cancelled_id,
-    cm.created_at AS cancelled_at,
-    cm.issued AS cancelled_issued,
-    cm.reason AS cancelled_reason,
+    s.cancelled AS cancelled_detail,
 
     COALESCE(
       (
@@ -101,9 +93,6 @@ export async function GET(
     ) AS shipment_title
 
   FROM sale s
-
-  LEFT JOIN cancelled_machine cm
-    ON s.id = cm.machine_id
 
   LEFT JOIN commissions co
     ON s.id = co.sale_id
@@ -253,7 +242,7 @@ WHERE c.id = $1`;
       return NextResponse.json(
         {
           customer,
-          machine,
+          machine: saleResponse(machine),
           percentage_completion,
           unmatchedFields,
           installments,
@@ -272,14 +261,9 @@ WHERE c.id = $1`;
 
       const machineQuery = `
   SELECT s.*, 
-         CASE WHEN cm.id IS NOT NULL THEN TRUE ELSE FALSE END AS cancelled_detail,
-         cm.id AS cancelled_id,
-        co.commission_issued AS commission_issued,
-         cm.created_at AS cancelled_at,
-         cm.issued AS cancelled_issued,
-         cm.reason AS cancelled_reason
+         s.cancelled AS cancelled_detail,
+         co.commission_issued AS commission_issued
   FROM sale s
-  LEFT JOIN cancelled_machine cm ON s.id = cm.machine_id
   LEFT JOIN commissions co ON s.id = co.sale_id 
   WHERE s.id = $1
 `;
@@ -458,7 +442,7 @@ WHERE c.id = $1`;
       return NextResponse.json(
         {
           customer,
-          machine,
+          machine: saleResponse(machine),
           percentage_completion,
           unmatchedFields,
           installments,
@@ -640,7 +624,7 @@ export async function deleteMachine(
     await client.query("BEGIN");
 
     const saleResult = await client.query(
-      `SELECT customer_id, type, parts_information, contract_images_png, other_images_png, machine_nameplate_images, final_handover_images, installation_report, handshake_images
+      `SELECT customer_id, type, parts_information, cancelled, contract_images_png, other_images_png, machine_nameplate_images, final_handover_images, installation_report, handshake_images
        FROM sale
        WHERE id = $1
        FOR UPDATE`,
@@ -656,22 +640,12 @@ export async function deleteMachine(
     }
 
     const saleRow = saleResult.rows[0];
-    const cancelledResult = await client.query(
-      `SELECT id FROM cancelled_machine WHERE machine_id = $1 LIMIT 1`,
-      [id],
-    );
-
-    if (cancelledResult.rowCount === 0) {
+    if (!saleRow.cancelled) {
       await restorePartsInventory(
         client,
         office,
         saleRow.type,
         saleRow.parts_information,
-      );
-    } else {
-      await client.query(
-        `DELETE FROM cancelled_machine WHERE machine_id = $1`,
-        [id],
       );
     }
 
