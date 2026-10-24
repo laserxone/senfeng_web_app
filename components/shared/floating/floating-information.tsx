@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import Spinner from "@/components/ui/spinner";
 import { useChequeAlerts, type ChequeAlert } from "@/hooks/use-cheque-alerts";
 import useUserDetail from "@/hooks/use-user-detail";
 import {
@@ -34,7 +35,7 @@ type ReminderFilter = (typeof REMINDER_FILTERS)[number];
 export default function FloatingInformation() {
   const [open, setOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<ReminderFilter>("today");
-  const { count, grouped } = useChequeAlerts();
+  const { count, grouped, clearReminder, clearingId } = useChequeAlerts();
   const { base_route } = useUserDetail();
 
   const reminders =
@@ -67,7 +68,7 @@ export default function FloatingInformation() {
         showCloseButton={false}
         className="w-full max-w-lg min-w-full gap-0 sm:max-w-lg sm:min-w-lg"
       >
-        <SheetHeader className="border-b px-5 py-4 text-left">
+        <SheetHeader className="border-b py-4 pr-8 pl-5 text-left">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <SheetTitle className="text-lg font-semibold tracking-tight">
@@ -92,7 +93,7 @@ export default function FloatingInformation() {
           </SheetDescription>
         </SheetHeader>
 
-        <div className="border-b px-4 py-3">
+        <div className="border-b py-3 pr-8 pl-4">
           <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {REMINDER_FILTERS.map((filter) => (
               <Button
@@ -123,7 +124,7 @@ export default function FloatingInformation() {
 
         <ScrollArea className="min-h-0 flex-1">
           {reminders.length ? (
-            <div className="divide-y px-4">
+            <div className="divide-y pr-8 pl-4">
               {reminders.map((reminder) => (
                 <ReminderCard
                   key={reminder.id}
@@ -131,11 +132,14 @@ export default function FloatingInformation() {
                   baseRoute={base_route}
                   filter={activeFilter}
                   onOpen={() => setOpen(false)}
+                  onClear={() => clearReminder(reminder.id)}
+                  isClearing={clearingId === reminder.id}
+                  clearDisabled={clearingId !== null}
                 />
               ))}
             </div>
           ) : (
-            <div className="flex min-h-72 flex-col items-center justify-center px-6 text-center">
+            <div className="flex min-h-72 flex-col items-center justify-center pr-8 pl-6 text-center">
               <span className="mb-4 grid size-14 place-items-center rounded-2xl bg-muted text-muted-foreground">
                 {activeFilter === "overdue" ? (
                   <TriangleAlert className="size-6" />
@@ -164,11 +168,17 @@ function ReminderCard({
   baseRoute,
   filter,
   onOpen,
+  onClear,
+  isClearing,
+  clearDisabled,
 }: {
   reminder: ChequeAlert;
   baseRoute: string;
   filter: ReminderFilter;
   onOpen: () => void;
+  onClear: () => void;
+  isClearing: boolean;
+  clearDisabled: boolean;
 }) {
   const href = `/${baseRoute}${reminder.link.startsWith("/") ? reminder.link : `/${reminder.link}`}`;
   const userName = reminder.seller_name || "Unknown user";
@@ -193,7 +203,7 @@ function ReminderCard({
       </span>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2">
           <Link
             href={href}
             onClick={onOpen}
@@ -245,7 +255,20 @@ function ReminderCard({
             </p>
             <p className="truncate text-xs font-medium">{userName}</p>
           </div>
+
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-2"
+          disabled={clearDisabled}
+          onClick={onClear}
+          aria-label={`Clear reminder for ${reminder.customer_name || reminder.customer_owner || "customer"}`}
+        >
+          {isClearing && <Spinner />}
+          {isClearing ? "Clearing" : "Clear"}
+        </Button>
       </div>
     </article>
   );

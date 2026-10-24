@@ -23,6 +23,7 @@ export type ChequeAlert = {
 
 export function useChequeAlerts() {
   const [info, setInfo] = useState<ChequeAlert[]>([]);
+  const [clearingId, setClearingId] = useState<number | null>(null);
   const { userID } = useUserDetail();
 
   async function fetchData() {
@@ -42,6 +43,20 @@ export function useChequeAlerts() {
     return () => unsub();
   }, [userID]);
 
+  async function clearReminder(id: number) {
+    if (!userID || clearingId !== null) return;
+
+    setClearingId(id);
+    try {
+      await axios.put(`/${userID}/reminders/${id}`, { pending: false });
+      setInfo((current) => current.filter((reminder) => reminder.id !== id));
+    } catch {
+      // The shared axios interceptor reports request errors.
+    } finally {
+      setClearingId(null);
+    }
+  }
+
   const today = moment().startOf("day");
 
   const grouped = {
@@ -51,5 +66,5 @@ export function useChequeAlerts() {
   };
   const count = info.length;
 
-  return { info, grouped, count: count };
+  return { info, grouped, count: count, setInfo, clearReminder, clearingId };
 }
