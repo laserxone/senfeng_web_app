@@ -497,13 +497,13 @@ export default function POS() {
       prevItems.map((item, index) =>
         index === i
           ? {
-            ...item,
-            [name]: name === "price" ? value : value,
-            total:
-              name === "price"
-                ? Number(value) * Number(item.qty)
-                : item.total,
-          }
+              ...item,
+              [name]: name === "price" ? value : value,
+              total:
+                name === "price"
+                  ? Number(value) * Number(item.qty)
+                  : item.total,
+            }
           : item,
       ),
     );
@@ -529,11 +529,11 @@ export default function POS() {
         return prevItems.map((eachItem) =>
           eachItem.id === item.id
             ? {
-              ...eachItem,
-              qty: Number(eachItem.qty) + 1,
-              total:
-                Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
-            }
+                ...eachItem,
+                qty: Number(eachItem.qty) + 1,
+                total:
+                  Number(eachItem.price || 0) * (Number(eachItem.qty || 0) + 1),
+              }
             : eachItem,
         );
       } else {
@@ -558,11 +558,11 @@ export default function POS() {
         .map((eachItem) =>
           eachItem.id === item.id
             ? {
-              ...eachItem,
-              qty: Number(eachItem.qty) - 1,
-              total:
-                Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
-            }
+                ...eachItem,
+                qty: Number(eachItem.qty) - 1,
+                total:
+                  Number(eachItem.price || 0) * (Number(eachItem.qty || 0) - 1),
+              }
             : eachItem,
         )
         .filter((eachItem) => Number(eachItem?.qty || 0) > 0),
@@ -1254,7 +1254,9 @@ export default function POS() {
 
               <AddInventoryDialog onSaved={fetchData} />
 
-              {isAdmin && <TransferStockAction userID={userID} baseRoute={base_route} />}
+              {isAdmin && (
+                <TransferStockAction userID={userID} baseRoute={base_route} />
+              )}
 
               <Link href={`/${base_route}/parts-receiving`}>
                 <PosActionButton

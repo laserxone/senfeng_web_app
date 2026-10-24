@@ -90,11 +90,26 @@ const AddMachine = ({
     )
     .superRefine((data, context) => {
       if (!data.isCredit) return;
-      if (!Number.isSafeInteger(data.creditMonths) || !data.creditMonths || data.creditMonths < 1) {
-        context.addIssue({ code: "custom", path: ["creditMonths"], message: "Enter a positive number of months" });
+      if (
+        !Number.isSafeInteger(data.creditMonths) ||
+        !data.creditMonths ||
+        data.creditMonths < 1
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["creditMonths"],
+          message: "Enter a positive number of months",
+        });
       }
-      if (!data.creditStartDate || !calculateCreditEndDate(data.creditStartDate, data.creditMonths ?? 0)) {
-        context.addIssue({ code: "custom", path: ["creditStartDate"], message: "Select a valid start date" });
+      if (
+        !data.creditStartDate ||
+        !calculateCreditEndDate(data.creditStartDate, data.creditMonths ?? 0)
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["creditStartDate"],
+          message: "Select a valid start date",
+        });
       }
     });
 
@@ -121,9 +136,16 @@ const AddMachine = ({
   });
 
   const isCredit = useWatch({ control: form.control, name: "isCredit" });
-  const creditMonths = useWatch({ control: form.control, name: "creditMonths" });
-  const creditStartDate = useWatch({ control: form.control, name: "creditStartDate" });
-  const validCreditPeriod = Number.isSafeInteger(creditMonths) && (creditMonths ?? 0) > 0;
+  const creditMonths = useWatch({
+    control: form.control,
+    name: "creditMonths",
+  });
+  const creditStartDate = useWatch({
+    control: form.control,
+    name: "creditStartDate",
+  });
+  const validCreditPeriod =
+    Number.isSafeInteger(creditMonths) && (creditMonths ?? 0) > 0;
   const creditEndDate = isCredit
     ? calculateCreditEndDate(creditStartDate || "", creditMonths ?? 0)
     : null;
@@ -178,10 +200,11 @@ const AddMachine = ({
 
             const res = await Promise.all(
               total.map(async (item, idx) => {
-                const name = `${OfficeState.value.data
-                  }/customer/${customer_id}/machine/${saleID}/installments/${moment()
-                    .valueOf()
-                    .toString()}_${idx}.png`;
+                const name = `${
+                  OfficeState.value.data
+                }/customer/${customer_id}/machine/${saleID}/installments/${moment()
+                  .valueOf()
+                  .toString()}_${idx}.png`;
                 const imgRef = await UploadImage(item.img, name);
                 return axios.post(`/${user_id}/installments`, {
                   date: item.date,
@@ -226,8 +249,9 @@ const AddMachine = ({
 
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
-          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
-            }`}
+          className={`max-w-[94vw] overflow-hidden rounded-2xl border-border bg-card p-0 text-card-foreground transition-all duration-300 ${
+            cheque ? "sm:max-w-[90vw]" : "sm:max-w-lg"
+          }`}
         >
           <DialogHeader className="border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
@@ -248,8 +272,9 @@ const AddMachine = ({
           <div className="flex w-full flex-1">
             <ScrollArea className="max-h-[calc(100dvh-132px)] w-full">
               <div
-                className={`flex gap-6 ${cheque ? "flex-row" : "flex-col"
-                  } w-full`}
+                className={`flex gap-6 ${
+                  cheque ? "flex-row" : "flex-col"
+                } w-full`}
               >
                 <div
                   className={`${cheque ? "w-1/2" : "w-full"} space-y-2 p-3.5`}
@@ -510,14 +535,23 @@ const AddMachine = ({
                                   placeholder="Enter period"
                                   value={field.value ?? ""}
                                   onChange={(event) => {
-                                    const months = event.target.value === "" ? undefined : Number(event.target.value);
+                                    const months =
+                                      event.target.value === ""
+                                        ? undefined
+                                        : Number(event.target.value);
                                     field.onChange(months);
-                                    if (!Number.isSafeInteger(months) || !months || months < 1) {
+                                    if (
+                                      !Number.isSafeInteger(months) ||
+                                      !months ||
+                                      months < 1
+                                    ) {
                                       form.setValue("creditStartDate", "");
                                     }
                                   }}
                                 />
-                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
                               </Field>
                             )}
                           />
@@ -528,13 +562,23 @@ const AddMachine = ({
                               <Field data-invalid={fieldState.invalid}>
                                 <FieldLabel>Credit start date</FieldLabel>
                                 <AppCalendar
-                                  key={validCreditPeriod ? "active" : "inactive"}
-                                  date={field.value ? new Date(`${field.value}T00:00:00`) : undefined}
-                                  onChange={(date) => field.onChange(format(date, "yyyy-MM-dd"))}
+                                  key={
+                                    validCreditPeriod ? "active" : "inactive"
+                                  }
+                                  date={
+                                    field.value
+                                      ? new Date(`${field.value}T00:00:00`)
+                                      : undefined
+                                  }
+                                  onChange={(date) =>
+                                    field.onChange(format(date, "yyyy-MM-dd"))
+                                  }
                                   max=""
                                   disabled={!validCreditPeriod}
                                 />
-                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
                               </Field>
                             )}
                           />
@@ -542,7 +586,14 @@ const AddMachine = ({
                             <FieldLabel>Credit end date</FieldLabel>
                             <Input
                               className="h-9 rounded-lg"
-                              value={creditEndDate ? format(new Date(`${creditEndDate}T00:00:00`), "PPP") : ""}
+                              value={
+                                creditEndDate
+                                  ? format(
+                                      new Date(`${creditEndDate}T00:00:00`),
+                                      "PPP",
+                                    )
+                                  : ""
+                              }
                               placeholder="Calculated automatically"
                               readOnly
                             />

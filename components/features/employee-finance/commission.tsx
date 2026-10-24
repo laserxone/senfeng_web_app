@@ -239,8 +239,8 @@ const OwnerView = () => {
   function hasInvalidContractDate(item: CommissionOwnerProps) {
     return Boolean(
       item.contract_date &&
-        item.last_payment_date &&
-        moment(item.contract_date).isAfter(item.last_payment_date, "day"),
+      item.last_payment_date &&
+      moment(item.contract_date).isAfter(item.last_payment_date, "day"),
     );
   }
 
@@ -934,7 +934,9 @@ const OtherView = () => {
       }
     }
 
-    async function handleApplyCommissionAgain(item: CommissionMachineItemProps) {
+    async function handleApplyCommissionAgain(
+      item: CommissionMachineItemProps,
+    ) {
       const commissionId = item.commission?.id;
 
       if (item.customer.profile_completion < 100) {
@@ -1110,9 +1112,7 @@ const OtherView = () => {
                           </TooltipProvider>
                           <Button
                             variant="outline"
-                            onClick={() =>
-                              handleApplyCommissionAgain(item)
-                            }
+                            onClick={() => handleApplyCommissionAgain(item)}
                           >
                             Apply again
                           </Button>

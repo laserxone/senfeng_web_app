@@ -163,10 +163,11 @@ export default function QuotationPage() {
         <Badge
           variant="outline"
           title={row.original.user_name || "Unassigned"}
-          className={`max-w-full text-[10px] ${row.original.user_name
-            ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
-            : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
-            }`}
+          className={`max-w-full text-[10px] ${
+            row.original.user_name
+              ? "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300"
+              : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300"
+          }`}
         >
           <span className="min-w-0 truncate">
             {row.original.user_name || "Unassigned"}
@@ -247,11 +248,7 @@ export default function QuotationPage() {
       header: sortableHeader("Delivery time"),
       cell: ({ row }) =>
         row.original.delivery_time ? (
-
-          <span>
-            {row.original.delivery_time}
-          </span>
-
+          <span>{row.original.delivery_time}</span>
         ) : (
           <span className="text-muted-foreground">—</span>
         ),

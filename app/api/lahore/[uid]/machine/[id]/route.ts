@@ -43,7 +43,8 @@ async function restorePartsInventory(
       "UPDATE inventory SET qty = qty + 1 WHERE id = $1 AND office = $2",
       [inventoryId, office],
     );
-    if (updated.rowCount !== 1) throw new Error(`Inventory ${inventoryId} does not belong to ${office}`);
+    if (updated.rowCount !== 1)
+      throw new Error(`Inventory ${inventoryId} does not belong to ${office}`);
   }
 }
 
@@ -499,7 +500,10 @@ export async function PUT(
     );
     const sale = saleResult.rows[0];
     if (!sale) {
-      return NextResponse.json({ message: "Machine not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Machine not found" },
+        { status: 404 },
+      );
     }
 
     for (const field of ["review_status", "reviewed_by", "reviewed_at"]) {
@@ -544,7 +548,10 @@ export async function PUT(
         const endDate = calculateCreditEndDate(startDate, months);
         if (!endDate) {
           return NextResponse.json(
-            { message: "Enter a valid credit start date and a positive number of months" },
+            {
+              message:
+                "Enter a valid credit start date and a positive number of months",
+            },
             { status: 400 },
           );
         }
@@ -610,8 +617,7 @@ export async function PUT(
       { message: "Internal Server Error" },
       { status: 500 },
     );
-  }
-  finally {
+  } finally {
     if (!transactionFinished) await client.query("ROLLBACK");
     client.release();
   }
@@ -661,6 +667,11 @@ export async function deleteMachine(
         office,
         saleRow.type,
         saleRow.parts_information,
+      );
+    } else {
+      await client.query(
+        `DELETE FROM cancelled_machine WHERE machine_id = $1`,
+        [id],
       );
     }
 

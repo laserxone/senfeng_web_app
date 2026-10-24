@@ -32,30 +32,47 @@ import { calculateCreditEndDate } from "@/lib/credit-terms";
 import { OfficeContext } from "@/store/context/OfficeContext";
 import { format } from "date-fns";
 
-const formSchema = z.object({
-  machineModel: z.string().min(1, { message: "Machine model is required." }),
-  power: z.string().min(1, { message: "Power is required." }),
-  source: z.string().min(1, { message: "Source is required." }),
-  contractDate: z.date({ error: "Contract date is required." }),
-  isSpeedMoney: z.boolean(),
-  isCredit: z.boolean(),
-  creditMonths: z.coerce.number<number>().optional(),
-  creditStartDate: z.string().optional(),
-  speedMoney: z.coerce.number<number>().optional(),
-  speedMoneyNote: z.string().optional(),
-  note: z.string().optional(),
-  totalPrice: z.coerce.number<number>({ error: "Price is required" }),
-  cnic: z.string().optional(),
-  orderNo: z.string(),
-}).superRefine((data, context) => {
-  if (!data.isCredit) return;
-  if (!Number.isSafeInteger(data.creditMonths) || !data.creditMonths || data.creditMonths < 1) {
-    context.addIssue({ code: "custom", path: ["creditMonths"], message: "Enter a positive number of months" });
-  }
-  if (!data.creditStartDate || !calculateCreditEndDate(data.creditStartDate, data.creditMonths ?? 0)) {
-    context.addIssue({ code: "custom", path: ["creditStartDate"], message: "Select a valid start date" });
-  }
-});
+const formSchema = z
+  .object({
+    machineModel: z.string().min(1, { message: "Machine model is required." }),
+    power: z.string().min(1, { message: "Power is required." }),
+    source: z.string().min(1, { message: "Source is required." }),
+    contractDate: z.date({ error: "Contract date is required." }),
+    isSpeedMoney: z.boolean(),
+    isCredit: z.boolean(),
+    creditMonths: z.coerce.number<number>().optional(),
+    creditStartDate: z.string().optional(),
+    speedMoney: z.coerce.number<number>().optional(),
+    speedMoneyNote: z.string().optional(),
+    note: z.string().optional(),
+    totalPrice: z.coerce.number<number>({ error: "Price is required" }),
+    cnic: z.string().optional(),
+    orderNo: z.string(),
+  })
+  .superRefine((data, context) => {
+    if (!data.isCredit) return;
+    if (
+      !Number.isSafeInteger(data.creditMonths) ||
+      !data.creditMonths ||
+      data.creditMonths < 1
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["creditMonths"],
+        message: "Enter a positive number of months",
+      });
+    }
+    if (
+      !data.creditStartDate ||
+      !calculateCreditEndDate(data.creditStartDate, data.creditMonths ?? 0)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["creditStartDate"],
+        message: "Select a valid start date",
+      });
+    }
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -75,7 +92,7 @@ const EditMachine = ({
   const [isSpeedMoney, setIsSpeedMoney] = useState(false);
   const [loading, setLoading] = useState(false);
   const { userID, office } = useUserDetail();
-  const { state: OfficeState } = useContext(OfficeContext)!
+  const { state: OfficeState } = useContext(OfficeContext)!;
   const isKarachi = OfficeState.value.data?.toLowerCase() === "karachi";
 
   const form = useForm<FormValues>({
@@ -100,9 +117,16 @@ const EditMachine = ({
 
   const canEditCredit = data?.review_status !== "approved";
   const isCredit = useWatch({ control: form.control, name: "isCredit" });
-  const creditMonths = useWatch({ control: form.control, name: "creditMonths" });
-  const creditStartDate = useWatch({ control: form.control, name: "creditStartDate" });
-  const validCreditPeriod = Number.isSafeInteger(creditMonths) && (creditMonths ?? 0) > 0;
+  const creditMonths = useWatch({
+    control: form.control,
+    name: "creditMonths",
+  });
+  const creditStartDate = useWatch({
+    control: form.control,
+    name: "creditStartDate",
+  });
+  const validCreditPeriod =
+    Number.isSafeInteger(creditMonths) && (creditMonths ?? 0) > 0;
   const creditEndDate = isCredit
     ? calculateCreditEndDate(creditStartDate || "", creditMonths ?? 0)
     : null;
@@ -141,21 +165,25 @@ const EditMachine = ({
         speed_money_note: values.speedMoneyNote,
         speed_money: values.isSpeedMoney,
         speed_money_amount: values.speedMoney ? Number(values.speedMoney) : 0,
-        ...(canEditCredit ? {
-          is_credit: values.isCredit,
-          credit_months: values.isCredit ? values.creditMonths : null,
-          credit_start_date: values.isCredit ? values.creditStartDate : null,
-        } : {}),
+        ...(canEditCredit
+          ? {
+              is_credit: values.isCredit,
+              credit_months: values.isCredit ? values.creditMonths : null,
+              credit_start_date: values.isCredit
+                ? values.creditStartDate
+                : null,
+            }
+          : {}),
         serial_no: values.machineModel,
         power: values.power,
         source: values.source,
         note: values.note,
         ...(isKarachi
           ? {
-            order_no_arr: values.orderNo.trim()
-              ? [values.orderNo.trim()]
-              : [],
-          }
+              order_no_arr: values.orderNo.trim()
+                ? [values.orderNo.trim()]
+                : [],
+            }
           : {}),
         price: values.totalPrice,
         contract_date: values.contractDate,
@@ -400,14 +428,23 @@ const EditMachine = ({
                             placeholder="Enter period"
                             value={field.value ?? ""}
                             onChange={(event) => {
-                              const months = event.target.value === "" ? undefined : Number(event.target.value);
+                              const months =
+                                event.target.value === ""
+                                  ? undefined
+                                  : Number(event.target.value);
                               field.onChange(months);
-                              if (!Number.isSafeInteger(months) || !months || months < 1) {
+                              if (
+                                !Number.isSafeInteger(months) ||
+                                !months ||
+                                months < 1
+                              ) {
                                 form.setValue("creditStartDate", "");
                               }
                             }}
                           />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
@@ -419,12 +456,20 @@ const EditMachine = ({
                           <FieldLabel>Credit start date</FieldLabel>
                           <AppCalendar
                             key={validCreditPeriod ? "active" : "inactive"}
-                            date={field.value ? new Date(`${field.value}T00:00:00`) : undefined}
-                            onChange={(date) => field.onChange(format(date, "yyyy-MM-dd"))}
+                            date={
+                              field.value
+                                ? new Date(`${field.value}T00:00:00`)
+                                : undefined
+                            }
+                            onChange={(date) =>
+                              field.onChange(format(date, "yyyy-MM-dd"))
+                            }
                             max=""
                             disabled={!validCreditPeriod}
                           />
-                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
                         </Field>
                       )}
                     />
@@ -432,7 +477,14 @@ const EditMachine = ({
                       <FieldLabel>Credit end date</FieldLabel>
                       <Input
                         className="h-9 rounded-lg"
-                        value={creditEndDate ? format(new Date(`${creditEndDate}T00:00:00`), "PPP") : ""}
+                        value={
+                          creditEndDate
+                            ? format(
+                                new Date(`${creditEndDate}T00:00:00`),
+                                "PPP",
+                              )
+                            : ""
+                        }
                         placeholder="Calculated automatically"
                         readOnly
                       />

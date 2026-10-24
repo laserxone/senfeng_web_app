@@ -15,7 +15,9 @@ type Resolution =
   | { ok: true; user: ResolvedFirebaseUser }
   | { ok: false; response: NextResponse };
 
-export async function resolveFirebaseUser(request: Request): Promise<Resolution> {
+export async function resolveFirebaseUser(
+  request: Request,
+): Promise<Resolution> {
   const authenticated = await requireAuth(request);
   if (!authenticated.ok) return authenticated;
 

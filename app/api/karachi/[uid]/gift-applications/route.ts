@@ -94,7 +94,10 @@ export async function POST(request: NextRequest) {
       [customer_id],
     );
     if (!customer.rowCount) {
-      return NextResponse.json({ message: "Customer does not belong to this office" }, { status: 409 });
+      return NextResponse.json(
+        { message: "Customer does not belong to this office" },
+        { status: 409 },
+      );
     }
     const hierarchy = await client.query(
       "SELECT id FROM approval_hierarchies WHERE id = $1 AND hierarchy_type = 'gift'",

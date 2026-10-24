@@ -5,7 +5,8 @@ const allowedRootDomain = "senfenglaserpk.com";
 export function proxy(request: NextRequest) {
   const hostname = request.nextUrl.hostname.toLowerCase();
   const isAllowedDomain =
-    hostname === allowedRootDomain || hostname.endsWith(`.${allowedRootDomain}`);
+    hostname === allowedRootDomain ||
+    hostname.endsWith(`.${allowedRootDomain}`);
   const isLocalDevelopment =
     process.env.NODE_ENV === "development" &&
     (hostname === "localhost" || hostname === "127.0.0.1");

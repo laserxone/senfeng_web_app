@@ -49,7 +49,11 @@ type SessionUserRow = {
   [key: string]: unknown;
 };
 
-function getNavigation(user: SessionUserRow, city: string, khataAllowed: boolean) {
+function getNavigation(
+  user: SessionUserRow,
+  city: string,
+  khataAllowed: boolean,
+) {
   const office = user.office.toLowerCase();
   let baseRoute = "";
   let navItems: NavigationItem[] = [];
@@ -76,8 +80,12 @@ function getNavigation(user: SessionUserRow, city: string, khataAllowed: boolean
           item.title === "Customers"
             ? {
                 ...item,
-                items: item.items?.filter((child) => child.title !== "Quotation"),
-                isActive: item.isActive?.filter((active) => active !== "quotation"),
+                items: item.items?.filter(
+                  (child) => child.title !== "Quotation",
+                ),
+                isActive: item.isActive?.filter(
+                  (active) => active !== "quotation",
+                ),
               }
             : item,
         );
@@ -154,7 +162,10 @@ export async function getSessionUser(userId: number, city: string) {
   const user = result.rows[0];
   if (!user) return null;
 
-  const settings = await pool.query<{ version_code: string | null; url: string | null }>(
+  const settings = await pool.query<{
+    version_code: string | null;
+    url: string | null;
+  }>(
     "SELECT version_code, url FROM public.settings WHERE office_id = $1 LIMIT 1",
     [user.office_id],
   );

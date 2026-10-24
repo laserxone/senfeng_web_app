@@ -251,11 +251,11 @@ export default function OrdersPage() {
           !search.trim()
             ? true
             : Object.entries(item).some(([_, value]) => {
-              if (value === null || value === undefined) return false;
-              return String(value)
-                .toLowerCase()
-                .includes(search.toLowerCase());
-            }),
+                if (value === null || value === undefined) return false;
+                return String(value)
+                  .toLowerCase()
+                  .includes(search.toLowerCase());
+              }),
         );
 
       if (filteredItems.length === 0) return null;
@@ -276,15 +276,15 @@ export default function OrdersPage() {
         <div className="grid border-t bg-muted/20 sm:grid-cols-2 sm:divide-x">
           {(isAdmin
             ? [
-              {
-                key: "lahore",
-                label: "Lahore Stock",
-              },
-              {
-                key: "karachi",
-                label: "Karachi Stock",
-              },
-            ]
+                {
+                  key: "lahore",
+                  label: "Lahore Stock",
+                },
+                {
+                  key: "karachi",
+                  label: "Karachi Stock",
+                },
+              ]
             : [{ key: officeKey, label: `${officeName} Stock` }]
           ).map((item) => {
             const active = selectedStock === item.key;
@@ -446,11 +446,13 @@ export default function OrdersPage() {
                                 {order?.order_items?.map((item) => (
                                   <div
                                     key={item.id}
-                                    className={`relative overflow-hidden px-2.5 py-2 ${item.is_machine
+                                    className={`relative overflow-hidden px-2.5 py-2 ${
+                                      item.is_machine
                                         ? item.machine_color_bg
                                         : "bg-background"
-                                      } rounded-lg border border-black/5 shadow-sm ${item.is_machine && item.machine_color_text
-                                      }`}
+                                    } rounded-lg border border-black/5 shadow-sm ${
+                                      item.is_machine && item.machine_color_text
+                                    }`}
                                   >
                                     {item?.booked && (
                                       <Image
@@ -472,7 +474,7 @@ export default function OrdersPage() {
                                           <span className="min-w-0 truncate text-sm font-medium">
                                             {item.name}
                                             {item.location &&
-                                              item.location?.toLocaleLowerCase() ===
+                                            item.location?.toLocaleLowerCase() ===
                                               "lahore" ? (
                                               <Badge
                                                 variant="outline"
@@ -497,10 +499,11 @@ export default function OrdersPage() {
                                         <div className="flex flex-wrap items-center gap-1.5">
                                           <div>
                                             <Badge
-                                              className={`h-5 rounded-full border px-2 text-[10px] font-medium ${item.show
+                                              className={`h-5 rounded-full border px-2 text-[10px] font-medium ${
+                                                item.show
                                                   ? "border-green-200 bg-green-100 text-green-700"
                                                   : "border-red-200 bg-red-100 text-red-700"
-                                                }`}
+                                              }`}
                                             >
                                               {item?.show
                                                 ? "Showing"
@@ -538,10 +541,11 @@ export default function OrdersPage() {
                                       </div>
 
                                       <div
-                                        className={`mt-1.5 grid gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4 ${item.is_machine
+                                        className={`mt-1.5 grid gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-2 lg:grid-cols-4 ${
+                                          item.is_machine
                                             ? item.machine_color_text
                                             : "text-muted-foreground"
-                                          }`}
+                                        }`}
                                       >
                                         {item.is_machine && (
                                           <>
@@ -569,8 +573,8 @@ export default function OrdersPage() {
                                               Booking Date:{" "}
                                               {item?.booking_date
                                                 ? moment(
-                                                  item?.booking_date,
-                                                ).format("YYYY-MM-DD")
+                                                    item?.booking_date,
+                                                  ).format("YYYY-MM-DD")
                                                 : ""}
                                             </span>
                                           </>

@@ -182,7 +182,7 @@ export type MyCustomer = {
   location?: string;
   number?: string[];
   lead?: number | null;
-  lead_name ?:string
+  lead_name?: string;
   ownership?: number;
   office?: string | null;
   ownership_name?: string | null;
@@ -216,7 +216,7 @@ export type MyCustomerResolved = {
   location?: string;
   number?: string;
   lead?: number | null;
-  lead_name ?: string
+  lead_name?: string;
   ownership?: number;
   office?: string | null;
   ownership_name?: string | null;
@@ -996,9 +996,9 @@ export type StockProps = {
   unit?: string;
   buying?: string;
   modified?: boolean;
-  model ?: string
-  power ?: string
-  serial_no ?: string
+  model?: string;
+  power?: string;
+  serial_no?: string;
 };
 
 export type InvoiceItem = {
@@ -1046,7 +1046,6 @@ export type POSInvoiceReminder = {
   outward_gatepass?: POSInvoiceReminder;
   location?: string;
 };
-
 
 export type SearchItem = POSInvoiceReminder & {
   total: number;

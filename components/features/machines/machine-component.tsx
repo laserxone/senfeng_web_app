@@ -905,8 +905,8 @@ const ReviewFieldGroup = ({
           </p>
           <p className="mt-0.5 break-words text-xs text-foreground">
             {key === "contract_date" && value
-                ? moment(value as string).format("YYYY-MM-DD")
-                : formatReviewValue(value)}
+              ? moment(value as string).format("YYYY-MM-DD")
+              : formatReviewValue(value)}
           </p>
         </div>
       ))}
@@ -931,7 +931,12 @@ const ReviewMachineDetails = ({
       ([key]) =>
         key !== "type" &&
         key !== "parts_information" &&
-        !["is_credit", "credit_months", "credit_start_date", "credit_end_date"].includes(key),
+        ![
+          "is_credit",
+          "credit_months",
+          "credit_start_date",
+          "credit_end_date",
+        ].includes(key),
     ),
   );
 
@@ -944,7 +949,10 @@ const ReviewMachineDetails = ({
             title="Credit terms"
             values={{
               "Credit period": `${machine.credit_months} months`,
-              "Credit start date": String(machine.credit_start_date).slice(0, 10),
+              "Credit start date": String(machine.credit_start_date).slice(
+                0,
+                10,
+              ),
               "Credit end date": String(machine.credit_end_date).slice(0, 10),
             }}
           />

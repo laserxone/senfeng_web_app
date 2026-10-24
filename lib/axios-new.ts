@@ -25,7 +25,6 @@ const axios = axiosInstance.create({
 });
 
 axios.interceptors.request.use(async (config) => {
-  
   config.baseURL = `${BASE_URL}/new`;
 
   config.headers["Cache-Control"] = "no-cache, no-store, must-revalidate";

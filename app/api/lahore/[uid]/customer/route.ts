@@ -333,7 +333,7 @@ export const createCustomerHandlers = (office: Office) => {
     }
   `;
 
-      const whereClauses = [];
+        const whereClauses = [];
 
         if (user.limited_access) {
           if (

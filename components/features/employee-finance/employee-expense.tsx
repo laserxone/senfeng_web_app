@@ -395,27 +395,23 @@ export default function EmployeeBranchExpenses() {
     0,
   );
 
-  const totalCash = visibleData.filter((item) => item.mode?.toLowerCase() === "cash").reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0,
-  )
+  const totalCash = visibleData
+    .filter((item) => item.mode?.toLowerCase() === "cash")
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
-  const totalBank = visibleData.filter((item) => item.mode?.toLowerCase() === "bank").reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0,
-  )
+  const totalBank = visibleData
+    .filter((item) => item.mode?.toLowerCase() === "bank")
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
 
   const RefreshedFunds = useCallback(() => {
     return (
-      <OfficeFundBalance total={data.reduce(
-        (sum, item) => sum + Number(item.amount || 0),
-        0,
-      )} />
-    )
-  }, [data])
+      <OfficeFundBalance
+        total={data.reduce((sum, item) => sum + Number(item.amount || 0), 0)}
+      />
+    );
+  }, [data]);
 
   return (
-
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
         <div className="flex flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
@@ -485,7 +481,9 @@ export default function EmployeeBranchExpenses() {
               <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
                 Cash
               </span>
-              <span className="text-sm font-bold">PKR {formatCurrency(totalCash)}</span>
+              <span className="text-sm font-bold">
+                PKR {formatCurrency(totalCash)}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:border-t-0 sm:px-5">
@@ -494,7 +492,9 @@ export default function EmployeeBranchExpenses() {
               <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
                 Bank
               </span>
-              <span className="text-sm font-bold">PKR {formatCurrency(totalBank)}</span>
+              <span className="text-sm font-bold">
+                PKR {formatCurrency(totalBank)}
+              </span>
             </div>
           </div>
         </div>
@@ -583,7 +583,6 @@ export default function EmployeeBranchExpenses() {
         date={imageURL?.date}
       />
     </div>
-
   );
 }
 type ImageSheetProps = {
@@ -682,7 +681,9 @@ const ImageSheet = ({
 
 const formSchema = z.object({
   note: z.string().min(1, { message: "TID is required." }),
-  amount: z.coerce.number<number>().positive("Amount must be greater than zero"),
+  amount: z.coerce
+    .number<number>()
+    .positive("Amount must be greater than zero"),
   mode: z.enum(["Cash", "Bank"], { message: "Select Cash or Bank." }),
   date: z.date({ error: "Date is required." }),
   image: z.string().min(1, { message: "Image is required." }),
@@ -817,7 +818,10 @@ export const AddExpensesDialog = ({
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel>Mode</FieldLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
                           <SelectTrigger className="h-9 rounded-lg">
                             <SelectValue placeholder="Select mode" />
                           </SelectTrigger>

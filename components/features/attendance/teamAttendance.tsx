@@ -442,9 +442,9 @@ export const AttendanceDetail = ({
                             </h3>
                             <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
                               {entry.time
-                                ? momentT(entry.time).tz(TIMEZONE).format(
-                                    "YYYY-MM-DD hh:mm A",
-                                  )
+                                ? momentT(entry.time)
+                                    .tz(TIMEZONE)
+                                    .format("YYYY-MM-DD hh:mm A")
                                 : "No time recorded"}
                             </p>
                           </div>

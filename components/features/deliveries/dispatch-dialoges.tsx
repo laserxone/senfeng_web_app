@@ -875,29 +875,28 @@ export function DispatchOrderDialog({
                               Order No <RequiredStar />
                             </FieldLabel>
 
-                           
-                              <div className="space-y-2">
-                                {(field.value || []).map(
-                                  (order: string, index: number) => (
-                                    <div
-                                      key={index}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <div className="flex flex-1">
-                                        <SelectOrderNo
-                                          value={order}
-                                          onReturnData={(e) => {
-                                            console.log(e);
-                                            const updated = [
-                                              ...(field.value || []),
-                                            ];
-                                            updated[index] = e.machine_serial;
-                                            field.onChange(updated);
-                                            setSelectedOrderNo(e);
-                                          }}
-                                        />
-                                      </div>
-                                      {/* <Button
+                            <div className="space-y-2">
+                              {(field.value || []).map(
+                                (order: string, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <div className="flex flex-1">
+                                      <SelectOrderNo
+                                        value={order}
+                                        onReturnData={(e) => {
+                                          console.log(e);
+                                          const updated = [
+                                            ...(field.value || []),
+                                          ];
+                                          updated[index] = e.machine_serial;
+                                          field.onChange(updated);
+                                          setSelectedOrderNo(e);
+                                        }}
+                                      />
+                                    </div>
+                                    {/* <Button
                                     type="button"
                                     variant="destructive"
                                     size="icon"
@@ -913,11 +912,10 @@ export function DispatchOrderDialog({
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button> */}
-                                    </div>
-                                  ),
-                                )}
-                              </div>
-                       
+                                  </div>
+                                ),
+                              )}
+                            </div>
 
                             {/* <Button
                               type="button"

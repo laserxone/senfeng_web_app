@@ -71,7 +71,7 @@ export interface UserContextType {
 
 export const UserContext = createContext<UserContextType>({
   state: { value: { data: null } },
-  setUser: () => { },
+  setUser: () => {},
   loading: false,
 });
 
@@ -103,7 +103,6 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
       return false;
     };
-
 
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       const email = fbUser?.email ?? null;

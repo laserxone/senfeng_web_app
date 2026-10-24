@@ -3,35 +3,35 @@ import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextRequest, NextResponse } from "next/server";
 
 export const createFundsHandler = (office: "lahore" | "karachi") =>
-   async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> },
-) {
-  try {
-    const { uid } = await params
-    const isAdmin = await checkSuperadmin(uid);
-    const result = await pool.query(
-      "SELECT account, balance FROM office_fund_balances WHERE office = $1",
-      [office],
-    );
-    const balances = { cash: "0.00", bank: "0.00" };
-    for (const row of result.rows) {
-      if (row.account === "cash") balances.cash = String(row.balance);
-      if (row.account === "bank") balances.bank = String(row.balance);
+  async function GET(
+    req: NextRequest,
+    { params }: { params: Promise<{ uid: string }> },
+  ) {
+    try {
+      const { uid } = await params;
+      const isAdmin = await checkSuperadmin(uid);
+      const result = await pool.query(
+        "SELECT account, balance FROM office_fund_balances WHERE office = $1",
+        [office],
+      );
+      const balances = { cash: "0.00", bank: "0.00" };
+      for (const row of result.rows) {
+        if (row.account === "cash") balances.cash = String(row.balance);
+        if (row.account === "bank") balances.bank = String(row.balance);
+      }
+      if (!isAdmin) {
+        balances.bank = "0";
+      }
+      return NextResponse.json(balances, {
+        headers: { "Cache-Control": "no-store" },
+      });
+    } catch (error) {
+      console.error("Error fetching Lahore office balances:", error);
+      return NextResponse.json(
+        { message: "Failed to fetch office balances" },
+        { status: 500 },
+      );
     }
-    if (!isAdmin) {
-      balances.bank = "0"
-    }
-    return NextResponse.json(balances, {
-      headers: { "Cache-Control": "no-store" },
-    });
-  } catch (error) {
-    console.error("Error fetching Lahore office balances:", error);
-    return NextResponse.json(
-      { message: "Failed to fetch office balances" },
-      { status: 500 },
-    );
-  }
-}
+  };
 
 export const GET = createFundsHandler("lahore");

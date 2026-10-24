@@ -122,7 +122,9 @@ export default function CustomerMainPage({
       header: sortableHeader("Assigned to"),
       size: 150,
       cell: ({ row }) => (
-        <span className="break-words">{row.original.ownership_name || "—"}</span>
+        <span className="break-words">
+          {row.original.ownership_name || "—"}
+        </span>
       ),
     },
     ...(isAdmin
@@ -132,7 +134,9 @@ export default function CustomerMainPage({
             header: sortableHeader("Lead by"),
             size: 145,
             cell: ({ row }) => (
-              <span className="break-words">{row.original.lead_name || "—"}</span>
+              <span className="break-words">
+                {row.original.lead_name || "—"}
+              </span>
             ),
           } satisfies ColumnDef<MyCustomer>,
         ]
@@ -144,7 +148,9 @@ export default function CustomerMainPage({
         Array.isArray(item.number) ? item.number.join(", ") : item.number || "",
       size: 155,
       cell: ({ row }) => (
-        <span className="break-words">{row.getValue<string>("number") || "—"}</span>
+        <span className="break-words">
+          {row.getValue<string>("number") || "—"}
+        </span>
       ),
     },
     {
@@ -228,7 +234,7 @@ export default function CustomerMainPage({
           : additionalFilter == "duplicate"
             ? item.orignalNumber?.some((num) => numCount[num] > 1)
             : additionalFilter == "mycustomers"
-              ? (item.ownership === userID || item?.lead === userID)
+              ? item.ownership === userID || item?.lead === userID
               : true,
     )
     .filter((item) =>
@@ -277,16 +283,16 @@ export default function CustomerMainPage({
 
   const filterItems = isAdmin
     ? [
-      { value: "unassigned", label: "Unassigned" },
-      { value: "unsold", label: "Unsold Customers" },
-      { value: "mycustomers", label: "My Customers" },
-      { value: "duplicate", label: "Duplicate" },
-    ]
+        { value: "unassigned", label: "Unassigned" },
+        { value: "unsold", label: "Unsold Customers" },
+        { value: "mycustomers", label: "My Customers" },
+        { value: "duplicate", label: "Duplicate" },
+      ]
     : [
-      { value: "unassigned", label: "Unassigned" },
-      { value: "unsold", label: "Unsold Customers" },
-      { value: "mycustomers", label: "My Customers" },
-    ];
+        { value: "unassigned", label: "Unassigned" },
+        { value: "unsold", label: "Unsold Customers" },
+        { value: "mycustomers", label: "My Customers" },
+      ];
 
   return (
     <>
@@ -350,10 +356,10 @@ export default function CustomerMainPage({
           data={
             additionalFilter === "duplicate"
               ? filteredData.sort((a, b) =>
-                (a?.sorting || "")
-                  ?.toLowerCase()
-                  ?.localeCompare(b?.sorting?.toLowerCase() || ""),
-              )
+                  (a?.sorting || "")
+                    ?.toLowerCase()
+                    ?.localeCompare(b?.sorting?.toLowerCase() || ""),
+                )
               : filteredData
           }
           onRowClick={(val) => {

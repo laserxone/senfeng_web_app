@@ -220,7 +220,13 @@ export function QuotationForm({
   }, [selectedMachine, paymentTerms]);
 
   return (
-    <AppDialog open={open} onOpenChange={handleOpenChange} title="Create Quotation" Icon={FileText} description="Configure customer, machine, pricing, and delivery terms.">
+    <AppDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      title="Create Quotation"
+      Icon={FileText}
+      description="Configure customer, machine, pricing, and delivery terms."
+    >
       <form
         onSubmit={form.handleSubmit(handleGeneratePDF)}
         className="space-y-3 p-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
@@ -243,10 +249,7 @@ export function QuotationForm({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Date</FieldLabel>
 
-                  <AppCalendar
-                    date={field.value}
-                    onChange={field.onChange}
-                  />
+                  <AppCalendar date={field.value} onChange={field.onChange} />
 
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -282,11 +285,9 @@ export function QuotationForm({
                     shouldValidate: true,
                   });
 
-                  form.setValue(
-                    "customer_name",
-                    val.name || val.owner || "",
-                    { shouldValidate: true },
-                  );
+                  form.setValue("customer_name", val.name || val.owner || "", {
+                    shouldValidate: true,
+                  });
 
                   form.setValue("contact_person", val.owner || "", {
                     shouldValidate: true,
@@ -341,10 +342,7 @@ export function QuotationForm({
                     Contact Person
                   </FieldLabel>
 
-                  <Input
-                    placeholder="Enter contact person name"
-                    {...field}
-                  />
+                  <Input placeholder="Enter contact person name" {...field} />
 
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -590,8 +588,6 @@ export function QuotationForm({
           )}
         </Button>
       </form>
-
     </AppDialog>
-
   );
 }

@@ -45,7 +45,10 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
           );
           if (!endDate) {
             return NextResponse.json(
-              { message: "Enter a valid credit start date and a positive number of months" },
+              {
+                message:
+                  "Enter a valid credit start date and a positive number of months",
+              },
               { status: 400 },
             );
           }

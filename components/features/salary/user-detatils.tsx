@@ -25,7 +25,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import Spinner from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/config/firebase";
 import useUserDetail from "@/hooks/use-user-detail";
@@ -72,6 +71,7 @@ export default function DetailComponent({ id }: { id: string | null }) {
   const [joiningDate, setJoiningDate] = useState<Date | null>(null);
   const [leavingDate, setLeavingDate] = useState<Date | null>(null);
   const [active, setActive] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fixedData, setFixedData] = useState<UserProfile>({
@@ -260,7 +260,6 @@ export default function DetailComponent({ id }: { id: string | null }) {
         customer_full_access: checks?.customer_full_access,
         repairing_and_maintenance: checks?.repairing_and_maintenance,
         team_attendance: checks?.team_attendance,
-        active: active,
         careers: checks?.careers,
         reimbursement_approval: checks?.reimbursement_approval,
         team_attendance_marking: checks?.team_attendance_marking,
@@ -273,6 +272,23 @@ export default function DetailComponent({ id }: { id: string | null }) {
       .finally(() => {
         setDataLoading(false);
       });
+  }
+
+  async function handleStatusChange() {
+    if (!id || !userID || statusLoading) return;
+
+    setStatusLoading(true);
+    try {
+      const response = await axios.patch(`/${userID}/user/${id}/status`, {
+        active: !active,
+      });
+      setActive(response.data.active);
+      toast.success(response.data.active ? "User enabled" : "User disabled");
+    } catch {
+      // The axios interceptor displays the response error.
+    } finally {
+      setStatusLoading(false);
+    }
   }
 
   const OpenDashboard = [
@@ -329,10 +345,14 @@ export default function DetailComponent({ id }: { id: string | null }) {
                 <div
                   className={`rounded-full border px-3 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-muted/30 text-muted-foreground"}`}
                 >
-                  {active ? "Active" : "Inactive"}
+                  {active ? "Enabled" : "Disabled"}
                 </div>
               </div>
-              <Button onClick={handleSave} className="w-full sm:w-auto">
+              <Button
+                onClick={handleSave}
+                disabled={dataLoading}
+                className="w-full sm:w-auto"
+              >
                 {dataLoading && <Spinner />} Save Changes
               </Button>
             </div>
@@ -414,11 +434,11 @@ export default function DetailComponent({ id }: { id: string | null }) {
             </Field>
           </FieldSet>
 
-          {/* Dates & Status */}
+          {/* Dates */}
           <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4">
             <FieldLegend className="mb-1 flex items-center gap-2 px-1 text-sm font-semibold text-foreground">
               <CalendarDays className="h-4 w-4 text-amber-700" />
-              Dates & Status
+              Dates
             </FieldLegend>
 
             <Field>
@@ -436,12 +456,36 @@ export default function DetailComponent({ id }: { id: string | null }) {
                 onChange={(date) => setLeavingDate(date)}
               />
             </Field>
-
-            <div className="flex items-center justify-between rounded-xl border bg-muted/15 p-3">
-              <Label className="font-medium">Status</Label>
-              <Switch checked={active} onCheckedChange={setActive} />
-            </div>
           </FieldSet>
+
+          <div className="flex flex-col justify-between gap-4 rounded-2xl border bg-background p-4 shadow-sm sm:p-5">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <ShieldCheck className="h-4 w-4 text-blue-700" />
+                Account status
+              </div>
+              <div
+                className={`mt-4 inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}
+              >
+                {active ? "Enabled" : "Disabled"}
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {active
+                  ? "Sign-in is enabled for this user."
+                  : "Sign-in is disabled for this user."}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant={active ? "destructive" : "default"}
+              className="h-9 w-full rounded-lg sm:w-fit"
+              disabled={statusLoading}
+              onClick={handleStatusChange}
+            >
+              {statusLoading && <Spinner />}
+              {active ? "Disable user" : "Enable user"}
+            </Button>
+          </div>
 
           {/* Note */}
           <FieldSet className="gap-3 rounded-2xl border bg-background p-3 shadow-sm sm:p-4 lg:col-span-2">

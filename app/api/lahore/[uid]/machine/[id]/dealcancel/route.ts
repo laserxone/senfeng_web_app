@@ -35,7 +35,8 @@ async function restorePartsInventory(
       "UPDATE inventory SET qty = qty + 1 WHERE id = $1 AND office = $2",
       [inventoryId, office],
     );
-    if (updated.rowCount !== 1) throw new Error(`Inventory ${inventoryId} does not belong to ${office}`);
+    if (updated.rowCount !== 1)
+      throw new Error(`Inventory ${inventoryId} does not belong to ${office}`);
   }
 }
 

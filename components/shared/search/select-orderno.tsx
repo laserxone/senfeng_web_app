@@ -33,7 +33,7 @@ type OrderNoTypes = {
   machine_serial: string;
   search: string;
   label: string;
-  is_machine: boolean
+  is_machine: boolean;
 };
 
 export function SelectOrderNo({

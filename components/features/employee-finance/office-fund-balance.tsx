@@ -13,13 +13,7 @@ const amountFormatter = new Intl.NumberFormat("en-PK", {
   maximumFractionDigits: 2,
 });
 
-export default function OfficeFundBalance({
-
-  total,
-}: {
-
-  total?: number;
-}) {
+export default function OfficeFundBalance({ total }: { total?: number }) {
   const { userID, isAdmin } = useUserDetail();
   const [balances, setBalances] = useState<Balances | null>(null);
   const [failed, setFailed] = useState(false);
@@ -50,24 +44,26 @@ export default function OfficeFundBalance({
   };
 
   const showValues = (isAdmin ? 2 : 1) + (total === undefined ? 0 : 1);
-  const grid = `sm:grid-cols-${showValues}`
+  const grid = `sm:grid-cols-${showValues}`;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <div className={`grid gap-3 ${grid} `}>
-        {total !== undefined && <Card size="sm">
-          <CardContent className="flex items-center gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
-              <WalletCards className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">Total Cash Flow</p>
-              <p className="truncate text-lg font-semibold tabular-nums">
-                PKR {amountFormatter.format(total)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>}
+        {total !== undefined && (
+          <Card size="sm">
+            <CardContent className="flex items-center gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                <WalletCards className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Total Cash Flow</p>
+                <p className="truncate text-lg font-semibold tabular-nums">
+                  PKR {amountFormatter.format(total)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         <Card size="sm">
           <CardContent className="flex items-center gap-3">
             <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
@@ -84,21 +80,23 @@ export default function OfficeFundBalance({
           </CardContent>
         </Card>
 
-        {isAdmin && <Card size="sm">
-          <CardContent className="flex items-center gap-3">
-            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
-              <Landmark className="size-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">
-                Available bank balance
-              </p>
-              <p className="truncate text-lg font-semibold tabular-nums">
-                {displayAmount(balances?.bank)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>}
+        {isAdmin && (
+          <Card size="sm">
+            <CardContent className="flex items-center gap-3">
+              <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                <Landmark className="size-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">
+                  Available bank balance
+                </p>
+                <p className="truncate text-lg font-semibold tabular-nums">
+                  {displayAmount(balances?.bank)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -28,7 +28,10 @@ const AppCalendar = ({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   return (
-    <Popover open={isCalendarOpen && !disabled} onOpenChange={setIsCalendarOpen}>
+    <Popover
+      open={isCalendarOpen && !disabled}
+      onOpenChange={setIsCalendarOpen}
+    >
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}

@@ -1,5 +1,8 @@
 import pool from "@/config/db";
-import { debitOfficeFund, withOfficeFundTransaction } from "@/lib/office-fund-helper";
+import {
+  debitOfficeFund,
+  withOfficeFundTransaction,
+} from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {

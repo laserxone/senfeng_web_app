@@ -38,7 +38,7 @@ import {
   Truck,
   User,
   Users,
-  Zap
+  Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -209,7 +209,13 @@ export function QuotationFormEdit({
         <SquarePen />
       </Button>
 
-      <AppDialog open={open} onOpenChange={handleOpenChange} title="Edit Quotation" Icon={FileText} description="Update customer, machine, pricing, and delivery terms.">
+      <AppDialog
+        open={open}
+        onOpenChange={handleOpenChange}
+        title="Edit Quotation"
+        Icon={FileText}
+        description="Update customer, machine, pricing, and delivery terms."
+      >
         <form
           onSubmit={form.handleSubmit(handleGeneratePDF)}
           className="space-y-3 px-3.5 pb-4 [&_input]:rounded-lg [&_label]:text-[11px] [&_label]:font-semibold [&_label]:tracking-wide [&_label]:text-muted-foreground [&_label]:uppercase"
@@ -232,10 +238,7 @@ export function QuotationFormEdit({
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel>Date</FieldLabel>
 
-                    <AppCalendar
-                      date={field.value}
-                      onChange={field.onChange}
-                    />
+                    <AppCalendar date={field.value} onChange={field.onChange} />
 
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -294,9 +297,7 @@ export function QuotationFormEdit({
                 />
 
                 {form.formState.errors.customer_id && (
-                  <FieldError
-                    errors={[form.formState.errors.customer_id]}
-                  />
+                  <FieldError errors={[form.formState.errors.customer_id]} />
                 )}
               </Field>
 
@@ -332,10 +333,7 @@ export function QuotationFormEdit({
                       Contact Person
                     </FieldLabel>
 
-                    <Input
-                      placeholder="Enter contact person name"
-                      {...field}
-                    />
+                    <Input placeholder="Enter contact person name" {...field} />
 
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
@@ -581,8 +579,6 @@ export function QuotationFormEdit({
           </Button>
         </form>
       </AppDialog>
-
-
     </>
   );
 }

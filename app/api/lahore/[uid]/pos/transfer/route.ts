@@ -290,8 +290,8 @@ export const createTransferHandlers = (office: Office) => {
           ({ attname }) => `"${attname.replaceAll('"', '""')}"`,
         );
         const created = await client.query<{ id: number }>(
-          `INSERT INTO public.inventory (${[...columns, '"qty"', '"office"'].join(', ')})
-           SELECT ${[...columns, '$1', '$2'].join(', ')}
+          `INSERT INTO public.inventory (${[...columns, '"qty"', '"office"'].join(", ")})
+           SELECT ${[...columns, "$1", "$2"].join(", ")}
              FROM public.inventory WHERE id = $3
            RETURNING id`,
           [receivedQty, office, pending.inventory_id],
