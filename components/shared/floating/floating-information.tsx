@@ -180,6 +180,7 @@ function ReminderCard({
   isClearing: boolean;
   clearDisabled: boolean;
 }) {
+  const { isAdmin } = useUserDetail()
   const href = `/${baseRoute}${reminder.link.startsWith("/") ? reminder.link : `/${reminder.link}`}`;
   const userName = reminder.seller_name || "Unknown user";
   const initials = userName
@@ -257,18 +258,20 @@ function ReminderCard({
           </div>
 
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="mt-2"
-          disabled={clearDisabled}
-          onClick={onClear}
-          aria-label={`Clear reminder for ${reminder.customer_name || reminder.customer_owner || "customer"}`}
-        >
-          {isClearing && <Spinner />}
-          {isClearing ? "Clearing" : "Clear"}
-        </Button>
+        {isAdmin &&
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            disabled={clearDisabled}
+            onClick={onClear}
+            aria-label={`Clear reminder for ${reminder.customer_name || reminder.customer_owner || "customer"}`}
+          >
+            {isClearing && <Spinner />}
+            {isClearing ? "Clearing" : "Clear"}
+          </Button>
+        }
       </div>
     </article>
   );
