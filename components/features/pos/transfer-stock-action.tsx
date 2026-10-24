@@ -3,6 +3,7 @@
 import NotificationBadge from "@/components/shared/notifications/NotificationBadge";
 import { Button } from "@/components/ui/button";
 import axios from "@/lib/axios";
+import useUserDetail from "@/hooks/use-user-detail";
 import { ArrowLeftRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -15,6 +16,7 @@ export function TransferStockAction({
   baseRoute: string;
 }) {
   const [pendingCount, setPendingCount] = useState(0);
+  const { designation } = useUserDetail();
 
   useEffect(() => {
     if (!userID) return;
@@ -22,7 +24,12 @@ export function TransferStockAction({
     axios
       .get(`/${userID}/pos/transfer?view=count`)
       .then(({ data }) => {
-        if (active) setPendingCount(Number(data.pending_count) || 0);
+        if (active) {
+          setPendingCount(
+            (Number(data.pending_count) || 0) +
+              (designation === "Owner" ? Number(data.approval_count) || 0 : 0),
+          );
+        }
       })
       .catch(() => {
         if (active) setPendingCount(0);
@@ -30,7 +37,7 @@ export function TransferStockAction({
     return () => {
       active = false;
     };
-  }, [userID]);
+  }, [userID, designation]);
 
   return (
     <Link href={`/${baseRoute}/pos/transfer-stock`} className="block">

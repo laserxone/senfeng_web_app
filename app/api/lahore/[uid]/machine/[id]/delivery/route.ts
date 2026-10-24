@@ -1,7 +1,5 @@
 import pool from "@/config/db";
 import { NOTIFICATION_TYPES } from "@/constants/notifications";
-import { addLog } from "@/lib/addLog";
-import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -65,18 +63,6 @@ export async function PUT(
         NOTIFICATION_TYPES.machine_delivery_applied.category,
         NOTIFICATION_TYPES.machine_delivery_applied.title,
       );
-    }
-
-    try {
-      const logMSG = generateLog(data, "Machine updated");
-      addLog({
-        text: logMSG,
-        user_id: uid,
-        customer_id: result.rows[0].customer_id,
-        sale_id: result.rows[0].id,
-      });
-    } catch (error) {
-      console.log(error);
     }
 
     console.log("data updated successfully");

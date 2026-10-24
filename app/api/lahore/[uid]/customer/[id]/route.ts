@@ -1,12 +1,10 @@
 import pool from "@/config/db";
 import { partFields, profileFields, saleFields } from "@/constants/data";
-import { addLog } from "@/lib/addLog";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import DeleteStorageBackend from "@/lib/delete-storage-backend";
-import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
-import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { sendNotificationToSMM } from "@/lib/sendNotificationToSMM";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -313,13 +311,7 @@ export async function PUT(
       }
     }
 
-    try {
-      const logMSG = generateLog(data, "Customer updated");
 
-      addLog({ text: logMSG, user_id: uid, customer_id: result.rows[0].id });
-    } catch (error) {
-      console.log(error);
-    }
 
     return NextResponse.json(
       { message: "Updated successfully" },

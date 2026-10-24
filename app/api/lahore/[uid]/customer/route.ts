@@ -1,7 +1,6 @@
 import pool from "@/config/db";
-import { addLog } from "@/lib/addLog";
+import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
-import { generateLog } from "@/lib/generateLog";
 import { sendNotification } from "@/lib/sendNotification";
 import {
   sendNotificationToCRM,
@@ -10,7 +9,6 @@ import {
 import { sendNotificationToMobile } from "@/lib/sendNotificationToMobile";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
-import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
 type Office = "lahore" | "karachi";
 type RouteContext = { params: Promise<{ uid: string }> };
@@ -80,13 +78,7 @@ export const createCustomerHandlers = (office: Office) => {
         "all",
         NOTIFICATION_TYPES.customer_added.title,
       );
-      try {
-        const logMSG = generateLog(data, "New customer added");
 
-        addLog({ text: logMSG, user_id: uid, customer_id: result.rows[0].id });
-      } catch (error) {
-        console.log(error);
-      }
 
       return NextResponse.json(
         { message: "Inserted successfully", data: result.rows[0] },
@@ -309,9 +301,8 @@ export const createCustomerHandlers = (office: Office) => {
       c.member,
       COALESCE(u.name, '') AS ownership_name,
       COALESCE(ul.name, '') AS lead_name
-      ${
-        machinesQuery
-          ? `,
+      ${machinesQuery
+            ? `,
       COALESCE(json_agg(s.serial_no) FILTER (WHERE s.serial_no IS NOT NULL), '[]') AS machines,
        COALESCE(json_agg(s.sell_by) FILTER (WHERE s.sell_by IS NOT NULL), '[]') AS sell_by,
         COALESCE(
@@ -319,18 +310,17 @@ export const createCustomerHandlers = (office: Office) => {
         FILTER (WHERE handshake_image IS NOT NULL),
         '[]'
       ) AS handshake_images`
-          : ""
-      }
+            : ""
+          }
     FROM customer c
     LEFT JOIN users u ON c.ownership = u.id
     LEFT JOIN users ul ON c.lead = ul.id
-    ${
-      machinesQuery
-        ? `LEFT JOIN sale s ON c.id = s.customer_id
+    ${machinesQuery
+            ? `LEFT JOIN sale s ON c.id = s.customer_id
         LEFT JOIN LATERAL unnest(s.handshake_images) AS handshake_image 
       ON TRUE`
-        : ""
-    }
+            : ""
+          }
   `;
 
         const whereClauses = [];

@@ -1,7 +1,5 @@
 import pool from "@/config/db";
 import { NOTIFICATION_TYPES } from "@/constants/notifications";
-import { addLog } from "@/lib/addLog";
-import { generateLog } from "@/lib/generateLog";
 import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -78,20 +76,6 @@ export const createPaymentHandler = (office: "lahore" | "karachi") =>
         NOTIFICATION_TYPES.payment_added.category,
         NOTIFICATION_TYPES.payment_added.title,
       );
-
-      try {
-        const logMSG = generateLog(data, "New Payment added");
-
-        addLog({
-          text: logMSG,
-          user_id: null,
-          customer_id: null,
-          sale_id: result.rows[0].machine_id,
-          payment_id: result.rows[0].id,
-        });
-      } catch (error) {
-        console.log(error);
-      }
 
       return NextResponse.json(
         {

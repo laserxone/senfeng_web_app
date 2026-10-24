@@ -39,6 +39,14 @@ export const NOTIFICATION_TYPES = {
     title: "Part Added",
     category: NOTIFICATION_CATEGORIES.SALES,
   },
+  stock_transfer_approval: {
+    title: "Stock Transfer Approval Requested",
+    category: NOTIFICATION_CATEGORIES.SALES,
+  },
+  stock_transfer_ready: {
+    title: "Stock Transfer Ready to Receive",
+    category: NOTIFICATION_CATEGORIES.SALES,
+  },
   payment_added: {
     title: "Payment Added",
     category: NOTIFICATION_CATEGORIES.SALES,

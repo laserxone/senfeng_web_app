@@ -1,9 +1,7 @@
 import pool from "@/config/db";
 import { NOTIFICATION_TYPES } from "@/constants/notifications";
-import { addLog } from "@/lib/addLog";
-import { generateLog } from "@/lib/generateLog";
-import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { calculateCreditEndDate } from "@/lib/credit-terms";
+import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 
@@ -83,18 +81,6 @@ export const createMachineHandler = (office: "lahore" | "karachi") =>
         await client.query(`UPDATE customer SET member = TRUE WHERE id = $1`, [
           data.customer_id,
         ]);
-      }
-
-      try {
-        const logMSG = generateLog(data, "New Machine added");
-        addLog({
-          text: logMSG,
-          user_id: data.sell_by,
-          customer_id: data?.customer_id || null,
-          sale_id: result.rows[0].id,
-        });
-      } catch (error) {
-        console.log(error);
       }
 
       if (inventory) {

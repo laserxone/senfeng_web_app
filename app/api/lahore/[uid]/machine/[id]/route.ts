@@ -1,11 +1,9 @@
 import pool from "@/config/db";
 import { storage } from "@/config/firebase";
 import { partFields, saleFields } from "@/constants/data";
-import { calculateCreditEndDate } from "@/lib/credit-terms";
-import { addLog } from "@/lib/addLog";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
+import { calculateCreditEndDate } from "@/lib/credit-terms";
 import admin from "@/lib/firebaseAdmin";
-import { generateLog } from "@/lib/generateLog";
 import { saleResponse } from "@/lib/sale-response";
 import { deleteObject, ref } from "firebase/storage";
 import { NextRequest, NextResponse } from "next/server";
@@ -578,18 +576,6 @@ export async function PUT(
     await client.query("COMMIT");
     transactionFinished = true;
 
-    try {
-      const logMSG = generateLog(data, "Machine updated");
-      addLog({
-        text: logMSG,
-        user_id: uid,
-        customer_id: result.rows[0].customer_id,
-        sale_id: result.rows[0].id,
-      });
-    } catch (error) {
-      console.log(error);
-    }
-
     console.log("data updated successfully");
     return NextResponse.json(
       { message: "Updated successfully" },
@@ -659,10 +645,6 @@ export async function deleteMachine(
        WHERE machine_id = $1`,
       [id],
     );
-
-    await client.query(`UPDATE logs SET sale_id = NULL WHERE sale_id = $1`, [
-      id,
-    ]);
 
     const paymentResult = await client.query(
       `SELECT image FROM payment WHERE machine_id = $1`,
