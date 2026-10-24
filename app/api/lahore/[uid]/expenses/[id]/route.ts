@@ -6,9 +6,10 @@ import {
 } from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(
+async function deleteExpense(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { id } = await params;
   if (!id) {
@@ -24,7 +25,7 @@ export async function DELETE(
       if (!expense.rowCount) return null;
       await client.query(`DELETE FROM branchexpenses WHERE id = $1`, [id]);
       await reverseOfficeFund(client, {
-        office: "lahore",
+        office,
         sourceType: "office_expense",
         sourceId: Number(id),
       });
@@ -42,5 +43,12 @@ export async function DELETE(
     );
   }
 }
+
+export const createExpenseDeleteHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ id: string }> }) =>
+    deleteExpense(req, context, office);
+
+export const DELETE = createExpenseDeleteHandler("lahore");
 
 export const revalidate = 0;

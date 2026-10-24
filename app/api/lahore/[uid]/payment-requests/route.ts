@@ -1,7 +1,7 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+async function getPaymentRequests(office: "lahore" | "karachi") {
   const result = await pool.query(`
     SELECT
       pr.id,
@@ -30,12 +30,18 @@ export async function GET() {
       ON c.id = s.customer_id
     LEFT JOIN users u
       ON u.id = c.ownership
-    WHERE pr.office = 'lahore'
+    WHERE pr.office = '${office}'
     ORDER BY pr.created_at DESC
   `);
 
   return NextResponse.json(result.rows);
 }
+
+export const createPaymentRequestsGetHandler =
+  (office: "lahore" | "karachi") => () =>
+    getPaymentRequests(office);
+
+export const GET = createPaymentRequestsGetHandler("lahore");
 
 export async function PUT(req: NextRequest) {
   try {

@@ -48,9 +48,10 @@ WHERE u.id = $1
   }
 }
 
-export async function POST(
+async function postVisit(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   try {
     const searchParams = req.nextUrl.searchParams;
@@ -66,7 +67,7 @@ export async function POST(
     }
 
     if (data.signature) {
-      const fileName = `lahore/${uid}/signature/${Date.now()}.png`;
+      const fileName = `${office}/${uid}/signature/${Date.now()}.png`;
       UploadImageForMobile(data.signature, fileName);
       data.signature = fileName;
     }
@@ -113,5 +114,12 @@ export async function POST(
     );
   }
 }
+
+export const createVisitPostHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    postVisit(req, context, office);
+
+export const POST = createVisitPostHandler("lahore");
 
 export const revalidate = 0;

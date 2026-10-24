@@ -5,12 +5,12 @@ import momentT from "moment-timezone";
 import moment from "moment/moment";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getDashboard(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
-  const office = "lahore";
 
   try {
     const isAdmin = await checkSuperadmin(uid);
@@ -18,10 +18,10 @@ export async function GET(
       const userDesignation = await getDesignation(uid);
 
       if (userDesignation === "Customer Relationship Manager") {
-        const responseData = await getCRMData(office || "lahore");
+        const responseData = await getCRMData(office);
         return NextResponse.json(responseData, { status: 200 });
       } else {
-        const responseData = await getAdminDashboardData(office || "lahore");
+        const responseData = await getAdminDashboardData(office);
         return NextResponse.json(responseData, { status: 200 });
       }
     } else {
@@ -61,7 +61,7 @@ export async function GET(
 
         return NextResponse.json({ ...responseData, user }, { status: 200 });
       } else if (user?.designation === "Store Manager") {
-        const responseData = await getStoreData(uid);
+        const responseData = await getStoreData(uid, office);
 
         return NextResponse.json({ ...responseData, user }, { status: 200 });
       } else if (user?.designation === "Sales") {
@@ -72,6 +72,7 @@ export async function GET(
           lastMonthEnd,
           uid,
           Number(user?.monthly_target ?? 0),
+          office,
         );
 
         return NextResponse.json({ ...responseData, user }, { status: 200 });
@@ -83,6 +84,7 @@ export async function GET(
           currentMonthEnd,
           uid,
           user?.reimbursement_approval,
+          office,
         );
 
         return NextResponse.json({ ...responseData, user }, { status: 200 });
@@ -102,6 +104,13 @@ export async function GET(
     );
   }
 }
+
+export const createDashboardGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getDashboard(req, context, office);
+
+export const GET = createDashboardGetHandler("lahore");
 
 async function getCRMData(office: string) {
   const TIMEZONE = "Asia/Karachi";
@@ -474,7 +483,7 @@ ORDER BY u.name ASC;
   LEFT JOIN users ON task.assigned_to = users.id
   LEFT JOIN customer ON task.customer_id = customer.id
   WHERE task.created_at BETWEEN $1 AND $2
-    AND LOWER(users.office) = 'lahore' AND users.designation = 'Sales'
+    AND LOWER(users.office) = '${office}' AND users.designation = 'Sales'
   GROUP BY users.id, users.name
   ORDER BY MAX(task.created_at) DESC;
 `;
@@ -699,7 +708,7 @@ ORDER BY u.name ASC;
     ), 0) AS total_pending
   FROM complaints c
   LEFT JOIN payment_totals pt ON pt.complaint_id = c.id
-  WHERE LOWER(c.managing_office) = 'lahore';
+  WHERE LOWER(c.managing_office) = '${office}';
 `);
 
   const query = `
@@ -718,7 +727,7 @@ LEFT JOIN customer c
     ON c.id = si.customer_id
 LEFT JOIN users u
     ON u.id = c.ownership
-WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
+WHERE si.office = '${office}' AND si.owner_paid IS FALSE
   AND si.invoice_status = 'issued'
 GROUP BY si.id, u.name
 ORDER BY created_at DESC
@@ -1084,7 +1093,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
   LEFT JOIN users ON task.assigned_to = users.id
   LEFT JOIN customer ON task.customer_id = customer.id
   WHERE task.created_at BETWEEN $1 AND $2
-    AND LOWER(users.office) = 'lahore'
+    AND LOWER(users.office) = '${office}'
   GROUP BY users.id, users.name
   ORDER BY MAX(task.created_at) DESC;
 `;
@@ -1226,7 +1235,7 @@ LEFT JOIN sale_sum s ON u.id = s.user_id;
     ), 0) AS total_pending
   FROM complaints c
   LEFT JOIN payment_totals pt ON pt.complaint_id = c.id
-  WHERE LOWER(c.managing_office) = 'lahore';
+  WHERE LOWER(c.managing_office) = '${office}';
 `);
 
   const query = `
@@ -1245,7 +1254,7 @@ LEFT JOIN customer c
     ON c.id = si.customer_id
 LEFT JOIN users u
     ON u.id = c.ownership
-WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
+WHERE si.office = '${office}' AND si.owner_paid IS FALSE
   AND si.invoice_status = 'issued'
 GROUP BY si.id, u.name
 ORDER BY created_at DESC
@@ -1582,6 +1591,7 @@ async function getSalesData(
   lastMonthEnd: string,
   uid: string,
   target: Number,
+  office: "lahore" | "karachi",
 ) {
   const [customersQuery] = await Promise.all([
     pool.query(
@@ -1687,7 +1697,7 @@ async function getSalesData(
   LEFT JOIN customer_parts cp ON cp.part_id = si.id AND cp.office = si.office
   LEFT JOIN customer c ON c.id = si.customer_id
   LEFT JOIN users u ON u.id = c.ownership
-  WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
+  WHERE si.office = '${office}' AND si.owner_paid IS FALSE
     AND si.invoice_status = 'issued'
     AND c.ownership = $1
   GROUP BY si.id, u.name, c.id
@@ -2046,6 +2056,7 @@ async function getCRMAfterSalesData(
   currentMonthEnd: string,
   uid: string,
   approval: boolean,
+  office: "lahore" | "karachi",
 ) {
   const customersResult = await pool.query(`
   SELECT
@@ -2057,7 +2068,7 @@ async function getCRMAfterSalesData(
     c.member,
     c.created_at
   FROM customer c
-  WHERE LOWER(c.office) = 'lahore'
+  WHERE LOWER(c.office) = '${office}'
     AND (
       c.member IS TRUE
       OR EXISTS (
@@ -2085,7 +2096,7 @@ async function getCRMAfterSalesData(
       AND f.created_at BETWEEN $2 AND $3
     ORDER BY f.customer_id, f.created_at DESC
     `,
-    ["lahore", currentMonthStart, currentMonthEnd],
+    [office, currentMonthStart, currentMonthEnd],
   );
 
   const feedbackMap = new Map(
@@ -2152,7 +2163,7 @@ async function getEngineerData(uid: string) {
   );
 }
 
-async function getStoreData(uid: string) {
+async function getStoreData(uid: string, office: "lahore" | "karachi") {
   const TIMEZONE = "Asia/Karachi";
 
   const now = moment.tz(TIMEZONE);
@@ -2205,7 +2216,7 @@ async function getStoreData(uid: string) {
       ON c.id = si.customer_id
     LEFT JOIN users u
       ON u.id = c.ownership
-    WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
+    WHERE si.office = '${office}' AND si.owner_paid IS FALSE
       AND si.invoice_status = 'issued'
     GROUP BY si.id, u.name, c.location
     ORDER BY si.created_at DESC
@@ -2227,7 +2238,7 @@ async function getStoreData(uid: string) {
       ) AS data
     FROM order_items oi
     WHERE oi.booked IS FALSE
-    AND LOWER(oi.location) = 'lahore'
+    AND LOWER(oi.location) = '${office}'
     GROUP BY oi.machine_model, oi.machine_power
     ORDER BY oi.machine_model ASC, oi.machine_power ASC
   `;
@@ -2266,7 +2277,7 @@ async function getStoreData(uid: string) {
       phone,
       address
     FROM savedinvoices
-    WHERE office = 'lahore' AND created_at BETWEEN $1 AND $2
+    WHERE office = '${office}' AND created_at BETWEEN $1 AND $2
       AND invoice_status = 'issued'
     ORDER BY created_at DESC
   `;
@@ -2283,7 +2294,7 @@ async function getStoreData(uid: string) {
   const lowStockQuery = `
   SELECT *
   FROM inventory
-  WHERE office = 'lahore' AND threshold IS NOT NULL
+  WHERE office = '${office}' AND threshold IS NOT NULL
     AND qty IS NOT NULL
     AND qty <= threshold
   ORDER BY name ASC

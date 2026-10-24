@@ -25,9 +25,10 @@ export async function DELETE(
   }
 }
 
-export async function PUT(
+async function putLabTask(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string; id: string }> },
+  office: "lahore" | "karachi",
 ) {
   try {
     const data = await req.json();
@@ -50,7 +51,7 @@ export async function PUT(
 
     if (updates.parts_receiving_id !== undefined) {
       const task = await pool.query(
-        "SELECT customer_id FROM lab_tasks WHERE id = $1 AND managing_office = 'lahore'",
+        `SELECT customer_id FROM lab_tasks WHERE id = $1 AND managing_office = '${office}'`,
         [id],
       );
       if (!task.rows[0]) {
@@ -64,7 +65,7 @@ export async function PUT(
         const receipt = await pool.query(
           `SELECT customer_id
            FROM parts_receiving
-           WHERE id = $1 AND managing_office = 'lahore'`,
+           WHERE id = $1 AND managing_office = '${office}'`,
           [updates.parts_receiving_id],
         );
         if (!receipt.rows[0]) {
@@ -108,7 +109,7 @@ export async function PUT(
     const query = `
           UPDATE lab_tasks 
           SET ${fields.join(", ")}
-          WHERE id = $${values.length} AND managing_office = 'lahore'
+          WHERE id = $${values.length} AND managing_office = '${office}'
           RETURNING *
       `;
 
@@ -119,7 +120,7 @@ export async function PUT(
       sendNotificationToOwner(
         `${labTask?.remarks_other || labTask?.remarks}`,
         `repairandmaintenance?r=${labTask?.id}`,
-        "lahore",
+        office,
         NOTIFICATION_TYPES.repairing_updated.category,
         NOTIFICATION_TYPES.repairing_updated.title,
       );
@@ -127,7 +128,7 @@ export async function PUT(
       sendNotificationToLabManagers(
         `${labTask?.remarks_other || labTask?.remarks}`,
         `repairandmaintenance?r=${labTask?.id}`,
-        "lahore",
+        office,
         NOTIFICATION_TYPES.repairing_updated.category,
         NOTIFICATION_TYPES.repairing_updated.title,
       );
@@ -146,5 +147,15 @@ export async function PUT(
     );
   }
 }
+
+export const createLabPutHandler =
+  (office: "lahore" | "karachi") =>
+  (
+    req: NextRequest,
+    context: { params: Promise<{ uid: string; id: string }> },
+  ) =>
+    putLabTask(req, context, office);
+
+export const PUT = createLabPutHandler("lahore");
 
 export const revalidate = 0;

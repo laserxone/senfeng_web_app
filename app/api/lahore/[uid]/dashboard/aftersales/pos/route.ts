@@ -2,9 +2,10 @@ import pool from "@/config/db";
 import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getAfterSalesPos(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   try {
     const query = `
@@ -28,7 +29,7 @@ LEFT JOIN customer c
     ON c.id = si.customer_id
 LEFT JOIN users u
     ON u.id = c.ownership
-WHERE si.office = 'lahore' AND si.owner_paid IS FALSE
+WHERE si.office = '${office}' AND si.owner_paid IS FALSE
   AND si.invoice_status = 'issued'
 GROUP BY si.id, u.name, c.location
 ORDER BY created_at DESC
@@ -93,3 +94,10 @@ ORDER BY created_at DESC
     return NextResponse.json({ message: error?.message }, { status: 500 });
   }
 }
+
+export const createAfterSalesPosGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getAfterSalesPos(req, context, office);
+
+export const GET = createAfterSalesPosGetHandler("lahore");

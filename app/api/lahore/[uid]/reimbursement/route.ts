@@ -44,9 +44,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(
+async function getReimbursement(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
   const searchParams = req.nextUrl.searchParams;
@@ -72,7 +73,7 @@ export async function GET(
   INNER JOIN users u ON r.submitted_by = u.id
   LEFT JOIN customer c ON c.id = r.customer_id
   LEFT JOIN users o ON o.id = c.ownership
-  WHERE u.office = 'lahore'
+  WHERE u.office = '${office}'
 `;
 
       const queryParams = [];
@@ -144,7 +145,7 @@ export async function GET(
   INNER JOIN users u ON r.submitted_by = u.id
   LEFT JOIN customer c ON c.id = r.customer_id
   LEFT JOIN users o ON o.id = c.ownership
-  WHERE u.id = $1 AND u.office = 'lahore'
+  WHERE u.id = $1 AND u.office = '${office}'
 `;
 
       const queryParams = [uid];
@@ -204,5 +205,12 @@ export async function GET(
     );
   }
 }
+
+export const createReimbursementGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getReimbursement(req, context, office);
+
+export const GET = createReimbursementGetHandler("lahore");
 
 export const revalidate = 0;

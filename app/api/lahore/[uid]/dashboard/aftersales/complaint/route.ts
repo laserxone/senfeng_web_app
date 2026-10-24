@@ -1,9 +1,10 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getAfterSalesComplaints(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const searchParams = req.nextUrl.searchParams;
   const start = searchParams.get("start");
@@ -87,7 +88,7 @@ export async function GET(
  
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        WHERE c.customer_id IS NOT NULL AND c.managing_office = 'lahore'
+        WHERE c.customer_id IS NOT NULL AND c.managing_office = '${office}'
       `;
 
       if (start && end) {
@@ -110,3 +111,10 @@ export async function GET(
     );
   }
 }
+
+export const createAfterSalesComplaintsGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getAfterSalesComplaints(req, context, office);
+
+export const GET = createAfterSalesComplaintsGetHandler("lahore");

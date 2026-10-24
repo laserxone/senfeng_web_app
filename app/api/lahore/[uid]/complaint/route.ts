@@ -2,9 +2,10 @@ import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getComplaints(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
   const searchParams = new URL(req.url).searchParams;
@@ -94,7 +95,7 @@ export async function GET(
  
         LEFT JOIN users engineer ON ca.engineer_id = engineer.id
         LEFT JOIN users assigned_by_user ON ca.assigned_by = assigned_by_user.id
-        WHERE c.customer_id IS NOT NULL AND c.managing_office = 'lahore'
+        WHERE c.customer_id IS NOT NULL AND c.managing_office = '${office}'
       `;
 
       if (start_date && end_date) {
@@ -209,6 +210,13 @@ export async function GET(
     );
   }
 }
+
+export const createComplaintGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getComplaints(req, context, office);
+
+export const GET = createComplaintGetHandler("lahore");
 
 export async function POST(req: NextRequest) {
   const data = await req.json();

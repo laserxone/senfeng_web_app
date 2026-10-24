@@ -24,7 +24,7 @@ export async function DELETE(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: String }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const data = await req.json();
@@ -35,7 +35,7 @@ export async function PUT(
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
     }
 
-    const fields = [];
+    const fields: string[] = [];
     const values = [];
 
     Object.entries(updates).forEach(([key, value], index) => {
@@ -64,7 +64,7 @@ export async function PUT(
       { message: "Updated successfully" },
       { status: 200 },
     );
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
       { message: error.message || "Internal Server Error" },
       { status: 500 },

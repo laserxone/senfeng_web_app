@@ -6,7 +6,10 @@ import moment from "moment";
 import { NextRequest, NextResponse } from "next/server";
 import { NOTIFICATION_TYPES } from "@/constants/notifications";
 
-export async function POST(req: NextRequest) {
+async function postComplaintLog(
+  req: NextRequest,
+  office: "lahore" | "karachi",
+) {
   const { image_base64, ...data } = await req.json();
 
   try {
@@ -19,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     if (data.signature) {
       const customerId = data.image.split("/")[0];
-      const fileName = `lahore/${customerId}/complaint/signature/${moment().valueOf().toString()}.png`;
+      const fileName = `${office}/${customerId}/complaint/signature/${moment().valueOf().toString()}.png`;
       UploadImageForMobile(data.signature, fileName);
       data.signature = fileName;
     }
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
     sendNotificationToOwner(
       `Complaint updates`,
       `complaint?c=${result.rows?.[0].complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`,
-      "lahore",
+      office,
       NOTIFICATION_TYPES.complaint_updated.category,
       NOTIFICATION_TYPES.complaint_updated.title,
     );
@@ -51,7 +54,7 @@ export async function POST(req: NextRequest) {
     sendNotificationToComplaintManagers(
       `Complaint updates`,
       `complaint?c=${result.rows?.[0].complaint_id}&start=${moment().startOf("month").toDate().toISOString()}&end=${moment().endOf("month").toDate().toISOString()}`,
-      "lahore",
+      office,
       NOTIFICATION_TYPES.complaint_updated.category,
       NOTIFICATION_TYPES.complaint_updated.title,
     );
@@ -65,6 +68,12 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const createComplaintLogsPostHandler =
+  (office: "lahore" | "karachi") => (req: NextRequest) =>
+    postComplaintLog(req, office);
+
+export const POST = createComplaintLogsPostHandler("lahore");
 
 export async function PUT(req: NextRequest) {
   try {

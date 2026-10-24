@@ -5,7 +5,7 @@ import {
 } from "@/lib/office-fund-helper";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+async function postExpense(req: NextRequest, office: "lahore" | "karachi") {
   try {
     const data = await req.json();
 
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       const submittedBy = Number(data.submitted_by);
       const expense = (await client.query(query, values)).rows[0];
       await debitOfficeFund(client, {
-        office: "lahore",
+        office,
         sourceType: "office_expense",
         sourceId: Number(expense.id),
         mode: expense.mode,
@@ -53,12 +53,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
+async function getExpenses(req: NextRequest, office: "lahore" | "karachi") {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
-
-  const office = "lahore";
 
   try {
     let query = `
@@ -71,7 +69,7 @@ INNER JOIN users u ON r.submitted_by = u.id
  WHERE u.office = $1
     `;
 
-    const queryParams = [office];
+    const queryParams: string[] = [office];
 
     if (start_date && end_date) {
       query += ` AND r.date BETWEEN $2 AND $3`;
@@ -88,5 +86,12 @@ INNER JOIN users u ON r.submitted_by = u.id
     );
   }
 }
+
+export const createExpenseHandlers = (office: "lahore" | "karachi") => ({
+  POST: (req: NextRequest) => postExpense(req, office),
+  GET: (req: NextRequest) => getExpenses(req, office),
+});
+
+export const { POST, GET } = createExpenseHandlers("lahore");
 
 export const revalidate = 0;

@@ -3,7 +3,7 @@ import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+async function postLabTask(req: NextRequest, office: "lahore" | "karachi") {
   try {
     const data = await req.json();
 
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    data.managing_office = "lahore";
+    data.managing_office = office;
 
     if (
       data.priority &&
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       const receipt = await pool.query(
         `SELECT id, customer_id
          FROM parts_receiving
-         WHERE id = $1 AND managing_office = 'lahore'`,
+         WHERE id = $1 AND managing_office = '${office}'`,
         [data.parts_receiving_id],
       );
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         `SELECT id
          FROM lab_tasks
          WHERE parts_receiving_id = $1
-           AND managing_office = 'lahore'
+           AND managing_office = '${office}'
            AND COALESCE(status, 'pending') <> 'completed'
          LIMIT 1`,
         [data.parts_receiving_id],
@@ -101,9 +101,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(
+async function getLabTasks(
   req: NextRequest,
   { params }: { params: Promise<{}> },
+  office: "lahore" | "karachi",
 ) {
   const searchParams = req.nextUrl.searchParams;
   const user = searchParams.get("user");
@@ -138,7 +139,7 @@ LEFT JOIN LATERAL (
   FROM lab_task_payments
   WHERE lab_task_id = lt.id
 ) payment_totals ON TRUE
-WHERE lt.managing_office = 'lahore'
+WHERE lt.managing_office = '${office}'
   `;
 
     if (user) {
@@ -158,5 +159,13 @@ WHERE lt.managing_office = 'lahore'
     );
   }
 }
+
+export const createLabHandlers = (office: "lahore" | "karachi") => ({
+  POST: (req: NextRequest) => postLabTask(req, office),
+  GET: (req: NextRequest, context: { params: Promise<{}> }) =>
+    getLabTasks(req, context, office),
+});
+
+export const { POST, GET } = createLabHandlers("lahore");
 
 export const revalidate = 0;

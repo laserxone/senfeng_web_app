@@ -1,14 +1,13 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getNews(
   req: NextRequest,
   { params }: { params: Promise<{}> },
+  office: "lahore" | "karachi",
 ) {
   const searchParams = req.nextUrl.searchParams;
   const expiry = searchParams.get("expiry");
-  const office = "lahore";
-
   const queryParams = [];
   let conditions = [];
 
@@ -38,6 +37,13 @@ export async function GET(
     );
   }
 }
+
+export const createNewsGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{}> }) =>
+    getNews(req, context, office);
+
+export const GET = createNewsGetHandler("lahore");
 
 export async function POST(req: NextRequest) {
   try {

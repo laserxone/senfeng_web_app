@@ -4,6 +4,14 @@
 
 - Never re-export an imported `revalidate` value from a route module.
 
+## Lahore and Karachi API route migration
+
+- Before sharing a handler, compare the Lahore and Karachi route code for the selected main route and every nested route.
+- Skip routes that already use a shared handler.
+- Share a handler only when the behavior matches after accounting for the city-specific value. Report any other differences for review.
+- Report the comparison and get the user's confirmation before changing either city's route code.
+- Put the shared handler in the Lahore route and call it from both Lahore and Karachi, passing the city where needed.
+
 ## Dialogs
 
 Follow the dialog pattern in `components/features/customer-relations/add-feedback.tsx`.

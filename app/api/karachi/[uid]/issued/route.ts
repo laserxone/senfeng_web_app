@@ -1,23 +1,3 @@
-import pool from "@/config/db";
-import { NextRequest, NextResponse } from "next/server";
+﻿import { createIssuedGetHandler } from "@/app/api/lahore/[uid]/issued/route";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ uid: string }> },
-) {
-  const { uid } = await params;
-
-  try {
-    const result = await pool.query(
-      `SELECT * from issueditems WHERE user_id = $1 AND office = 'karachi' AND received IS FALSE`,
-      [uid],
-    );
-
-    return NextResponse.json(result.rows, { status: 200 });
-  } catch (error) {
-    return NextResponse.json(
-      { message: "Something went wrong" },
-      { status: 200 },
-    );
-  }
-}
+export const GET = createIssuedGetHandler("karachi");

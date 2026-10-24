@@ -2,9 +2,10 @@ import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getReminders(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
 
@@ -32,7 +33,7 @@ JOIN customer c ON s.customer_id = c.id
 JOIN users u ON s.sell_by = u.id
 WHERE 
   mi.pending = true
-  AND LOWER(u.office) = 'lahore'
+  AND LOWER(u.office) = '${office}'
   AND (
     mi.date < NOW() 
     OR (mi.date >= NOW() AND mi.date <= NOW() + INTERVAL '3 days')
@@ -63,7 +64,7 @@ ORDER BY mi.date ASC;
     JOIN users u ON s.sell_by = u.id
     WHERE 
       mi.pending = true
-      AND LOWER(u.office) = 'lahore'
+      AND LOWER(u.office) = '${office}'
       AND (
         mi.date < NOW() 
         OR (mi.date >= NOW() AND mi.date <= NOW() + INTERVAL '3 days')
@@ -83,5 +84,12 @@ ORDER BY mi.date ASC;
     return NextResponse.json({ message: "Error occured" }, { status: 500 });
   }
 }
+
+export const createRemindersGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getReminders(req, context, office);
+
+export const GET = createRemindersGetHandler("lahore");
 
 export const revalidate = 0;

@@ -2,9 +2,10 @@ import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getRecord(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
 
@@ -21,7 +22,7 @@ export async function GET(
                 u.name AS user_name 
             FROM salaries s
             INNER JOIN users u ON s.user_id = u.id
-            WHERE issued = $1 AND u.office = 'lahore'
+            WHERE issued = $1 AND u.office = '${office}'
             ORDER BY s.year DESC, s.month DESC;
         `,
         [true],
@@ -94,5 +95,12 @@ export async function GET(
     );
   }
 }
+
+export const createRecordGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getRecord(req, context, office);
+
+export const GET = createRecordGetHandler("lahore");
 
 export const revalidate = 0;

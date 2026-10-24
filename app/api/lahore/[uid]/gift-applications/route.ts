@@ -3,13 +3,17 @@ import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { sendNotification } from "@/lib/sendNotification";
 import { NextRequest, NextResponse } from "next/server";
 
-const selectApplications = (where = "", params: unknown[] = []) =>
+const selectApplications = (
+  office: "lahore" | "karachi",
+  where = "",
+  params: unknown[] = [],
+) =>
   pool.query(
     `SELECT ga.*, u.name AS user_name, u.designation AS user_designation,
       ah.name AS hierarchy_name, c.name AS customer_name, c.owner AS customer_owner,
       COALESCE((SELECT json_agg(json_build_object('id', i.id, 'name', i.name, 'qty', requested.qty, 'available_qty', i.qty) ORDER BY i.name)
         FROM jsonb_to_recordset(ga.inventory_items) AS requested(id integer, qty numeric)
-        JOIN inventory i ON i.id = requested.id AND i.office = 'lahore'), '[]'::json) AS inventory_details,
+        JOIN inventory i ON i.id = requested.id AND i.office = '${office}'), '[]'::json) AS inventory_details,
       json_agg(json_build_object('id', gap.id, 'approver_id', gap.approver_id,
         'approval_order', gap.approval_order, 'status', gap.status, 'comments', gap.comments,
         'acted_at', gap.acted_at, 'approver_name', au.name, 'approver_designation', au.designation)
@@ -20,13 +24,16 @@ const selectApplications = (where = "", params: unknown[] = []) =>
     LEFT JOIN approval_hierarchies ah ON ga.hierarchy_id = ah.id
     LEFT JOIN gift_approvals gap ON ga.id = gap.gift_application_id
     LEFT JOIN users au ON gap.approver_id = au.id
-    WHERE c.office = 'lahore' ${where}
+    WHERE c.office = '${office}' ${where}
     GROUP BY ga.id, u.name, u.designation, ah.name, c.name, c.owner
     ORDER BY ga.created_at DESC`,
     params,
   );
 
-export async function GET(request: NextRequest) {
+async function getGiftApplications(
+  request: NextRequest,
+  office: "lahore" | "karachi",
+) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("user_id");
@@ -34,12 +41,16 @@ export async function GET(request: NextRequest) {
 
     if (userId)
       return NextResponse.json(
-        (await selectApplications("AND ga.user_id = $1", [Number(userId)]))
-          .rows,
+        (
+          await selectApplications(office, "AND ga.user_id = $1", [
+            Number(userId),
+          ])
+        ).rows,
       );
     if (approverId) {
       const id = Number(approverId);
       const applications = await selectApplications(
+        office,
         `AND EXISTS (SELECT 1 FROM gift_approvals g WHERE g.gift_application_id = ga.id AND g.approver_id = $1)`,
         [id],
       );
@@ -65,7 +76,7 @@ export async function GET(request: NextRequest) {
       }));
       return NextResponse.json(rows);
     }
-    return NextResponse.json((await selectApplications()).rows);
+    return NextResponse.json((await selectApplications(office)).rows);
   } catch (error: any) {
     return NextResponse.json(
       { message: error.message || "Failed to fetch gift applications" },
@@ -74,7 +85,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postGiftApplication(
+  request: NextRequest,
+  office: "lahore" | "karachi",
+) {
   const client = await pool.connect();
   try {
     const {
@@ -102,7 +116,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const customer = await client.query(
-      "SELECT id FROM customer WHERE id = $1 AND office = 'lahore'",
+      `SELECT id FROM customer WHERE id = $1 AND office = '${office}'`,
       [customer_id],
     );
     if (!customer.rowCount) {
@@ -149,7 +163,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const stock = await client.query(
-      "SELECT id, qty FROM inventory WHERE id = ANY($1::int[]) AND office = 'lahore'",
+      `SELECT id, qty FROM inventory WHERE id = ANY($1::int[]) AND office = '${office}'`,
       [requestedItems.map((item) => item.id)],
     );
     const available = new Map(
@@ -227,3 +241,12 @@ export async function POST(request: NextRequest) {
     client.release();
   }
 }
+
+export const createGiftApplicationHandlers = (
+  office: "lahore" | "karachi",
+) => ({
+  GET: (request: NextRequest) => getGiftApplications(request, office),
+  POST: (request: NextRequest) => postGiftApplication(request, office),
+});
+
+export const { GET, POST } = createGiftApplicationHandlers("lahore");

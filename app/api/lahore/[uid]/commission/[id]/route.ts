@@ -4,7 +4,7 @@ import { NOTIFICATION_TYPES } from "@/constants/notifications";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
-  req: NextResponse,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {

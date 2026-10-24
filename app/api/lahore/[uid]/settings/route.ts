@@ -1,14 +1,13 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+async function getSettings(office: "lahore" | "karachi") {
   try {
-    const query = `
-    SELECT * FROM settings;
-    `;
-
-    const result = await pool.query(query);
-    return NextResponse.json(result.rows[0], { status: 200 });
+    const result = await pool.query(
+      "SELECT * FROM settings WHERE office = $1 LIMIT 1",
+      [office],
+    );
+    return NextResponse.json(result.rows[0] ?? null, { status: 200 });
   } catch (error: any) {
     console.error("Error inserting data: ", error);
     return NextResponse.json(
@@ -18,10 +17,11 @@ export async function GET() {
   }
 }
 
-export async function PUT(req: NextRequest) {
+async function putSettings(req: NextRequest, office: "lahore" | "karachi") {
   try {
     const data = await req.json();
     const { id, ...updates } = data;
+    delete updates.office;
 
     if (!id) {
       return NextResponse.json({ message: "ID is required" }, { status: 400 });
@@ -30,9 +30,9 @@ export async function PUT(req: NextRequest) {
     const fields: string[] = [];
     const values = [];
 
-    Object.entries(updates).forEach(([key, value], index) => {
+    Object.entries(updates).forEach(([key, value]) => {
       if (value !== undefined) {
-        fields.push(`${key} = $${index + 1}`);
+        fields.push(`${key} = $${values.length + 1}`);
         values.push(value);
       }
     });
@@ -44,14 +44,20 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    values.push(id); // Add ID as the last parameter for WHERE clause
+    values.push(id, office);
     const query = `
             UPDATE settings 
             SET ${fields.join(", ")}
-            WHERE id = $${values.length}
+            WHERE id = $${values.length - 1} AND office = $${values.length}
         `;
 
-    await pool.query(query, values);
+    const result = await pool.query(query, values);
+    if (result.rowCount === 0) {
+      return NextResponse.json(
+        { message: "Settings not found for this office" },
+        { status: 404 },
+      );
+    }
 
     console.log("data updated successfully");
     return NextResponse.json(
@@ -66,5 +72,12 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
+
+export const createSettingsHandlers = (office: "lahore" | "karachi") => ({
+  GET: () => getSettings(office),
+  PUT: (req: NextRequest) => putSettings(req, office),
+});
+
+export const { GET, PUT } = createSettingsHandlers("lahore");
 
 export const revalidate = 0;

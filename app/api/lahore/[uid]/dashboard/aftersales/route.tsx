@@ -1,13 +1,13 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getAfterSalesDashboard(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
   const searchParams = req.nextUrl.searchParams;
-  const office = "lahore";
   const start = searchParams.get("start");
   const end = searchParams.get("end");
   try {
@@ -33,7 +33,7 @@ export async function GET(
     c.member,
     c.created_at
   FROM customer c
-  WHERE c.office = 'lahore'
+  WHERE c.office = '${office}'
     AND (
       c.member IS TRUE
       OR EXISTS (
@@ -61,7 +61,7 @@ export async function GET(
       AND f.created_at BETWEEN $2 AND $3
     ORDER BY f.customer_id, f.created_at DESC
     `,
-      ["lahore", start, end],
+      [office, start, end],
     );
 
     const feedbackMap = new Map(
@@ -111,3 +111,10 @@ export async function GET(
     );
   }
 }
+
+export const createAfterSalesDashboardGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getAfterSalesDashboard(req, context, office);
+
+export const GET = createAfterSalesDashboardGetHandler("lahore");

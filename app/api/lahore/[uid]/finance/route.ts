@@ -1,13 +1,11 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+async function getFinance(req: NextRequest, office: "lahore" | "karachi") {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
   const user = searchParams.get("user");
-
-  const office = "lahore";
 
   let whereClause = ``;
   const queryParams = [start_date, end_date];
@@ -103,3 +101,9 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+export const createFinanceGetHandler =
+  (office: "lahore" | "karachi") => (req: NextRequest) =>
+    getFinance(req, office);
+
+export const GET = createFinanceGetHandler("lahore");

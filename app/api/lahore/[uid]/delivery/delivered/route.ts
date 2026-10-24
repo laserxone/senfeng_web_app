@@ -1,9 +1,10 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getDelivered(
   req: NextRequest,
   { params }: { params: Promise<{}> },
+  office: "lahore" | "karachi",
 ) {
   try {
     const queryResult = await pool.query(`
@@ -33,7 +34,7 @@ export async function GET(
   LEFT JOIN payment_requests pr ON pr.sale_id = s.id
   WHERE s.ready_for_delivery IS TRUE 
     AND s.delivery_date IS NOT NULL
-    AND c.office = 'lahore'
+    AND c.office = '${office}'
   ORDER BY s.delivery_date DESC
 `);
     return NextResponse.json(queryResult.rows, { status: 200 });
@@ -44,3 +45,10 @@ export async function GET(
     );
   }
 }
+
+export const createDeliveredGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{}> }) =>
+    getDelivered(req, context, office);
+
+export const GET = createDeliveredGetHandler("lahore");

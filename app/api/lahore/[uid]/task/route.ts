@@ -8,7 +8,7 @@ import { sendNotificationToOwner } from "@/lib/sendNotificationToOwner";
 import momentT from "moment-timezone";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+async function postTask(req: NextRequest, office: "lahore" | "karachi") {
   try {
     const {
       task_name,
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
       sendNotificationToOwner(
         `Task assigned: ${taskName}`,
         `task?t=${newTask.rows?.[0]?.id}&start=${start}&end=${end}`,
-        "lahore",
+        office,
         NOTIFICATION_TYPES.task_assigned.category,
         NOTIFICATION_TYPES.task_assigned.title,
       );
@@ -141,9 +141,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(
+async function getTask(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
   const searchParams = req.nextUrl.searchParams;
@@ -170,7 +171,7 @@ FROM task t
 INNER JOIN users u ON t.assigned_to = u.id
 LEFT JOIN users ab ON t.assigned_by = ab.id
 LEFT JOIN customer c ON t.customer_id = c.id
-WHERE u.office = 'lahore'
+WHERE u.office = '${office}'
     `;
 
       if (start_date && end_date) {
@@ -297,5 +298,13 @@ WHERE u.id = $1
     );
   }
 }
+
+export const createTaskHandlers = (office: "lahore" | "karachi") => ({
+  POST: (req: NextRequest) => postTask(req, office),
+  GET: (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getTask(req, context, office),
+});
+
+export const { POST, GET } = createTaskHandlers("lahore");
 
 export const revalidate = 0;

@@ -2,15 +2,14 @@ import pool from "@/config/db";
 import { checkSuperadmin } from "@/lib/checkSuperadmin";
 import { NextResponse, NextRequest } from "next/server";
 
-export async function GET(
+async function getAllFinance(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
   const searchParams = req.nextUrl.searchParams;
   const user = searchParams.get("user");
-  const office = "lahore";
-
   const isAdmin = await checkSuperadmin(uid);
   const queryParams = [];
   queryParams.push(office);
@@ -230,3 +229,10 @@ export async function GET(
     }
   }
 }
+
+export const createAllFinanceGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getAllFinance(req, context, office);
+
+export const GET = createAllFinanceGetHandler("lahore");

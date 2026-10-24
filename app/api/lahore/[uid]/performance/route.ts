@@ -1,7 +1,7 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+async function getPerformance(req: NextRequest, office: "lahore" | "karachi") {
   const searchParams = req.nextUrl.searchParams;
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   INNER JOIN complaints c
     ON c.id = ca.complaint_id
 
-  WHERE u.office = 'lahore'
+  WHERE u.office = '${office}'
 `;
 
   if (start_date && end_date) {
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
       ON ca.engineer_id = u.id
     INNER JOIN complaints c
       ON c.id = ca.complaint_id
-    WHERE u.office = 'lahore'
+    WHERE u.office = '${office}'
       AND c.created_at BETWEEN $1 AND $2
     `,
         [previousStartDate, previousEndDate],
@@ -295,6 +295,12 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+export const createPerformanceGetHandler =
+  (office: "lahore" | "karachi") => (req: NextRequest) =>
+    getPerformance(req, office);
+
+export const GET = createPerformanceGetHandler("lahore");
 
 const getPercentageChange = (current: number, previous: number) => {
   if (previous === 0 && current === 0) {

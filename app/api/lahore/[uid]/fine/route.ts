@@ -41,9 +41,10 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(
+async function getFines(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const { uid } = await params;
   const searchParams = req.nextUrl.searchParams;
@@ -82,7 +83,7 @@ export async function GET(
         queryParams.push(user);
       } else {
         query += queryParams.length ? ` AND` : ` WHERE`;
-        query += ` u.office = 'lahore'`;
+        query += ` u.office = '${office}'`;
       }
 
       query += ` ORDER BY f.created_at DESC;`;
@@ -129,5 +130,12 @@ export async function GET(
     );
   }
 }
+
+export const createFineGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getFines(req, context, office);
+
+export const GET = createFineGetHandler("lahore");
 
 export const revalidate = 0;

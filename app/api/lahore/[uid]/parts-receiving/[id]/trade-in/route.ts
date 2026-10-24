@@ -1,7 +1,6 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-const OFFICE = "lahore";
 const error = (value: unknown) =>
   NextResponse.json(
     {
@@ -31,25 +30,26 @@ function deliveryDate(value: unknown) {
   return result.toISOString();
 }
 
-async function verifiedReceipt(value: string) {
+async function verifiedReceipt(value: string, office: "lahore" | "karachi") {
   const id = receiptId(value);
   const receipt = await pool.query(
     "SELECT id FROM parts_receiving WHERE id = $1 AND managing_office = $2 AND is_trade_in = TRUE",
-    [id, OFFICE],
+    [id, office],
   );
   if (!receipt.rows[0]) throw new Error("Trade-in receipt not found");
   return id;
 }
 
-export async function GET(
+async function getTradeIn(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
+  office: "lahore" | "karachi",
 ) {
   try {
     const { id } = await params;
     const result = await pool.query(
       "SELECT * FROM part_trade_ins WHERE parts_receiving_id = $1",
-      [await verifiedReceipt(id)],
+      [await verifiedReceipt(id, office)],
     );
     return NextResponse.json(result.rows[0] ?? null);
   } catch (value) {
@@ -57,13 +57,14 @@ export async function GET(
   }
 }
 
-export async function PUT(
+async function putTradeIn(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
+  office: "lahore" | "karachi",
 ) {
   try {
     const { id } = await params;
-    const sourceId = await verifiedReceipt(id);
+    const sourceId = await verifiedReceipt(id, office);
     const input = await req.json();
     const quantity = Number(input.part_qty);
     if (!Number.isFinite(quantity) || quantity <= 0)
@@ -89,3 +90,12 @@ export async function PUT(
     return error(value);
   }
 }
+
+export const createTradeInHandlers = (office: "lahore" | "karachi") => ({
+  GET: (req: NextRequest, context: { params: Promise<{ id: string }> }) =>
+    getTradeIn(req, context, office),
+  PUT: (req: NextRequest, context: { params: Promise<{ id: string }> }) =>
+    putTradeIn(req, context, office),
+});
+
+export const { GET, PUT } = createTradeInHandlers("lahore");

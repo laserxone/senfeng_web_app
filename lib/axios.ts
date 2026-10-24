@@ -32,15 +32,8 @@ const axios = axiosInstance.create({
 });
 
 axios.interceptors.request.use(async (config) => {
-  const requestUrl = config.url || "";
-
-  const isUserDetailRequest =
-    requestUrl.includes("/userdetail") ||
-    requestUrl.startsWith("userdetail") ||
-    requestUrl.startsWith("/userdetail");
-
   const office = config.office ?? userOffice;
-  config.baseURL = isUserDetailRequest ? BASE_URL : `${BASE_URL}${office}`;
+  config.baseURL = `${BASE_URL}${office}`;
 
   config.headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
   config.headers["Pragma"] = "no-cache";

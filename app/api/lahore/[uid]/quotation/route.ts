@@ -20,7 +20,7 @@ export async function GET() {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function postQuotation(req: NextRequest, office: "lahore" | "karachi") {
   try {
     const data = await req.json();
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     sendNotificationToOwner(
       `${res.rows?.[0]?.customer_name || res?.rows?.[0]?.contact_person}`,
       `quotation?q=${res?.rows?.[0]?.id}`,
-      "lahore",
+      office,
       "sales",
       NOTIFICATION_TYPES.quotation_submitted.title,
     );
@@ -63,3 +63,9 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const createQuotationPostHandler =
+  (office: "lahore" | "karachi") => (req: NextRequest) =>
+    postQuotation(req, office);
+
+export const POST = createQuotationPostHandler("lahore");

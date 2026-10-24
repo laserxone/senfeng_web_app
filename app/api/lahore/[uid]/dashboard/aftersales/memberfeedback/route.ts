@@ -1,9 +1,10 @@
 import pool from "@/config/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+async function getAfterSalesMemberFeedback(
   req: NextRequest,
   { params }: { params: Promise<{ uid: string }> },
+  office: "lahore" | "karachi",
 ) {
   const searchParams = req.nextUrl.searchParams;
   const start = searchParams.get("start");
@@ -20,7 +21,7 @@ export async function GET(
     c.created_at,
     c.rating
   FROM customer c
-  WHERE c.office = 'lahore'
+  WHERE c.office = '${office}'
     AND (
       c.member IS TRUE
       OR EXISTS (
@@ -49,7 +50,7 @@ export async function GET(
       AND f.created_at BETWEEN $2 AND $3
     ORDER BY f.customer_id, f.created_at DESC
     `,
-      ["lahore", start, end],
+      [office, start, end],
     );
 
     const feedbackMap = new Map(
@@ -144,3 +145,10 @@ export async function GET(
     );
   }
 }
+
+export const createAfterSalesMemberFeedbackGetHandler =
+  (office: "lahore" | "karachi") =>
+  (req: NextRequest, context: { params: Promise<{ uid: string }> }) =>
+    getAfterSalesMemberFeedback(req, context, office);
+
+export const GET = createAfterSalesMemberFeedbackGetHandler("lahore");

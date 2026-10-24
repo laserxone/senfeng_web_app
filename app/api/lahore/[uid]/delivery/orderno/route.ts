@@ -1,12 +1,12 @@
 import pool from "@/config/db";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+async function getOrderNumbers(office: "lahore" | "karachi") {
   try {
     const queryResult = await pool.query(`
   SELECT id, machine_serial, is_machine
   FROM order_items
-  WHERE LOWER(location) = 'lahore'
+  WHERE LOWER(location) = '${office}'
   ORDER BY machine_serial ASC
 `);
 
@@ -18,3 +18,9 @@ export async function GET() {
     );
   }
 }
+
+export const createOrderNumbersGetHandler =
+  (office: "lahore" | "karachi") => () =>
+    getOrderNumbers(office);
+
+export const GET = createOrderNumbersGetHandler("lahore");
